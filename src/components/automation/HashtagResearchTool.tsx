@@ -1,0 +1,245 @@
+import { useState } from "react";
+import { Hash, TrendingUp, Copy, Check, Search, Flame, Target, Users, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+
+const trendingHashtags = [
+  { tag: "#socialmedia", posts: "45.2M", difficulty: "high", growth: "+12%", category: "General" },
+  { tag: "#marketing", posts: "38.7M", difficulty: "high", growth: "+8%", category: "Business" },
+  { tag: "#growthhacking", posts: "2.1M", difficulty: "medium", growth: "+24%", category: "Strategy" },
+  { tag: "#contentcreator", posts: "18.4M", difficulty: "medium", growth: "+15%", category: "Creator" },
+  { tag: "#digitalmarketing", posts: "28.9M", difficulty: "high", growth: "+6%", category: "Business" },
+  { tag: "#smm", posts: "890K", difficulty: "low", growth: "+32%", category: "Strategy" },
+  { tag: "#instagramgrowth", posts: "5.6M", difficulty: "medium", growth: "+18%", category: "Growth" },
+  { tag: "#viralcontent", posts: "3.2M", difficulty: "medium", growth: "+45%", category: "Content" },
+  { tag: "#influencermarketing", posts: "4.8M", difficulty: "medium", growth: "+21%", category: "Business" },
+  { tag: "#automation", posts: "1.2M", difficulty: "low", growth: "+38%", category: "Tech" },
+];
+
+const suggestedSets = [
+  {
+    name: "Growth Pack",
+    tags: ["#growth", "#success", "#motivation", "#entrepreneur", "#business"],
+  },
+  {
+    name: "Content Creator",
+    tags: ["#contentcreator", "#creator", "#creatorlife", "#content", "#creative"],
+  },
+  {
+    name: "Marketing Pro",
+    tags: ["#marketing", "#digitalmarketing", "#socialmedia", "#branding", "#strategy"],
+  },
+];
+
+const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty) {
+    case "low": return "text-brand-green bg-brand-green/10 border-brand-green/30";
+    case "medium": return "text-brand-orange bg-brand-orange/10 border-brand-orange/30";
+    case "high": return "text-destructive bg-destructive/10 border-destructive/30";
+    default: return "text-muted-foreground bg-muted";
+  }
+};
+
+export const HashtagResearchTool = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [copiedTag, setCopiedTag] = useState<string | null>(null);
+  const [copiedSet, setCopiedSet] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const filteredHashtags = trendingHashtags.filter((h) =>
+    h.tag.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    h.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const copyTag = (tag: string) => {
+    navigator.clipboard.writeText(tag);
+    setCopiedTag(tag);
+    setTimeout(() => setCopiedTag(null), 2000);
+  };
+
+  const copySet = (name: string, tags: string[]) => {
+    navigator.clipboard.writeText(tags.join(" "));
+    setCopiedSet(name);
+    setTimeout(() => setCopiedSet(null), 2000);
+  };
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const copySelected = () => {
+    navigator.clipboard.writeText(selectedTags.join(" "));
+    setCopiedSet("selected");
+    setTimeout(() => setCopiedSet(null), 2000);
+  };
+
+  return (
+    <div className="glass-card p-6 md:p-8">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-brand-purple/20 glow-blue">
+            <Hash className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold">Hashtag Research Tool</h3>
+            <p className="text-sm text-muted-foreground">Find trending hashtags for maximum reach</p>
+          </div>
+        </div>
+        {selectedTags.length > 0 && (
+          <Button onClick={copySelected} className="bg-primary hover:bg-primary/90">
+            {copiedSet === "selected" ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+            Copy {selectedTags.length} Tags
+          </Button>
+        )}
+      </div>
+
+      {/* Search */}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search hashtags or categories..."
+          className="pl-10 bg-secondary/50 border-border"
+        />
+      </div>
+
+      {/* Quick Sets */}
+      <div className="mb-6">
+        <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          Quick Hashtag Sets
+        </h4>
+        <div className="grid md:grid-cols-3 gap-3">
+          {suggestedSets.map((set) => (
+            <div
+              key={set.name}
+              className="p-4 rounded-xl bg-secondary/50 border border-border hover:border-primary/50 transition-all group"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium text-sm">{set.name}</span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => copySet(set.name, set.tags)}
+                >
+                  {copiedSet === set.name ? (
+                    <Check className="h-3 w-3 text-brand-green" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {set.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Trending Hashtags Table */}
+      <div>
+        <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+          <Flame className="h-4 w-4 text-brand-orange" />
+          Trending Hashtags
+        </h4>
+        <div className="rounded-xl border border-border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-secondary/50">
+                  <th className="text-left p-3 text-xs font-medium text-muted-foreground">HASHTAG</th>
+                  <th className="text-left p-3 text-xs font-medium text-muted-foreground">POSTS</th>
+                  <th className="text-left p-3 text-xs font-medium text-muted-foreground">DIFFICULTY</th>
+                  <th className="text-left p-3 text-xs font-medium text-muted-foreground">GROWTH</th>
+                  <th className="text-left p-3 text-xs font-medium text-muted-foreground">CATEGORY</th>
+                  <th className="text-right p-3 text-xs font-medium text-muted-foreground">ACTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredHashtags.map((hashtag, index) => (
+                  <tr
+                    key={hashtag.tag}
+                    className={`border-t border-border hover:bg-secondary/30 transition-colors cursor-pointer ${
+                      selectedTags.includes(hashtag.tag) ? "bg-primary/5" : ""
+                    }`}
+                    onClick={() => toggleTag(hashtag.tag)}
+                  >
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedTags.includes(hashtag.tag)}
+                          onChange={() => {}}
+                          className="rounded border-border"
+                        />
+                        <span className="font-medium text-primary">{hashtag.tag}</span>
+                      </div>
+                    </td>
+                    <td className="p-3 text-sm text-muted-foreground">{hashtag.posts}</td>
+                    <td className="p-3">
+                      <Badge className={`text-xs border ${getDifficultyColor(hashtag.difficulty)}`}>
+                        {hashtag.difficulty}
+                      </Badge>
+                    </td>
+                    <td className="p-3">
+                      <span className="text-sm text-brand-green font-medium flex items-center gap-1">
+                        <TrendingUp className="h-3 w-3" />
+                        {hashtag.growth}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      <Badge variant="secondary" className="text-xs">{hashtag.category}</Badge>
+                    </td>
+                    <td className="p-3 text-right">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyTag(hashtag.tag);
+                        }}
+                      >
+                        {copiedTag === hashtag.tag ? (
+                          <Check className="h-4 w-4 text-brand-green" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { icon: Hash, label: "Total Hashtags", value: "10K+", color: "text-primary" },
+          { icon: Flame, label: "Trending Now", value: "847", color: "text-brand-orange" },
+          { icon: Target, label: "Low Competition", value: "234", color: "text-brand-green" },
+          { icon: Users, label: "Avg. Reach", value: "50K", color: "text-brand-purple" },
+        ].map((stat) => (
+          <div key={stat.label} className="p-3 rounded-lg bg-secondary/50 text-center">
+            <stat.icon className={`h-5 w-5 mx-auto mb-1 ${stat.color}`} />
+            <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
+            <p className="text-xs text-muted-foreground">{stat.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
