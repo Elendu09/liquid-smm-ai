@@ -2,63 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
-/* HOME OF SMM - Dark Theme Design System matching SMMPilot.online */
+/* HOME OF SMM - Dual Theme Design System */
 
 @layer base {
+  /* Light Mode - Clean Professional */
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 210 40% 98%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 217 91% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 47% 12%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 222 47% 14%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 220 14% 95%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 217 91% 60%;
-    --accent-foreground: 222 47% 6%;
+    --accent: 217 91% 50%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 222 47% 16%;
-    --input: 222 47% 12%;
-    --ring: 217 91% 60%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 50%;
 
     --radius: 0.75rem;
 
-    /* Custom brand colors */
-    --brand-blue: 217 91% 60%;
-    --brand-blue-glow: 217 91% 70%;
-    --brand-purple: 270 70% 60%;
-    --brand-cyan: 190 90% 50%;
-    --brand-green: 142 70% 45%;
-    --brand-orange: 25 95% 55%;
-    --brand-pink: 330 80% 60%;
+    /* Brand colors */
+    --brand-blue: 217 91% 50%;
+    --brand-blue-glow: 217 91% 60%;
+    --brand-purple: 270 70% 55%;
+    --brand-cyan: 190 90% 45%;
+    --brand-green: 142 70% 40%;
+    --brand-orange: 25 95% 50%;
+    --brand-pink: 330 80% 55%;
 
-    /* Glass effects */
-    --glass-bg: 222 47% 8% / 0.6;
-    --glass-border: 222 47% 20% / 0.3;
+    /* Glass effects - Light mode */
+    --glass-bg: 0 0% 100% / 0.8;
+    --glass-border: 220 13% 85% / 0.5;
 
-    --sidebar-background: 222 47% 5%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 222 47% 6%;
-    --sidebar-accent: 222 47% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 47% 16%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-background: 220 14% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 217 91% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 93%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 50%;
   }
 
+  /* Dark Mode - Deep Navy */
   .dark {
     --background: 222 47% 6%;
     --foreground: 210 40% 98%;
@@ -88,6 +90,19 @@
     --input: 222 47% 12%;
     --ring: 217 91% 60%;
 
+    /* Brand colors - slightly brighter for dark mode */
+    --brand-blue: 217 91% 60%;
+    --brand-blue-glow: 217 91% 70%;
+    --brand-purple: 270 70% 60%;
+    --brand-cyan: 190 90% 50%;
+    --brand-green: 142 70% 45%;
+    --brand-orange: 25 95% 55%;
+    --brand-pink: 330 80% 60%;
+
+    /* Glass effects - Dark mode */
+    --glass-bg: 222 47% 8% / 0.6;
+    --glass-border: 222 47% 20% / 0.3;
+
     --sidebar-background: 222 47% 5%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 217 91% 60%;
@@ -106,9 +121,10 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  /* Hide scrollbar for clean look */
+  /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -131,17 +147,34 @@
 @layer components {
   /* Glass card effect */
   .glass-card {
-    @apply relative overflow-hidden rounded-xl border border-border/30 bg-card/60 backdrop-blur-xl;
+    @apply relative overflow-hidden rounded-xl border bg-card/60 backdrop-blur-xl;
+    border-color: hsl(var(--glass-border));
   }
 
   .glass-card::before {
     content: '';
-    @apply absolute inset-0 rounded-xl bg-gradient-to-br from-white/5 to-transparent pointer-events-none;
+    @apply absolute inset-0 rounded-xl pointer-events-none;
+    background: linear-gradient(135deg, hsl(0 0% 100% / 0.05) 0%, transparent 50%);
   }
 
-  /* Glow effects */
+  /* Light mode glass adjustments */
+  :root .glass-card {
+    @apply bg-card/80 shadow-lg;
+    box-shadow: 0 4px 24px hsl(217 91% 50% / 0.05);
+  }
+
+  .dark .glass-card {
+    @apply bg-card/60;
+    box-shadow: 0 0 20px hsl(217 91% 60% / 0.1);
+  }
+
+  /* Glow effects - Dark mode only */
   .glow-blue {
     box-shadow: 0 0 20px hsl(217 91% 60% / 0.3), 0 0 40px hsl(217 91% 60% / 0.1);
+  }
+
+  .dark .glow-blue {
+    box-shadow: 0 0 30px hsl(217 91% 60% / 0.4), 0 0 60px hsl(217 91% 60% / 0.2);
   }
 
   .glow-blue-intense {
@@ -157,13 +190,31 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-brand-purple to-brand-pink;
   }
 
-  /* Animated background dots */
+  /* Background patterns */
   .bg-dots {
-    background-image: radial-gradient(circle, hsl(var(--primary) / 0.15) 1px, transparent 1px);
+    background-image: radial-gradient(circle, hsl(var(--primary) / 0.1) 1px, transparent 1px);
     background-size: 30px 30px;
   }
 
-  /* Animated gradient border */
+  .dark .bg-dots {
+    background-image: radial-gradient(circle, hsl(var(--primary) / 0.15) 1px, transparent 1px);
+  }
+
+  /* Grid pattern */
+  .bg-grid {
+    background-image: 
+      linear-gradient(hsl(var(--primary) / 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--primary) / 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  .dark .bg-grid {
+    background-image: 
+      linear-gradient(hsl(var(--primary) / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--primary) / 0.05) 1px, transparent 1px);
+  }
+
+  /* Gradient border */
   .gradient-border {
     @apply relative;
   }
@@ -181,7 +232,11 @@
 
   .hover-lift:hover {
     @apply -translate-y-1;
-    box-shadow: 0 10px 40px hsl(217 91% 60% / 0.15);
+    box-shadow: 0 10px 40px hsl(217 91% 50% / 0.1);
+  }
+
+  .dark .hover-lift:hover {
+    box-shadow: 0 10px 40px hsl(217 91% 60% / 0.2);
   }
 
   /* Pulse animation for live indicators */
@@ -191,36 +246,47 @@
 
   .pulse-live::after {
     content: '';
-    @apply absolute inset-0 rounded-full bg-brand-green animate-ping opacity-75;
+    @apply absolute inset-0 rounded-full animate-ping opacity-75;
+    background: hsl(var(--brand-green));
   }
 
   /* Platform badge colors */
   .platform-instagram {
-    @apply bg-gradient-to-r from-[hsl(330_80%_50%)] via-[hsl(25_95%_55%)] to-[hsl(50_90%_55%)];
+    background: linear-gradient(135deg, hsl(330 80% 50%), hsl(25 95% 55%), hsl(50 90% 55%));
   }
 
   .platform-tiktok {
-    @apply bg-gradient-to-r from-[hsl(190_90%_50%)] to-[hsl(330_80%_60%)];
+    background: linear-gradient(135deg, hsl(190 90% 50%), hsl(330 80% 60%));
   }
 
   .platform-youtube {
-    @apply bg-[hsl(0_84%_50%)];
+    background: hsl(0 84% 50%);
   }
 
   .platform-facebook {
-    @apply bg-[hsl(220_44%_41%)];
+    background: hsl(220 44% 41%);
   }
 
   .platform-twitter {
-    @apply bg-[hsl(203_89%_53%)];
+    background: hsl(203 89% 53%);
   }
 
   .platform-linkedin {
-    @apply bg-[hsl(210_85%_40%)];
+    background: hsl(210 85% 40%);
   }
 
   .platform-telegram {
-    @apply bg-[hsl(200_100%_50%)];
+    background: hsl(200 100% 50%);
+  }
+
+  /* Section backgrounds */
+  .section-gradient {
+    @apply relative;
+    background: linear-gradient(180deg, transparent, hsl(var(--muted) / 0.3), transparent);
+  }
+
+  .dark .section-gradient {
+    background: linear-gradient(180deg, transparent, hsl(var(--secondary) / 0.5), transparent);
   }
 }
 
@@ -306,5 +372,25 @@
 
   .animate-fade-in-scale {
     animation: fade-in-scale 0.4s ease-out forwards;
+  }
+
+  /* Spin slow */
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 8s linear infinite;
+  }
+
+  /* Bounce subtle */
+  @keyframes bounce-subtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  .animate-bounce-subtle {
+    animation: bounce-subtle 2s ease-in-out infinite;
   }
 }

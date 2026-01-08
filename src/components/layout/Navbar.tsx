@@ -43,7 +43,7 @@ export function Navbar() {
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
           isScrolled
-            ? "bg-background/80 backdrop-blur-xl border-b border-border shadow-lg"
+            ? "bg-background/80 backdrop-blur-xl border-b border-border shadow-sm"
             : "bg-transparent"
         )}
       >
@@ -52,13 +52,13 @@ export function Navbar() {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group">
               <div className="relative">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-blue to-brand-purple flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-brand-purple flex items-center justify-center">
                   <Zap className="w-5 h-5 text-white" />
                 </div>
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-brand-blue to-brand-purple opacity-50 blur-lg group-hover:opacity-75 transition-opacity" />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-brand-purple opacity-0 group-hover:opacity-50 blur-lg transition-opacity" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-brand-blue to-brand-purple bg-clip-text text-transparent">
-                SMMPilot
+              <span className="text-xl font-bold bg-gradient-to-r from-primary to-brand-purple bg-clip-text text-transparent">
+                HOME OF SMM
               </span>
             </Link>
 
@@ -93,7 +93,7 @@ export function Navbar() {
                 <Link to="/dashboard">
                   <Button
                     size="sm"
-                    className="bg-gradient-to-r from-brand-blue to-brand-purple hover:opacity-90 text-white"
+                    className="bg-gradient-to-r from-primary to-brand-purple hover:opacity-90 text-white"
                   >
                     Get Started
                     <ChevronRight className="w-4 h-4 ml-1" />
@@ -136,7 +136,7 @@ export function Navbar() {
                   </Button>
                 </Link>
                 <Link to="/dashboard" className="flex-1">
-                  <Button className="w-full bg-gradient-to-r from-brand-blue to-brand-purple">
+                  <Button className="w-full bg-gradient-to-r from-primary to-brand-purple">
                     Get Started
                   </Button>
                 </Link>
