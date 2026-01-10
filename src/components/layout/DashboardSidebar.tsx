@@ -12,6 +12,10 @@ import {
   Zap,
   ChevronLeft,
   ChevronRight,
+  CalendarDays,
+  Film,
+  MessageCircle,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -53,6 +57,26 @@ const navItems = [
     label: "Comment Manager",
     href: "/dashboard/comment-manager",
     icon: MessageSquare,
+  },
+  {
+    label: "Content Calendar",
+    href: "/dashboard/content-calendar",
+    icon: CalendarDays,
+  },
+  {
+    label: "Story Automation",
+    href: "/dashboard/story-automation",
+    icon: Film,
+  },
+  {
+    label: "DM Automation",
+    href: "/dashboard/dm-automation",
+    icon: MessageCircle,
+  },
+  {
+    label: "Follower Analyzer",
+    href: "/dashboard/follower-analyzer",
+    icon: Users,
   },
 ];
 

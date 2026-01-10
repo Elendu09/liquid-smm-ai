@@ -18,6 +18,10 @@ import EngagementBot from "@/pages/dashboard/EngagementBot";
 import Analytics from "@/pages/dashboard/Analytics";
 import HashtagResearch from "@/pages/dashboard/HashtagResearch";
 import CommentManager from "@/pages/dashboard/CommentManager";
+import ContentCalendar from "@/pages/dashboard/ContentCalendar";
+import StoryAutomation from "@/pages/dashboard/StoryAutomation";
+import DMAutomation from "@/pages/dashboard/DMAutomation";
+import FollowerAnalyzer from "@/pages/dashboard/FollowerAnalyzer";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +45,10 @@ const App = () => (
               <Route path="analytics" element={<Analytics />} />
               <Route path="hashtag-research" element={<HashtagResearch />} />
               <Route path="comment-manager" element={<CommentManager />} />
+              <Route path="content-calendar" element={<ContentCalendar />} />
+              <Route path="story-automation" element={<StoryAutomation />} />
+              <Route path="dm-automation" element={<DMAutomation />} />
+              <Route path="follower-analyzer" element={<FollowerAnalyzer />} />
             </Route>
             
             {/* Catch-all */}
