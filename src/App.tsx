@@ -22,6 +22,8 @@ import ContentCalendar from "@/pages/dashboard/ContentCalendar";
 import StoryAutomation from "@/pages/dashboard/StoryAutomation";
 import DMAutomation from "@/pages/dashboard/DMAutomation";
 import FollowerAnalyzer from "@/pages/dashboard/FollowerAnalyzer";
+import CompetitorTracker from "@/pages/dashboard/CompetitorTracker";
+import LinkInBio from "@/pages/dashboard/LinkInBio";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +51,8 @@ const App = () => (
               <Route path="story-automation" element={<StoryAutomation />} />
               <Route path="dm-automation" element={<DMAutomation />} />
               <Route path="follower-analyzer" element={<FollowerAnalyzer />} />
+              <Route path="competitor-tracker" element={<CompetitorTracker />} />
+              <Route path="link-bio" element={<LinkInBio />} />
             </Route>
             
             {/* Catch-all */}
