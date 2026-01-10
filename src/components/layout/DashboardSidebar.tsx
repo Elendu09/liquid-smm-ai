@@ -16,6 +16,8 @@ import {
   Film,
   MessageCircle,
   Users,
+  Target,
+  LinkIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -77,6 +79,16 @@ const navItems = [
     label: "Follower Analyzer",
     href: "/dashboard/follower-analyzer",
     icon: Users,
+  },
+  {
+    label: "Competitor Tracker",
+    href: "/dashboard/competitor-tracker",
+    icon: Target,
+  },
+  {
+    label: "Link in Bio",
+    href: "/dashboard/link-bio",
+    icon: LinkIcon,
   },
 ];
 
