@@ -8,6 +8,10 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 // Pages
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Pricing from "./pages/Pricing";
+import Settings from "./pages/Settings";
 
 // Dashboard Layout and Pages
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -37,6 +41,10 @@ const App = () => (
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/settings" element={<Settings />} />
             
             {/* Dashboard Routes */}
             <Route path="/dashboard" element={<DashboardLayout />}>
