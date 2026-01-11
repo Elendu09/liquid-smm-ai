@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { Film, Play, Clock, Eye, Link2, MessageCircle, BarChart3, Plus, Sparkles, Image, Palette, Layout } from "lucide-react";
+import { Film, Play, Clock, Eye, Link2, MessageCircle, BarChart3, Plus, Sparkles, Image, Palette, Layout, ShoppingBag, Clapperboard, BarChart2, HelpCircle, Timer, Quote, ShoppingCart, Star, Lightbulb, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 
 const storyTemplates = [
-  { id: 1, name: "Product Showcase", thumbnail: "🛍️", category: "Sales", uses: 1240 },
-  { id: 2, name: "Behind the Scenes", thumbnail: "🎬", category: "Engagement", uses: 890 },
-  { id: 3, name: "Poll Template", thumbnail: "📊", category: "Interactive", uses: 2100 },
-  { id: 4, name: "Q&A Story", thumbnail: "❓", category: "Interactive", uses: 1560 },
-  { id: 5, name: "Countdown Timer", thumbnail: "⏰", category: "Promo", uses: 780 },
-  { id: 6, name: "Quote of the Day", thumbnail: "💬", category: "Content", uses: 1890 },
+  { id: 1, name: "Product Showcase", icon: ShoppingBag, category: "Sales", uses: 1240 },
+  { id: 2, name: "Behind the Scenes", icon: Clapperboard, category: "Engagement", uses: 890 },
+  { id: 3, name: "Poll Template", icon: BarChart2, category: "Interactive", uses: 2100 },
+  { id: 4, name: "Q&A Story", icon: HelpCircle, category: "Interactive", uses: 1560 },
+  { id: 5, name: "Countdown Timer", icon: Timer, category: "Promo", uses: 780 },
+  { id: 6, name: "Quote of the Day", icon: Quote, category: "Content", uses: 1890 },
 ];
 
 const scheduledStories = [
@@ -26,10 +26,10 @@ const storyAnalytics = [
 ];
 
 const highlights = [
-  { id: 1, name: "Products", stories: 12, cover: "🛒" },
-  { id: 2, name: "Reviews", stories: 8, cover: "⭐" },
-  { id: 3, name: "Tips", stories: 15, cover: "💡" },
-  { id: 4, name: "Team", stories: 6, cover: "👥" },
+  { id: 1, name: "Products", stories: 12, icon: ShoppingCart },
+  { id: 2, name: "Reviews", stories: 8, icon: Star },
+  { id: 3, name: "Tips", stories: 15, icon: Lightbulb },
+  { id: 4, name: "Team", stories: 6, icon: Users },
 ];
 
 export const StoryAutomation = () => {
@@ -100,7 +100,9 @@ export const StoryAutomation = () => {
                   }
                 `}
               >
-                <div className="text-4xl mb-3">{template.thumbnail}</div>
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-pink-500/20 to-orange-500/20 flex items-center justify-center mb-3">
+                  <template.icon className="h-6 w-6 text-pink-500" />
+                </div>
                 <p className="font-medium text-sm">{template.name}</p>
                 <div className="flex items-center justify-between mt-2">
                   <Badge variant="secondary" className="text-xs">{template.category}</Badge>
@@ -143,8 +145,8 @@ export const StoryAutomation = () => {
               {highlights.map((highlight) => (
                 <div key={highlight.id} className="text-center group cursor-pointer">
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 to-orange-500 p-0.5 mx-auto mb-1 group-hover:scale-105 transition-transform">
-                    <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-xl">
-                      {highlight.cover}
+                    <div className="w-full h-full rounded-full bg-card flex items-center justify-center">
+                      <highlight.icon className="h-5 w-5 text-pink-500" />
                     </div>
                   </div>
                   <p className="text-xs font-medium truncate">{highlight.name}</p>
