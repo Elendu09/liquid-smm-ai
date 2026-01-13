@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { AccountProvider } from "@/contexts/AccountContext";
 
 // Pages
 import Index from "./pages/Index";
@@ -29,45 +30,62 @@ import FollowerAnalyzer from "@/pages/dashboard/FollowerAnalyzer";
 import CompetitorTracker from "@/pages/dashboard/CompetitorTracker";
 import LinkInBio from "@/pages/dashboard/LinkInBio";
 
+// New Dashboard Pages
+import AccountHealth from "@/pages/dashboard/AccountHealth";
+import Team from "@/pages/dashboard/Team";
+import ContentLibrary from "@/pages/dashboard/ContentLibrary";
+import AIStudio from "@/pages/dashboard/AIStudio";
+import Reports from "@/pages/dashboard/Reports";
+import Notifications from "@/pages/dashboard/Notifications";
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/settings" element={<Settings />} />
-            
-            {/* Dashboard Routes */}
-            <Route path="/dashboard" element={<DashboardLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="caption-generator" element={<CaptionGenerator />} />
-              <Route path="scheduler" element={<Scheduler />} />
-              <Route path="engagement-bot" element={<EngagementBot />} />
-              <Route path="analytics" element={<Analytics />} />
-              <Route path="hashtag-research" element={<HashtagResearch />} />
-              <Route path="comment-manager" element={<CommentManager />} />
-              <Route path="content-calendar" element={<ContentCalendar />} />
-              <Route path="story-automation" element={<StoryAutomation />} />
-              <Route path="dm-automation" element={<DMAutomation />} />
-              <Route path="follower-analyzer" element={<FollowerAnalyzer />} />
-              <Route path="competitor-tracker" element={<CompetitorTracker />} />
-              <Route path="link-bio" element={<LinkInBio />} />
-            </Route>
-            
-            {/* Catch-all */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AccountProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/settings" element={<Settings />} />
+              
+              {/* Dashboard Routes */}
+              <Route path="/dashboard" element={<DashboardLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="caption-generator" element={<CaptionGenerator />} />
+                <Route path="scheduler" element={<Scheduler />} />
+                <Route path="engagement-bot" element={<EngagementBot />} />
+                <Route path="analytics" element={<Analytics />} />
+                <Route path="hashtag-research" element={<HashtagResearch />} />
+                <Route path="comment-manager" element={<CommentManager />} />
+                <Route path="content-calendar" element={<ContentCalendar />} />
+                <Route path="story-automation" element={<StoryAutomation />} />
+                <Route path="dm-automation" element={<DMAutomation />} />
+                <Route path="follower-analyzer" element={<FollowerAnalyzer />} />
+                <Route path="competitor-tracker" element={<CompetitorTracker />} />
+                <Route path="link-bio" element={<LinkInBio />} />
+                {/* New Dashboard Routes */}
+                <Route path="account-health" element={<AccountHealth />} />
+                <Route path="team" element={<Team />} />
+                <Route path="content-library" element={<ContentLibrary />} />
+                <Route path="ai-studio" element={<AIStudio />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="notifications" element={<Notifications />} />
+              </Route>
+              
+              {/* Catch-all */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AccountProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

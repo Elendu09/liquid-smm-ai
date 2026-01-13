@@ -302,3 +302,46 @@ export const platformGroups = {
 };
 
 export const allPlatformIds = platforms.map((p) => p.id);
+
+// Primary platforms for focused features (5 main platforms)
+export const primaryPlatformIds = ["facebook", "instagram", "twitter", "whatsapp", "youtube"];
+
+export const getPrimaryPlatforms = (): Platform[] => {
+  return platforms.filter((p) => primaryPlatformIds.includes(p.id));
+};
+
+// Tone presets per platform
+export const platformTonePresets: Record<string, { default: string; options: string[] }> = {
+  instagram: { default: "inspirational", options: ["inspirational", "casual", "trendy", "educational", "storytelling"] },
+  tiktok: { default: "trendy", options: ["trendy", "casual", "humorous", "educational", "viral"] },
+  youtube: { default: "educational", options: ["educational", "entertaining", "professional", "casual", "storytelling"] },
+  twitter: { default: "witty", options: ["witty", "concise", "professional", "casual", "controversial"] },
+  facebook: { default: "friendly", options: ["friendly", "professional", "casual", "storytelling", "promotional"] },
+  linkedin: { default: "professional", options: ["professional", "thought-leadership", "educational", "inspirational", "casual"] },
+  whatsapp: { default: "personal", options: ["personal", "friendly", "professional", "casual", "urgent"] },
+  threads: { default: "conversational", options: ["conversational", "casual", "witty", "educational"] },
+  pinterest: { default: "inspirational", options: ["inspirational", "educational", "lifestyle", "promotional"] },
+  snapchat: { default: "casual", options: ["casual", "fun", "trendy", "personal"] },
+  reddit: { default: "informative", options: ["informative", "casual", "humorous", "controversial", "helpful"] },
+  telegram: { default: "informative", options: ["informative", "professional", "casual", "promotional"] },
+  discord: { default: "casual", options: ["casual", "friendly", "humorous", "informative"] },
+  bluesky: { default: "conversational", options: ["conversational", "witty", "casual", "professional"] },
+};
+
+// Trending hashtags per platform (mock data)
+export const trendingHashtags: Record<string, string[]> = {
+  instagram: ["#reels", "#viral", "#instagood", "#photooftheday", "#trending", "#fyp", "#explore", "#lifestyle"],
+  tiktok: ["#fyp", "#foryou", "#viral", "#trending", "#xyzbca", "#tiktokviral", "#fypシ", "#trend"],
+  youtube: ["#shorts", "#viral", "#trending", "#subscribe", "#youtubeshorts", "#video", "#tutorial"],
+  twitter: ["#trending", "#viral", "#breaking", "#news", "#tech", "#innovation", "#thoughts"],
+  facebook: ["#viral", "#trending", "#lifestyle", "#community", "#share", "#family", "#friends"],
+  linkedin: ["#leadership", "#innovation", "#careers", "#networking", "#business", "#growth", "#success"],
+  whatsapp: [],
+  threads: ["#threads", "#trending", "#viral", "#thoughts", "#community"],
+  pinterest: ["#pinterest", "#diy", "#home", "#fashion", "#recipes", "#ideas", "#inspiration"],
+  snapchat: [],
+  reddit: [],
+  telegram: [],
+  discord: [],
+  bluesky: ["#bluesky", "#decentralized", "#tech", "#thoughts"],
+};
