@@ -138,7 +138,7 @@ export default function AccountHealthPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="h-12 w-12 rounded-full bg-muted p-2">
-                        <PlatformIcon platformId={account.platformId} size="lg" />
+                        <PlatformIcon platform={account.platformId} size="lg" />
                       </div>
                       <div>
                         <CardTitle className="text-base">{account.displayName}</CardTitle>
@@ -218,7 +218,7 @@ export default function AccountHealthPage() {
                   <div className="flex items-center gap-2">
                     <h4 className="font-medium">{rec.title}</h4>
                     <div className="h-5 w-5">
-                      <PlatformIcon platformId={rec.platform} size="md" />
+                      <PlatformIcon platform={rec.platform} size="md" />
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">{rec.description}</p>

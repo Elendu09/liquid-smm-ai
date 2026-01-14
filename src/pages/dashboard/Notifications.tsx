@@ -174,9 +174,9 @@ export default function NotificationsPage() {
                         )}
                       >
                         <div className="shrink-0">
-                          {notification.platformId ? (
+                        {notification.platformId ? (
                             <div className="h-10 w-10 rounded-full bg-muted p-2">
-                              <PlatformIcon platformId={notification.platformId} size="md" />
+                              <PlatformIcon platform={notification.platformId} size="md" />
                             </div>
                           ) : (
                             <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">

@@ -102,7 +102,7 @@ export function NotificationBell({ collapsed }: NotificationBellProps) {
                   <div className="flex items-start gap-3">
                     {notification.platformId ? (
                       <div className="mt-0.5 h-8 w-8 rounded-full bg-muted/50 p-1.5">
-                        <PlatformIcon platformId={notification.platformId} size="md" />
+                        <PlatformIcon platform={notification.platformId} size="md" />
                       </div>
                     ) : (
                       <div
