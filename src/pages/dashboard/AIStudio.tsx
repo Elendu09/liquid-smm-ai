@@ -7,19 +7,21 @@ import {
   Zap, 
   TrendingUp, 
   Sparkles,
-  Send,
   Copy,
   RefreshCw,
   Lightbulb,
   BookOpen,
-  MessageSquare
+  MessageSquare,
+  Check,
+  Download,
+  Languages
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -28,6 +30,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
+import { 
+  useCaption, 
+  useAIChat, 
+  useContentRewrite, 
+  useSummarize, 
+  useImageGeneration,
+  useQuote
+} from "@/hooks/useSkyrank";
 
 const aiTools = [
   {
@@ -36,20 +47,23 @@ const aiTools = [
     description: "Generate engaging captions for any platform",
     icon: MessageSquare,
     color: "from-pink-500 to-rose-500",
+    placeholder: "Describe your post topic (e.g., 'fitness motivation for beginners')",
   },
   {
     id: "image",
-    name: "Image Prompt",
-    description: "Create AI image generation prompts",
+    name: "AI Image Generator",
+    description: "Create AI images from text prompts",
     icon: Image,
     color: "from-purple-500 to-indigo-500",
+    placeholder: "Describe the image you want (e.g., 'sunset over mountains')",
   },
   {
     id: "script",
     name: "Video Script",
-    description: "Write compelling video scripts",
+    description: "Write compelling video scripts with AI",
     icon: Video,
     color: "from-blue-500 to-cyan-500",
+    placeholder: "What's your video about? (e.g., 'how to start a podcast')",
   },
   {
     id: "repurpose",
@@ -57,6 +71,7 @@ const aiTools = [
     description: "Transform long content into social posts",
     icon: RefreshCw,
     color: "from-green-500 to-emerald-500",
+    placeholder: "Paste your blog post or article to repurpose...",
   },
   {
     id: "ideas",
@@ -64,6 +79,7 @@ const aiTools = [
     description: "Get trending content suggestions",
     icon: Lightbulb,
     color: "from-yellow-500 to-orange-500",
+    placeholder: "Enter your niche (e.g., 'fitness', 'tech', 'cooking')",
   },
   {
     id: "blog",
@@ -71,6 +87,7 @@ const aiTools = [
     description: "Turn blog posts into social content",
     icon: BookOpen,
     color: "from-red-500 to-pink-500",
+    placeholder: "Paste your blog content to convert into social posts...",
   },
 ];
 
@@ -90,32 +107,126 @@ const viralPatterns = [
   { name: "Story Arc", success: 79, description: "Personal story with relatable struggle and resolution" },
 ];
 
+const rewriteStyles = [
+  { id: "casual", label: "Casual" },
+  { id: "formal", label: "Formal" },
+  { id: "professional", label: "Professional" },
+  { id: "creative", label: "Creative" },
+];
+
 export default function AIStudioPage() {
   const [selectedTool, setSelectedTool] = useState("caption");
   const [inputText, setInputText] = useState("");
   const [outputText, setOutputText] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState("instagram");
+  const [rewriteStyle, setRewriteStyle] = useState("professional");
+  const [copied, setCopied] = useState(false);
 
-  const handleGenerate = () => {
-    if (!inputText) return;
-    setIsGenerating(true);
-    // Simulate AI generation
-    setTimeout(() => {
-      setOutputText(`✨ Here's your AI-generated content based on "${inputText.slice(0, 50)}..."
+  // API hooks
+  const { isLoading: captionLoading, generate: generateCaption } = useCaption();
+  const { isLoading: chatLoading, send: sendChat } = useAIChat();
+  const { isLoading: rewriteLoading, rewrite } = useContentRewrite();
+  const { isLoading: summarizeLoading, summarize } = useSummarize();
+  const { isLoading: imageLoading, generate: generateImage } = useImageGeneration();
+  const { generate: generateQuote } = useQuote();
 
-🎯 Main Caption:
-Transform your social media game with these proven strategies! Here's what top creators don't tell you about growth...
+  const isGenerating = captionLoading || chatLoading || rewriteLoading || summarizeLoading || imageLoading;
 
-📝 Key Points:
-• Consistency beats perfection every time
-• Engage authentically with your community
-• Use data to guide your content decisions
+  const handleGenerate = async () => {
+    if (!inputText.trim()) {
+      toast({ title: "Please enter some text", variant: "destructive" });
+      return;
+    }
 
-🔗 Don't forget to save this for later!
+    setOutputText("");
+    setGeneratedImage(null);
 
-#socialmedia #growthtips #contentcreator #smm`);
-      setIsGenerating(false);
-    }, 2000);
+    switch (selectedTool) {
+      case "caption": {
+        const result = await generateCaption(inputText, "engaging");
+        if (result) {
+          const hashtagStr = result.hashtags.length > 0 
+            ? `\n\n${result.hashtags.join(" ")}` 
+            : "";
+          setOutputText(result.text + hashtagStr);
+        }
+        break;
+      }
+
+      case "image": {
+        const imageUrl = await generateImage(inputText);
+        if (imageUrl) {
+          setGeneratedImage(imageUrl);
+          setOutputText(`✨ Image generated successfully!\n\nPrompt: "${inputText}"`);
+        } else {
+          setOutputText("Image generation failed. Please try a different prompt.");
+        }
+        break;
+      }
+
+      case "script": {
+        const prompt = `Write a compelling video script about: ${inputText}. 
+Include:
+- Hook (first 3 seconds)
+- Main content points
+- Call to action
+Format it clearly with sections.`;
+        const result = await sendChat(prompt, "gpt-4.1-mini");
+        if (result) {
+          setOutputText(result);
+        }
+        break;
+      }
+
+      case "repurpose": {
+        const result = await rewrite(inputText, rewriteStyle as any);
+        if (result) {
+          setOutputText(`📱 Repurposed Content (${rewriteStyle} style):\n\n${result}`);
+        }
+        break;
+      }
+
+      case "ideas": {
+        const prompt = `Generate 5 viral content ideas for the ${inputText} niche. 
+For each idea include:
+- Catchy title
+- Content format (video, carousel, story)
+- Hook line
+- Key points to cover
+Format as a numbered list.`;
+        const result = await sendChat(prompt, "claude");
+        if (result) {
+          setOutputText(result);
+        }
+        break;
+      }
+
+      case "blog": {
+        const summary = await summarize(inputText);
+        if (summary) {
+          const socialPrompt = `Turn this summary into 3 social media posts (Twitter, LinkedIn, Instagram):\n\n${summary}`;
+          const socialPosts = await sendChat(socialPrompt, "gpt-4.1-mini");
+          setOutputText(socialPosts || summary);
+        }
+        break;
+      }
+
+      default:
+        break;
+    }
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(outputText);
+    setCopied(true);
+    toast({ title: "Copied to clipboard!" });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleQuickIdea = async (topic: string) => {
+    setInputText(`Create content about ${topic}`);
+    setSelectedTool("ideas");
   };
 
   const currentTool = aiTools.find((t) => t.id === selectedTool);
@@ -129,12 +240,14 @@ Transform your social media game with these proven strategies! Here's what top c
             <Wand2 className="h-8 w-8 text-primary" />
             AI Content Studio
           </h1>
-          <p className="text-muted-foreground mt-1">Create amazing content with AI-powered tools</p>
+          <p className="text-muted-foreground mt-1">
+            Create amazing content with SkyRank.digital AI APIs
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="gap-1">
-            <Zap className="h-3 w-3 text-yellow-500" />
-            500 credits remaining
+          <Badge variant="outline" className="gap-1 bg-primary/10 text-primary border-primary/30">
+            <Sparkles className="h-3 w-3" />
+            Real AI Powered
           </Badge>
         </div>
       </div>
@@ -148,7 +261,11 @@ Transform your social media game with these proven strategies! Here's what top c
               "cursor-pointer transition-all hover:scale-105",
               selectedTool === tool.id && "ring-2 ring-primary"
             )}
-            onClick={() => setSelectedTool(tool.id)}
+            onClick={() => {
+              setSelectedTool(tool.id);
+              setOutputText("");
+              setGeneratedImage(null);
+            }}
           >
             <CardContent className="p-4 text-center">
               <div className={cn(
@@ -188,31 +305,45 @@ Transform your social media game with these proven strategies! Here's what top c
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium">Input</label>
-                  <Select defaultValue="instagram">
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="instagram">Instagram</SelectItem>
-                      <SelectItem value="tiktok">TikTok</SelectItem>
-                      <SelectItem value="twitter">X (Twitter)</SelectItem>
-                      <SelectItem value="linkedin">LinkedIn</SelectItem>
-                      <SelectItem value="youtube">YouTube</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    {selectedTool === "repurpose" && (
+                      <Select value={rewriteStyle} onValueChange={setRewriteStyle}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {rewriteStyles.map((style) => (
+                            <SelectItem key={style.id} value={style.id}>{style.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="instagram">Instagram</SelectItem>
+                        <SelectItem value="tiktok">TikTok</SelectItem>
+                        <SelectItem value="twitter">X (Twitter)</SelectItem>
+                        <SelectItem value="linkedin">LinkedIn</SelectItem>
+                        <SelectItem value="youtube">YouTube</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <Textarea
-                  placeholder="Describe what you want to create... (e.g., 'A motivational post about productivity for entrepreneurs')"
+                  placeholder={currentTool?.placeholder || "Describe what you want to create..."}
                   className="min-h-[120px]"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                 />
               </div>
-              <Button className="w-full" onClick={handleGenerate} disabled={isGenerating || !inputText}>
+              <Button className="w-full" onClick={handleGenerate} disabled={isGenerating || !inputText.trim()}>
                 {isGenerating ? (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
+                    Generating with AI...
                   </>
                 ) : (
                   <>
@@ -224,25 +355,65 @@ Transform your social media game with these proven strategies! Here's what top c
             </CardContent>
           </Card>
 
-          {/* Output */}
-          {outputText && (
+          {/* Loading State */}
+          {isGenerating && (
             <Card>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                  <span className="text-sm font-medium">AI is generating your content...</span>
+                </div>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Output */}
+          {(outputText || generatedImage) && !isGenerating && (
+            <Card className="animate-fade-in-scale">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Generated Content</CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    Generated Content
+                    <Badge variant="secondary" className="text-xs">AI</Badge>
+                  </CardTitle>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={handleGenerate}>
                       <RefreshCw className="mr-2 h-3 w-3" />
                       Regenerate
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <Copy className="mr-2 h-3 w-3" />
+                    <Button variant="outline" size="sm" onClick={handleCopy}>
+                      {copied ? (
+                        <Check className="mr-2 h-3 w-3 text-brand-green" />
+                      ) : (
+                        <Copy className="mr-2 h-3 w-3" />
+                      )}
                       Copy
                     </Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                {generatedImage && (
+                  <div className="relative rounded-lg overflow-hidden bg-secondary/50">
+                    <img 
+                      src={generatedImage} 
+                      alt="AI Generated" 
+                      className="w-full h-auto max-h-96 object-contain"
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="absolute bottom-2 right-2"
+                      onClick={() => window.open(generatedImage, '_blank')}
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Download
+                    </Button>
+                  </div>
+                )}
                 <div className="p-4 rounded-lg bg-muted/50 whitespace-pre-wrap text-sm">
                   {outputText}
                 </div>
@@ -257,7 +428,7 @@ Transform your social media game with these proven strategies! Here's what top c
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-green-500" />
+                <TrendingUp className="h-4 w-4 text-brand-green" />
                 Trending Topics
               </CardTitle>
             </CardHeader>
@@ -266,13 +437,13 @@ Transform your social media game with these proven strategies! Here's what top c
                 <div
                   key={index}
                   className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                  onClick={() => setInputText(`Create content about ${topic.topic}`)}
+                  onClick={() => handleQuickIdea(topic.topic)}
                 >
                   <div>
                     <p className="font-medium text-sm">{topic.topic}</p>
                     <Badge variant="secondary" className="text-xs">{topic.category}</Badge>
                   </div>
-                  <span className="text-green-500 text-sm font-medium">{topic.growth}</span>
+                  <span className="text-brand-green text-sm font-medium">{topic.growth}</span>
                 </div>
               ))}
             </CardContent>
@@ -282,7 +453,7 @@ Transform your social media game with these proven strategies! Here's what top c
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Zap className="h-4 w-4 text-yellow-500" />
+                <Zap className="h-4 w-4 text-brand-orange" />
                 Viral Content Patterns
               </CardTitle>
             </CardHeader>

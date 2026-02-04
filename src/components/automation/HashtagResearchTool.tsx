@@ -1,10 +1,21 @@
 import { useState } from "react";
-import { Hash, TrendingUp, Copy, Check, Search, Flame, Target, Users, Sparkles } from "lucide-react";
+import { Hash, TrendingUp, Copy, Check, Search, Flame, Target, Users, Sparkles, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useHashtags } from "@/hooks/useSkyrank";
+import { toast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-const trendingHashtags = [
+// Static trending data (enhanced with API results)
+const staticTrendingHashtags = [
   { tag: "#socialmedia", posts: "45.2M", difficulty: "high", growth: "+12%", category: "General" },
   { tag: "#marketing", posts: "38.7M", difficulty: "high", growth: "+8%", category: "Business" },
   { tag: "#growthhacking", posts: "2.1M", difficulty: "medium", growth: "+24%", category: "Strategy" },
@@ -32,6 +43,14 @@ const suggestedSets = [
   },
 ];
 
+const platformOptions = [
+  { id: "instagram", name: "Instagram" },
+  { id: "tiktok", name: "TikTok" },
+  { id: "twitter", name: "Twitter" },
+  { id: "youtube", name: "YouTube" },
+  { id: "linkedin", name: "LinkedIn" },
+];
+
 const getDifficultyColor = (difficulty: string) => {
   switch (difficulty) {
     case "low": return "text-brand-green bg-brand-green/10 border-brand-green/30";
@@ -43,11 +62,27 @@ const getDifficultyColor = (difficulty: string) => {
 
 export const HashtagResearchTool = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPlatform, setSelectedPlatform] = useState("instagram");
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
   const [copiedSet, setCopiedSet] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [aiGeneratedTags, setAiGeneratedTags] = useState<string[]>([]);
 
-  const filteredHashtags = trendingHashtags.filter((h) =>
+  const { isLoading, generate } = useHashtags();
+
+  const handleAIGenerate = async () => {
+    if (!searchQuery.trim()) {
+      toast({ title: "Please enter a topic to search", variant: "destructive" });
+      return;
+    }
+    const result = await generate(searchQuery, selectedPlatform);
+    if (result) {
+      setAiGeneratedTags(result);
+      toast({ title: "AI hashtags generated!", description: `Found ${result.length} relevant hashtags` });
+    }
+  };
+
+  const filteredHashtags = staticTrendingHashtags.filter((h) =>
     h.tag.toLowerCase().includes(searchQuery.toLowerCase()) ||
     h.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -55,12 +90,14 @@ export const HashtagResearchTool = () => {
   const copyTag = (tag: string) => {
     navigator.clipboard.writeText(tag);
     setCopiedTag(tag);
+    toast({ title: `Copied ${tag}` });
     setTimeout(() => setCopiedTag(null), 2000);
   };
 
   const copySet = (name: string, tags: string[]) => {
     navigator.clipboard.writeText(tags.join(" "));
     setCopiedSet(name);
+    toast({ title: `Copied ${name} hashtag set` });
     setTimeout(() => setCopiedSet(null), 2000);
   };
 
@@ -73,6 +110,7 @@ export const HashtagResearchTool = () => {
   const copySelected = () => {
     navigator.clipboard.writeText(selectedTags.join(" "));
     setCopiedSet("selected");
+    toast({ title: `Copied ${selectedTags.length} hashtags` });
     setTimeout(() => setCopiedSet(null), 2000);
   };
 
@@ -85,7 +123,7 @@ export const HashtagResearchTool = () => {
           </div>
           <div>
             <h3 className="text-xl font-bold">Hashtag Research Tool</h3>
-            <p className="text-sm text-muted-foreground">Find trending hashtags for maximum reach</p>
+            <p className="text-sm text-muted-foreground">Find trending hashtags with AI-powered suggestions</p>
           </div>
         </div>
         {selectedTags.length > 0 && (
@@ -96,16 +134,89 @@ export const HashtagResearchTool = () => {
         )}
       </div>
 
-      {/* Search */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search hashtags or categories..."
-          className="pl-10 bg-secondary/50 border-border"
-        />
+      {/* Search with AI Generate */}
+      <div className="flex gap-3 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Enter topic to find hashtags (e.g., fitness, travel, tech)..."
+            className="pl-10 bg-secondary/50 border-border"
+            onKeyDown={(e) => e.key === 'Enter' && handleAIGenerate()}
+          />
+        </div>
+        <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+          <SelectTrigger className="w-36">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {platformOptions.map((p) => (
+              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button onClick={handleAIGenerate} disabled={isLoading || !searchQuery.trim()}>
+          {isLoading ? (
+            <RefreshCw className="h-4 w-4 animate-spin" />
+          ) : (
+            <>
+              <Sparkles className="mr-2 h-4 w-4" />
+              AI Generate
+            </>
+          )}
+        </Button>
       </div>
+
+      {/* AI Generated Hashtags */}
+      {isLoading && (
+        <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+            <span className="text-sm font-medium">Generating AI hashtags...</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-6 w-24 rounded-full" />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {aiGeneratedTags.length > 0 && !isLoading && (
+        <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-fade-in-scale">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">AI Generated for "{searchQuery}"</span>
+              <Badge variant="secondary" className="text-xs">AI Powered</Badge>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                navigator.clipboard.writeText(aiGeneratedTags.join(" "));
+                toast({ title: "All AI hashtags copied!" });
+              }}
+            >
+              <Copy className="h-3 w-3 mr-1" />
+              Copy All
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {aiGeneratedTags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-pointer transition-all"
+                onClick={() => copyTag(tag.startsWith('#') ? tag : `#${tag}`)}
+              >
+                {tag.startsWith('#') ? tag : `#${tag}`}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Quick Sets */}
       <div className="mb-6">
@@ -166,7 +277,7 @@ export const HashtagResearchTool = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredHashtags.map((hashtag, index) => (
+                {filteredHashtags.map((hashtag) => (
                   <tr
                     key={hashtag.tag}
                     className={`border-t border-border hover:bg-secondary/30 transition-colors cursor-pointer ${
