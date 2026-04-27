@@ -608,26 +608,31 @@ const LinkInBioBuilder = () => {
 
                     {/* Links */}
                     <div className="space-y-2.5">
-                      {enabledLinks.map((link, idx) => (
-                        <button
-                          key={link.id}
-                          className={cn(
-                            "w-full py-3.5 px-4 text-sm font-semibold transition-all flex items-center justify-between gap-2 group",
-                            roundedButtons ? "rounded-2xl" : "rounded-md",
-                            activeTheme.buttonClass,
-                            animations && "hover:scale-[1.02] active:scale-[0.98]",
-                            link.highlight && "ring-2 ring-yellow-400/60 shadow-[0_0_20px_rgba(250,204,21,0.3)]"
-                          )}
-                          style={animations ? { animationDelay: `${idx * 50}ms` } : undefined}
-                        >
-                          <span className="flex-1 text-center truncate">{link.title}</span>
-                          <ArrowUpRight className={cn("h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity", animations && "-translate-x-1 group-hover:translate-x-0")} />
-                        </button>
-                      ))}
+                      {enabledLinks.map((link, idx) => {
+                        const LinkIco = LINK_ICONS[link.icon] || Link2;
+                        return (
+                          <button
+                            key={link.id}
+                            className={cn(
+                              "w-full py-3.5 px-4 text-sm font-semibold transition-all flex items-center gap-3 group",
+                              roundedButtons ? "rounded-2xl" : "rounded-md",
+                              activeTheme.buttonClass,
+                              animations && "hover:scale-[1.02] active:scale-[0.98]",
+                              link.highlight && "ring-2 ring-yellow-400/60 shadow-[0_0_20px_rgba(250,204,21,0.3)]"
+                            )}
+                            style={animations ? { animationDelay: `${idx * 50}ms` } : undefined}
+                          >
+                            <LinkIco className="h-4 w-4 flex-shrink-0 opacity-90" />
+                            <span className="flex-1 text-center truncate">{link.title}</span>
+                            <ArrowUpRight className={cn("h-4 w-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity", animations && "-translate-x-1 group-hover:translate-x-0")} />
+                          </button>
+                        );
+                      })}
                       {enabledLinks.length === 0 && (
-                        <p className={cn("text-center text-xs py-8", activeTheme.subTextClass)}>
-                          Add links to see them here ✨
-                        </p>
+                        <div className={cn("flex flex-col items-center justify-center text-center py-10 gap-2", activeTheme.subTextClass)}>
+                          <Sparkles className="h-5 w-5 opacity-70" />
+                          <p className="text-xs">Add links to see them here</p>
+                        </div>
                       )}
                     </div>
 
