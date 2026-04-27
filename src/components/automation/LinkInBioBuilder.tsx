@@ -29,8 +29,55 @@ import {
   ArrowUpRight,
   Heart,
   BadgeCheck,
+  Link2,
+  ShoppingBag,
+  Mail,
+  CalendarDays,
+  Briefcase,
+  Music,
+  Headphones,
+  BookOpen,
+  Coffee,
+  Gift,
+  Camera,
+  PlayCircle,
+  Newspaper,
+  Rocket,
+  Star,
+  Tv,
+  type LucideIcon,
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+
+// Curated set of Lucide icons users can pick for each link
+const LINK_ICONS: Record<string, LucideIcon> = {
+  link: Link2,
+  shopping: ShoppingBag,
+  youtube: Youtube,
+  mail: Mail,
+  calendar: CalendarDays,
+  globe: Globe,
+  briefcase: Briefcase,
+  instagram: Instagram,
+  twitter: Twitter,
+  facebook: Facebook,
+  linkedin: Linkedin,
+  github: Github,
+  music: Music,
+  podcast: Headphones,
+  book: BookOpen,
+  coffee: Coffee,
+  gift: Gift,
+  camera: Camera,
+  play: PlayCircle,
+  news: Newspaper,
+  rocket: Rocket,
+  star: Star,
+  tv: Tv,
+};
+
+const LINK_ICON_OPTIONS = Object.keys(LINK_ICONS);
 
 type ThemeId = "gradient" | "midnight" | "sunset" | "ocean" | "forest" | "minimal" | "neon" | "rose";
 
