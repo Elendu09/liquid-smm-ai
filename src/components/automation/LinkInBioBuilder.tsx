@@ -45,6 +45,9 @@ import {
   Rocket,
   Star,
   Tv,
+  SignalHigh,
+  Wifi,
+  BatteryFull,
   type LucideIcon,
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
