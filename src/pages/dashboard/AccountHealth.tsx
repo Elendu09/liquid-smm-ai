@@ -84,7 +84,7 @@ export default function AccountHealthPage() {
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className={cn("text-3xl font-bold", getHealthColor(overallHealth))}>
+                <span className={cn("text-2xl sm:text-3xl font-bold", getHealthColor(overallHealth))}>
                   {overallHealth}%
                 </span>
               </div>

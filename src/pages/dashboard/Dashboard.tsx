@@ -64,7 +64,7 @@ export default function Dashboard() {
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Welcome back! 👋</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Welcome back! 👋</h1>
           <p className="text-muted-foreground mt-1">Here's an overview of your social media performance.</p>
         </div>
         <div className="flex gap-2">
@@ -94,7 +94,7 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-bold">{stat.value}</div>
+                <div className="text-2xl sm:text-3xl font-bold">{stat.value}</div>
                 <div className="text-sm text-muted-foreground">{stat.label}</div>
               </div>
             </CardContent>
