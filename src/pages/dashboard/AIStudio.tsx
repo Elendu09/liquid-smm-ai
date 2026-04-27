@@ -232,7 +232,7 @@ Format as a numbered list.`;
   const currentTool = aiTools.find((t) => t.id === selectedTool);
 
   return (
-    <div className="p-6 lg:p-8 space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
