@@ -560,9 +560,13 @@ const LinkInBioBuilder = () => {
                   <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-full z-20" />
 
                   {/* Status bar */}
-                  <div className={cn("flex items-center justify-between px-6 pt-2 pb-1 text-[10px] font-medium z-10", activeTheme.textClass)}>
+                  <div className={cn("flex items-center justify-between px-6 pt-2 pb-1 text-[10px] font-semibold z-10", activeTheme.textClass)}>
                     <span>9:41</span>
-                    <span className="opacity-70">●●● 5G</span>
+                    <div className="flex items-center gap-1 opacity-80">
+                      <SignalHigh className="h-3 w-3" />
+                      <Wifi className="h-3 w-3" />
+                      <BatteryFull className="h-3.5 w-3.5" />
+                    </div>
                   </div>
 
                   {/* Scrollable content */}
