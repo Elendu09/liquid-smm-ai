@@ -292,8 +292,37 @@ const LinkInBioBuilder = () => {
                           : "bg-muted/10 border-border/50 opacity-60"
                       )}
                     >
-                      <div className="flex items-center gap-2 sm:flex-col">
-                        <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab flex-shrink-0" />
+                        <Select
+                          value={link.icon}
+                          onValueChange={(val) =>
+                            setLinks(links.map((l) => (l.id === link.id ? { ...l, icon: val } : l)))
+                          }
+                        >
+                          <SelectTrigger
+                            className="h-10 w-12 p-0 flex items-center justify-center"
+                            aria-label="Choose icon"
+                          >
+                            {(() => {
+                              const Ico = LINK_ICONS[link.icon] || Link2;
+                              return <Ico className="h-4 w-4" />;
+                            })()}
+                          </SelectTrigger>
+                          <SelectContent className="max-h-64">
+                            {LINK_ICON_OPTIONS.map((key) => {
+                              const Ico = LINK_ICONS[key];
+                              return (
+                                <SelectItem key={key} value={key}>
+                                  <span className="flex items-center gap-2 capitalize">
+                                    <Ico className="h-4 w-4" />
+                                    {key}
+                                  </span>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="flex-1 space-y-2 min-w-0">
                         <Input
