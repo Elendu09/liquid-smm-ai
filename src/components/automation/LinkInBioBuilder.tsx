@@ -179,16 +179,16 @@ const LinkInBioBuilder = () => {
   const [showVerified, setShowVerified] = useState(true);
 
   const [links, setLinks] = useState<LinkItem[]>([
-    { id: 1, title: "🛍️ Shop My Favorites", url: "https://shop.example.com", clicks: 1247, enabled: true, icon: "shopping", highlight: true },
-    { id: 2, title: "🎬 Latest YouTube Video", url: "https://youtube.com/watch", clicks: 892, enabled: true, icon: "youtube" },
-    { id: 3, title: "📩 Join My Newsletter", url: "https://newsletter.example.com", clicks: 534, enabled: true, icon: "mail" },
-    { id: 4, title: "📅 Book a Consultation", url: "https://calendly.com/example", clicks: 321, enabled: true, icon: "calendar" },
-    { id: 5, title: "💼 My Portfolio", url: "https://portfolio.example.com", clicks: 456, enabled: false, icon: "globe" },
+    { id: 1, title: "Shop My Favorites", url: "https://shop.example.com", clicks: 1247, enabled: true, icon: "shopping", highlight: true },
+    { id: 2, title: "Latest YouTube Video", url: "https://youtube.com/watch", clicks: 892, enabled: true, icon: "youtube" },
+    { id: 3, title: "Join My Newsletter", url: "https://newsletter.example.com", clicks: 534, enabled: true, icon: "mail" },
+    { id: 4, title: "Book a Consultation", url: "https://calendly.com/example", clicks: 321, enabled: true, icon: "calendar" },
+    { id: 5, title: "My Portfolio", url: "https://portfolio.example.com", clicks: 456, enabled: false, icon: "briefcase" },
   ]);
 
   const [profileData, setProfileData] = useState({
     name: "Sarah Johnson",
-    bio: "Digital Creator · Marketing Expert\nHelping brands grow 🚀",
+    bio: "Digital Creator · Marketing Expert\nHelping brands grow with proven strategies.",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
     bioUrl: "bio.homeofsmm.com/sarah",
   });
