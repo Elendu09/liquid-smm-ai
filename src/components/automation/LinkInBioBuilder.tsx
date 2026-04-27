@@ -29,8 +29,58 @@ import {
   ArrowUpRight,
   Heart,
   BadgeCheck,
+  Link2,
+  ShoppingBag,
+  Mail,
+  CalendarDays,
+  Briefcase,
+  Music,
+  Headphones,
+  BookOpen,
+  Coffee,
+  Gift,
+  Camera,
+  PlayCircle,
+  Newspaper,
+  Rocket,
+  Star,
+  Tv,
+  SignalHigh,
+  Wifi,
+  BatteryFull,
+  type LucideIcon,
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+
+// Curated set of Lucide icons users can pick for each link
+const LINK_ICONS: Record<string, LucideIcon> = {
+  link: Link2,
+  shopping: ShoppingBag,
+  youtube: Youtube,
+  mail: Mail,
+  calendar: CalendarDays,
+  globe: Globe,
+  briefcase: Briefcase,
+  instagram: Instagram,
+  twitter: Twitter,
+  facebook: Facebook,
+  linkedin: Linkedin,
+  github: Github,
+  music: Music,
+  podcast: Headphones,
+  book: BookOpen,
+  coffee: Coffee,
+  gift: Gift,
+  camera: Camera,
+  play: PlayCircle,
+  news: Newspaper,
+  rocket: Rocket,
+  star: Star,
+  tv: Tv,
+};
+
+const LINK_ICON_OPTIONS = Object.keys(LINK_ICONS);
 
 type ThemeId = "gradient" | "midnight" | "sunset" | "ocean" | "forest" | "minimal" | "neon" | "rose";
 
@@ -132,16 +182,16 @@ const LinkInBioBuilder = () => {
   const [showVerified, setShowVerified] = useState(true);
 
   const [links, setLinks] = useState<LinkItem[]>([
-    { id: 1, title: "🛍️ Shop My Favorites", url: "https://shop.example.com", clicks: 1247, enabled: true, icon: "shopping", highlight: true },
-    { id: 2, title: "🎬 Latest YouTube Video", url: "https://youtube.com/watch", clicks: 892, enabled: true, icon: "youtube" },
-    { id: 3, title: "📩 Join My Newsletter", url: "https://newsletter.example.com", clicks: 534, enabled: true, icon: "mail" },
-    { id: 4, title: "📅 Book a Consultation", url: "https://calendly.com/example", clicks: 321, enabled: true, icon: "calendar" },
-    { id: 5, title: "💼 My Portfolio", url: "https://portfolio.example.com", clicks: 456, enabled: false, icon: "globe" },
+    { id: 1, title: "Shop My Favorites", url: "https://shop.example.com", clicks: 1247, enabled: true, icon: "shopping", highlight: true },
+    { id: 2, title: "Latest YouTube Video", url: "https://youtube.com/watch", clicks: 892, enabled: true, icon: "youtube" },
+    { id: 3, title: "Join My Newsletter", url: "https://newsletter.example.com", clicks: 534, enabled: true, icon: "mail" },
+    { id: 4, title: "Book a Consultation", url: "https://calendly.com/example", clicks: 321, enabled: true, icon: "calendar" },
+    { id: 5, title: "My Portfolio", url: "https://portfolio.example.com", clicks: 456, enabled: false, icon: "briefcase" },
   ]);
 
   const [profileData, setProfileData] = useState({
     name: "Sarah Johnson",
-    bio: "Digital Creator · Marketing Expert\nHelping brands grow 🚀",
+    bio: "Digital Creator · Marketing Expert\nHelping brands grow with proven strategies.",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
     bioUrl: "bio.homeofsmm.com/sarah",
   });
@@ -245,8 +295,37 @@ const LinkInBioBuilder = () => {
                           : "bg-muted/10 border-border/50 opacity-60"
                       )}
                     >
-                      <div className="flex items-center gap-2 sm:flex-col">
-                        <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab flex-shrink-0" />
+                        <Select
+                          value={link.icon}
+                          onValueChange={(val) =>
+                            setLinks(links.map((l) => (l.id === link.id ? { ...l, icon: val } : l)))
+                          }
+                        >
+                          <SelectTrigger
+                            className="h-10 w-12 p-0 flex items-center justify-center"
+                            aria-label="Choose icon"
+                          >
+                            {(() => {
+                              const Ico = LINK_ICONS[link.icon] || Link2;
+                              return <Ico className="h-4 w-4" />;
+                            })()}
+                          </SelectTrigger>
+                          <SelectContent className="max-h-64">
+                            {LINK_ICON_OPTIONS.map((key) => {
+                              const Ico = LINK_ICONS[key];
+                              return (
+                                <SelectItem key={key} value={key}>
+                                  <span className="flex items-center gap-2 capitalize">
+                                    <Ico className="h-4 w-4" />
+                                    {key}
+                                  </span>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="flex-1 space-y-2 min-w-0">
                         <Input
@@ -484,9 +563,13 @@ const LinkInBioBuilder = () => {
                   <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-full z-20" />
 
                   {/* Status bar */}
-                  <div className={cn("flex items-center justify-between px-6 pt-2 pb-1 text-[10px] font-medium z-10", activeTheme.textClass)}>
+                  <div className={cn("flex items-center justify-between px-6 pt-2 pb-1 text-[10px] font-semibold z-10", activeTheme.textClass)}>
                     <span>9:41</span>
-                    <span className="opacity-70">●●● 5G</span>
+                    <div className="flex items-center gap-1 opacity-80">
+                      <SignalHigh className="h-3 w-3" />
+                      <Wifi className="h-3 w-3" />
+                      <BatteryFull className="h-3.5 w-3.5" />
+                    </div>
                   </div>
 
                   {/* Scrollable content */}
@@ -532,26 +615,31 @@ const LinkInBioBuilder = () => {
 
                     {/* Links */}
                     <div className="space-y-2.5">
-                      {enabledLinks.map((link, idx) => (
-                        <button
-                          key={link.id}
-                          className={cn(
-                            "w-full py-3.5 px-4 text-sm font-semibold transition-all flex items-center justify-between gap-2 group",
-                            roundedButtons ? "rounded-2xl" : "rounded-md",
-                            activeTheme.buttonClass,
-                            animations && "hover:scale-[1.02] active:scale-[0.98]",
-                            link.highlight && "ring-2 ring-yellow-400/60 shadow-[0_0_20px_rgba(250,204,21,0.3)]"
-                          )}
-                          style={animations ? { animationDelay: `${idx * 50}ms` } : undefined}
-                        >
-                          <span className="flex-1 text-center truncate">{link.title}</span>
-                          <ArrowUpRight className={cn("h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity", animations && "-translate-x-1 group-hover:translate-x-0")} />
-                        </button>
-                      ))}
+                      {enabledLinks.map((link, idx) => {
+                        const LinkIco = LINK_ICONS[link.icon] || Link2;
+                        return (
+                          <button
+                            key={link.id}
+                            className={cn(
+                              "w-full py-3.5 px-4 text-sm font-semibold transition-all flex items-center gap-3 group",
+                              roundedButtons ? "rounded-2xl" : "rounded-md",
+                              activeTheme.buttonClass,
+                              animations && "hover:scale-[1.02] active:scale-[0.98]",
+                              link.highlight && "ring-2 ring-yellow-400/60 shadow-[0_0_20px_rgba(250,204,21,0.3)]"
+                            )}
+                            style={animations ? { animationDelay: `${idx * 50}ms` } : undefined}
+                          >
+                            <LinkIco className="h-4 w-4 flex-shrink-0 opacity-90" />
+                            <span className="flex-1 text-center truncate">{link.title}</span>
+                            <ArrowUpRight className={cn("h-4 w-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity", animations && "-translate-x-1 group-hover:translate-x-0")} />
+                          </button>
+                        );
+                      })}
                       {enabledLinks.length === 0 && (
-                        <p className={cn("text-center text-xs py-8", activeTheme.subTextClass)}>
-                          Add links to see them here ✨
-                        </p>
+                        <div className={cn("flex flex-col items-center justify-center text-center py-10 gap-2", activeTheme.subTextClass)}>
+                          <Sparkles className="h-5 w-5 opacity-70" />
+                          <p className="text-xs">Add links to see them here</p>
+                        </div>
                       )}
                     </div>
 
