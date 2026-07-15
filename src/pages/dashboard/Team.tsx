@@ -137,16 +137,16 @@ export default function TeamPage() {
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Users className="h-8 w-8 text-primary" />
-            Team Collaboration
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+            <Users className="h-7 w-7 sm:h-8 sm:w-8 text-primary shrink-0" />
+            <span className="truncate">Team Collaboration</span>
           </h1>
-          <p className="text-muted-foreground mt-1">Manage your team members and permissions</p>
+          <p className="text-muted-foreground mt-1 text-sm">Manage your team members and permissions</p>
         </div>
         <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <UserPlus className="mr-2 h-4 w-4" />
               Invite Member
             </Button>
@@ -256,15 +256,14 @@ export default function TeamPage() {
               <CardDescription>Manage access and permissions for your team</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-1 lg:gap-0 lg:space-y-4">
-
+              <div className="space-y-3">
                 {members.map((member) => (
                   <div
                     key={member.id}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between gap-3 p-3 sm:p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="relative shrink-0">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={member.avatar} />
                           <AvatarFallback>{member.name.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -273,17 +272,17 @@ export default function TeamPage() {
                           {getStatusIndicator(member.status)}
                         </span>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{member.name}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium truncate">{member.name}</span>
                           {getRoleBadge(member.role)}
                         </div>
-                        <div className="text-sm text-muted-foreground">{member.email}</div>
+                        <div className="text-xs sm:text-sm text-muted-foreground truncate">{member.email}</div>
                       </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="shrink-0" aria-label={`Actions for ${member.name}`}>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

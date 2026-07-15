@@ -52,22 +52,24 @@ export const GrowthAnalytics = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-primary/10 glow-blue">
-            <TrendingUp className="h-6 w-6 text-primary" />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="p-2.5 sm:p-3 rounded-xl bg-primary/10 glow-blue shrink-0">
+            <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
           </div>
-          <div>
-            <h3 className="text-xl font-bold">Growth Analytics</h3>
-            <p className="text-sm text-muted-foreground">Track your social media performance</p>
+          <div className="min-w-0">
+            <h3 className="text-lg sm:text-xl font-bold truncate">Growth Analytics</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">Track your social media performance</p>
           </div>
         </div>
-        <div className="flex gap-1 p-1 rounded-lg bg-secondary">
+        <div className="flex gap-1 p-1 rounded-lg bg-secondary self-start sm:self-auto" role="tablist" aria-label="Time range">
           {timeRanges.map((range) => (
             <button
               key={range}
               onClick={() => setSelectedRange(range)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              role="tab"
+              aria-selected={selectedRange === range}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all min-w-[44px] ${
                 selectedRange === range
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -80,15 +82,16 @@ export const GrowthAnalytics = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <StatCard icon={Users} label="Total Followers" value="31.2K" change="+152%" isPositive={true} />
         <StatCard icon={Heart} label="Engagement Rate" value="7.1%" change="+69%" isPositive={true} />
         <StatCard icon={Eye} label="Total Reach" value="284K" change="+89%" isPositive={true} />
         <StatCard icon={Clock} label="Time Saved" value="127hrs" change="+45%" isPositive={true} />
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid md:grid-cols-2 gap-6">
+      {/* Charts — kanban lanes on mobile, grid on desktop */}
+      <div className="-mx-4 sm:mx-0 px-4 sm:px-0">
+        <div className="flex md:grid md:grid-cols-2 gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory pb-3 md:overflow-visible md:pb-0 [&>*]:snap-start [&>*]:shrink-0 [&>*]:w-[88vw] sm:[&>*]:w-96 md:[&>*]:w-auto">
         {/* Follower Growth Chart */}
         <div className="glass-card p-6">
           <h4 className="text-lg font-semibold mb-4">Follower Growth</h4>
@@ -233,7 +236,10 @@ export const GrowthAnalytics = () => {
             </ResponsiveContainer>
           </div>
         </div>
+        </div>
       </div>
+
+
 
       {/* ROI Calculator */}
       <div className="glass-card p-6">

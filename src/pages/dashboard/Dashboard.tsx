@@ -142,152 +142,142 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Upcoming posts */}
-        <SectionCard
-          className="lg:col-span-2"
-          title="Upcoming posts"
-          description={`Next ${upcoming.length} scheduled`}
-          actions={
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/dashboard/publish/queue">
-                Open queue <ArrowRight className="ml-1 h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          }
-        >
-          {upcoming.length === 0 ? (
-            <EmptyState
-              icon={Calendar}
-              title="Nothing scheduled yet"
-              description="Draft a post and schedule it to see it here."
-              action={
-                <Button asChild size="sm">
-                  <Link to="/dashboard/publish/queue">Schedule a post</Link>
+      {/* Kanban lanes: Upcoming · Health · Activity */}
+      <div className="-mx-4 sm:mx-0 px-4 sm:px-0">
+        <div className="flex lg:grid lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 overflow-x-auto snap-x snap-mandatory pb-3 lg:overflow-visible lg:pb-0">
+          {/* Upcoming posts lane */}
+          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1">
+            <SectionCard
+              title="Upcoming posts"
+              description={`Next ${upcoming.length} scheduled`}
+              actions={
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/dashboard/publish/queue" aria-label="Open queue">
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
                 </Button>
               }
-            />
-          ) : (
-            <ul className="divide-y divide-border/60">
-              {upcoming.map((p) => (
-                <li key={p.id} className="py-3 flex items-center gap-3">
-                  <div className="flex -space-x-1.5 flex-shrink-0">
-                    {p.platformIds.slice(0, 3).map((pid) => (
-                      <div
-                        key={pid}
-                        className="ring-2 ring-card rounded-full"
-                      >
-                        <PlatformIcon platform={pid} size="xs" />
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Queue</span>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-foreground/70">{upcoming.length}</span>
+              </div>
+              {upcoming.length === 0 ? (
+                <EmptyState
+                  icon={Calendar}
+                  title="Nothing scheduled yet"
+                  description="Draft a post and schedule it to see it here."
+                  action={
+                    <Button asChild size="sm">
+                      <Link to="/dashboard/publish/queue">Schedule a post</Link>
+                    </Button>
+                  }
+                />
+              ) : (
+                <ul className="space-y-2">
+                  {upcoming.map((p) => (
+                    <li key={p.id} className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-2.5 hover:bg-muted/40 transition-colors">
+                      <div className="flex -space-x-1.5 flex-shrink-0">
+                        {p.platformIds.slice(0, 3).map((pid) => (
+                          <div key={pid} className="ring-2 ring-card rounded-full">
+                            <PlatformIcon platform={pid} size="xs" />
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">
-                      {p.caption || "(no caption)"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(p.scheduledAt), "MMM d, h:mm a")}
-                    </p>
-                  </div>
-                  <Badge variant="secondary" className="text-[10px] flex-shrink-0">
-                    {p.platformIds.length} channel
-                    {p.platformIds.length === 1 ? "" : "s"}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          )}
-        </SectionCard>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{p.caption || "(no caption)"}</p>
+                        <p className="text-xs text-muted-foreground">{format(new Date(p.scheduledAt), "MMM d, h:mm a")}</p>
+                      </div>
+                      <Badge variant="secondary" className="text-[10px] flex-shrink-0">
+                        {p.platformIds.length}ch
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </SectionCard>
+          </div>
 
-        {/* Account health */}
-        <SectionCard
-          title="Account health"
-          description={`${accounts.length} connected`}
-          actions={
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/dashboard/analytics/health">
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          }
-        >
-          {accounts.length === 0 ? (
-            <EmptyState
-              icon={Users}
-              title="No accounts connected"
-              description="Connect a platform to unlock tools."
-            />
-          ) : (
-            <ul className="space-y-3">
-              {accounts.slice(0, 5).map((a) => {
-                const p = getPlatformById(a.platformId);
-                return (
-                  <li
-                    key={a.id}
-                    className="flex items-center gap-3"
-                  >
-                    <PlatformIcon platform={a.platformId} size="sm" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">
-                        @{a.username}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {p?.name} · {a.followers.toLocaleString()} followers
-                      </p>
-                    </div>
-                    <span
-                      className={cn(
-                        "w-2 h-2 rounded-full flex-shrink-0",
-                        accountStatusDot(a.status),
-                      )}
-                      aria-label={`Status: ${a.status}`}
-                    />
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </SectionCard>
+          {/* Account health lane */}
+          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1">
+            <SectionCard
+              title="Account health"
+              description={`${accounts.length} connected`}
+              actions={
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/dashboard/analytics/health" aria-label="Open health">
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              }
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Accounts</span>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-foreground/70">{accounts.length}</span>
+              </div>
+              {accounts.length === 0 ? (
+                <EmptyState icon={Users} title="No accounts connected" description="Connect a platform to unlock tools." />
+              ) : (
+                <ul className="space-y-2">
+                  {accounts.slice(0, 5).map((a) => {
+                    const p = getPlatformById(a.platformId);
+                    return (
+                      <li key={a.id} className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-2.5">
+                        <PlatformIcon platform={a.platformId} size="sm" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">@{a.username}</p>
+                          <p className="text-xs text-muted-foreground truncate">{p?.name} · {a.followers.toLocaleString()}</p>
+                        </div>
+                        <span className={cn("w-2 h-2 rounded-full flex-shrink-0", accountStatusDot(a.status))} aria-label={`Status: ${a.status}`} />
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </SectionCard>
+          </div>
+
+          {/* Recent activity lane */}
+          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1">
+            <SectionCard
+              title="Recent activity"
+              description={`Last ${recent.length} runs`}
+              actions={
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/dashboard/activity/runs" aria-label="View all activity">
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              }
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Runs</span>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-foreground/70">{recent.length}</span>
+              </div>
+              {recent.length === 0 ? (
+                <EmptyState icon={Clock} title="No runs yet" description="Every automation you run shows up here." />
+              ) : (
+                <ul className="space-y-2">
+                  {recent.map((r) => (
+                    <li key={r.id} className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-2.5">
+                      {statusIcon(r.status)}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{r.action}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {r.toolKey}{r.accountHandle ? ` · @${r.accountHandle}` : ""}
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                        {formatDistanceToNow(new Date(r.createdAt), { addSuffix: true })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </SectionCard>
+          </div>
+        </div>
       </div>
-
-      {/* Recent runs */}
-      <SectionCard
-        title="Recent activity"
-        description={`Last ${recent.length} automation runs`}
-        actions={
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/dashboard/activity/runs">
-              View all <ArrowRight className="ml-1 h-3.5 w-3.5" />
-            </Link>
-          </Button>
-        }
-      >
-        {recent.length === 0 ? (
-          <EmptyState
-            icon={Clock}
-            title="No runs yet"
-            description="Every automation you run shows up here."
-          />
-        ) : (
-          <ul className="divide-y divide-border/60">
-            {recent.map((r) => (
-              <li key={r.id} className="py-2.5 flex items-center gap-3">
-                {statusIcon(r.status)}
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{r.action}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {r.toolKey}
-                    {r.accountHandle ? ` · @${r.accountHandle}` : ""}
-                  </p>
-                </div>
-                <span className="text-xs text-muted-foreground flex-shrink-0">
-                  {formatDistanceToNow(new Date(r.createdAt), { addSuffix: true })}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </SectionCard>
 
       {/* Quick access to hubs (desktop/tablet) */}
       <div className="hidden md:block">
