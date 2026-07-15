@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { logRun } from "@/hooks/useRunHistory";
 import type { Platform } from "@/config/platforms";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
