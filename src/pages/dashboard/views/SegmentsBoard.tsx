@@ -387,6 +387,8 @@ export default function SegmentsBoard() {
           )}
         </SheetContent>
       </Sheet>
+
+      <SegmentPreviewSheet segment={previewing} onClose={() => setPreviewing(null)} />
     </div>
   );
 }
