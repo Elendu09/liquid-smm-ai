@@ -92,13 +92,53 @@ export default function CaptionsBoard() {
   const [view, setView] = useViewMode("library-captions", "kanban");
   const { items, setItems, add, update, remove } = useLocalCollection<Caption>("library", "captions");
   const { add: addScheduled } = useScheduledPosts();
+  const { drain } = useMcpInbox();
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Caption | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmQueue, setConfirmQueue] = useState(false);
 
   useEffect(() => {
     if (items.length === 0) setItems(seed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Drain any caption drafts queued by MCP tools (from ChatGPT/Claude etc.)
+  useEffect(() => {
+    const pending = drain("caption-draft");
+    if (pending.length === 0) return;
+    const now = new Date().toISOString();
+    const drafts: Caption[] = pending.map((p) => {
+      const pl = p.payload as {
+        title?: string;
+        body?: string;
+        hashtags?: string[];
+        platformIds?: string[];
+      };
+      return {
+        id: crypto.randomUUID(),
+        title: pl.title ?? "MCP caption",
+        body: pl.body ?? "",
+        hashtags: pl.hashtags ?? [],
+        platformIds: pl.platformIds ?? [],
+        tags: ["mcp"],
+        status: "draft",
+        createdAt: now,
+      };
+    });
+    setItems((prev) => [...drafts, ...prev]);
+    toast.success(`Added ${drafts.length} MCP caption${drafts.length > 1 ? "s" : ""} to library`);
+    logMcpCall({
+      tool: "create_caption_draft",
+      status: "success",
+      summary: `Applied ${drafts.length} caption draft(s) from MCP inbox`,
+      resources: drafts.map((d) => ({ kind: "caption", id: d.id, label: d.title })),
+      payload: { count: drafts.length },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   const filtered = useMemo(
     () =>
