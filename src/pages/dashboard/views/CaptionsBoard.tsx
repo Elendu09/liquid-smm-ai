@@ -98,6 +98,13 @@ export default function CaptionsBoard() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmQueue, setConfirmQueue] = useState(false);
+  const defaultStart = () => {
+    const d = new Date(Date.now() + 60 * 60 * 1000);
+    d.setSeconds(0, 0);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+  };
+  const [queueStartAt, setQueueStartAt] = useState<string>(defaultStart());
+  const [queueIntervalMin, setQueueIntervalMin] = useState<number>(15);
 
   useEffect(() => {
     if (items.length === 0) setItems(seed);
@@ -216,12 +223,17 @@ export default function CaptionsBoard() {
 
   const bulkQueue = () => {
     if (selectedCaptions.length === 0) return;
-    const startMs = Date.now() + 60 * 60 * 1000; // +1h
+    const startMs = queueStartAt ? new Date(queueStartAt).getTime() : Date.now() + 60 * 60 * 1000;
+    if (Number.isNaN(startMs)) {
+      toast.error("Invalid start time");
+      return;
+    }
+    const stepMs = Math.max(0, Math.round(queueIntervalMin)) * 60 * 1000;
     selectedCaptions.forEach((c, i) => {
       const full = c.hashtags.length > 0 ? `${c.body}\n\n${c.hashtags.map((h) => `#${h}`).join(" ")}` : c.body;
       addScheduled({
         caption: full,
-        scheduledAt: new Date(startMs + i * 15 * 60 * 1000).toISOString(),
+        scheduledAt: new Date(startMs + i * stepMs).toISOString(),
         platformIds: c.platformIds.length > 0 ? c.platformIds : ["instagram"],
         hashtags: c.hashtags,
       });
@@ -399,14 +411,51 @@ export default function CaptionsBoard() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={confirmQueue} onOpenChange={setConfirmQueue}>
+      <AlertDialog open={confirmQueue} onOpenChange={(o) => { if (o) setQueueStartAt(defaultStart()); setConfirmQueue(o); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Queue {selected.size} posts?</AlertDialogTitle>
             <AlertDialogDescription>
-              Each caption becomes a scheduled post starting in 1 hour, staggered 15 minutes apart.
+              Match your campaign plan by setting when the first post goes out and the gap between each caption.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
+            <div>
+              <label htmlFor="queue-start" className="text-xs font-medium text-muted-foreground mb-1 block">
+                Start time
+              </label>
+              <Input
+                id="queue-start"
+                type="datetime-local"
+                value={queueStartAt}
+                onChange={(e) => setQueueStartAt(e.target.value)}
+                aria-label="Queue start time"
+              />
+            </div>
+            <div>
+              <label htmlFor="queue-interval" className="text-xs font-medium text-muted-foreground mb-1 block">
+                Interval (minutes)
+              </label>
+              <Input
+                id="queue-interval"
+                type="number"
+                min={0}
+                step={5}
+                value={queueIntervalMin}
+                onChange={(e) => setQueueIntervalMin(Number(e.target.value) || 0)}
+                aria-label="Minutes between posts"
+              />
+            </div>
+          </div>
+          {selectedCaptions.length > 0 && queueStartAt && (
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              First: {new Date(queueStartAt).toLocaleString()} · Last:{" "}
+              {new Date(
+                new Date(queueStartAt).getTime() +
+                  (selectedCaptions.length - 1) * Math.max(0, queueIntervalMin) * 60_000,
+              ).toLocaleString()}
+            </p>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={bulkQueue}>Queue</AlertDialogAction>
