@@ -1,8 +1,10 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
-import { FolderOpen, LinkIcon, Palette } from "lucide-react";
+import { FolderOpen, LinkIcon, Palette, FileText } from "lucide-react";
 import { PageHeader, HubTabs, StatusBoard, type HubTab } from "@/components/dashboard/shell";
+import CaptionsBoard from "../views/CaptionsBoard";
 
 const tabs: HubTab[] = [
+  { label: "Captions", href: "/dashboard/library/captions", icon: FileText },
   { label: "Assets", href: "/dashboard/library/assets", icon: FolderOpen },
   { label: "Link in Bio", href: "/dashboard/library/link-bio", icon: LinkIcon },
   { label: "Presets & Templates", href: "/dashboard/library/presets", icon: Palette },
@@ -46,9 +48,9 @@ export default function LibraryHub() {
   return (
     <Routes>
       <Route element={<LibraryLayout />}>
-        <Route index element={<Navigate to="assets" replace />} />
+        <Route index element={<Navigate to="captions" replace />} />
+        <Route path="captions" element={<CaptionsBoard />} />
         <Route
-          path="assets"
           element={
             <StatusBoard
               storageKey="library:assets"
