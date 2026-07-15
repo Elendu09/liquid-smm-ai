@@ -27,19 +27,19 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-const navItems = [
+const navItems: { label: string; href: string; icon: typeof LayoutDashboard; toolKey?: string }[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Caption Generator", href: "/dashboard/caption-generator", icon: Sparkles },
-  { label: "Post Scheduler", href: "/dashboard/scheduler", icon: Calendar },
-  { label: "Engagement Bot", href: "/dashboard/engagement-bot", icon: Bot },
+  { label: "Caption Generator", href: "/dashboard/caption-generator", icon: Sparkles, toolKey: "caption-generator" },
+  { label: "Post Scheduler", href: "/dashboard/scheduler", icon: Calendar, toolKey: "scheduler" },
+  { label: "Engagement Bot", href: "/dashboard/engagement-bot", icon: Bot, toolKey: "engagement-bot" },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-  { label: "Hashtag Research", href: "/dashboard/hashtag-research", icon: Hash },
-  { label: "Comment Manager", href: "/dashboard/comment-manager", icon: MessageSquare },
+  { label: "Hashtag Research", href: "/dashboard/hashtag-research", icon: Hash, toolKey: "hashtag-research" },
+  { label: "Comment Manager", href: "/dashboard/comment-manager", icon: MessageSquare, toolKey: "comment-manager" },
   { label: "Content Calendar", href: "/dashboard/content-calendar", icon: CalendarDays },
-  { label: "Story Automation", href: "/dashboard/story-automation", icon: Film },
-  { label: "DM Automation", href: "/dashboard/dm-automation", icon: MessageCircle },
-  { label: "Follower Analyzer", href: "/dashboard/follower-analyzer", icon: Users },
-  { label: "Competitor Tracker", href: "/dashboard/competitor-tracker", icon: Target },
+  { label: "Story Automation", href: "/dashboard/story-automation", icon: Film, toolKey: "story-automation" },
+  { label: "DM Automation", href: "/dashboard/dm-automation", icon: MessageCircle, toolKey: "dm-automation" },
+  { label: "Follower Analyzer", href: "/dashboard/follower-analyzer", icon: Users, toolKey: "follower-analyzer" },
+  { label: "Competitor Tracker", href: "/dashboard/competitor-tracker", icon: Target, toolKey: "competitor-tracker" },
   { label: "Link in Bio", href: "/dashboard/link-bio", icon: LinkIcon },
 ];
 
