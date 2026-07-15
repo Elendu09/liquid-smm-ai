@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { useMcpInbox } from "@/hooks/useMcpInbox";
+import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useAccounts } from "@/contexts/AccountContext";
 import { cn } from "@/lib/utils";
