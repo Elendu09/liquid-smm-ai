@@ -31,7 +31,6 @@ const navItems: { label: string; href: string; icon: typeof LayoutDashboard; exa
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { label: "Library", href: "/dashboard/library", icon: FolderOpen },
   { label: "Activity", href: "/dashboard/activity", icon: Clock },
-  { label: "Settings", href: "/dashboard/settings", icon: Cog },
 ];
 
 interface SidebarContentProps {
