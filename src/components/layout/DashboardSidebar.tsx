@@ -22,7 +22,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-const navItems = [
+const navItems: { label: string; href: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
   { label: "Create", href: "/dashboard/create", icon: Sparkles },
   { label: "Publish", href: "/dashboard/publish", icon: Calendar },
@@ -32,7 +32,7 @@ const navItems = [
   { label: "Library", href: "/dashboard/library", icon: FolderOpen },
   { label: "Activity", href: "/dashboard/activity", icon: Clock },
   { label: "Settings", href: "/dashboard/settings", icon: Cog },
-] as const;
+];
 
 interface SidebarContentProps {
   collapsed: boolean;
