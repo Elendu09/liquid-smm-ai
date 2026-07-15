@@ -97,6 +97,45 @@ export default function CreateStudio() {
   const { items: drafts, setItems, add, update, remove } = useLocalCollection<Draft>("create", "drafts");
   const { add: addScheduled } = useScheduledPosts();
   const { accounts } = useAccounts();
+  const { drain } = useMcpInbox();
+
+  // Drain any caption drafts queued by MCP tool calls into the Studio.
+  useEffect(() => {
+    const pending = drain("caption-draft");
+    if (pending.length === 0) return;
+    const now = new Date().toISOString();
+    const created: Draft[] = pending.map((p) => {
+      const pl = p.payload as {
+        title?: string;
+        body?: string;
+        hashtags?: string[];
+        platformIds?: string[];
+      };
+      const body =
+        (pl.hashtags?.length ?? 0) > 0
+          ? `${pl.body ?? ""}\n\n${(pl.hashtags ?? []).map((h) => `#${h}`).join(" ")}`
+          : (pl.body ?? "");
+      return {
+        id: crypto.randomUUID(),
+        title: pl.title ?? "MCP draft",
+        status: "draft",
+        caption: body,
+        platform: pl.platformIds?.[0] ?? accounts[0]?.platformId ?? "instagram",
+        createdAt: now,
+      };
+    });
+    setItems((prev) => [...created, ...prev]);
+    toast.success(`Loaded ${created.length} MCP draft${created.length > 1 ? "s" : ""} into studio`);
+    logMcpCall({
+      tool: "create_caption_draft",
+      status: "success",
+      summary: `Applied ${created.length} MCP draft(s) into Studio`,
+      resources: created.map((d) => ({ kind: "caption", id: d.id, label: d.title })),
+      payload: { count: created.length },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState("");
