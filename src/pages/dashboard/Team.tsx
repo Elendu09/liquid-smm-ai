@@ -137,16 +137,16 @@ export default function TeamPage() {
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Users className="h-8 w-8 text-primary" />
-            Team Collaboration
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+            <Users className="h-7 w-7 sm:h-8 sm:w-8 text-primary shrink-0" />
+            <span className="truncate">Team Collaboration</span>
           </h1>
-          <p className="text-muted-foreground mt-1">Manage your team members and permissions</p>
+          <p className="text-muted-foreground mt-1 text-sm">Manage your team members and permissions</p>
         </div>
         <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <UserPlus className="mr-2 h-4 w-4" />
               Invite Member
             </Button>
