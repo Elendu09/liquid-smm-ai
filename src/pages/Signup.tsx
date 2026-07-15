@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Eye, EyeOff, Mail, Lock, User, Instagram, Sparkles, Check, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+function safeNext(next: string | null): string {
+  if (!next) return "/dashboard";
+  if (!next.startsWith("/") || next.startsWith("//")) return "/dashboard";
+  return next;
+}
+
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
