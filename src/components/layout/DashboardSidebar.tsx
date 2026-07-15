@@ -94,14 +94,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
       </nav>
 
       <div className="p-3 border-t border-border space-y-1 flex-shrink-0">
-        <Link
-          to="/settings"
-          onClick={onNavigate}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        >
-          <Settings className="w-5 h-5 flex-shrink-0" />
-          {showLabels && <span>Full settings</span>}
-        </Link>
+
 
         <div className={cn("flex items-center gap-3 px-3 py-2", !showLabels && "justify-center")}>
           <ThemeToggle />
