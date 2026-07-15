@@ -191,9 +191,9 @@ export const SmartPostScheduler = ({ selectedPlatforms = [] }: SmartPostSchedule
           logRun({
             toolKey: "scheduler",
             action: "schedule",
-            platform: post.platforms?.[0],
+            platform: post.platformIds?.[0],
             status: "success",
-            input: { caption: post.caption?.slice(0, 120), scheduledAt: post.scheduledAt, platforms: post.platforms },
+            input: { caption: post.caption?.slice(0, 120), scheduledAt: post.scheduledAt, platforms: post.platformIds },
           });
           setDialogOpen(false);
           toast.success("Post scheduled");
