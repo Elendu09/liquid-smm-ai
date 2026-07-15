@@ -138,7 +138,7 @@ export const HeroSection = () => {
           >
             <Button
               size="lg"
-              className="glow-blue-intense text-lg px-10 py-7 bg-gradient-to-r from-primary to-brand-purple hover:opacity-90 text-white font-bold group rounded-xl"
+              className="glow-blue-intense text-lg px-10 py-7 bg-primary hover:bg-primary/90 text-primary-foreground font-bold group rounded-xl shadow-[0_0_24px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_32px_hsl(var(--primary)/0.55)]"
             >
               Start Automating Free
               <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />

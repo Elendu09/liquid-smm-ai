@@ -193,7 +193,7 @@ const LinkInBioBuilder = () => {
     name: "Sarah Johnson",
     bio: "Digital Creator · Marketing Expert\nHelping brands grow with proven strategies.",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
-    bioUrl: "bio.homeofsmm.com/sarah",
+    bioUrl: "bio.smmsaas.com/sarah",
   });
 
   const socialLinks = [
@@ -409,11 +409,11 @@ const LinkInBioBuilder = () => {
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">Custom URL</label>
                     <div className="flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-1">
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">bio.homeofsmm.com/</span>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">bio.smmsaas.com/</span>
                       <Input
                         value={profileData.bioUrl.split("/").pop()}
                         onChange={(e) =>
-                          setProfileData({ ...profileData, bioUrl: `bio.homeofsmm.com/${e.target.value}` })
+                          setProfileData({ ...profileData, bioUrl: `bio.smmsaas.com/${e.target.value}` })
                         }
                         className="flex-1 border-0 px-0 focus-visible:ring-0"
                       />
@@ -518,7 +518,7 @@ const LinkInBioBuilder = () => {
                         </div>
                         <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-primary to-brand-purple rounded-full transition-all"
+                            className="h-full bg-primary rounded-full transition-all"
                             style={{
                               width: `${(link.clicks / Math.max(...links.map((l) => l.clicks), 1)) * 100}%`,
                             }}
@@ -646,7 +646,7 @@ const LinkInBioBuilder = () => {
                     {/* Footer */}
                     <div className={cn("flex items-center justify-center gap-1 mt-8 text-[10px]", activeTheme.subTextClass)}>
                       <Heart className="h-3 w-3" />
-                      <span>Built with SMMPilot</span>
+                      <span>Built with SMMSAAS</span>
                     </div>
                   </div>
 

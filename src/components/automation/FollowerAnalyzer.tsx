@@ -195,7 +195,7 @@ export const FollowerAnalyzer = () => {
                 </div>
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-primary to-brand-purple rounded-full transition-all"
+                    className="h-full bg-primary rounded-full transition-all"
                     style={{ width: `${item.percentage}%` }}
                   />
                 </div>
