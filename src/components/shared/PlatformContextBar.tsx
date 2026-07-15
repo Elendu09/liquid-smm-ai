@@ -13,14 +13,13 @@ import { ConnectedAccount } from "@/contexts/AccountContext";
 import { getPlatformById } from "@/config/platforms";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { usePresets } from "@/hooks/usePresets";
+import { useActivePreset } from "@/hooks/useActivePreset";
 
 interface PlatformContextBarProps {
   toolLabel: string;
   accounts: ConnectedAccount[];
   onChange: () => void;
   toolKey?: string;
-  selectedPresetId?: string;
-  onPresetChange?: (id: string) => void;
 }
 
 export function PlatformContextBar({
@@ -28,12 +27,10 @@ export function PlatformContextBar({
   accounts,
   onChange,
   toolKey,
-  selectedPresetId,
-  onPresetChange,
 }: PlatformContextBarProps) {
   const primaryPlatform = accounts[0]?.platformId;
-  const { rows: presets, defaultPreset } = usePresets(toolKey, primaryPlatform);
-  const activePresetId = selectedPresetId ?? defaultPreset?.id;
+  const { rows: presets } = usePresets(toolKey, primaryPlatform);
+  const { preset: activePreset, setActivePreset } = useActivePreset(toolKey, primaryPlatform);
 
   return (
     <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-secondary/40 border border-border">
@@ -60,8 +57,8 @@ export function PlatformContextBar({
       {toolKey && presets.length > 0 && (
         <div className="flex items-center gap-1.5">
           <Star className="h-3 w-3 text-muted-foreground" />
-          <Select value={activePresetId} onValueChange={(v) => onPresetChange?.(v)}>
-            <SelectTrigger className="h-7 w-[180px] text-xs">
+          <Select value={activePreset?.id} onValueChange={setActivePreset}>
+            <SelectTrigger className="h-7 w-[180px] text-xs" aria-label="Active preset">
               <SelectValue placeholder="Preset" />
             </SelectTrigger>
             <SelectContent>
