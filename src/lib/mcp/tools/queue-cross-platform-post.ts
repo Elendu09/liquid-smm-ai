@@ -22,7 +22,12 @@ export default defineTool({
     hashtags: z.array(z.string()).optional().describe("Hashtags without leading #."),
     mediaUrl: z.string().url().optional().describe("Optional media URL."),
   },
-  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    openWorldHint: false,
+    needsApproval: true,
+  },
   handler: (input, ctx: ToolContext) => {
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
@@ -52,6 +57,7 @@ export default defineTool({
       hashtags: input.hashtags ?? [],
       mediaUrl: input.mediaUrl,
       createdAt: new Date().toISOString(),
+      status: "pending-approval" as const,
       source: "mcp:queue_cross_platform_post",
       userId: ctx.getUserId(),
     };
@@ -60,10 +66,10 @@ export default defineTool({
       content: [
         {
           type: "text",
-          text: `Queued cross-platform post for ${input.platformIds.join(", ")} at ${when.toISOString()}.`,
+          text: `Proposed cross-platform post for ${input.platformIds.join(", ")} at ${when.toISOString()}. The user must approve it inside the app before it is queued.`,
         },
       ],
-      structuredContent: { post: record },
+      structuredContent: { post: record, needsApproval: true },
     };
   },
 });
