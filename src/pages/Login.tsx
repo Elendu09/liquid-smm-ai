@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, Instagram, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 
 function safeNext(next: string | null): string {
@@ -34,12 +35,14 @@ const Login = () => {
   }, [navigate, next]);
 
   const handleGoogle = async () => {
-    const redirectTo = `${window.location.origin}${next}`;
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo },
-    });
-    if (error) toast.error(error.message);
+    const redirect_uri = `${window.location.origin}${next}`;
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri });
+    if (result.error) {
+      toast.error(result.error.message ?? "Google sign-in failed");
+      return;
+    }
+    if (result.redirected) return;
+    navigate(next, { replace: true });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

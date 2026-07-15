@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Eye, EyeOff, Mail, Lock, User, Instagram, Sparkles, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 
 function safeNext(next: string | null): string {
