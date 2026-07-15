@@ -88,7 +88,12 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
       </div>
 
       {/* Navigation */}
-      <NavList navItems={navItems} onNavigate={onNavigate} showLabels={showLabels} />
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        {navItems.map((item) => (
+          <NavItem key={item.href} item={item} onNavigate={onNavigate} showLabels={showLabels} />
+        ))}
+      </nav>
+
 
 
       {/* Bottom Section */}
