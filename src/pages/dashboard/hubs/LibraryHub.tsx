@@ -13,15 +13,16 @@ const tabs: HubTab[] = [
 
 function LibraryLayout() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <PageHeader
-        title="Library"
-        description="Reusable assets, link pages, and platform presets."
-        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Library" }]}
-      />
-      <HubTabs tabs={tabs}>
-        <Outlet />
-      </HubTabs>
+    <div>
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+        <PageHeader
+          title="Library"
+          description="Reusable assets, link pages, and platform presets."
+          breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Library" }]}
+        />
+        <HubTabs tabs={tabs} />
+      </div>
+      <Outlet />
     </div>
   );
 }
