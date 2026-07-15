@@ -12,7 +12,7 @@
   "mcp": {
     "server": {
       "name": "smm-app-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "SMM App MCP"
     },
     "tools": [
@@ -45,6 +45,139 @@
           "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_scheduled_posts",
+        "title": "List scheduled posts",
+        "description": "List the user's scheduled cross-platform posts. Scheduled posts live in the user's browser storage today, so this returns a descriptive placeholder rather than fabricated data.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "queue_cross_platform_post",
+        "title": "Queue cross-platform post",
+        "description": "Draft a scheduled cross-platform post plan for the signed-in user. Returns a validated post record ready to be added to the queue on the user's next app open.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "caption": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "description": "Post caption text."
+            },
+            "platformIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "description": "Platforms to publish to. Must come from the app's supported set."
+            },
+            "scheduledAt": {
+              "type": "string",
+              "description": "ISO 8601 timestamp to publish at."
+            },
+            "hashtags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Hashtags without leading #."
+            },
+            "mediaUrl": {
+              "type": "string",
+              "format": "uri",
+              "description": "Optional media URL."
+            }
+          },
+          "required": [
+            "caption",
+            "platformIds",
+            "scheduledAt"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_captions",
+        "title": "List caption library",
+        "description": "List saved captions from the user's caption library. Captions are stored in the user's browser today, so this returns a descriptive placeholder. Use `create_caption_draft` to add new drafts that appear next time the user opens the app.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_caption_draft",
+        "title": "Create caption draft",
+        "description": "Create a new caption draft for the signed-in user. Returns the validated draft record which the user's app applies to the Studio and caption library on next open.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "description": "Short title for the draft."
+            },
+            "body": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "description": "Caption body text."
+            },
+            "hashtags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Hashtags without leading #."
+            },
+            "platformIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Target platform ids."
+            }
+          },
+          "required": [
+            "title",
+            "body"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
       }

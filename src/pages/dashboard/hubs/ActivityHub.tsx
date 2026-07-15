@@ -1,10 +1,12 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
-import { Clock, Bell } from "lucide-react";
+import { Clock, Bell, Terminal } from "lucide-react";
 import { PageHeader, HubTabs, StatusBoard, type HubTab } from "@/components/dashboard/shell";
 import { ActivityFeedView } from "../views/ActivityFeedView";
+import { McpActivityView } from "../views/McpActivityView";
 
 const tabs: HubTab[] = [
   { label: "Runs", href: "/dashboard/activity/runs", icon: Clock },
+  { label: "MCP calls", href: "/dashboard/activity/mcp", icon: Terminal },
   { label: "Notifications", href: "/dashboard/activity/notifications", icon: Bell },
 ];
 
@@ -44,6 +46,7 @@ export default function ActivityHub() {
       <Route element={<ActivityLayout />}>
         <Route index element={<Navigate to="runs" replace />} />
         <Route path="runs" element={<ActivityFeedView />} />
+        <Route path="mcp" element={<McpActivityView />} />
         <Route
           path="notifications"
           element={

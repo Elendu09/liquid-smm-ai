@@ -13,6 +13,7 @@ import {
   ReferenceDot,
 } from "recharts";
 import { cn } from "@/lib/utils";
+import { StoryTooltip, SceneCallout } from "./StoryTooltip";
 
 const followerData = [
   { month: "Jan", followers: 12400, engagement: 4.2 },
@@ -176,6 +177,11 @@ export function GrowthStory() {
             You had {start.followers.toLocaleString()} followers and a {start.engagement}% engagement rate. Solid
             foundation — but the real story starts next.
           </p>
+          <SceneCallout
+            kpi={`Baseline: ${start.followers.toLocaleString()} followers · ${start.engagement}% ER`}
+            formula="baseline = followers[0], engagement_rate[0]"
+            insight="This is the anchor every later delta is measured against."
+          />
         </Scene>
 
         <Scene
@@ -200,7 +206,8 @@ export function GrowthStory() {
                     fontSize={12}
                     tickFormatter={(v) => `${v / 1000}k`}
                   />
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip content={<StoryTooltip kpi="Followers" unit="" data={followerData} dataKey="followers" />} />
+
                   <Area
                     type="monotone"
                     dataKey="followers"
@@ -227,6 +234,11 @@ export function GrowthStory() {
             single month — your biggest jump.
           </p>
           <p>Whatever you did that month, do more of it.</p>
+          <SceneCallout
+            kpi={`Biggest MoM delta: +${jump.delta.toLocaleString()} · ${jumpPoint.month}`}
+            formula="delta[m] = followers[m] − followers[m−1]"
+            insight="Peak month growth points to which content or campaign compounded fastest."
+          />
         </Scene>
 
         <Scene
@@ -245,7 +257,7 @@ export function GrowthStory() {
                     fontSize={12}
                     tickFormatter={(v) => `${v}%`}
                   />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`${v}%`, "Engagement"]} />
+                  <Tooltip content={<StoryTooltip kpi="Engagement rate" unit="%" data={followerData} dataKey="engagement" />} />
                   <Line
                     type="monotone"
                     dataKey="engagement"
@@ -268,6 +280,11 @@ export function GrowthStory() {
             {Math.round(((now.engagement - start.engagement) / start.engagement) * 100)}% lift.
           </p>
           <p>Bigger audience and a more engaged one. That's the compounding effect.</p>
+          <SceneCallout
+            kpi={`Engagement lift: +${(now.engagement - start.engagement).toFixed(1)} pts`}
+            formula="lift = (er[now] − er[start]) / er[start]"
+            insight="Follower growth without engagement lift means noise. Both climbed together."
+          />
         </Scene>
 
         <Scene
@@ -292,7 +309,7 @@ export function GrowthStory() {
                     fontSize={12}
                     tickFormatter={(v) => `${v / 1000}k`}
                   />
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip content={<StoryTooltip kpi="Followers (projected)" unit="" data={projected as unknown as Array<Record<string, number | string | null>>} dataKey="followers" />} />
                   <Area
                     type="monotone"
                     dataKey="followers"
@@ -325,6 +342,11 @@ export function GrowthStory() {
             </span>{" "}
             followers in the next 6 months.
           </p>
+          <SceneCallout
+            kpi={`Projected 6-month: ${(projected[projected.length - 1].projected ?? 0).toLocaleString()}`}
+            formula="projected[m] = last + avg_monthly_growth × m"
+            insight="Straight-line projection from your observed growth. Any campaign lift compounds on top."
+          />
         </Scene>
       </div>
     </div>

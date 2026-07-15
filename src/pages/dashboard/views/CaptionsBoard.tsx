@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { FileText, Plus, Copy, Send, Sparkles, Trash2, X } from "lucide-react";
+import { FileText, Plus, Copy, Send, Sparkles, Trash2, X, CheckSquare } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -14,9 +14,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
+import { useMcpInbox } from "@/hooks/useMcpInbox";
+import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
 
@@ -79,13 +92,53 @@ export default function CaptionsBoard() {
   const [view, setView] = useViewMode("library-captions", "kanban");
   const { items, setItems, add, update, remove } = useLocalCollection<Caption>("library", "captions");
   const { add: addScheduled } = useScheduledPosts();
+  const { drain } = useMcpInbox();
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Caption | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmQueue, setConfirmQueue] = useState(false);
 
   useEffect(() => {
     if (items.length === 0) setItems(seed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Drain any caption drafts queued by MCP tools (from ChatGPT/Claude etc.)
+  useEffect(() => {
+    const pending = drain("caption-draft");
+    if (pending.length === 0) return;
+    const now = new Date().toISOString();
+    const drafts: Caption[] = pending.map((p) => {
+      const pl = p.payload as {
+        title?: string;
+        body?: string;
+        hashtags?: string[];
+        platformIds?: string[];
+      };
+      return {
+        id: crypto.randomUUID(),
+        title: pl.title ?? "MCP caption",
+        body: pl.body ?? "",
+        hashtags: pl.hashtags ?? [],
+        platformIds: pl.platformIds ?? [],
+        tags: ["mcp"],
+        status: "draft",
+        createdAt: now,
+      };
+    });
+    setItems((prev) => [...drafts, ...prev]);
+    toast.success(`Added ${drafts.length} MCP caption${drafts.length > 1 ? "s" : ""} to library`);
+    logMcpCall({
+      tool: "create_caption_draft",
+      status: "success",
+      summary: `Applied ${drafts.length} caption draft(s) from MCP inbox`,
+      resources: drafts.map((d) => ({ kind: "caption", id: d.id, label: d.title })),
+      payload: { count: drafts.length },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   const filtered = useMemo(
     () =>
@@ -139,55 +192,113 @@ export default function CaptionsBoard() {
     navigate(`/dashboard/create/studio?draftId=${encodeURIComponent(c.id)}`);
   };
 
-  const card = (c: Caption, dense = false) => (
-    <div className={cn(dense ? "p-3" : "p-3")}>
-      <div className="flex items-start gap-2">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-          <FileText className="h-4 w-4 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate">{c.title}</p>
-          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{c.body || "No text yet"}</p>
-          <div className="flex flex-wrap items-center gap-1 mt-2">
-            {c.platformIds.slice(0, 4).map((p) => (
-              <PlatformIcon key={p} platform={p} size="xs" showBackground />
-            ))}
-            {c.tags.slice(0, 3).map((t) => (
-              <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                {t}
-              </Badge>
-            ))}
+  const toggleSelect = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const selectedCaptions = useMemo(() => items.filter((c) => selected.has(c.id)), [items, selected]);
+
+  const bulkCopy = async () => {
+    if (selectedCaptions.length === 0) return;
+    const text = selectedCaptions
+      .map((c) => (c.hashtags.length > 0 ? `${c.body}\n\n${c.hashtags.map((h) => `#${h}`).join(" ")}` : c.body))
+      .join("\n\n---\n\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`Copied ${selectedCaptions.length} captions`);
+    } catch {
+      toast.error("Could not copy");
+    }
+  };
+
+  const bulkQueue = () => {
+    if (selectedCaptions.length === 0) return;
+    const startMs = Date.now() + 60 * 60 * 1000; // +1h
+    selectedCaptions.forEach((c, i) => {
+      const full = c.hashtags.length > 0 ? `${c.body}\n\n${c.hashtags.map((h) => `#${h}`).join(" ")}` : c.body;
+      addScheduled({
+        caption: full,
+        scheduledAt: new Date(startMs + i * 15 * 60 * 1000).toISOString(),
+        platformIds: c.platformIds.length > 0 ? c.platformIds : ["instagram"],
+        hashtags: c.hashtags,
+      });
+    });
+    toast.success(`Queued ${selectedCaptions.length} captions`);
+    setSelected(new Set());
+    setConfirmQueue(false);
+  };
+
+  const bulkDelete = () => {
+    if (selectedCaptions.length === 0) return;
+    const ids = new Set(selectedCaptions.map((c) => c.id));
+    setItems((prev) => prev.filter((c) => !ids.has(c.id)));
+    toast.success(`Deleted ${ids.size} captions`);
+    setSelected(new Set());
+    setConfirmDelete(false);
+  };
+
+  const card = (c: Caption, dense = false) => {
+    const isSelected = selected.has(c.id);
+    return (
+      <div className={cn(dense ? "p-3" : "p-3", isSelected && "ring-2 ring-primary/50 rounded-lg")}>
+        <div className="flex items-start gap-2">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => toggleSelect(c.id)}
+            aria-label={`Select ${c.title}`}
+            className="mt-1 shrink-0"
+          />
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <FileText className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold truncate">{c.title}</p>
+            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{c.body || "No text yet"}</p>
+            <div className="flex flex-wrap items-center gap-1 mt-2">
+              {c.platformIds.slice(0, 4).map((p) => (
+                <PlatformIcon key={p} platform={p} size="xs" showBackground />
+              ))}
+              {c.tags.slice(0, 3).map((t) => (
+                <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                  {t}
+                </Badge>
+              ))}
+            </div>
           </div>
         </div>
+        <div className="flex justify-end gap-1 mt-2">
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Copy caption" onClick={() => copy(c)}>
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Insert into queue" onClick={() => insertIntoQueue(c)}>
+            <Send className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Send to studio" onClick={() => sendToStudio(c)}>
+            <Sparkles className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditing(c)}>
+            Edit
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-destructive hover:text-destructive"
+            aria-label="Delete caption"
+            onClick={() => {
+              remove(c.id);
+              toast.success("Deleted");
+            }}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
-      <div className="flex justify-end gap-1 mt-2">
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Copy caption" onClick={() => copy(c)}>
-          <Copy className="h-3.5 w-3.5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Insert into queue" onClick={() => insertIntoQueue(c)}>
-          <Send className="h-3.5 w-3.5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Send to studio" onClick={() => sendToStudio(c)}>
-          <Sparkles className="h-3.5 w-3.5" />
-        </Button>
-        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditing(c)}>
-          Edit
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-destructive hover:text-destructive"
-          aria-label="Delete caption"
-          onClick={() => {
-            remove(c.id);
-            toast.success("Deleted");
-          }}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-    </div>
-  );
+    );
+  };
+
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pb-8">
@@ -219,6 +330,90 @@ export default function CaptionsBoard() {
       ) : (
         <ListView items={filtered} getKey={(c) => c.id} renderItem={(c) => card(c, true)} />
       )}
+
+      {/* Sticky bulk-action bar */}
+      {selected.size > 0 && (
+        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.5rem)] sm:w-auto max-w-[42rem]">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 rounded-2xl border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl p-2 pl-3">
+            <div className="flex items-center gap-1.5 pr-2 border-r border-border/60">
+              <CheckSquare className="h-4 w-4 text-primary" />
+              <span className="text-xs font-semibold whitespace-nowrap">
+                {selected.size} selected
+              </span>
+            </div>
+            <Button size="sm" variant="ghost" onClick={bulkCopy} aria-label="Copy selected captions">
+              <Copy className="h-3.5 w-3.5 mr-1" /> Copy
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setConfirmQueue(true)}
+              aria-label="Insert selected captions into queue"
+            >
+              <Send className="h-3.5 w-3.5 mr-1" /> Queue
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => selectedCaptions[0] && sendToStudio(selectedCaptions[0])}
+              disabled={selectedCaptions.length === 0}
+              aria-label="Send first selected caption to studio"
+            >
+              <Sparkles className="h-3.5 w-3.5 mr-1" /> Studio
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setConfirmDelete(true)}
+              aria-label="Delete selected captions"
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSelected(new Set())}
+              aria-label="Clear selection"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selected.size} captions?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes them from your library. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={bulkDelete} className="bg-destructive text-destructive-foreground">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmQueue} onOpenChange={setConfirmQueue}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Queue {selected.size} posts?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Each caption becomes a scheduled post starting in 1 hour, staggered 15 minutes apart.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={bulkQueue}>Queue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       <Sheet open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { Target, Plus, Copy, Zap, Trash2, X } from "lucide-react";
+import { Target, Plus, Copy, Zap, Trash2, X, Eye } from "lucide-react";
+import { SegmentPreviewSheet } from "@/components/dashboard/segments/SegmentPreviewSheet";
 import {
   ToolbarBar,
   ViewToggle,
@@ -113,6 +114,7 @@ export default function SegmentsBoard() {
   const { items, setItems, add, update, remove } = useLocalCollection<Segment>("audience", "segments");
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Segment | null>(null);
+  const [previewing, setPreviewing] = useState<Segment | null>(null);
 
   useEffect(() => {
     if (items.length === 0) setItems(seed);
@@ -190,11 +192,14 @@ export default function SegmentsBoard() {
             </div>
           </div>
         </div>
-        <div className="flex justify-end gap-1 mt-2">
+        <div className="flex justify-end gap-1 mt-2 flex-wrap">
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Preview segment" onClick={() => setPreviewing(s)}>
+            <Eye className="h-3.5 w-3.5" />
+          </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Duplicate segment" onClick={() => duplicate(s)}>
             <Copy className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Use in automation" onClick={() => useInAutomation(s)}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Use in automation" onClick={() => setPreviewing(s)}>
             <Zap className="h-3.5 w-3.5" />
           </Button>
           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditing(s)}>
@@ -382,6 +387,8 @@ export default function SegmentsBoard() {
           )}
         </SheetContent>
       </Sheet>
+
+      <SegmentPreviewSheet segment={previewing} onClose={() => setPreviewing(null)} />
     </div>
   );
 }
