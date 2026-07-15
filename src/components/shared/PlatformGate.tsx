@@ -99,6 +99,7 @@ export function PlatformGate({ toolKey, children }: PlatformGateProps) {
           toolLabel={req.label}
           accounts={selectedAccounts}
           onChange={change}
+          toolKey={String(toolKey)}
         />
         {children({ platforms: selectedPlatforms, accounts: selectedAccounts })}
       </div>
