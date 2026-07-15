@@ -188,6 +188,13 @@ export const SmartPostScheduler = ({ selectedPlatforms = [] }: SmartPostSchedule
         captionCap={minCaptionCap}
         onSave={(post) => {
           add(post);
+          logRun({
+            toolKey: "scheduler",
+            action: "schedule",
+            platform: post.platforms?.[0],
+            status: "success",
+            input: { caption: post.caption?.slice(0, 120), scheduledAt: post.scheduledAt, platforms: post.platforms },
+          });
           setDialogOpen(false);
           toast.success("Post scheduled");
         }}
