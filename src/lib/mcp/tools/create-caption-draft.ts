@@ -16,7 +16,6 @@ export default defineTool({
     readOnlyHint: false,
     destructiveHint: false,
     openWorldHint: false,
-    needsApproval: true,
   },
   handler: (input, ctx: ToolContext) => {
     if (!ctx.isAuthenticated()) {

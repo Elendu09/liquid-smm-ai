@@ -103,8 +103,7 @@
         "annotations": {
           "readOnlyHint": false,
           "destructiveHint": false,
-          "openWorldHint": false,
-          "needsApproval": true
+          "openWorldHint": false
         },
         "inputSchema": {
           "type": "object",
@@ -173,8 +172,7 @@
         "annotations": {
           "readOnlyHint": false,
           "destructiveHint": false,
-          "openWorldHint": false,
-          "needsApproval": true
+          "openWorldHint": false
         },
         "inputSchema": {
           "type": "object",

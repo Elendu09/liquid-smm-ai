@@ -120,8 +120,7 @@ var queue_cross_platform_post_default = defineTool4({
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
-    openWorldHint: false,
-    needsApproval: true
+    openWorldHint: false
   },
   handler: (input, ctx) => {
     if (!ctx.isAuthenticated()) {
@@ -206,8 +205,7 @@ var create_caption_draft_default = defineTool6({
   annotations: {
     readOnlyHint: false,
     destructiveHint: false,
-    openWorldHint: false,
-    needsApproval: true
+    openWorldHint: false
   },
   handler: (input, ctx) => {
     if (!ctx.isAuthenticated()) {
