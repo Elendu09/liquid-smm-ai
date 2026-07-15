@@ -12,7 +12,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Pricing from "./pages/Pricing";
-import Settings from "./pages/Settings";
+
 
 // Dashboard shell
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
