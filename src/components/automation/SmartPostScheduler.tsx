@@ -193,6 +193,7 @@ export const SmartPostScheduler = ({ selectedPlatforms = [] }: SmartPostSchedule
         onClose={() => setDialogOpen(false)}
         platforms={selectedPlatforms}
         captionCap={minCaptionCap}
+        initialCaption={template?.body ? (cta ? `${template.body}\n\n${cta}` : template.body) : ""}
         onSave={(post) => {
           add(post);
           logRun({
@@ -200,7 +201,13 @@ export const SmartPostScheduler = ({ selectedPlatforms = [] }: SmartPostSchedule
             action: "schedule",
             platform: post.platformIds?.[0],
             status: "success",
-            input: { caption: post.caption?.slice(0, 120), scheduledAt: post.scheduledAt, platforms: post.platformIds },
+            input: {
+              caption: post.caption?.slice(0, 120),
+              scheduledAt: post.scheduledAt,
+              platforms: post.platformIds,
+              presetName,
+              templateName: template?.name,
+            },
           });
           setDialogOpen(false);
           toast.success("Post scheduled");
@@ -215,15 +222,17 @@ function SchedulePostDialog({
   onClose,
   platforms,
   captionCap,
+  initialCaption = "",
   onSave,
 }: {
   open: boolean;
   onClose: () => void;
   platforms: Platform[];
   captionCap: number;
+  initialCaption?: string;
   onSave: (post: { caption: string; mediaUrl?: string; scheduledAt: string; platformIds: string[] }) => void;
 }) {
-  const [caption, setCaption] = useState("");
+  const [caption, setCaption] = useState(initialCaption);
   const [mediaUrl, setMediaUrl] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [time, setTime] = useState("09:00");
