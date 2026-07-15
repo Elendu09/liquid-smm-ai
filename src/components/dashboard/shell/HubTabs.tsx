@@ -1,0 +1,58 @@
+import { ReactNode } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+
+export interface HubTab {
+  label: string;
+  href: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  badge?: string | number;
+}
+
+interface HubTabsProps {
+  tabs: HubTab[];
+  className?: string;
+  children?: ReactNode;
+}
+
+export function HubTabs({ tabs, className, children }: HubTabsProps) {
+  const location = useLocation();
+  // fallback: if no match, treat first tab as active by rendering NavLink normally.
+  const anyActive = tabs.some((t) => location.pathname === t.href);
+
+  return (
+    <div className={cn("space-y-6", className)}>
+      <div
+        role="tablist"
+        aria-label="Section tabs"
+        className="flex flex-wrap gap-1 p-1 rounded-xl border border-border/60 bg-muted/40 w-fit max-w-full overflow-x-auto"
+      >
+        {tabs.map((t, i) => (
+          <NavLink
+            key={t.href}
+            to={t.href}
+            end
+            role="tab"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium min-h-[36px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                (isActive || (!anyActive && i === 0))
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )
+            }
+          >
+            {t.icon && <t.icon className="h-4 w-4" />}
+            <span>{t.label}</span>
+            {t.badge != null && (
+              <span className="ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">
+                {t.badge}
+              </span>
+            )}
+          </NavLink>
+        ))}
+      </div>
+      {children}
+    </div>
+  );
+}
