@@ -263,7 +263,7 @@ function AccountSwitcherContent({
           <CommandItem
             onSelect={() => {
               setOpen(false);
-              // TODO: Open add account modal
+              onConnect();
             }}
             className="cursor-pointer"
           >
@@ -273,7 +273,7 @@ function AccountSwitcherContent({
           <CommandItem
             onSelect={() => {
               setOpen(false);
-              // TODO: Navigate to settings
+              onManage();
             }}
             className="cursor-pointer"
           >
