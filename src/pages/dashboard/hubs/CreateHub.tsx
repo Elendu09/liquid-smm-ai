@@ -13,15 +13,16 @@ const tabs: HubTab[] = [
 
 function CreateLayout() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <PageHeader
-        title="Create"
-        description="Draft captions, research hashtags, and generate assets with AI — all in one place."
-        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Create" }]}
-      />
-      <HubTabs tabs={tabs}>
-        <Outlet />
-      </HubTabs>
+    <div>
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+        <PageHeader
+          title="Create"
+          description="Draft captions, research hashtags, and generate assets with AI — all in one place."
+          breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Create" }]}
+        />
+        <HubTabs tabs={tabs} />
+      </div>
+      <Outlet />
     </div>
   );
 }
