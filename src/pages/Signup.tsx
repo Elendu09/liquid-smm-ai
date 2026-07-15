@@ -115,7 +115,8 @@ const Signup = () => {
           <CardContent className="space-y-4">
             {/* Social Login Buttons */}
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" type="button" onClick={handleGoogle} aria-label="Sign up with Google">
+
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -243,18 +244,19 @@ const Signup = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90"
-                disabled={!agreeTerms}
+                disabled={!agreeTerms || loading}
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Create Account
+                {loading ? "Creating..." : "Create Account"}
               </Button>
+
             </form>
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline font-medium">
+              <Link to={`/login?next=${encodeURIComponent(next)}`} className="text-primary hover:underline font-medium">
                 Sign in
               </Link>
             </div>
