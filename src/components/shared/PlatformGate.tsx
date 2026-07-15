@@ -130,11 +130,9 @@ export function PlatformGate({ toolKey, children }: PlatformGateProps) {
                 {req.label} needs an account that supports this feature.
               </p>
             </div>
-            <Button asChild>
-              <Link to="/dashboard/account-health">
-                <Plug className="mr-2 h-4 w-4" />
-                Connect an account
-              </Link>
+            <Button onClick={() => setConnectOpen(true)}>
+              <Plug className="mr-2 h-4 w-4" />
+              Connect an account
             </Button>
           </div>
         ) : (
