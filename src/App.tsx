@@ -12,7 +12,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Pricing from "./pages/Pricing";
-import Settings from "./pages/Settings";
+
 
 // Dashboard shell
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -68,7 +68,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/pricing" element={<Pricing />} />
-              <Route path="/settings" element={<Settings />} />
+              
 
               {/* Dashboard */}
               <Route path="/dashboard" element={<DashboardLayout />}>
