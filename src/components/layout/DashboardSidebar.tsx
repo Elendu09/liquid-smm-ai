@@ -96,6 +96,23 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
       <div className="p-3 border-t border-border space-y-1 flex-shrink-0">
 
 
+        <NavLink
+          to="/dashboard/settings"
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium min-h-[44px] transition-colors",
+              isActive
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted",
+            )
+          }
+          title={!showLabels ? "Settings" : undefined}
+        >
+          <Cog className="w-5 h-5 flex-shrink-0" />
+          {showLabels && <span>Settings</span>}
+        </NavLink>
+
         <div className={cn("flex items-center gap-3 px-3 py-2", !showLabels && "justify-center")}>
           <ThemeToggle />
           {showLabels && <span className="text-sm text-muted-foreground">Theme</span>}

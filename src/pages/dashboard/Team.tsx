@@ -256,7 +256,8 @@ export default function TeamPage() {
               <CardDescription>Manage access and permissions for your team</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-1 lg:gap-0 lg:space-y-4">
+
                 {members.map((member) => (
                   <div
                     key={member.id}

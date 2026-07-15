@@ -23,6 +23,7 @@ import {
   SectionCard,
   EmptyState,
 } from "@/components/dashboard/shell";
+import { MobileHubNav } from "@/components/dashboard/shell/MobileHubNav";
 import { useAccounts } from "@/contexts/AccountContext";
 import { useRunHistory } from "@/hooks/useRunHistory";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
@@ -288,8 +289,8 @@ export default function Dashboard() {
         )}
       </SectionCard>
 
-      {/* Quick access to hubs */}
-      <div>
+      {/* Quick access to hubs (desktop/tablet) */}
+      <div className="hidden md:block">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
           Jump to a hub
         </h2>
@@ -311,6 +312,11 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+
+      {/* Mobile spacer so content isn't hidden behind fixed bottom nav */}
+      <div className="h-20 md:hidden" aria-hidden />
+      <MobileHubNav />
+
     </div>
   );
 }
