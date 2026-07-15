@@ -13,6 +13,7 @@ import {
   ReferenceDot,
 } from "recharts";
 import { cn } from "@/lib/utils";
+import { StoryTooltip, SceneCallout } from "./StoryTooltip";
 
 const followerData = [
   { month: "Jan", followers: 12400, engagement: 4.2 },
