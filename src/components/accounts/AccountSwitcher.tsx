@@ -170,12 +170,16 @@ function AccountSwitcherContent({
   setActiveAccount,
   setOpen,
   formatFollowers,
+  onConnect,
+  onManage,
 }: {
   groupedAccounts: Record<string, ConnectedAccount[]>;
   activeAccount: ConnectedAccount | null;
   setActiveAccount: (account: ConnectedAccount) => void;
   setOpen: (open: boolean) => void;
   formatFollowers: (count: number) => string;
+  onConnect: () => void;
+  onManage: () => void;
 }) {
   return (
     <Command>
