@@ -2,11 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AccountProvider } from "@/contexts/AccountContext";
 
-// Pages
+// Public pages
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -14,33 +14,45 @@ import Signup from "./pages/Signup";
 import Pricing from "./pages/Pricing";
 import Settings from "./pages/Settings";
 
-// Dashboard Layout and Pages
+// Dashboard shell
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Dashboard from "@/pages/dashboard/Dashboard";
-import CaptionGenerator from "@/pages/dashboard/CaptionGenerator";
-import Scheduler from "@/pages/dashboard/Scheduler";
-import EngagementBot from "@/pages/dashboard/EngagementBot";
-import Analytics from "@/pages/dashboard/Analytics";
-import HashtagResearch from "@/pages/dashboard/HashtagResearch";
-import CommentManager from "@/pages/dashboard/CommentManager";
-import ContentCalendar from "@/pages/dashboard/ContentCalendar";
-import StoryAutomation from "@/pages/dashboard/StoryAutomation";
-import DMAutomation from "@/pages/dashboard/DMAutomation";
-import FollowerAnalyzer from "@/pages/dashboard/FollowerAnalyzer";
-import CompetitorTracker from "@/pages/dashboard/CompetitorTracker";
-import LinkInBio from "@/pages/dashboard/LinkInBio";
 
-// New Dashboard Pages
-import AccountHealth from "@/pages/dashboard/AccountHealth";
-import Team from "@/pages/dashboard/Team";
-import ContentLibrary from "@/pages/dashboard/ContentLibrary";
-import AIStudio from "@/pages/dashboard/AIStudio";
-import Reports from "@/pages/dashboard/Reports";
-import Notifications from "@/pages/dashboard/Notifications";
-import RunHistory from "@/pages/dashboard/RunHistory";
-import PresetsAndTemplates from "@/pages/dashboard/PresetsAndTemplates";
+// Hubs
+import CreateHub from "@/pages/dashboard/hubs/CreateHub";
+import PublishHub from "@/pages/dashboard/hubs/PublishHub";
+import EngageHub from "@/pages/dashboard/hubs/EngageHub";
+import AudienceHub from "@/pages/dashboard/hubs/AudienceHub";
+import AnalyticsHub from "@/pages/dashboard/hubs/AnalyticsHub";
+import LibraryHub from "@/pages/dashboard/hubs/LibraryHub";
+import ActivityHub from "@/pages/dashboard/hubs/ActivityHub";
+import SettingsHub from "@/pages/dashboard/hubs/SettingsHub";
 
 const queryClient = new QueryClient();
+
+// Old route -> new hub tab
+const legacyRedirects: Record<string, string> = {
+  "caption-generator": "/dashboard/create/captions",
+  "hashtag-research": "/dashboard/create/hashtags",
+  "ai-studio": "/dashboard/create/studio",
+  "scheduler": "/dashboard/publish/queue",
+  "content-calendar": "/dashboard/publish/calendar",
+  "story-automation": "/dashboard/publish/stories",
+  "engagement-bot": "/dashboard/engage/bot",
+  "comment-manager": "/dashboard/engage/comments",
+  "dm-automation": "/dashboard/engage/dms",
+  "follower-analyzer": "/dashboard/audience/followers",
+  "competitor-tracker": "/dashboard/audience/competitors",
+  "analytics": "/dashboard/analytics/overview",
+  "reports": "/dashboard/analytics/reports",
+  "account-health": "/dashboard/analytics/health",
+  "content-library": "/dashboard/library/assets",
+  "link-bio": "/dashboard/library/link-bio",
+  "presets": "/dashboard/library/presets",
+  "history": "/dashboard/activity/runs",
+  "notifications": "/dashboard/activity/notifications",
+  "team": "/dashboard/settings/team",
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -57,34 +69,31 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/settings" element={<Settings />} />
-              
-              {/* Dashboard Routes */}
+
+              {/* Dashboard */}
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<Dashboard />} />
-                <Route path="caption-generator" element={<CaptionGenerator />} />
-                <Route path="scheduler" element={<Scheduler />} />
-                <Route path="engagement-bot" element={<EngagementBot />} />
-                <Route path="analytics" element={<Analytics />} />
-                <Route path="hashtag-research" element={<HashtagResearch />} />
-                <Route path="comment-manager" element={<CommentManager />} />
-                <Route path="content-calendar" element={<ContentCalendar />} />
-                <Route path="story-automation" element={<StoryAutomation />} />
-                <Route path="dm-automation" element={<DMAutomation />} />
-                <Route path="follower-analyzer" element={<FollowerAnalyzer />} />
-                <Route path="competitor-tracker" element={<CompetitorTracker />} />
-                <Route path="link-bio" element={<LinkInBio />} />
-                {/* New Dashboard Routes */}
-                <Route path="account-health" element={<AccountHealth />} />
-                <Route path="team" element={<Team />} />
-                <Route path="content-library" element={<ContentLibrary />} />
-                <Route path="ai-studio" element={<AIStudio />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="notifications" element={<Notifications />} />
-                <Route path="history" element={<RunHistory />} />
-                <Route path="presets" element={<PresetsAndTemplates />} />
+
+                {/* Hubs */}
+                <Route path="create/*" element={<CreateHub />} />
+                <Route path="publish/*" element={<PublishHub />} />
+                <Route path="engage/*" element={<EngageHub />} />
+                <Route path="audience/*" element={<AudienceHub />} />
+                <Route path="analytics/*" element={<AnalyticsHub />} />
+                <Route path="library/*" element={<LibraryHub />} />
+                <Route path="activity/*" element={<ActivityHub />} />
+                <Route path="settings/*" element={<SettingsHub />} />
+
+                {/* Legacy route redirects */}
+                {Object.entries(legacyRedirects).map(([from, to]) => (
+                  <Route
+                    key={from}
+                    path={from}
+                    element={<Navigate to={to} replace />}
+                  />
+                ))}
               </Route>
-              
-              {/* Catch-all */}
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
