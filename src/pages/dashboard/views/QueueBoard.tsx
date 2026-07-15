@@ -1,7 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Trash2, Clock, Calendar as CalendarIcon, Plus, ChevronDown } from "lucide-react";
 import { format, parseISO, isBefore } from "date-fns";
+import { useMcpInbox } from "@/hooks/useMcpInbox";
+import { logMcpCall } from "@/hooks/useMcpActivity";
 import {
   PageHeader,
   ToolbarBar,
@@ -82,11 +84,45 @@ function PostCard({
 
 export default function QueueBoard() {
   const [view, setView] = useViewMode("publish-queue", "kanban");
-  const { posts, remove, update } = useScheduledPosts();
+  const { posts, add, remove, update } = useScheduledPosts();
+  const { drain } = useMcpInbox();
   const [search, setSearch] = useState("");
   const [composerOpen, setComposerOpen] = useState(false);
   const [rescheduling, setRescheduling] = useState<ScheduledPost | null>(null);
   const [rescheduleValue, setRescheduleValue] = useState("");
+
+  // Drain approved cross-platform post proposals from MCP tools.
+  useEffect(() => {
+    const pending = drain("scheduled-post");
+    if (pending.length === 0) return;
+    const added: ScheduledPost[] = [];
+    pending.forEach((p) => {
+      const pl = p.payload as {
+        caption?: string;
+        platformIds?: string[];
+        scheduledAt?: string;
+        hashtags?: string[];
+        mediaUrl?: string;
+      };
+      const rec = add({
+        caption: pl.caption ?? "",
+        platformIds: pl.platformIds ?? ["instagram"],
+        scheduledAt: pl.scheduledAt ?? new Date().toISOString(),
+        hashtags: pl.hashtags,
+        mediaUrl: pl.mediaUrl,
+      });
+      added.push(rec);
+    });
+    toast.success(`Added ${added.length} approved MCP post${added.length > 1 ? "s" : ""} to queue`);
+    logMcpCall({
+      tool: "queue_cross_platform_post",
+      status: "success",
+      summary: `Applied ${added.length} approved cross-platform post(s)`,
+      resources: added.map((r) => ({ kind: "scheduled-post", id: r.id, label: r.caption.slice(0, 60) })),
+      payload: { count: added.length },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = useMemo(
     () =>
