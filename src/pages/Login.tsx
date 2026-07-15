@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,17 +7,54 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, Instagram, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
+import { toast } from "sonner";
+
+function safeNext(next: string | null): string {
+  if (!next) return "/dashboard";
+  // Only allow same-origin relative paths.
+  if (!next.startsWith("/") || next.startsWith("//")) return "/dashboard";
+  return next;
+}
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const next = safeNext(searchParams.get("next"));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate(next, { replace: true });
+    });
+  }, [navigate, next]);
+
+  const handleGoogle = async () => {
+    const redirect_uri = `${window.location.origin}${next}`;
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri });
+    if (result.error) {
+      toast.error(result.error.message ?? "Google sign-in failed");
+      return;
+    }
+    if (result.redirected) return;
+    navigate(next, { replace: true });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login submitted:", { email, password, rememberMe });
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    navigate(next, { replace: true });
   };
 
   return (
@@ -52,7 +89,8 @@ const Login = () => {
           <CardContent className="space-y-4">
             {/* Social Login Buttons */}
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" type="button" onClick={handleGoogle} aria-label="Sign in with Google">
+
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -136,17 +174,18 @@ const Login = () => {
                 </Label>
               </div>
 
-              <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90">
+              <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90" disabled={loading}>
                 <Sparkles className="w-4 h-4 mr-2" />
-                Sign In
+                {loading ? "Signing in..." : "Sign In"}
               </Button>
+
             </form>
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">
+              <Link to={`/signup?next=${encodeURIComponent(next)}`} className="text-primary hover:underline font-medium">
                 Sign up for free
               </Link>
             </div>
