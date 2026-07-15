@@ -150,6 +150,7 @@ export const SmartPostScheduler = ({ selectedPlatforms = [] }: SmartPostSchedule
                       className="text-destructive"
                       onClick={() => {
                         remove(post.id);
+                        logRun({ toolKey: "scheduler", action: "delete", status: "success", input: { id: post.id } });
                         toast.success("Post deleted");
                       }}
                     >
