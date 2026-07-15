@@ -37,6 +37,8 @@ const statusColors: Record<string, string> = {
 
 export function AccountSwitcher({ collapsed = false }: AccountSwitcherProps) {
   const [open, setOpen] = useState(false);
+  const [connectOpen, setConnectOpen] = useState(false);
+  const navigate = useNavigate();
   const { accounts, activeAccount, setActiveAccount, activePlatforms } =
     useAccounts();
 
