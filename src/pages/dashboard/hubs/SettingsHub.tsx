@@ -1,11 +1,21 @@
-import { Outlet, Route, Routes, Navigate } from "react-router-dom";
-import { UserCog, Users } from "lucide-react";
+import { Route, Routes, Navigate, Outlet } from "react-router-dom";
+import { UserCog, Bell, Link2, CreditCard, Shield, Users } from "lucide-react";
 import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
-import { SettingsPanels } from "@/components/settings/SettingsPanels";
+import {
+  AccountPanel,
+  NotificationsPanel,
+  ConnectedPanel,
+  BillingPanel,
+  SecurityPanel,
+} from "@/components/settings/SettingsPanels";
 import Team from "../Team";
 
 const tabs: HubTab[] = [
   { label: "Account", href: "/dashboard/settings/account", icon: UserCog },
+  { label: "Notifications", href: "/dashboard/settings/notifications", icon: Bell },
+  { label: "Connected", href: "/dashboard/settings/connected", icon: Link2 },
+  { label: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
+  { label: "Security", href: "/dashboard/settings/security", icon: Shield },
   { label: "Team", href: "/dashboard/settings/team", icon: Users },
 ];
 
@@ -25,12 +35,8 @@ function SettingsLayout() {
   );
 }
 
-function AccountPanel() {
-  return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <SettingsPanels />
-    </div>
-  );
+function Wrap({ children }: { children: React.ReactNode }) {
+  return <div className="p-4 sm:p-6 lg:p-8">{children}</div>;
 }
 
 export default function SettingsHub() {
@@ -38,7 +44,11 @@ export default function SettingsHub() {
     <Routes>
       <Route element={<SettingsLayout />}>
         <Route index element={<Navigate to="account" replace />} />
-        <Route path="account" element={<AccountPanel />} />
+        <Route path="account" element={<Wrap><AccountPanel /></Wrap>} />
+        <Route path="notifications" element={<Wrap><NotificationsPanel /></Wrap>} />
+        <Route path="connected" element={<Wrap><ConnectedPanel /></Wrap>} />
+        <Route path="billing" element={<Wrap><BillingPanel /></Wrap>} />
+        <Route path="security" element={<Wrap><SecurityPanel /></Wrap>} />
         <Route path="team" element={<Team />} />
       </Route>
     </Routes>
