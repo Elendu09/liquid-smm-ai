@@ -64,18 +64,182 @@ var list_platforms_default = defineTool2({
   }
 });
 
+// src/lib/mcp/tools/list-scheduled-posts.ts
+import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.22.2";
+var list_scheduled_posts_default = defineTool3({
+  name: "list_scheduled_posts",
+  title: "List scheduled posts",
+  description: "List the user's scheduled cross-platform posts. Scheduled posts live in the user's browser storage today, so this returns a descriptive placeholder rather than fabricated data.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: (_input, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
+    const payload = {
+      posts: [],
+      note: "Scheduled posts are stored locally in the user's browser (smmpilot:scheduled-posts). Ask the user to open /dashboard/publish/queue to see them, or use queue_cross_platform_post to add a new one."
+    };
+    return {
+      content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+      structuredContent: payload
+    };
+  }
+});
+
+// src/lib/mcp/tools/queue-cross-platform-post.ts
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { z } from "npm:zod@^3.25.76";
+var SUPPORTED_PLATFORMS = [
+  "instagram",
+  "facebook",
+  "tiktok",
+  "youtube",
+  "twitter",
+  "linkedin",
+  "pinterest",
+  "snapchat",
+  "threads",
+  "reddit",
+  "discord",
+  "telegram",
+  "whatsapp",
+  "twitch"
+];
+var queue_cross_platform_post_default = defineTool4({
+  name: "queue_cross_platform_post",
+  title: "Queue cross-platform post",
+  description: "Draft a scheduled cross-platform post plan for the signed-in user. Returns a validated post record ready to be added to the queue on the user's next app open.",
+  inputSchema: {
+    caption: z.string().min(1).max(4e3).describe("Post caption text."),
+    platformIds: z.array(z.string()).min(1).describe("Platforms to publish to. Must come from the app's supported set."),
+    scheduledAt: z.string().describe("ISO 8601 timestamp to publish at."),
+    hashtags: z.array(z.string()).optional().describe("Hashtags without leading #."),
+    mediaUrl: z.string().url().optional().describe("Optional media URL.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  handler: (input, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
+    const unknownPlatforms = input.platformIds.filter((p) => !SUPPORTED_PLATFORMS.includes(p));
+    if (unknownPlatforms.length > 0) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Unsupported platforms: ${unknownPlatforms.join(", ")}. Supported: ${SUPPORTED_PLATFORMS.join(", ")}.`
+          }
+        ],
+        isError: true
+      };
+    }
+    const when = new Date(input.scheduledAt);
+    if (Number.isNaN(when.getTime())) {
+      return { content: [{ type: "text", text: "scheduledAt must be a valid ISO 8601 timestamp." }], isError: true };
+    }
+    const record = {
+      id: crypto.randomUUID(),
+      caption: input.caption,
+      platformIds: input.platformIds,
+      scheduledAt: when.toISOString(),
+      hashtags: input.hashtags ?? [],
+      mediaUrl: input.mediaUrl,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      source: "mcp:queue_cross_platform_post",
+      userId: ctx.getUserId()
+    };
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Queued cross-platform post for ${input.platformIds.join(", ")} at ${when.toISOString()}.`
+        }
+      ],
+      structuredContent: { post: record }
+    };
+  }
+});
+
+// src/lib/mcp/tools/list-captions.ts
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.22.2";
+var list_captions_default = defineTool5({
+  name: "list_captions",
+  title: "List caption library",
+  description: "List saved captions from the user's caption library. Captions are stored in the user's browser today, so this returns a descriptive placeholder. Use `create_caption_draft` to add new drafts that appear next time the user opens the app.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: (_input, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
+    const payload = {
+      captions: [],
+      note: "Captions live in the user's browser (smmpilot:library:captions). Ask them to open /dashboard/library/captions to see all captions."
+    };
+    return {
+      content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+      structuredContent: payload
+    };
+  }
+});
+
+// src/lib/mcp/tools/create-caption-draft.ts
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { z as z2 } from "npm:zod@^3.25.76";
+var create_caption_draft_default = defineTool6({
+  name: "create_caption_draft",
+  title: "Create caption draft",
+  description: "Create a new caption draft for the signed-in user. Returns the validated draft record which the user's app applies to the Studio and caption library on next open.",
+  inputSchema: {
+    title: z2.string().min(1).max(120).describe("Short title for the draft."),
+    body: z2.string().min(1).max(4e3).describe("Caption body text."),
+    hashtags: z2.array(z2.string()).optional().describe("Hashtags without leading #."),
+    platformIds: z2.array(z2.string()).optional().describe("Target platform ids.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  handler: (input, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
+    const draft = {
+      id: crypto.randomUUID(),
+      title: input.title,
+      body: input.body,
+      hashtags: input.hashtags ?? [],
+      platformIds: input.platformIds ?? [],
+      tags: [],
+      status: "draft",
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      source: "mcp:create_caption_draft",
+      userId: ctx.getUserId()
+    };
+    return {
+      content: [{ type: "text", text: `Created caption draft "${input.title}".` }],
+      structuredContent: { draft }
+    };
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "ntbtbzssdwkbrfcmqyfc";
 var mcp_default = defineMcp({
   name: "smm-app-mcp",
   title: "SMM App MCP",
-  version: "0.1.0",
-  instructions: "Tools for the SMM app. Use `whoami` to check the signed-in user, and `list_platforms` to see which social networks the app supports.",
+  version: "0.2.0",
+  instructions: "Tools for the SMM app. Use `whoami` to check the signed-in user, `list_platforms` to see supported networks, `list_scheduled_posts` / `queue_cross_platform_post` to work with the publish queue, and `list_captions` / `create_caption_draft` to work with the caption library.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
   }),
-  tools: [whoami_default, list_platforms_default]
+  tools: [
+    whoami_default,
+    list_platforms_default,
+    list_scheduled_posts_default,
+    queue_cross_platform_post_default,
+    list_captions_default,
+    create_caption_draft_default
+  ]
 });
 
 // lovable-mcp-supabase-entry.ts
