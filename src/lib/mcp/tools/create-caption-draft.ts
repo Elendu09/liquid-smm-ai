@@ -12,7 +12,11 @@ export default defineTool({
     hashtags: z.array(z.string()).optional().describe("Hashtags without leading #."),
     platformIds: z.array(z.string()).optional().describe("Target platform ids."),
   },
-  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    openWorldHint: false,
+  },
   handler: (input, ctx: ToolContext) => {
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
@@ -24,14 +28,19 @@ export default defineTool({
       hashtags: input.hashtags ?? [],
       platformIds: input.platformIds ?? [],
       tags: [],
-      status: "draft" as const,
+      status: "pending-approval" as const,
       createdAt: new Date().toISOString(),
       source: "mcp:create_caption_draft",
       userId: ctx.getUserId(),
     };
     return {
-      content: [{ type: "text", text: `Created caption draft "${input.title}".` }],
-      structuredContent: { draft },
+      content: [
+        {
+          type: "text",
+          text: `Proposed caption draft "${input.title}". The user must approve it inside the app before it appears in their library.`,
+        },
+      ],
+      structuredContent: { draft, needsApproval: true },
     };
   },
 });

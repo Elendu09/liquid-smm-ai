@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/dashboard/shell";
 import { useMcpActivity, type McpActivityStatus } from "@/hooks/useMcpActivity";
+import { ApprovalPanel } from "@/components/dashboard/mcp/ApprovalPanel";
 import { cn } from "@/lib/utils";
 
 const STATUS_META: Record<McpActivityStatus, { label: string; icon: typeof CheckCircle2; className: string }> = {
@@ -62,6 +63,7 @@ export function McpActivityView() {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pb-8 space-y-4">
+      <ApprovalPanel />
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1.5">

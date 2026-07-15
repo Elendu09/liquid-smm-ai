@@ -1,22 +1,23 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * Pending intents produced by MCP tool calls that must be applied
- * inside the user's browser (which owns the localStorage-backed data).
- *
- * MCP handlers run in a Deno edge function and cannot write to the
- * browser's localStorage directly. When a real cross-device backend is
- * added, this hook can be swapped for a Supabase-backed queue without
- * changing consumers.
+ * Pending intents produced by MCP tool calls. Write-capable tools mark
+ * items with `needsApproval: true`; the app only drains items whose
+ * `status` is "approved". Rejected items are kept for the audit trail
+ * but never applied.
  */
 export type McpInboxKind = "caption-draft" | "scheduled-post";
+export type McpInboxStatus = "pending" | "approved" | "rejected";
 
 export interface McpInboxItem<TPayload = unknown> {
   id: string;
   kind: McpInboxKind;
   createdAt: string;
-  source: string; // e.g. "mcp:create_caption_draft"
+  source: string;
   payload: TPayload;
+  needsApproval?: boolean;
+  status: McpInboxStatus;
+  decidedAt?: string;
 }
 
 const KEY = "smmpilot:mcp-inbox";
@@ -25,7 +26,9 @@ function read(): McpInboxItem[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as McpInboxItem[]) : [];
+    const parsed = raw ? (JSON.parse(raw) as McpInboxItem[]) : [];
+    // Back-compat: legacy items without status default to approved.
+    return parsed.map((it) => ({ ...it, status: it.status ?? "approved" }));
   } catch {
     return [];
   }
@@ -55,29 +58,58 @@ function subscribe(cb: () => void) {
   return () => listeners.delete(cb);
 }
 
-export function enqueueInbox<T>(item: Omit<McpInboxItem<T>, "id" | "createdAt">) {
+export function enqueueInbox<T>(
+  item: Omit<McpInboxItem<T>, "id" | "createdAt" | "status"> & { status?: McpInboxStatus },
+) {
   const full: McpInboxItem<T> = {
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
+    status: item.needsApproval ? "pending" : (item.status ?? "approved"),
     ...item,
   };
   write([full, ...read()]);
   return full;
 }
 
+export function approveInboxItem(id: string) {
+  write(
+    read().map((it) =>
+      it.id === id ? { ...it, status: "approved", decidedAt: new Date().toISOString() } : it,
+    ),
+  );
+}
+
+export function rejectInboxItem(id: string) {
+  write(
+    read().map((it) =>
+      it.id === id ? { ...it, status: "rejected", decidedAt: new Date().toISOString() } : it,
+    ),
+  );
+}
+
+export function removeInboxItem(id: string) {
+  write(read().filter((it) => it.id !== id));
+}
+
 export function useMcpInbox() {
   const items = useSyncExternalStore(subscribe, () => cache, () => cache);
+  /** Drains only APPROVED items of the given kind. Pending items stay put. */
   const drain = (kind: McpInboxKind): McpInboxItem[] => {
-    const [take, keep] = read().reduce<[McpInboxItem[], McpInboxItem[]]>(
-      (acc, it) => {
-        if (it.kind === kind) acc[0].push(it);
-        else acc[1].push(it);
-        return acc;
-      },
-      [[], []],
-    );
-    if (take.length > 0) write(keep);
+    const all = read();
+    const take = all.filter((it) => it.kind === kind && it.status === "approved");
+    if (take.length === 0) return [];
+    const keep = all.filter((it) => !(it.kind === kind && it.status === "approved"));
+    write(keep);
     return take;
   };
-  return { items, drain, enqueue: enqueueInbox };
+  const pending = items.filter((it) => it.status === "pending");
+  return {
+    items,
+    pending,
+    drain,
+    enqueue: enqueueInbox,
+    approve: approveInboxItem,
+    reject: rejectInboxItem,
+    remove: removeInboxItem,
+  };
 }

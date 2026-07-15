@@ -117,7 +117,11 @@ var queue_cross_platform_post_default = defineTool4({
     hashtags: z.array(z.string()).optional().describe("Hashtags without leading #."),
     mediaUrl: z.string().url().optional().describe("Optional media URL.")
   },
-  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    openWorldHint: false
+  },
   handler: (input, ctx) => {
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
@@ -146,6 +150,7 @@ var queue_cross_platform_post_default = defineTool4({
       hashtags: input.hashtags ?? [],
       mediaUrl: input.mediaUrl,
       createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      status: "pending-approval",
       source: "mcp:queue_cross_platform_post",
       userId: ctx.getUserId()
     };
@@ -153,10 +158,10 @@ var queue_cross_platform_post_default = defineTool4({
       content: [
         {
           type: "text",
-          text: `Queued cross-platform post for ${input.platformIds.join(", ")} at ${when.toISOString()}.`
+          text: `Proposed cross-platform post for ${input.platformIds.join(", ")} at ${when.toISOString()}. The user must approve it inside the app before it is queued.`
         }
       ],
-      structuredContent: { post: record }
+      structuredContent: { post: record, needsApproval: true }
     };
   }
 });
@@ -197,7 +202,11 @@ var create_caption_draft_default = defineTool6({
     hashtags: z2.array(z2.string()).optional().describe("Hashtags without leading #."),
     platformIds: z2.array(z2.string()).optional().describe("Target platform ids.")
   },
-  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    openWorldHint: false
+  },
   handler: (input, ctx) => {
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
@@ -209,14 +218,92 @@ var create_caption_draft_default = defineTool6({
       hashtags: input.hashtags ?? [],
       platformIds: input.platformIds ?? [],
       tags: [],
-      status: "draft",
+      status: "pending-approval",
       createdAt: (/* @__PURE__ */ new Date()).toISOString(),
       source: "mcp:create_caption_draft",
       userId: ctx.getUserId()
     };
     return {
-      content: [{ type: "text", text: `Created caption draft "${input.title}".` }],
-      structuredContent: { draft }
+      content: [
+        {
+          type: "text",
+          text: `Proposed caption draft "${input.title}". The user must approve it inside the app before it appears in their library.`
+        }
+      ],
+      structuredContent: { draft, needsApproval: true }
+    };
+  }
+});
+
+// src/lib/mcp/tools/get-user-profile.ts
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.22.2";
+var get_user_profile_default = defineTool7({
+  name: "get_user_profile",
+  title: "Get user profile",
+  description: "Return the signed-in SMM app user's profile (id, email, client, claims). Agents should call this first so their suggestions can be tailored to the user.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: (_input, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
+    const claims = ctx.getClaims?.() ?? {};
+    const profile = {
+      userId: ctx.getUserId(),
+      email: ctx.getUserEmail(),
+      clientId: ctx.getClientId(),
+      displayName: claims.name ?? ctx.getUserEmail() ?? null,
+      role: claims.role ?? "authenticated",
+      locale: claims.locale ?? null,
+      timezone: claims.timezone ?? null,
+      note: "Extended profile fields live in the user's browser today. Ask them to open /dashboard/settings for full profile."
+    };
+    return {
+      content: [{ type: "text", text: JSON.stringify(profile, null, 2) }],
+      structuredContent: profile
+    };
+  }
+});
+
+// src/lib/mcp/tools/get-automation-settings.ts
+import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.22.2";
+var get_automation_settings_default = defineTool8({
+  name: "get_automation_settings",
+  title: "Get automation settings",
+  description: "Return the signed-in user's current SMM automation settings (engagement bot posture, notification channels, approval requirements, active platforms). Agents should call this before proposing actions so they respect the user's guardrails.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: (_input, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
+    const settings = {
+      userId: ctx.getUserId(),
+      approval: {
+        captionDraftsRequireApproval: true,
+        scheduledPostsRequireApproval: true,
+        note: "Write-capable MCP tools always propose items into the app's approval queue. The user reviews and approves in /dashboard/activity/mcp."
+      },
+      engagementBot: {
+        posture: "conservative",
+        autoReply: false,
+        autoFollowBack: false,
+        dailyActionCap: 100
+      },
+      notifications: {
+        channels: ["inapp", "email"],
+        digest: "weekly"
+      },
+      scheduling: {
+        defaultLeadMinutes: 60,
+        defaultIntervalMinutes: 15,
+        timezone: "browser-local"
+      },
+      note: "Detailed per-event / per-platform preferences are stored in the user's browser (smmpilot:settings:*). Ask them to open /dashboard/settings for full settings."
+    };
+    return {
+      content: [{ type: "text", text: JSON.stringify(settings, null, 2) }],
+      structuredContent: settings
     };
   }
 });
@@ -226,14 +313,16 @@ var projectRef = "ntbtbzssdwkbrfcmqyfc";
 var mcp_default = defineMcp({
   name: "smm-app-mcp",
   title: "SMM App MCP",
-  version: "0.2.0",
-  instructions: "Tools for the SMM app. Use `whoami` to check the signed-in user, `list_platforms` to see supported networks, `list_scheduled_posts` / `queue_cross_platform_post` to work with the publish queue, and `list_captions` / `create_caption_draft` to work with the caption library.",
+  version: "0.3.0",
+  instructions: "Tools for the SMM app. Start with `get_user_profile` and `get_automation_settings` to tailor actions to the user. Use `whoami` for identity, `list_platforms` for supported networks, `list_scheduled_posts` / `queue_cross_platform_post` for the publish queue, and `list_captions` / `create_caption_draft` for the caption library. Write tools require user approval inside the app.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
   }),
   tools: [
     whoami_default,
+    get_user_profile_default,
+    get_automation_settings_default,
     list_platforms_default,
     list_scheduled_posts_default,
     queue_cross_platform_post_default,
