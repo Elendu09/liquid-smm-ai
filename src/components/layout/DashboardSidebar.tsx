@@ -132,6 +132,58 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
   );
 }
 
+function NavItem({
+  item,
+  onNavigate,
+  showLabels,
+}: {
+  item: (typeof navItems)[number];
+  onNavigate?: () => void;
+  showLabels: boolean;
+}) {
+  const location = useLocation();
+  const { accounts } = useAccounts();
+  const isActive = location.pathname === item.href;
+
+  const hasCompatible = useMemo(() => {
+    if (!item.toolKey) return true;
+    const req = toolPlatformRequirements[item.toolKey];
+    if (!req) return true;
+    return accounts.some((a) => {
+      const p = getPlatformById(a.platformId);
+      return p ? isPlatformCompatible(p, req) : false;
+    });
+  }, [item.toolKey, accounts]);
+
+  return (
+    <Link
+      to={item.href}
+      onClick={onNavigate}
+      className={cn(
+        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative",
+        isActive
+          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+      )}
+      title={!hasCompatible ? "No connected account supports this tool" : undefined}
+    >
+      <span className="relative flex-shrink-0">
+        <item.icon className={cn("w-5 h-5", isActive && "animate-pulse")} />
+        {item.toolKey && (
+          <span
+            className={cn(
+              "absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-card",
+              hasCompatible ? "bg-brand-green" : "bg-muted-foreground/60"
+            )}
+          />
+        )}
+      </span>
+      {showLabels && <span>{item.label}</span>}
+    </Link>
+  );
+}
+
+
 export function DashboardSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
