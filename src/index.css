@@ -109,6 +109,12 @@
     --glass-bg: 222 47% 8% / 0.6;
     --glass-border: 222 47% 20% / 0.3;
 
+    /* Canvas theme (CTA + Footer) - warm editorial (dark) */
+    --canvas: 30 15% 10%;
+    --canvas-ink: 40 30% 94%;
+    --canvas-muted: 40 15% 65%;
+    --canvas-border: 30 15% 22%;
+
     --sidebar-background: 222 47% 5%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 217 91% 60%;
