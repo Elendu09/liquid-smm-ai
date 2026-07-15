@@ -1,5 +1,4 @@
 import { ReactNode, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { AlertCircle, Check, Plug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +8,7 @@ import { platforms, Platform, getPlatformById } from "@/config/platforms";
 import { toolPlatformRequirements, isPlatformCompatible } from "@/config/toolPlatformMap";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { PlatformContextBar } from "@/components/shared/PlatformContextBar";
+import { ConnectAccountDialog } from "@/components/accounts/ConnectAccountDialog";
 
 export interface SelectedContext {
   platforms: Platform[];
