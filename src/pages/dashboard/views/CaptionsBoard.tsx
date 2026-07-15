@@ -331,6 +331,90 @@ export default function CaptionsBoard() {
         <ListView items={filtered} getKey={(c) => c.id} renderItem={(c) => card(c, true)} />
       )}
 
+      {/* Sticky bulk-action bar */}
+      {selected.size > 0 && (
+        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.5rem)] sm:w-auto max-w-[42rem]">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 rounded-2xl border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl p-2 pl-3">
+            <div className="flex items-center gap-1.5 pr-2 border-r border-border/60">
+              <CheckSquare className="h-4 w-4 text-primary" />
+              <span className="text-xs font-semibold whitespace-nowrap">
+                {selected.size} selected
+              </span>
+            </div>
+            <Button size="sm" variant="ghost" onClick={bulkCopy} aria-label="Copy selected captions">
+              <Copy className="h-3.5 w-3.5 mr-1" /> Copy
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setConfirmQueue(true)}
+              aria-label="Insert selected captions into queue"
+            >
+              <Send className="h-3.5 w-3.5 mr-1" /> Queue
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => selectedCaptions[0] && sendToStudio(selectedCaptions[0])}
+              disabled={selectedCaptions.length === 0}
+              aria-label="Send first selected caption to studio"
+            >
+              <Sparkles className="h-3.5 w-3.5 mr-1" /> Studio
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setConfirmDelete(true)}
+              aria-label="Delete selected captions"
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSelected(new Set())}
+              aria-label="Clear selection"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selected.size} captions?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes them from your library. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={bulkDelete} className="bg-destructive text-destructive-foreground">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmQueue} onOpenChange={setConfirmQueue}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Queue {selected.size} posts?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Each caption becomes a scheduled post starting in 1 hour, staggered 15 minutes apart.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={bulkQueue}>Queue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
       <Sheet open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
           {editing && (
