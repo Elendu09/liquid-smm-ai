@@ -27,6 +27,7 @@ export function PlatformGate({ toolKey, children }: PlatformGateProps) {
   const { accounts } = useAccounts();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [confirmed, setConfirmed] = useState(false);
+  const [connectOpen, setConnectOpen] = useState(false);
 
   // Rehydrate selection
   useEffect(() => {
