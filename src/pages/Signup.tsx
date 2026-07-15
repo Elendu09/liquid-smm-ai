@@ -24,6 +24,16 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const next = safeNext(searchParams.get("next"));
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate(next, { replace: true });
+    });
+  }, [navigate, next]);
 
   const passwordRequirements = [
     { label: "At least 8 characters", met: password.length >= 8 },
@@ -42,10 +52,36 @@ const Signup = () => {
     return "bg-green-500";
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Signup submitted:", { name, email, password, agreeTerms });
+  const handleGoogle = async () => {
+    const redirectTo = `${window.location.origin}${next}`;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo },
+    });
+    if (error) toast.error(error.message);
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const emailRedirectTo = `${window.location.origin}${next}`;
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo, data: { full_name: name } },
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (data.session) {
+      navigate(next, { replace: true });
+    } else {
+      toast.success("Check your email to confirm your account.");
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
