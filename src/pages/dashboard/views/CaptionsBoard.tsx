@@ -192,55 +192,113 @@ export default function CaptionsBoard() {
     navigate(`/dashboard/create/studio?draftId=${encodeURIComponent(c.id)}`);
   };
 
-  const card = (c: Caption, dense = false) => (
-    <div className={cn(dense ? "p-3" : "p-3")}>
-      <div className="flex items-start gap-2">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-          <FileText className="h-4 w-4 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate">{c.title}</p>
-          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{c.body || "No text yet"}</p>
-          <div className="flex flex-wrap items-center gap-1 mt-2">
-            {c.platformIds.slice(0, 4).map((p) => (
-              <PlatformIcon key={p} platform={p} size="xs" showBackground />
-            ))}
-            {c.tags.slice(0, 3).map((t) => (
-              <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                {t}
-              </Badge>
-            ))}
+  const toggleSelect = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const selectedCaptions = useMemo(() => items.filter((c) => selected.has(c.id)), [items, selected]);
+
+  const bulkCopy = async () => {
+    if (selectedCaptions.length === 0) return;
+    const text = selectedCaptions
+      .map((c) => (c.hashtags.length > 0 ? `${c.body}\n\n${c.hashtags.map((h) => `#${h}`).join(" ")}` : c.body))
+      .join("\n\n---\n\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`Copied ${selectedCaptions.length} captions`);
+    } catch {
+      toast.error("Could not copy");
+    }
+  };
+
+  const bulkQueue = () => {
+    if (selectedCaptions.length === 0) return;
+    const startMs = Date.now() + 60 * 60 * 1000; // +1h
+    selectedCaptions.forEach((c, i) => {
+      const full = c.hashtags.length > 0 ? `${c.body}\n\n${c.hashtags.map((h) => `#${h}`).join(" ")}` : c.body;
+      addScheduled({
+        caption: full,
+        scheduledAt: new Date(startMs + i * 15 * 60 * 1000).toISOString(),
+        platformIds: c.platformIds.length > 0 ? c.platformIds : ["instagram"],
+        hashtags: c.hashtags,
+      });
+    });
+    toast.success(`Queued ${selectedCaptions.length} captions`);
+    setSelected(new Set());
+    setConfirmQueue(false);
+  };
+
+  const bulkDelete = () => {
+    if (selectedCaptions.length === 0) return;
+    const ids = new Set(selectedCaptions.map((c) => c.id));
+    setItems((prev) => prev.filter((c) => !ids.has(c.id)));
+    toast.success(`Deleted ${ids.size} captions`);
+    setSelected(new Set());
+    setConfirmDelete(false);
+  };
+
+  const card = (c: Caption, dense = false) => {
+    const isSelected = selected.has(c.id);
+    return (
+      <div className={cn(dense ? "p-3" : "p-3", isSelected && "ring-2 ring-primary/50 rounded-lg")}>
+        <div className="flex items-start gap-2">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => toggleSelect(c.id)}
+            aria-label={`Select ${c.title}`}
+            className="mt-1 shrink-0"
+          />
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <FileText className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold truncate">{c.title}</p>
+            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{c.body || "No text yet"}</p>
+            <div className="flex flex-wrap items-center gap-1 mt-2">
+              {c.platformIds.slice(0, 4).map((p) => (
+                <PlatformIcon key={p} platform={p} size="xs" showBackground />
+              ))}
+              {c.tags.slice(0, 3).map((t) => (
+                <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                  {t}
+                </Badge>
+              ))}
+            </div>
           </div>
         </div>
+        <div className="flex justify-end gap-1 mt-2">
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Copy caption" onClick={() => copy(c)}>
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Insert into queue" onClick={() => insertIntoQueue(c)}>
+            <Send className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Send to studio" onClick={() => sendToStudio(c)}>
+            <Sparkles className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditing(c)}>
+            Edit
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-destructive hover:text-destructive"
+            aria-label="Delete caption"
+            onClick={() => {
+              remove(c.id);
+              toast.success("Deleted");
+            }}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
-      <div className="flex justify-end gap-1 mt-2">
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Copy caption" onClick={() => copy(c)}>
-          <Copy className="h-3.5 w-3.5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Insert into queue" onClick={() => insertIntoQueue(c)}>
-          <Send className="h-3.5 w-3.5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Send to studio" onClick={() => sendToStudio(c)}>
-          <Sparkles className="h-3.5 w-3.5" />
-        </Button>
-        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditing(c)}>
-          Edit
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-destructive hover:text-destructive"
-          aria-label="Delete caption"
-          onClick={() => {
-            remove(c.id);
-            toast.success("Deleted");
-          }}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-    </div>
-  );
+    );
+  };
+
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pb-8">
