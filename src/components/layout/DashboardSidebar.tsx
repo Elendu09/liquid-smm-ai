@@ -20,6 +20,8 @@ import {
   LinkIcon,
   Menu,
   X,
+  Clock,
+  Palette,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
