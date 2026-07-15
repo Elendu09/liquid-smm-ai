@@ -313,10 +313,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Mobile spacer so content isn't hidden behind fixed bottom nav */}
-      <div className="h-20 md:hidden" aria-hidden />
-      <MobileHubNav />
-
     </div>
   );
 }
