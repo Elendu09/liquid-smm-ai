@@ -11,15 +11,16 @@ const tabs: HubTab[] = [
 
 function ActivityLayout() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <PageHeader
-        title="Activity"
-        description="Every automation run and every notification, in order."
-        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Activity" }]}
-      />
-      <HubTabs tabs={tabs}>
-        <Outlet />
-      </HubTabs>
+    <div>
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+        <PageHeader
+          title="Activity"
+          description="Every automation run and every notification, in order."
+          breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Activity" }]}
+        />
+        <HubTabs tabs={tabs} />
+      </div>
+      <Outlet />
     </div>
   );
 }
