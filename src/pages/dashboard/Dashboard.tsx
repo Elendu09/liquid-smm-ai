@@ -23,6 +23,7 @@ import {
   SectionCard,
   EmptyState,
 } from "@/components/dashboard/shell";
+import { AiCommandBar } from "@/components/dashboard/AiCommandBar";
 
 import { useAccounts } from "@/contexts/AccountContext";
 import { useRunHistory } from "@/hooks/useRunHistory";
@@ -117,6 +118,7 @@ export default function Dashboard() {
           </>
         }
       />
+      <AiCommandBar />
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
