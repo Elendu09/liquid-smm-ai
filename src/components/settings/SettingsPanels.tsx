@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +52,7 @@ export function AccountPanel() {
                 <AvatarImage src="/placeholder.svg" />
                 <AvatarFallback className="text-2xl">JD</AvatarFallback>
               </Avatar>
-              <Button size="icon" className="absolute bottom-0 right-0 rounded-full w-8 h-8">
+              <Button size="icon" className="absolute bottom-0 right-0 rounded-full w-8 h-8" aria-label="Change avatar" onClick={() => toast("Avatar upload")}>
                 <Camera className="w-4 h-4" />
               </Button>
             </div>
@@ -108,7 +109,7 @@ export function AccountPanel() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button>Save Changes</Button>
+          <Button onClick={() => toast.success("Profile saved")}>Save Changes</Button>
         </CardFooter>
       </Card>
 
@@ -123,7 +124,7 @@ export function AccountPanel() {
               <h4 className="font-medium">Delete Account</h4>
               <p className="text-sm text-muted-foreground">Permanently delete your account and all associated data</p>
             </div>
-            <Button variant="destructive" size="sm">
+            <Button variant="destructive" size="sm" onClick={() => confirm("Delete your account? This cannot be undone.") && toast.success("Account deletion requested")}>
               <Trash2 className="w-4 h-4 mr-2" />
               Delete Account
             </Button>
@@ -200,7 +201,7 @@ export function NotificationsPanel() {
           ))}
         </CardContent>
         <CardFooter>
-          <Button>Save Preferences</Button>
+          <Button onClick={() => toast.success("Notification preferences saved")}>Save Preferences</Button>
         </CardFooter>
       </Card>
     </div>
@@ -245,7 +246,7 @@ export function ConnectedPanel() {
                 )}
               </div>
             </div>
-            <Button variant={account.connected ? "outline" : "default"} size="sm">
+            <Button variant={account.connected ? "outline" : "default"} size="sm" onClick={() => toast.success(`${account.platform} ${account.connected ? "disconnected" : "connected"}`)}>
               {account.connected ? "Disconnect" : "Connect"}
             </Button>
           </div>
@@ -282,7 +283,7 @@ export function BillingPanel() {
             <Button variant="outline" asChild>
               <Link to="/pricing">Change Plan</Link>
             </Button>
-            <Button variant="ghost" className="text-destructive hover:text-destructive">Cancel Subscription</Button>
+            <Button variant="ghost" className="text-destructive hover:text-destructive" onClick={() => confirm("Cancel your subscription?") && toast.success("Subscription cancelled")}>Cancel Subscription</Button>
           </div>
         </CardContent>
       </Card>
@@ -303,9 +304,9 @@ export function BillingPanel() {
                 <p className="text-sm text-muted-foreground">Expires 12/2025</p>
               </div>
             </div>
-            <Button variant="ghost" size="sm">Edit</Button>
+            <Button variant="ghost" size="sm" onClick={() => toast("Edit payment method")}>Edit</Button>
           </div>
-          <Button variant="outline" className="w-full">
+          <Button variant="outline" className="w-full" onClick={() => toast("Add payment method flow")}>
             <CreditCard className="w-4 h-4 mr-2" />
             Add Payment Method
           </Button>
@@ -332,7 +333,7 @@ export function BillingPanel() {
                 <div className="flex items-center gap-4">
                   <span className="font-medium">{invoice.amount}</span>
                   <Badge variant="secondary" className="bg-green-500/10 text-green-500">{invoice.status}</Badge>
-                  <Button variant="ghost" size="sm">Download</Button>
+                  <Button variant="ghost" size="sm" onClick={() => toast.success(`Invoice ${invoice.date} downloaded`)}>Download</Button>
                 </div>
               </div>
             ))}
@@ -366,7 +367,7 @@ export function SecurityPanel() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button>Update Password</Button>
+          <Button onClick={() => toast.success("Password updated")}>Update Password</Button>
         </CardFooter>
       </Card>
 
@@ -386,7 +387,7 @@ export function SecurityPanel() {
                 <p className="text-sm text-muted-foreground">Use an authenticator app to generate one-time codes</p>
               </div>
             </div>
-            <Button variant="outline">Enable</Button>
+            <Button variant="outline" onClick={() => toast.success("Two-factor enabled")}>Enable</Button>
           </div>
         </CardContent>
       </Card>
@@ -413,13 +414,13 @@ export function SecurityPanel() {
                 <p className="text-sm text-muted-foreground">{session.location} • {session.lastActive}</p>
               </div>
               {!session.current && (
-                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">Revoke</Button>
+                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => toast.success(`${session.device} signed out`)}>Revoke</Button>
               )}
             </div>
           ))}
         </CardContent>
         <CardFooter>
-          <Button variant="outline" className="text-destructive hover:text-destructive">
+          <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => confirm("Sign out of all devices?") && toast.success("Signed out of all devices")}>
             <AlertCircle className="w-4 h-4 mr-2" />
             Sign Out All Devices
           </Button>
