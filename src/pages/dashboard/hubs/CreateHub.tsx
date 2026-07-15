@@ -1,9 +1,9 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { Sparkles, Hash, Wand2 } from "lucide-react";
 import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
-import CaptionGenerator from "./CaptionGenerator";
-import HashtagResearch from "./HashtagResearch";
-import AIStudio from "./AIStudio";
+import CaptionGenerator from "../CaptionGenerator";
+import HashtagResearch from "../HashtagResearch";
+import AIStudio from "../AIStudio";
 
 const tabs: HubTab[] = [
   { label: "Captions", href: "/dashboard/create/captions", icon: Sparkles },
