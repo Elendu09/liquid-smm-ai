@@ -24,8 +24,11 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAccounts } from "@/contexts/AccountContext";
+import { toolPlatformRequirements, isPlatformCompatible } from "@/config/toolPlatformMap";
+import { getPlatformById } from "@/config/platforms";
 
 const navItems: { label: string; href: string; icon: typeof LayoutDashboard; toolKey?: string }[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
