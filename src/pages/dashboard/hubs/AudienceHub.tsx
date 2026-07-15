@@ -57,7 +57,8 @@ export default function AudienceHub() {
                 { id: "engaged", label: "Engaged" },
                 { id: "churned", label: "Churned" },
               ]}
-            />
+        />
+        <Route path="segments" element={<SegmentsBoard />} />
           }
         />
         <Route
