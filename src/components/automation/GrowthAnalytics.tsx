@@ -236,7 +236,10 @@ export const GrowthAnalytics = () => {
             </ResponsiveContainer>
           </div>
         </div>
+        </div>
       </div>
+
+
 
       {/* ROI Calculator */}
       <div className="glass-card p-6">
