@@ -1,9 +1,8 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { Bot, MessageSquare, MessageCircle } from "lucide-react";
 import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
-import EngagementBot from "../EngagementBot";
-import CommentManager from "../CommentManager";
-import DMAutomation from "../DMAutomation";
+import BotRulesView from "../views/BotRulesView";
+import { InboxBoard } from "../views/InboxBoard";
 
 const tabs: HubTab[] = [
   { label: "Engagement Bot", href: "/dashboard/engage/bot", icon: Bot },
@@ -32,9 +31,15 @@ export default function EngageHub() {
     <Routes>
       <Route element={<EngageLayout />}>
         <Route index element={<Navigate to="bot" replace />} />
-        <Route path="bot" element={<EngagementBot />} />
-        <Route path="comments" element={<CommentManager />} />
-        <Route path="dms" element={<DMAutomation />} />
+        <Route path="bot" element={<BotRulesView />} />
+        <Route
+          path="comments"
+          element={<InboxBoard kind="comment" title="Comments" description="Every comment across your accounts in one board." />}
+        />
+        <Route
+          path="dms"
+          element={<InboxBoard kind="dm" title="Direct Messages" description="All inbound DMs, sorted by conversation state." />}
+        />
       </Route>
     </Routes>
   );
