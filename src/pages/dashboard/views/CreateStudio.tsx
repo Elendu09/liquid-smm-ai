@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Send, Save, Trash2, Plus, Image as ImageIcon, Heart, MessageCircle, Share2 } from "lucide-react";
 import {
@@ -94,6 +95,7 @@ export default function CreateStudio() {
   const { items: drafts, setItems, add, update, remove } = useLocalCollection<Draft>("create", "drafts");
   const { add: addScheduled } = useScheduledPosts();
   const { accounts } = useAccounts();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Draft | null>(null);
@@ -103,6 +105,46 @@ export default function CreateStudio() {
     if (drafts.length === 0) setItems(seed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Prefill from ?draftId=<captionId> — pulls a caption from the Library
+  useEffect(() => {
+    const draftId = searchParams.get("draftId");
+    if (!draftId) return;
+    try {
+      const raw = window.localStorage.getItem("smmpilot:library:captions");
+      if (!raw) return;
+      const captions = JSON.parse(raw) as Array<{
+        id: string;
+        title: string;
+        body: string;
+        hashtags: string[];
+        platformIds: string[];
+      }>;
+      const cap = captions.find((c) => c.id === draftId);
+      if (!cap) return;
+      const body =
+        cap.hashtags.length > 0
+          ? `${cap.body}\n\n${cap.hashtags.map((h) => `#${h}`).join(" ")}`
+          : cap.body;
+      const newDraft: Draft = {
+        id: crypto.randomUUID(),
+        title: cap.title,
+        status: "draft",
+        caption: body,
+        platform: cap.platformIds[0] ?? accounts[0]?.platformId ?? "instagram",
+        createdAt: new Date().toISOString(),
+      };
+      add(newDraft);
+      setEditing(newDraft);
+      toast.success("Caption loaded into studio");
+      const next = new URLSearchParams(searchParams);
+      next.delete("draftId");
+      setSearchParams(next, { replace: true });
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const filtered = useMemo(
     () =>

@@ -1,6 +1,7 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { Clock, Bell } from "lucide-react";
 import { PageHeader, HubTabs, StatusBoard, type HubTab } from "@/components/dashboard/shell";
+import { ActivityFeedView } from "../views/ActivityFeedView";
 
 const tabs: HubTab[] = [
   { label: "Runs", href: "/dashboard/activity/runs", icon: Clock },
@@ -42,24 +43,7 @@ export default function ActivityHub() {
     <Routes>
       <Route element={<ActivityLayout />}>
         <Route index element={<Navigate to="runs" replace />} />
-        <Route
-          path="runs"
-          element={
-            <StatusBoard
-              storageKey="activity:runs"
-              hubKey="activity-runs"
-              icon={Clock}
-              searchPlaceholder="Search runs…"
-              addPlaceholder="Manual entry…"
-              seed={runSeed}
-              columns={[
-                { id: "pending", label: "Pending" },
-                { id: "success", label: "Success" },
-                { id: "failed", label: "Failed" },
-              ]}
-            />
-          }
-        />
+        <Route path="runs" element={<ActivityFeedView />} />
         <Route
           path="notifications"
           element={

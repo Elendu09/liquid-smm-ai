@@ -13,3 +13,5 @@ export { ListView } from "./ListView";
 export { ToolbarBar } from "./ToolbarBar";
 export { StatusBoard } from "./StatusBoard";
 export type { StatusItem } from "./StatusBoard";
+export { TimelineView } from "./TimelineView";
+export type { TimelineEvent, TimelineCategory, TimelineStatus } from "./TimelineView";

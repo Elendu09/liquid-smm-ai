@@ -1,9 +1,11 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
-import { Users, Target } from "lucide-react";
+import { Users, Target, Layers } from "lucide-react";
 import { PageHeader, HubTabs, StatusBoard, type HubTab } from "@/components/dashboard/shell";
+import SegmentsBoard from "../views/SegmentsBoard";
 
 const tabs: HubTab[] = [
   { label: "My Audience", href: "/dashboard/audience/followers", icon: Users },
+  { label: "Segments", href: "/dashboard/audience/segments", icon: Layers },
   { label: "Competitors", href: "/dashboard/audience/competitors", icon: Target },
 ];
 
@@ -58,6 +60,7 @@ export default function AudienceHub() {
             />
           }
         />
+        <Route path="segments" element={<SegmentsBoard />} />
         <Route
           path="competitors"
           element={
