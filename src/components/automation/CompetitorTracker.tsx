@@ -107,6 +107,9 @@ const CompetitorTracker = () => {
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${newCompetitor}`
       }]);
       setNewCompetitor("");
+      toast.success(`Added ${newCompetitor}`);
+    } else {
+      toast.error("Enter a username");
     }
   };
 
