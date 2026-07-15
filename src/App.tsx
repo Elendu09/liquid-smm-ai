@@ -37,6 +37,8 @@ import ContentLibrary from "@/pages/dashboard/ContentLibrary";
 import AIStudio from "@/pages/dashboard/AIStudio";
 import Reports from "@/pages/dashboard/Reports";
 import Notifications from "@/pages/dashboard/Notifications";
+import RunHistory from "@/pages/dashboard/RunHistory";
+import PresetsAndTemplates from "@/pages/dashboard/PresetsAndTemplates";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +80,8 @@ const App = () => (
                 <Route path="ai-studio" element={<AIStudio />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="notifications" element={<Notifications />} />
+                <Route path="history" element={<RunHistory />} />
+                <Route path="presets" element={<PresetsAndTemplates />} />
               </Route>
               
               {/* Catch-all */}

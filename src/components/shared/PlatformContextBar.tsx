@@ -1,17 +1,40 @@
-import { Repeat } from "lucide-react";
+import { Repeat, Clock, Star } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ConnectedAccount } from "@/contexts/AccountContext";
 import { getPlatformById } from "@/config/platforms";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { usePresets } from "@/hooks/usePresets";
 
 interface PlatformContextBarProps {
   toolLabel: string;
   accounts: ConnectedAccount[];
   onChange: () => void;
+  toolKey?: string;
+  selectedPresetId?: string;
+  onPresetChange?: (id: string) => void;
 }
 
-export function PlatformContextBar({ toolLabel, accounts, onChange }: PlatformContextBarProps) {
+export function PlatformContextBar({
+  toolLabel,
+  accounts,
+  onChange,
+  toolKey,
+  selectedPresetId,
+  onPresetChange,
+}: PlatformContextBarProps) {
+  const primaryPlatform = accounts[0]?.platformId;
+  const { rows: presets, defaultPreset } = usePresets(toolKey, primaryPlatform);
+  const activePresetId = selectedPresetId ?? defaultPreset?.id;
+
   return (
     <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-secondary/40 border border-border">
       <span className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
@@ -33,10 +56,35 @@ export function PlatformContextBar({ toolLabel, accounts, onChange }: PlatformCo
           );
         })}
       </div>
-      <Button size="sm" variant="ghost" className="ml-auto h-7" onClick={onChange}>
-        <Repeat className="mr-1 h-3 w-3" />
-        Change
-      </Button>
+
+      {toolKey && presets.length > 0 && (
+        <div className="flex items-center gap-1.5">
+          <Star className="h-3 w-3 text-muted-foreground" />
+          <Select value={activePresetId} onValueChange={(v) => onPresetChange?.(v)}>
+            <SelectTrigger className="h-7 w-[180px] text-xs">
+              <SelectValue placeholder="Preset" />
+            </SelectTrigger>
+            <SelectContent>
+              {presets.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}{p.isDefault ? " · default" : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      <div className="ml-auto flex items-center gap-1">
+        <Button asChild size="sm" variant="ghost" className="h-7">
+          <Link to="/dashboard/history">
+            <Clock className="mr-1 h-3 w-3" /> Activity
+          </Link>
+        </Button>
+        <Button size="sm" variant="ghost" className="h-7" onClick={onChange}>
+          <Repeat className="mr-1 h-3 w-3" /> Change
+        </Button>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Check, ChevronsUpDown, Plus, Settings } from "lucide-react";
+import { ConnectAccountDialog } from "@/components/accounts/ConnectAccountDialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +37,8 @@ const statusColors: Record<string, string> = {
 
 export function AccountSwitcher({ collapsed = false }: AccountSwitcherProps) {
   const [open, setOpen] = useState(false);
+  const [connectOpen, setConnectOpen] = useState(false);
+  const navigate = useNavigate();
   const { accounts, activeAccount, setActiveAccount, activePlatforms } =
     useAccounts();
 
@@ -88,8 +92,11 @@ export function AccountSwitcher({ collapsed = false }: AccountSwitcherProps) {
             setActiveAccount={setActiveAccount}
             setOpen={setOpen}
             formatFollowers={formatFollowers}
+            onConnect={() => setConnectOpen(true)}
+            onManage={() => navigate("/dashboard/account-health")}
           />
         </PopoverContent>
+        <ConnectAccountDialog open={connectOpen} onOpenChange={setConnectOpen} />
       </Popover>
     );
   }
@@ -148,8 +155,11 @@ export function AccountSwitcher({ collapsed = false }: AccountSwitcherProps) {
           setActiveAccount={setActiveAccount}
           setOpen={setOpen}
           formatFollowers={formatFollowers}
+          onConnect={() => setConnectOpen(true)}
+          onManage={() => navigate("/dashboard/account-health")}
         />
       </PopoverContent>
+      <ConnectAccountDialog open={connectOpen} onOpenChange={setConnectOpen} />
     </Popover>
   );
 }
@@ -160,12 +170,16 @@ function AccountSwitcherContent({
   setActiveAccount,
   setOpen,
   formatFollowers,
+  onConnect,
+  onManage,
 }: {
   groupedAccounts: Record<string, ConnectedAccount[]>;
   activeAccount: ConnectedAccount | null;
   setActiveAccount: (account: ConnectedAccount) => void;
   setOpen: (open: boolean) => void;
   formatFollowers: (count: number) => string;
+  onConnect: () => void;
+  onManage: () => void;
 }) {
   return (
     <Command>
@@ -249,7 +263,7 @@ function AccountSwitcherContent({
           <CommandItem
             onSelect={() => {
               setOpen(false);
-              // TODO: Open add account modal
+              onConnect();
             }}
             className="cursor-pointer"
           >
@@ -259,7 +273,7 @@ function AccountSwitcherContent({
           <CommandItem
             onSelect={() => {
               setOpen(false);
-              // TODO: Navigate to settings
+              onManage();
             }}
             className="cursor-pointer"
           >

@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { logRun } from "@/hooks/useRunHistory";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
@@ -325,6 +326,12 @@ export const DMAutomation = () => {
                       disabled={!replyText.trim()}
                       onClick={() => {
                         setMessages((prev) => prev.map((m) => (m.id === msg.id ? { ...m, replied: true } : m)));
+                        logRun({
+                          toolKey: "dm-automation",
+                          action: "reply",
+                          status: "success",
+                          input: { user: msg.user, message: replyText.slice(0, 200) },
+                        });
                         setReplyingTo(null);
                         setReplyText("");
                         toast.success(`Reply sent to ${msg.user}`);

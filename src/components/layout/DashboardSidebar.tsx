@@ -20,6 +20,8 @@ import {
   LinkIcon,
   Menu,
   X,
+  Clock,
+  Palette,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,8 @@ const navItems: { label: string; href: string; icon: typeof LayoutDashboard; too
   { label: "Follower Analyzer", href: "/dashboard/follower-analyzer", icon: Users, toolKey: "follower-analyzer" },
   { label: "Competitor Tracker", href: "/dashboard/competitor-tracker", icon: Target, toolKey: "competitor-tracker" },
   { label: "Link in Bio", href: "/dashboard/link-bio", icon: LinkIcon },
+  { label: "Presets & Templates", href: "/dashboard/presets", icon: Palette },
+  { label: "Activity", href: "/dashboard/history", icon: Clock },
 ];
 
 const bottomItems = [

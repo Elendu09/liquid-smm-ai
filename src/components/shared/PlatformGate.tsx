@@ -1,5 +1,4 @@
 import { ReactNode, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { AlertCircle, Check, Plug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +8,7 @@ import { platforms, Platform, getPlatformById } from "@/config/platforms";
 import { toolPlatformRequirements, isPlatformCompatible } from "@/config/toolPlatformMap";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { PlatformContextBar } from "@/components/shared/PlatformContextBar";
+import { ConnectAccountDialog } from "@/components/accounts/ConnectAccountDialog";
 
 export interface SelectedContext {
   platforms: Platform[];
@@ -27,6 +27,7 @@ export function PlatformGate({ toolKey, children }: PlatformGateProps) {
   const { accounts } = useAccounts();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [confirmed, setConfirmed] = useState(false);
+  const [connectOpen, setConnectOpen] = useState(false);
 
   // Rehydrate selection
   useEffect(() => {
@@ -99,6 +100,7 @@ export function PlatformGate({ toolKey, children }: PlatformGateProps) {
           toolLabel={req.label}
           accounts={selectedAccounts}
           onChange={change}
+          toolKey={String(toolKey)}
         />
         {children({ platforms: selectedPlatforms, accounts: selectedAccounts })}
       </div>
@@ -128,11 +130,9 @@ export function PlatformGate({ toolKey, children }: PlatformGateProps) {
                 {req.label} needs an account that supports this feature.
               </p>
             </div>
-            <Button asChild>
-              <Link to="/dashboard/account-health">
-                <Plug className="mr-2 h-4 w-4" />
-                Connect an account
-              </Link>
+            <Button onClick={() => setConnectOpen(true)}>
+              <Plug className="mr-2 h-4 w-4" />
+              Connect an account
             </Button>
           </div>
         ) : (
@@ -200,6 +200,7 @@ export function PlatformGate({ toolKey, children }: PlatformGateProps) {
           </div>
         )}
       </div>
+      <ConnectAccountDialog open={connectOpen} onOpenChange={setConnectOpen} />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCaption, useTranslate, useGrammarFix } from "@/hooks/useSkyrank";
 import { toast } from "@/hooks/use-toast";
+import { logRun } from "@/hooks/useRunHistory";
 import {
   Select,
   SelectContent,
@@ -66,7 +67,28 @@ export const AICaptionGenerator = ({ defaultPlatformId }: AICaptionGeneratorProp
       toast({ title: "Please enter a topic", variant: "destructive" });
       return;
     }
-    await generate(topic, selectedTone);
+    const start = performance.now();
+    try {
+      await generate(topic, selectedTone);
+      logRun({
+        toolKey: "caption-generator",
+        action: "generate",
+        platform: selectedPlatform,
+        status: "success",
+        input: { topic, tone: selectedTone },
+        durationMs: Math.round(performance.now() - start),
+      });
+    } catch (e) {
+      logRun({
+        toolKey: "caption-generator",
+        action: "generate",
+        platform: selectedPlatform,
+        status: "failed",
+        input: { topic, tone: selectedTone },
+        error: e instanceof Error ? e.message : String(e),
+        durationMs: Math.round(performance.now() - start),
+      });
+    }
   };
 
   const handleCopy = () => {

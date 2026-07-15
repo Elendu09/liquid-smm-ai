@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { logRun } from "@/hooks/useRunHistory";
 import type { Platform } from "@/config/platforms";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
@@ -149,6 +150,7 @@ export const SmartPostScheduler = ({ selectedPlatforms = [] }: SmartPostSchedule
                       className="text-destructive"
                       onClick={() => {
                         remove(post.id);
+                        logRun({ toolKey: "scheduler", action: "delete", status: "success", input: { id: post.id } });
                         toast.success("Post deleted");
                       }}
                     >
@@ -186,6 +188,13 @@ export const SmartPostScheduler = ({ selectedPlatforms = [] }: SmartPostSchedule
         captionCap={minCaptionCap}
         onSave={(post) => {
           add(post);
+          logRun({
+            toolKey: "scheduler",
+            action: "schedule",
+            platform: post.platformIds?.[0],
+            status: "success",
+            input: { caption: post.caption?.slice(0, 120), scheduledAt: post.scheduledAt, platforms: post.platformIds },
+          });
           setDialogOpen(false);
           toast.success("Post scheduled");
         }}
