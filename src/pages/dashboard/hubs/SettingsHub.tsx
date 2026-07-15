@@ -1,7 +1,7 @@
-import { Outlet, Route, Routes, Navigate } from "react-router-dom";
-import { UserCog, Users } from "lucide-react";
-import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
-import Settings from "@/pages/Settings";
+import { Outlet, Route, Routes, Navigate, Link } from "react-router-dom";
+import { UserCog, Users, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PageHeader, HubTabs, SectionCard, type HubTab } from "@/components/dashboard/shell";
 import Team from "../Team";
 
 const tabs: HubTab[] = [
@@ -9,12 +9,28 @@ const tabs: HubTab[] = [
   { label: "Team", href: "/dashboard/settings/team", icon: Users },
 ];
 
+function AccountPanel() {
+  return (
+    <SectionCard
+      title="Account preferences"
+      description="Profile, notifications, connected platforms, and billing live on the full settings page."
+    >
+      <Button asChild>
+        <Link to="/settings">
+          Open account settings
+          <ExternalLink className="ml-2 h-4 w-4" />
+        </Link>
+      </Button>
+    </SectionCard>
+  );
+}
+
 function SettingsLayout() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <PageHeader
         title="Settings"
-        description="Account preferences, team, connected platforms, and billing."
+        description="Account preferences and team management."
         breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Settings" }]}
       />
       <HubTabs tabs={tabs}>
@@ -29,7 +45,7 @@ export default function SettingsHub() {
     <Routes>
       <Route element={<SettingsLayout />}>
         <Route index element={<Navigate to="account" replace />} />
-        <Route path="account" element={<Settings />} />
+        <Route path="account" element={<AccountPanel />} />
         <Route path="team" element={<Team />} />
       </Route>
     </Routes>
