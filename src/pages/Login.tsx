@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,17 +7,51 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, Instagram, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+function safeNext(next: string | null): string {
+  if (!next) return "/dashboard";
+  // Only allow same-origin relative paths.
+  if (!next.startsWith("/") || next.startsWith("//")) return "/dashboard";
+  return next;
+}
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const next = safeNext(searchParams.get("next"));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate(next, { replace: true });
+    });
+  }, [navigate, next]);
+
+  const handleGoogle = async () => {
+    const redirectTo = `${window.location.origin}${next}`;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo },
+    });
+    if (error) toast.error(error.message);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login submitted:", { email, password, rememberMe });
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    navigate(next, { replace: true });
   };
 
   return (
