@@ -135,77 +135,10 @@ export function AccountPanel() {
   );
 }
 
-export function NotificationsPanel() {
-  const [notifications, setNotifications] = useState({
-    emailDigest: true,
-    pushNotifications: true,
-    weeklyReport: true,
-    newFollowers: false,
-    engagementAlerts: true,
-    productUpdates: true,
-    marketingEmails: false,
-    smsAlerts: false,
-  });
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Email Notifications</CardTitle>
-          <CardDescription>Manage your email notification preferences</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {[
-            { key: "emailDigest", label: "Daily Email Digest", description: "Receive a daily summary of your account activity" },
-            { key: "weeklyReport", label: "Weekly Analytics Report", description: "Get weekly performance insights and recommendations" },
-            { key: "engagementAlerts", label: "Engagement Alerts", description: "Notify when posts receive high engagement" },
-            { key: "productUpdates", label: "Product Updates", description: "Learn about new features and improvements" },
-            { key: "marketingEmails", label: "Marketing Emails", description: "Receive tips, tutorials, and promotional content" },
-          ].map((item) => (
-            <div key={item.key} className="flex items-center justify-between">
-              <div>
-                <Label htmlFor={item.key} className="font-medium">{item.label}</Label>
-                <p className="text-sm text-muted-foreground">{item.description}</p>
-              </div>
-              <Switch
-                id={item.key}
-                checked={notifications[item.key as keyof typeof notifications]}
-                onCheckedChange={(checked) => setNotifications({ ...notifications, [item.key]: checked })}
-              />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+import { NotificationPreferencesMatrix } from "./NotificationPreferencesMatrix";
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Push Notifications</CardTitle>
-          <CardDescription>Manage browser and mobile push notifications</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {[
-            { key: "pushNotifications", label: "Push Notifications", description: "Receive push notifications in your browser" },
-            { key: "newFollowers", label: "New Follower Alerts", description: "Get notified when you gain new followers" },
-            { key: "smsAlerts", label: "SMS Alerts", description: "Receive important alerts via SMS" },
-          ].map((item) => (
-            <div key={item.key} className="flex items-center justify-between">
-              <div>
-                <Label htmlFor={item.key} className="font-medium">{item.label}</Label>
-                <p className="text-sm text-muted-foreground">{item.description}</p>
-              </div>
-              <Switch
-                id={item.key}
-                checked={notifications[item.key as keyof typeof notifications]}
-                onCheckedChange={(checked) => setNotifications({ ...notifications, [item.key]: checked })}
-              />
-            </div>
-          ))}
-        </CardContent>
-        <CardFooter>
-          <Button onClick={() => toast.success("Notification preferences saved")}>Save Preferences</Button>
-        </CardFooter>
-      </Card>
-    </div>
-  );
+export function NotificationsPanel() {
+  return <NotificationPreferencesMatrix />;
 }
 
 export function ConnectedPanel() {
