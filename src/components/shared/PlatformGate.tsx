@@ -200,6 +200,7 @@ export function PlatformGate({ toolKey, children }: PlatformGateProps) {
           </div>
         )}
       </div>
+      <ConnectAccountDialog open={connectOpen} onOpenChange={setConnectOpen} />
     </div>
   );
 }
