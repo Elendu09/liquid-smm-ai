@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Check, ChevronsUpDown, Plus, Settings } from "lucide-react";
+import { ConnectAccountDialog } from "@/components/accounts/ConnectAccountDialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
