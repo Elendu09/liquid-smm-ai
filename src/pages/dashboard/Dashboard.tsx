@@ -23,6 +23,7 @@ import {
   SectionCard,
   EmptyState,
 } from "@/components/dashboard/shell";
+import { MobileHubNav } from "@/components/dashboard/shell/MobileHubNav";
 import { useAccounts } from "@/contexts/AccountContext";
 import { useRunHistory } from "@/hooks/useRunHistory";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
