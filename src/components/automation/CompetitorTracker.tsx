@@ -453,7 +453,7 @@ const CompetitorTracker = () => {
                   </div>
                 ))}
               </div>
-              <Button className="w-full mt-4" variant="outline">
+              <Button className="w-full mt-4" variant="outline" onClick={() => toast("Alert configuration coming soon")}>
                 Configure Alerts
               </Button>
             </CardContent>
