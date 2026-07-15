@@ -201,7 +201,8 @@ export function GrowthStory() {
                     fontSize={12}
                     tickFormatter={(v) => `${v / 1000}k`}
                   />
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip content={<StoryTooltip kpi="Followers" unit="" data={followerData} dataKey="followers" />} />
+
                   <Area
                     type="monotone"
                     dataKey="followers"
@@ -246,7 +247,7 @@ export function GrowthStory() {
                     fontSize={12}
                     tickFormatter={(v) => `${v}%`}
                   />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`${v}%`, "Engagement"]} />
+                  <Tooltip content={<StoryTooltip kpi="Engagement rate" unit="%" data={followerData} dataKey="engagement" />} />
                   <Line
                     type="monotone"
                     dataKey="engagement"
@@ -293,7 +294,7 @@ export function GrowthStory() {
                     fontSize={12}
                     tickFormatter={(v) => `${v / 1000}k`}
                   />
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip content={<StoryTooltip kpi="Followers (projected)" unit="" data={projected as unknown as Array<Record<string, number | string | null>>} dataKey="followers" />} />
                   <Area
                     type="monotone"
                     dataKey="followers"
