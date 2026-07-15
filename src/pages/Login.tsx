@@ -182,7 +182,7 @@ const Login = () => {
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">
+              <Link to={`/signup?next=${encodeURIComponent(next)}`} className="text-primary hover:underline font-medium">
                 Sign up for free
               </Link>
             </div>
