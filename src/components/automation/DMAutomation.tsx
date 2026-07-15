@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { MessageSquare, Bot, Send, Plus, Zap, Users, Clock, Target, Sparkles, ArrowRight, Settings2, Play, Pause } from "lucide-react";
+import { MessageSquare, Bot, Send, Plus, Zap, Users, Clock, Target, Sparkles, ArrowRight, Settings2, Play, Pause, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 const welcomeTemplates = [
   { id: 1, name: "New Follower Welcome", trigger: "new_follow", message: "Hey! 👋 Thanks for following! How can I help you today?", active: true, sent: 1247 },
@@ -34,9 +37,38 @@ const faqFlows = [
 
 export const DMAutomation = () => {
   const [isActive, setIsActive] = useState(true);
-  const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
+  const [templates, setTemplates] = useState(welcomeTemplates);
+  const [keywords, setKeywords] = useState(keywordResponses);
+  const [messages, setMessages] = useState(recentMessages);
   const [newKeyword, setNewKeyword] = useState("");
   const [newResponse, setNewResponse] = useState("");
+  const [welcomeDialog, setWelcomeDialog] = useState(false);
+  const [welcomeName, setWelcomeName] = useState("");
+  const [welcomeTrigger, setWelcomeTrigger] = useState("new_follow");
+  const [welcomeMessage, setWelcomeMessage] = useState("");
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyText, setReplyText] = useState("");
+
+  const toggleBot = () => {
+    setIsActive((prev) => {
+      toast(prev ? "DM bot paused" : "DM bot started");
+      return !prev;
+    });
+  };
+
+  const addKeyword = () => {
+    if (!newKeyword.trim() || !newResponse.trim()) {
+      toast.error("Fill in both fields");
+      return;
+    }
+    setKeywords((prev) => [
+      ...prev,
+      { id: Date.now(), keyword: newKeyword.trim(), response: newResponse.trim(), active: true },
+    ]);
+    setNewKeyword("");
+    setNewResponse("");
+    toast.success("Keyword response added");
+  };
 
   const stats = {
     totalSent: "4.8K",
@@ -44,6 +76,7 @@ export const DMAutomation = () => {
     avgResponseTime: "< 1 min",
     leadsGenerated: 156,
   };
+
 
   return (
     <div className="space-y-6">
@@ -59,7 +92,7 @@ export const DMAutomation = () => {
           </div>
         </div>
         <Button
-          onClick={() => setIsActive(!isActive)}
+          onClick={toggleBot}
           className={isActive 
             ? "bg-brand-green hover:bg-brand-green/90 text-white" 
             : "bg-secondary hover:bg-secondary/90"
@@ -117,13 +150,13 @@ export const DMAutomation = () => {
               <Sparkles className="h-5 w-5 text-primary" />
               Welcome Messages
             </h4>
-            <Button size="sm" variant="outline">
+            <Button size="sm" variant="outline" onClick={() => setWelcomeDialog(true)}>
               <Plus className="mr-1 h-4 w-4" />
               Add
             </Button>
           </div>
           <div className="space-y-3">
-            {welcomeTemplates.map((template) => (
+            {templates.map((template) => (
               <div
                 key={template.id}
                 className={`p-4 rounded-xl border transition-all ${
@@ -137,7 +170,13 @@ export const DMAutomation = () => {
                       Trigger: {template.trigger}
                     </Badge>
                   </div>
-                  <Switch checked={template.active} />
+                  <Switch
+                    checked={template.active}
+                    onCheckedChange={(v) => {
+                      setTemplates((prev) => prev.map((t) => (t.id === template.id ? { ...t, active: v } : t)));
+                      toast(v ? "Template enabled" : "Template disabled");
+                    }}
+                  />
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">{template.message}</p>
                 <p className="text-xs text-muted-foreground">
@@ -157,21 +196,39 @@ export const DMAutomation = () => {
             </h4>
           </div>
           <div className="space-y-3 mb-4">
-            {keywordResponses.map((item) => (
+            {keywords.map((item) => (
               <div
                 key={item.id}
                 className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <Badge className="bg-primary/10 text-primary border-primary/30">
                     {item.keyword}
                   </Badge>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground truncate max-w-[200px]">
+                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="text-sm text-muted-foreground truncate max-w-[180px]">
                     {item.response}
                   </span>
                 </div>
-                <Switch checked={item.active} />
+                <div className="flex items-center gap-1">
+                  <Switch
+                    checked={item.active}
+                    onCheckedChange={(v) =>
+                      setKeywords((prev) => prev.map((k) => (k.id === item.id ? { ...k, active: v } : k)))
+                    }
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 text-destructive"
+                    onClick={() => {
+                      setKeywords((prev) => prev.filter((k) => k.id !== item.id));
+                      toast.success("Keyword removed");
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -190,7 +247,7 @@ export const DMAutomation = () => {
                 onChange={(e) => setNewResponse(e.target.value)}
                 className="bg-secondary/50 min-h-[60px]"
               />
-              <Button className="w-full bg-primary hover:bg-primary/90">
+              <Button onClick={addKeyword} className="w-full bg-primary hover:bg-primary/90">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Keyword Response
               </Button>
@@ -207,44 +264,83 @@ export const DMAutomation = () => {
             Recent Messages
           </h4>
           <Badge variant="secondary">
-            {recentMessages.filter(m => !m.replied).length} pending
+            {messages.filter(m => !m.replied).length} pending
           </Badge>
         </div>
         <div className="space-y-3">
-          {recentMessages.map((msg) => (
+          {messages.map((msg) => (
             <div
               key={msg.id}
-              className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border"
+              className="flex flex-col gap-3 p-4 rounded-xl bg-secondary/30 border border-border"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-brand-purple flex items-center justify-center text-white font-bold text-sm">
-                  {msg.avatar}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium">{msg.user}</p>
-                    {msg.autoReplied && (
-                      <Badge variant="secondary" className="text-xs bg-brand-green/10 text-brand-green">
-                        <Bot className="h-3 w-3 mr-1" />
-                        Auto
-                      </Badge>
-                    )}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-brand-purple flex items-center justify-center text-white font-bold text-sm shrink-0">
+                    {msg.avatar}
                   </div>
-                  <p className="text-sm text-muted-foreground">{msg.message}</p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium truncate">{msg.user}</p>
+                      {msg.autoReplied && (
+                        <Badge variant="secondary" className="text-xs bg-brand-green/10 text-brand-green">
+                          <Bot className="h-3 w-3 mr-1" />
+                          Auto
+                        </Badge>
+                      )}
+                      {msg.replied && !msg.autoReplied && (
+                        <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">Replied</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{msg.message}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-xs text-muted-foreground hidden sm:inline">{msg.time}</span>
+                  {!msg.replied && (
+                    <Button
+                      size="sm"
+                      className="bg-primary hover:bg-primary/90"
+                      onClick={() => {
+                        setReplyingTo(replyingTo === msg.id ? null : msg.id);
+                        setReplyText("");
+                      }}
+                    >
+                      Reply
+                    </Button>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-muted-foreground">{msg.time}</span>
-                {!msg.replied && (
-                  <Button size="sm" className="bg-primary hover:bg-primary/90">
-                    Reply
-                  </Button>
-                )}
-              </div>
+              {replyingTo === msg.id && (
+                <div className="animate-fade-in-scale flex flex-col gap-2">
+                  <Textarea
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="Type your reply…"
+                    className="min-h-[70px] bg-background"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => setReplyingTo(null)}>Cancel</Button>
+                    <Button
+                      size="sm"
+                      disabled={!replyText.trim()}
+                      onClick={() => {
+                        setMessages((prev) => prev.map((m) => (m.id === msg.id ? { ...m, replied: true } : m)));
+                        setReplyingTo(null);
+                        setReplyText("");
+                        toast.success(`Reply sent to ${msg.user}`);
+                      }}
+                    >
+                      <Send className="h-3 w-3 mr-1" />
+                      Send
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
       </div>
+
 
       {/* FAQ Flows */}
       <div className="glass-card p-6">
@@ -274,6 +370,52 @@ export const DMAutomation = () => {
           ))}
         </div>
       </div>
+
+      {/* Welcome Message Dialog */}
+      <Dialog open={welcomeDialog} onOpenChange={setWelcomeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Welcome Message</DialogTitle>
+            <DialogDescription>Create an auto-reply triggered by follows, mentions, or keywords.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="wm-name">Name</Label>
+              <Input id="wm-name" value={welcomeName} onChange={(e) => setWelcomeName(e.target.value)} placeholder="New Follower Welcome" />
+            </div>
+            <div>
+              <Label htmlFor="wm-trigger">Trigger</Label>
+              <Input id="wm-trigger" value={welcomeTrigger} onChange={(e) => setWelcomeTrigger(e.target.value)} placeholder="new_follow, story_reply, keyword:..." />
+            </div>
+            <div>
+              <Label htmlFor="wm-message">Message</Label>
+              <Textarea id="wm-message" value={welcomeMessage} onChange={(e) => setWelcomeMessage(e.target.value)} placeholder="Hey! Thanks for following…" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setWelcomeDialog(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (!welcomeName.trim() || !welcomeMessage.trim()) {
+                  toast.error("Name and message are required");
+                  return;
+                }
+                setTemplates((prev) => [
+                  ...prev,
+                  { id: Date.now(), name: welcomeName.trim(), trigger: welcomeTrigger, message: welcomeMessage.trim(), active: true, sent: 0 },
+                ]);
+                setWelcomeName("");
+                setWelcomeMessage("");
+                setWelcomeDialog(false);
+                toast.success("Welcome message added");
+              }}
+            >
+              Add
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+

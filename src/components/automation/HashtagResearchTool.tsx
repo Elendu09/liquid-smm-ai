@@ -60,9 +60,13 @@ const getDifficultyColor = (difficulty: string) => {
   }
 };
 
-export const HashtagResearchTool = () => {
+interface HashtagResearchToolProps {
+  defaultPlatformId?: string;
+}
+
+export const HashtagResearchTool = ({ defaultPlatformId }: HashtagResearchToolProps = {}) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPlatform, setSelectedPlatform] = useState("instagram");
+  const [selectedPlatform, setSelectedPlatform] = useState(defaultPlatformId || "instagram");
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
   const [copiedSet, setCopiedSet] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);

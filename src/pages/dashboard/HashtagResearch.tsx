@@ -1,13 +1,20 @@
+import { PlatformGate } from "@/components/shared/PlatformGate";
 import { HashtagResearchTool } from "@/components/automation/HashtagResearchTool";
 
 export default function HashtagResearchPage() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold">Hashtag Research</h1>
-        <p className="text-muted-foreground mt-1">Discover trending hashtags to boost your reach.</p>
-      </div>
-      <HashtagResearchTool />
-    </div>
+    <PlatformGate toolKey="hashtag-research">
+      {(ctx) => (
+        <>
+          <div className="mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold">Hashtag Research</h1>
+            <p className="text-muted-foreground mt-1">
+              Discover trending hashtags to boost your reach on {ctx.platforms[0]?.name}.
+            </p>
+          </div>
+          <HashtagResearchTool defaultPlatformId={ctx.platforms[0]?.id} />
+        </>
+      )}
+    </PlatformGate>
   );
 }
