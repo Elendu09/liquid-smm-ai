@@ -11,3 +11,5 @@ export { KanbanBoard } from "./KanbanBoard";
 export type { KanbanColumnDef } from "./KanbanBoard";
 export { ListView } from "./ListView";
 export { ToolbarBar } from "./ToolbarBar";
+export { StatusBoard } from "./StatusBoard";
+export type { StatusItem } from "./StatusBoard";
