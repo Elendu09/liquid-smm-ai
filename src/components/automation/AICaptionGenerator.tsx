@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCaption, useTranslate, useGrammarFix } from "@/hooks/useSkyrank";
 import { toast } from "@/hooks/use-toast";
+import { logRun } from "@/hooks/useRunHistory";
 import {
   Select,
   SelectContent,
