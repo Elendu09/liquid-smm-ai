@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const benefits = [
@@ -11,66 +11,71 @@ const benefits = [
 
 export function CTASection() {
   return (
-    <section className="py-20 lg:py-32 relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-brand-blue via-brand-purple to-brand-pink opacity-90" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
-      
-      {/* Glow Effects */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+    <section
+      aria-labelledby="cta-heading"
+      className="relative overflow-hidden bg-[hsl(var(--canvas))] text-[hsl(var(--canvas-ink))]"
+    >
+      {/* Subtle grain */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-multiply"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+        }}
+      />
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-8">
-            <Sparkles className="w-4 h-4 text-white" />
-            <span className="text-sm font-medium text-white">Start Growing Today</span>
-          </div>
-
-          {/* Headline */}
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-            Ready to Automate Your{" "}
-            <span className="underline decoration-wavy decoration-white/50 underline-offset-4">
-              Social Media Growth?
-            </span>
-          </h2>
-
-          {/* Subheadline */}
-          <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-            Join thousands of marketers who are saving 20+ hours per week and growing their audience on autopilot.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-            <Link to="/dashboard">
-              <Button
-                size="lg"
-                className="bg-white text-brand-purple hover:bg-white/90 px-8 h-14 text-lg font-semibold shadow-2xl"
-              >
-                Start Free Trial
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white/30 text-white hover:bg-white/10 px-8 h-14 text-lg"
+      <div className="container mx-auto px-4 py-20 lg:py-32 relative">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16 items-center">
+          {/* Left: headline */}
+          <div className="lg:col-span-7">
+            <p className="text-xs uppercase tracking-[0.25em] text-[hsl(var(--canvas-muted))] mb-6">
+              — Start growing today
+            </p>
+            <h2
+              id="cta-heading"
+              className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl xl:text-8xl leading-[0.95] tracking-tight"
             >
-              Schedule Demo
-            </Button>
+              Ready to automate your
+              <span className="italic"> social media growth</span>?
+            </h2>
           </div>
 
-          {/* Benefits */}
-          <div className="flex flex-wrap items-center justify-center gap-6">
-            {benefits.map((benefit) => (
-              <div key={benefit} className="flex items-center gap-2 text-white/90">
-                <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-                  <Check className="w-3 h-3 text-white" />
-                </div>
-                <span className="text-sm">{benefit}</span>
-              </div>
-            ))}
+          {/* Right: copy + CTA */}
+          <div className="lg:col-span-5 lg:pl-8 lg:border-l lg:border-[hsl(var(--canvas-border))]">
+            <p className="text-lg text-[hsl(var(--canvas-muted))] mb-8 max-w-md leading-relaxed">
+              Join thousands of marketers saving 20+ hours per week and growing their
+              audience on autopilot with SMMSAAS.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+              <Link to="/dashboard" className="w-full sm:w-auto">
+                <Button
+                  variant="ink"
+                  size="lg"
+                  className="w-full sm:w-auto h-12 px-8 text-base font-semibold rounded-full"
+                >
+                  Start Free Trial
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto h-12 px-8 text-base rounded-full border-[hsl(var(--canvas-ink))]/25 bg-transparent text-[hsl(var(--canvas-ink))] hover:bg-[hsl(var(--canvas-ink))]/5"
+              >
+                Schedule Demo
+              </Button>
+            </div>
+
+            <ul className="grid grid-cols-2 gap-y-2 gap-x-4">
+              {benefits.map((b) => (
+                <li key={b} className="flex items-center gap-2 text-sm text-[hsl(var(--canvas-muted))]">
+                  <Check className="w-4 h-4 text-[hsl(var(--canvas-ink))]" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sparkles, Copy, RefreshCw, Check, Instagram, Youtube, Twitter, Facebook, Linkedin, Languages, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCaption, useTranslate, useGrammarFix } from "@/hooks/useSkyrank";
 import { toast } from "@/hooks/use-toast";
 import { logRun } from "@/hooks/useRunHistory";
+import { useActivePreset } from "@/hooks/useActivePreset";
+import { PresetChip } from "@/components/shared/PresetChip";
 import {
   Select,
   SelectContent,
@@ -53,10 +55,19 @@ interface AICaptionGeneratorProps {
 
 export const AICaptionGenerator = ({ defaultPlatformId }: AICaptionGeneratorProps = {}) => {
   const [selectedPlatform, setSelectedPlatform] = useState(defaultPlatformId || "instagram");
-  const [selectedTone, setSelectedTone] = useState("professional");
-  const [topic, setTopic] = useState("");
+  const { preset, tone: presetTone, presetName, cta, hashtagCount, template } = useActivePreset(
+    "caption-generator",
+    selectedPlatform,
+  );
+  const [selectedTone, setSelectedTone] = useState(presetTone);
+  const [topic, setTopic] = useState(template?.body ?? "");
   const [copied, setCopied] = useState(false);
   const [translateTo, setTranslateTo] = useState("");
+
+  // Sync tone when preset changes (e.g. user picks different one in context bar)
+  useEffect(() => {
+    if (preset?.id) setSelectedTone(presetTone);
+  }, [preset?.id, presetTone]);
 
   const { data: generatedCaption, isLoading: isGenerating, generate } = useCaption();
   const { isLoading: isTranslating, translate } = useTranslate();
@@ -68,14 +79,15 @@ export const AICaptionGenerator = ({ defaultPlatformId }: AICaptionGeneratorProp
       return;
     }
     const start = performance.now();
+    const enrichedTopic = cta ? `${topic}\n\nCall to action: ${cta}` : topic;
     try {
-      await generate(topic, selectedTone);
+      await generate(enrichedTopic, selectedTone);
       logRun({
         toolKey: "caption-generator",
         action: "generate",
         platform: selectedPlatform,
         status: "success",
-        input: { topic, tone: selectedTone },
+        input: { topic, tone: selectedTone, presetName, hashtagCount },
         durationMs: Math.round(performance.now() - start),
       });
     } catch (e) {
@@ -84,7 +96,7 @@ export const AICaptionGenerator = ({ defaultPlatformId }: AICaptionGeneratorProp
         action: "generate",
         platform: selectedPlatform,
         status: "failed",
-        input: { topic, tone: selectedTone },
+        input: { topic, tone: selectedTone, presetName },
         error: e instanceof Error ? e.message : String(e),
         durationMs: Math.round(performance.now() - start),
       });
@@ -119,19 +131,22 @@ export const AICaptionGenerator = ({ defaultPlatformId }: AICaptionGeneratorProp
 
   return (
     <div className="glass-card p-6 md:p-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 rounded-xl bg-primary/10 glow-blue">
-          <Sparkles className="h-6 w-6 text-primary" />
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-xl bg-primary/10 glow-blue">
+            <Sparkles className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold">AI Caption Generator</h3>
+            <p className="text-sm text-muted-foreground">
+              Create engagement-optimized captions with real AI
+              {generatedCaption?.isAI && (
+                <Badge variant="secondary" className="ml-2 text-xs">AI Powered</Badge>
+              )}
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-xl font-bold">AI Caption Generator</h3>
-          <p className="text-sm text-muted-foreground">
-            Create engagement-optimized captions with real AI
-            {generatedCaption?.isAI && (
-              <Badge variant="secondary" className="ml-2 text-xs">AI Powered</Badge>
-            )}
-          </p>
-        </div>
+        <PresetChip toolKey="caption-generator" platform={selectedPlatform} />
       </div>
 
       <div className="space-y-6">

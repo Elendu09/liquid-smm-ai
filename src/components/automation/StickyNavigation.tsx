@@ -69,11 +69,11 @@ export const StickyNavigation = () => {
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-r from-primary to-brand-purple">
+              <div className="p-2 rounded-xl bg-primary">
                 <Zap className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="font-bold text-lg">HOME OF SMM</h1>
+                <h1 className="font-bold text-lg">SMMSAAS</h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">Automation Suite</p>
               </div>
             </div>

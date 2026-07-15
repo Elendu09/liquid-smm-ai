@@ -13,6 +13,7 @@ import { ConnectAccountDialog } from "@/components/accounts/ConnectAccountDialog
 export interface SelectedContext {
   platforms: Platform[];
   accounts: ConnectedAccount[];
+  toolKey: string;
 }
 
 interface PlatformGateProps {
@@ -85,7 +86,7 @@ export function PlatformGate({ toolKey, children }: PlatformGateProps) {
 
   if (!req) {
     // Unknown tool key → render without gating.
-    return <>{children({ platforms: [], accounts: [] })}</>;
+    return <>{children({ platforms: [], accounts: [], toolKey: String(toolKey) })}</>;
   }
 
   if (confirmed && selectedIds.length) {
@@ -102,7 +103,7 @@ export function PlatformGate({ toolKey, children }: PlatformGateProps) {
           onChange={change}
           toolKey={String(toolKey)}
         />
-        {children({ platforms: selectedPlatforms, accounts: selectedAccounts })}
+        {children({ platforms: selectedPlatforms, accounts: selectedAccounts, toolKey: String(toolKey) })}
       </div>
     );
   }

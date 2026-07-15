@@ -66,7 +66,7 @@ export const AIAssistantWidget = () => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 p-4 rounded-full bg-gradient-to-r from-primary to-brand-purple text-white shadow-lg glow-blue-intense hover:scale-105 transition-transform group"
+        className="fixed bottom-6 right-6 z-50 p-4 rounded-full bg-primary text-primary-foreground shadow-lg glow-blue-intense hover:scale-105 transition-transform group"
       >
         <Bot className="h-6 w-6" />
         <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-green rounded-full flex items-center justify-center">
@@ -90,7 +90,7 @@ export const AIAssistantWidget = () => {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-primary/10 to-brand-purple/10">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-primary to-brand-purple">
+            <div className="p-2 rounded-lg bg-primary">
               <Bot className="h-5 w-5 text-white" />
             </div>
             <div>

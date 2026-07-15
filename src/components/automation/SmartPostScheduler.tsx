@@ -12,6 +12,8 @@ import { logRun } from "@/hooks/useRunHistory";
 import type { Platform } from "@/config/platforms";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
+import { useActivePreset } from "@/hooks/useActivePreset";
+import { PresetChip } from "@/components/shared/PresetChip";
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -25,6 +27,8 @@ export const SmartPostScheduler = ({ selectedPlatforms = [] }: SmartPostSchedule
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { posts, add, remove } = useScheduledPosts();
+  const primaryPlatform = selectedPlatforms[0]?.id;
+  const { template, presetName, cta } = useActivePreset("scheduler", primaryPlatform);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -58,10 +62,13 @@ export const SmartPostScheduler = ({ selectedPlatforms = [] }: SmartPostSchedule
             <p className="text-sm text-muted-foreground">Plan and automate cross-platform posting</p>
           </div>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Plus className="mr-2 h-4 w-4" />
-          Schedule Post
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <PresetChip toolKey="scheduler" platform={primaryPlatform} />
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Schedule Post
+          </Button>
+        </div>
       </div>
 
       {/* Calendar Header */}
@@ -186,6 +193,7 @@ export const SmartPostScheduler = ({ selectedPlatforms = [] }: SmartPostSchedule
         onClose={() => setDialogOpen(false)}
         platforms={selectedPlatforms}
         captionCap={minCaptionCap}
+        initialCaption={template?.body ? (cta ? `${template.body}\n\n${cta}` : template.body) : ""}
         onSave={(post) => {
           add(post);
           logRun({
@@ -193,7 +201,13 @@ export const SmartPostScheduler = ({ selectedPlatforms = [] }: SmartPostSchedule
             action: "schedule",
             platform: post.platformIds?.[0],
             status: "success",
-            input: { caption: post.caption?.slice(0, 120), scheduledAt: post.scheduledAt, platforms: post.platformIds },
+            input: {
+              caption: post.caption?.slice(0, 120),
+              scheduledAt: post.scheduledAt,
+              platforms: post.platformIds,
+              presetName,
+              templateName: template?.name,
+            },
           });
           setDialogOpen(false);
           toast.success("Post scheduled");
@@ -208,15 +222,17 @@ function SchedulePostDialog({
   onClose,
   platforms,
   captionCap,
+  initialCaption = "",
   onSave,
 }: {
   open: boolean;
   onClose: () => void;
   platforms: Platform[];
   captionCap: number;
+  initialCaption?: string;
   onSave: (post: { caption: string; mediaUrl?: string; scheduledAt: string; platformIds: string[] }) => void;
 }) {
-  const [caption, setCaption] = useState("");
+  const [caption, setCaption] = useState(initialCaption);
   const [mediaUrl, setMediaUrl] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [time, setTime] = useState("09:00");

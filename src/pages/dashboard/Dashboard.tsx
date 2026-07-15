@@ -72,7 +72,7 @@ export default function Dashboard() {
             <Eye className="mr-2 h-4 w-4" />
             View Reports
           </Button>
-          <Button className="bg-gradient-to-r from-primary to-brand-purple hover:opacity-90">
+          <Button className="bg-primary hover:bg-primary/90">
             <Zap className="mr-2 h-4 w-4" />
             Quick Action
           </Button>

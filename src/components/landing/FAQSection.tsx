@@ -53,7 +53,7 @@ export function FAQSection() {
             </span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            Everything you need to know about SMMPilot. Can't find the answer? Contact our support team.
+            Everything you need to know about SMMSAAS. Can't find the answer? Contact our support team.
           </p>
         </div>
 

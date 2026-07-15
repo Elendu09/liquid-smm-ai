@@ -5,7 +5,7 @@ const stats = [
     icon: Users,
     value: "50,000+",
     label: "Active Users",
-    description: "Marketers trust SMMPilot",
+    description: "Marketers trust SMMSAAS",
   },
   {
     icon: Calendar,
@@ -29,14 +29,14 @@ const stats = [
 
 const testimonials = [
   {
-    quote: "SMMPilot saved me 20+ hours per week. The AI captions are incredibly accurate and engaging.",
+    quote: "SMMSAAS saved me 20+ hours per week. The AI captions are incredibly accurate and engaging.",
     author: "Sarah Johnson",
     role: "Content Creator",
     avatar: "SJ",
     rating: 5,
   },
   {
-    quote: "Managing 15 client accounts was a nightmare until we found SMMPilot. Game changer!",
+    quote: "Managing 15 client accounts was a nightmare until we found SMMSAAS. Game changer!",
     author: "Mike Chen",
     role: "Agency Owner",
     avatar: "MC",
@@ -101,7 +101,7 @@ export function StatsSection() {
 
               {/* Author */}
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-blue to-brand-purple flex items-center justify-center text-white font-semibold">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary flex items-center justify-center text-white font-semibold">
                   {testimonial.avatar}
                 </div>
                 <div>
@@ -118,7 +118,7 @@ export function StatsSection() {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
             <TrendingUp className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium">
-              Join 50,000+ marketers growing with SMMPilot
+              Join 50,000+ marketers growing with SMMSAAS
             </span>
           </div>
         </div>
