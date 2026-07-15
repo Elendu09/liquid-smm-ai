@@ -47,7 +47,7 @@ function PostCard({
       <p className="text-sm line-clamp-3 text-foreground">{post.caption || "Untitled post"}</p>
       <div className="flex items-center gap-2 flex-wrap">
         {post.platformIds?.slice(0, 4).map((id) => (
-          <PlatformIcon key={id} platformId={id} className="h-4 w-4" />
+          <PlatformIcon key={id} platform={id} className="h-4 w-4" />
         ))}
       </div>
       <div className="flex items-center justify-between text-[11px] text-muted-foreground">
