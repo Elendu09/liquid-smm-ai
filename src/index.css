@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* HOME OF SMM - Dual Theme Design System */
+/* SMMSAAS - Dual Theme Design System */
 
 @layer base {
   /* Light Mode - Clean Professional */
@@ -49,6 +49,12 @@
     /* Glass effects - Light mode */
     --glass-bg: 0 0% 100% / 0.8;
     --glass-border: 220 13% 85% / 0.5;
+
+    /* Canvas theme (CTA + Footer) - warm editorial */
+    --canvas: 40 30% 96%;
+    --canvas-ink: 30 15% 12%;
+    --canvas-muted: 30 12% 40%;
+    --canvas-border: 30 20% 82%;
 
     --sidebar-background: 220 14% 98%;
     --sidebar-foreground: 222 47% 11%;
