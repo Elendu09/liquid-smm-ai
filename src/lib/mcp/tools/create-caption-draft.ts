@@ -13,7 +13,6 @@ export default defineTool({
     platformIds: z.array(z.string()).optional().describe("Target platform ids."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-  needsApproval: true,
   handler: (input, ctx: ToolContext) => {
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };

@@ -23,7 +23,6 @@ export default defineTool({
     mediaUrl: z.string().url().optional().describe("Optional media URL."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-  needsApproval: true,
   handler: (input, ctx: ToolContext) => {
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
