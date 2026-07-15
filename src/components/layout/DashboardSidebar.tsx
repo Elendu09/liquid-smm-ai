@@ -166,7 +166,7 @@ export function DashboardSidebar() {
 
       <aside
         className={cn(
-          "hidden lg:flex h-screen sticky top-0 flex-col border-r border-border bg-card transition-all duration-300",
+          "hidden lg:flex h-dvh sticky top-0 flex-col border-r border-border bg-card transition-all duration-300",
           collapsed ? "w-16" : "w-64",
         )}
       >
