@@ -92,8 +92,11 @@ export function AccountSwitcher({ collapsed = false }: AccountSwitcherProps) {
             setActiveAccount={setActiveAccount}
             setOpen={setOpen}
             formatFollowers={formatFollowers}
+            onConnect={() => setConnectOpen(true)}
+            onManage={() => navigate("/dashboard/account-health")}
           />
         </PopoverContent>
+        <ConnectAccountDialog open={connectOpen} onOpenChange={setConnectOpen} />
       </Popover>
     );
   }
