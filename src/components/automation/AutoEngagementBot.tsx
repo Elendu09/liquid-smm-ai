@@ -1,10 +1,14 @@
 import { useState } from "react";
-import { Bot, Heart, MessageCircle, UserPlus, Eye, Play, Pause, Settings2, Zap, Shield } from "lucide-react";
+import { Bot, Heart, MessageCircle, UserPlus, Eye, Play, Pause, Settings2, Zap, Shield, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const engagementTypes = [
   { id: "likes", label: "Auto Likes", icon: Heart, color: "text-pink-500", enabled: true },
@@ -55,7 +59,12 @@ export const AutoEngagementBot = () => {
           </div>
         </div>
         <Button
-          onClick={() => setIsActive(!isActive)}
+          onClick={() => {
+            setIsActive((prev) => {
+              toast(prev ? "Bot paused" : "Bot started");
+              return !prev;
+            });
+          }}
           className={`${
             isActive
               ? "bg-brand-green hover:bg-brand-green/90"

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Users, UserMinus, UserCheck, Clock, TrendingUp, TrendingDown, BarChart3, Search, Filter, Ghost, Star, Shield } from "lucide-react";
+import { Users, UserMinus, UserCheck, Clock, TrendingUp, TrendingDown, BarChart3, Search, Filter, Ghost, Star, Shield, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const followerQualityData = [
@@ -53,6 +54,28 @@ const recentUnfollowers = [
 export const FollowerAnalyzer = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"quality" | "ghosts" | "unfollowers">("quality");
+  const [ghosts, setGhosts] = useState(ghostFollowers);
+
+  const exportReport = () => {
+    const rows = [
+      ["Section", "Value"],
+      ["Total Followers", stats.totalFollowers],
+      ["Quality Score", stats.qualityScore],
+      ["Ghost %", stats.ghostPercentage],
+      ["Weekly Growth", stats.weeklyGrowth],
+      ["Avg Engagement", stats.avgEngagement],
+      ["Active Followers", stats.activeFollowers],
+    ];
+    const csv = rows.map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `follower-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Full report exported");
+  };
 
   const stats = {
     totalFollowers: "31.2K",
@@ -76,8 +99,8 @@ export const FollowerAnalyzer = () => {
             <p className="text-sm text-muted-foreground">Analyze follower quality and engagement</p>
           </div>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <BarChart3 className="mr-2 h-4 w-4" />
+        <Button onClick={exportReport} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Download className="mr-2 h-4 w-4" />
           Full Report
         </Button>
       </div>
@@ -250,10 +273,10 @@ export const FollowerAnalyzer = () => {
             <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/30 mb-4">
               <p className="text-sm text-destructive">
                 <Ghost className="inline h-4 w-4 mr-2" />
-                {ghostFollowers.length} ghost followers detected. Consider removing for better engagement rates.
+                {ghosts.length} ghost followers detected. Consider removing for better engagement rates.
               </p>
             </div>
-            {ghostFollowers.map((follower) => (
+            {ghosts.map((follower) => (
               <div
                 key={follower.id}
                 className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border"
@@ -267,7 +290,15 @@ export const FollowerAnalyzer = () => {
                     <p className="text-sm text-muted-foreground">Last active: {follower.lastActive}</p>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-destructive text-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    setGhosts((prev) => prev.filter((g) => g.id !== follower.id));
+                    toast.success(`Removed ${follower.username}`);
+                  }}
+                >
                   <UserMinus className="mr-1 h-4 w-4" />
                   Remove
                 </Button>

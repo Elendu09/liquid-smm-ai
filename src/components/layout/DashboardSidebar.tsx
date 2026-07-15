@@ -24,22 +24,25 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAccounts } from "@/contexts/AccountContext";
+import { toolPlatformRequirements, isPlatformCompatible } from "@/config/toolPlatformMap";
+import { getPlatformById } from "@/config/platforms";
 
-const navItems = [
+const navItems: { label: string; href: string; icon: typeof LayoutDashboard; toolKey?: string }[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Caption Generator", href: "/dashboard/caption-generator", icon: Sparkles },
-  { label: "Post Scheduler", href: "/dashboard/scheduler", icon: Calendar },
-  { label: "Engagement Bot", href: "/dashboard/engagement-bot", icon: Bot },
+  { label: "Caption Generator", href: "/dashboard/caption-generator", icon: Sparkles, toolKey: "caption-generator" },
+  { label: "Post Scheduler", href: "/dashboard/scheduler", icon: Calendar, toolKey: "scheduler" },
+  { label: "Engagement Bot", href: "/dashboard/engagement-bot", icon: Bot, toolKey: "engagement-bot" },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-  { label: "Hashtag Research", href: "/dashboard/hashtag-research", icon: Hash },
-  { label: "Comment Manager", href: "/dashboard/comment-manager", icon: MessageSquare },
+  { label: "Hashtag Research", href: "/dashboard/hashtag-research", icon: Hash, toolKey: "hashtag-research" },
+  { label: "Comment Manager", href: "/dashboard/comment-manager", icon: MessageSquare, toolKey: "comment-manager" },
   { label: "Content Calendar", href: "/dashboard/content-calendar", icon: CalendarDays },
-  { label: "Story Automation", href: "/dashboard/story-automation", icon: Film },
-  { label: "DM Automation", href: "/dashboard/dm-automation", icon: MessageCircle },
-  { label: "Follower Analyzer", href: "/dashboard/follower-analyzer", icon: Users },
-  { label: "Competitor Tracker", href: "/dashboard/competitor-tracker", icon: Target },
+  { label: "Story Automation", href: "/dashboard/story-automation", icon: Film, toolKey: "story-automation" },
+  { label: "DM Automation", href: "/dashboard/dm-automation", icon: MessageCircle, toolKey: "dm-automation" },
+  { label: "Follower Analyzer", href: "/dashboard/follower-analyzer", icon: Users, toolKey: "follower-analyzer" },
+  { label: "Competitor Tracker", href: "/dashboard/competitor-tracker", icon: Target, toolKey: "competitor-tracker" },
   { label: "Link in Bio", href: "/dashboard/link-bio", icon: LinkIcon },
 ];
 
@@ -86,26 +89,12 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              to={item.href}
-              onClick={onNavigate}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
-            >
-              <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive && "animate-pulse")} />
-              {showLabels && <span>{item.label}</span>}
-            </Link>
-          );
-        })}
+        {navItems.map((item) => (
+          <NavItem key={item.href} item={item} onNavigate={onNavigate} showLabels={showLabels} />
+        ))}
       </nav>
+
+
 
       {/* Bottom Section */}
       <div className="p-3 border-t border-border space-y-1 flex-shrink-0">
@@ -142,6 +131,58 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
     </>
   );
 }
+
+function NavItem({
+  item,
+  onNavigate,
+  showLabels,
+}: {
+  item: (typeof navItems)[number];
+  onNavigate?: () => void;
+  showLabels: boolean;
+}) {
+  const location = useLocation();
+  const { accounts } = useAccounts();
+  const isActive = location.pathname === item.href;
+
+  const hasCompatible = useMemo(() => {
+    if (!item.toolKey) return true;
+    const req = toolPlatformRequirements[item.toolKey];
+    if (!req) return true;
+    return accounts.some((a) => {
+      const p = getPlatformById(a.platformId);
+      return p ? isPlatformCompatible(p, req) : false;
+    });
+  }, [item.toolKey, accounts]);
+
+  return (
+    <Link
+      to={item.href}
+      onClick={onNavigate}
+      className={cn(
+        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative",
+        isActive
+          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+      )}
+      title={!hasCompatible ? "No connected account supports this tool" : undefined}
+    >
+      <span className="relative flex-shrink-0">
+        <item.icon className={cn("w-5 h-5", isActive && "animate-pulse")} />
+        {item.toolKey && (
+          <span
+            className={cn(
+              "absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-card",
+              hasCompatible ? "bg-brand-green" : "bg-muted-foreground/60"
+            )}
+          />
+        )}
+      </span>
+      {showLabels && <span>{item.label}</span>}
+    </Link>
+  );
+}
+
 
 export function DashboardSidebar() {
   const [collapsed, setCollapsed] = useState(false);

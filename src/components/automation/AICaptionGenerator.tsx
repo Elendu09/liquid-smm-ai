@@ -46,8 +46,12 @@ const languages = [
   { code: "ru", name: "Russian" },
 ];
 
-export const AICaptionGenerator = () => {
-  const [selectedPlatform, setSelectedPlatform] = useState("instagram");
+interface AICaptionGeneratorProps {
+  defaultPlatformId?: string;
+}
+
+export const AICaptionGenerator = ({ defaultPlatformId }: AICaptionGeneratorProps = {}) => {
+  const [selectedPlatform, setSelectedPlatform] = useState(defaultPlatformId || "instagram");
   const [selectedTone, setSelectedTone] = useState("professional");
   const [topic, setTopic] = useState("");
   const [copied, setCopied] = useState(false);

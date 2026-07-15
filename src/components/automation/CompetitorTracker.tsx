@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Users, 
-  TrendingUp, 
+import { toast } from "sonner";
+import {
+  Users,
+  TrendingUp,
   TrendingDown,
   Eye,
   Heart,
@@ -22,7 +23,8 @@ import {
   Target,
   Crown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Download,
 } from "lucide-react";
 
 const CompetitorTracker = () => {
@@ -105,11 +107,47 @@ const CompetitorTracker = () => {
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${newCompetitor}`
       }]);
       setNewCompetitor("");
+      toast.success(`Added ${newCompetitor}`);
+    } else {
+      toast.error("Enter a username");
     }
   };
 
   const removeCompetitor = (id: number) => {
     setCompetitors(competitors.filter(c => c.id !== id));
+    toast.success("Competitor removed");
+  };
+
+  const [refreshing, setRefreshing] = useState(false);
+  const refresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setCompetitors((prev) =>
+        prev.map((c) => ({
+          ...c,
+          followersChange: Number((Math.random() * 10 - 5).toFixed(1)),
+          engagementChange: Number((Math.random() * 2 - 1).toFixed(1)),
+        }))
+      );
+      setRefreshing(false);
+      toast.success("Competitor stats refreshed");
+    }, 900);
+  };
+
+  const exportCsv = () => {
+    const rows = [
+      ["Username", "Platform", "Followers", "Engagement %", "Avg Likes", "Avg Comments", "Frequency"],
+      ...competitors.map((c) => [c.username, c.platform, c.followers, c.engagement, c.avgLikes, c.avgComments, c.postingFreq]),
+    ];
+    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `competitors-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exported");
   };
 
   return (
@@ -120,16 +158,25 @@ const CompetitorTracker = () => {
           <h1 className="text-2xl font-bold text-foreground">Competitor Tracker</h1>
           <p className="text-muted-foreground">Monitor and analyze your competitors' performance</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Input 
-            placeholder="@username" 
+        <div className="flex items-center gap-2 flex-wrap">
+          <Input
+            placeholder="@username"
             value={newCompetitor}
             onChange={(e) => setNewCompetitor(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addCompetitor()}
             className="w-48"
           />
           <Button onClick={addCompetitor} className="gap-2">
             <Plus className="h-4 w-4" />
-            Add Competitor
+            Add
+          </Button>
+          <Button variant="outline" onClick={refresh} disabled={refreshing} className="gap-2">
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          <Button variant="outline" onClick={exportCsv} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export CSV
           </Button>
         </div>
       </div>
@@ -406,7 +453,7 @@ const CompetitorTracker = () => {
                   </div>
                 ))}
               </div>
-              <Button className="w-full mt-4" variant="outline">
+              <Button className="w-full mt-4" variant="outline" onClick={() => toast("Alert configuration coming soon")}>
                 Configure Alerts
               </Button>
             </CardContent>

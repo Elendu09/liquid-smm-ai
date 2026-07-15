@@ -1,7 +1,10 @@
+import { PlatformGate } from "@/components/shared/PlatformGate";
 import CompetitorTracker from "@/components/automation/CompetitorTracker";
 
-const CompetitorTrackerPage = () => {
-  return <CompetitorTracker />;
-};
-
-export default CompetitorTrackerPage;
+export default function CompetitorTrackerPage() {
+  return (
+    <PlatformGate toolKey="competitor-tracker">
+      {() => <CompetitorTracker />}
+    </PlatformGate>
+  );
+}
