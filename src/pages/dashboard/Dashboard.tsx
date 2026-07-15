@@ -23,7 +23,7 @@ import {
   SectionCard,
   EmptyState,
 } from "@/components/dashboard/shell";
-import { MobileHubNav } from "@/components/dashboard/shell/MobileHubNav";
+
 import { useAccounts } from "@/contexts/AccountContext";
 import { useRunHistory } from "@/hooks/useRunHistory";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
@@ -312,10 +312,6 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
-
-      {/* Mobile spacer so content isn't hidden behind fixed bottom nav */}
-      <div className="h-20 md:hidden" aria-hidden />
-      <MobileHubNav />
 
     </div>
   );
