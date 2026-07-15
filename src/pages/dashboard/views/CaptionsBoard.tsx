@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { FileText, Plus, Copy, Send, Sparkles, Trash2, X } from "lucide-react";
+import { FileText, Plus, Copy, Send, Sparkles, Trash2, X, CheckSquare } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -14,9 +14,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
+import { useMcpInbox } from "@/hooks/useMcpInbox";
+import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
 
