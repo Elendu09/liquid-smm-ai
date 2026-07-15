@@ -54,6 +54,28 @@ const recentUnfollowers = [
 export const FollowerAnalyzer = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"quality" | "ghosts" | "unfollowers">("quality");
+  const [ghosts, setGhosts] = useState(ghostFollowers);
+
+  const exportReport = () => {
+    const rows = [
+      ["Section", "Value"],
+      ["Total Followers", stats.totalFollowers],
+      ["Quality Score", stats.qualityScore],
+      ["Ghost %", stats.ghostPercentage],
+      ["Weekly Growth", stats.weeklyGrowth],
+      ["Avg Engagement", stats.avgEngagement],
+      ["Active Followers", stats.activeFollowers],
+    ];
+    const csv = rows.map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `follower-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Full report exported");
+  };
 
   const stats = {
     totalFollowers: "31.2K",
