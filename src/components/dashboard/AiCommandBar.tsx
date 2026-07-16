@@ -966,7 +966,7 @@ export function AiCommandBar() {
                 ref={textareaRef}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder={typed ? `${typed}▏` : "Ask anything… type / for commands"}
+                placeholder={typed ? `${typed}▏` : "Ask, attach an image, or press the phone to call…"}
                 rows={3}
                 className="resize-none text-[13px] leading-snug min-h-[72px] sm:min-h-[84px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none pl-3 pr-24 pt-2.5 pb-11 sm:pb-12 placeholder:text-muted-foreground/60 relative z-[1]"
                 onKeyDown={(e) => {
