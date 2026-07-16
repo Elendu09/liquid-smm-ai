@@ -28,6 +28,7 @@ import { useAccounts } from "@/contexts/AccountContext";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { cn } from "@/lib/utils";
 import { InlineMarkdown } from "./InlineMarkdown";
+import { CaptionDraftIntent } from "./ai-intents/CaptionDraftIntent";
 
 const SUGGESTIONS = [
   "Draft 3 caption ideas about a new product launch",
