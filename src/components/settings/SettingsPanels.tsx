@@ -129,6 +129,16 @@ export function AccountPanel() {
               Delete Account
             </Button>
           </div>
+          <Separator />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Restart onboarding tour</p>
+              <p className="text-sm text-muted-foreground">Rerun the setup wizard to update your profile, tone, and cadence.</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => window.dispatchEvent(new Event("smmpilot:open-onboarding"))}>
+              Take the tour
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
