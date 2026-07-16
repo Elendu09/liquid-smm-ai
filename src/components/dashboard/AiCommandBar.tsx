@@ -584,14 +584,24 @@ export function AiCommandBar() {
         {/* Prompt input area — compact Horizon glass */}
         <div className="px-4 pt-2">
           <div className="relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all">
+            <SlashCommandMenu
+              open={slashOpen}
+              query={slashQuery}
+              onPick={onSlashPick}
+              onClose={() => setPrompt("")}
+            />
             <Textarea
+              ref={textareaRef}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder={typed ? `${typed}▏` : "Ask anything…"}
+              placeholder={typed ? `${typed}▏` : "Ask anything… type / for commands"}
               rows={2}
               className="resize-none text-[13px] leading-snug min-h-[48px] sm:min-h-[58px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-3 pt-2.5 pb-9 sm:pb-10 placeholder:text-muted-foreground/60"
-
               onKeyDown={(e) => {
+                // SlashCommandMenu owns Enter / arrows while it's visible.
+                if (slashOpen && (e.key === "Enter" || e.key === "Tab" || e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Escape")) {
+                  return;
+                }
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   e.preventDefault();
                   submit();
@@ -603,32 +613,38 @@ export function AiCommandBar() {
             {/* Floating toolbar */}
             <div className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-2">
               <div className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground pl-1.5">
+                <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">/</kbd>
+                <span className="ml-0.5 mr-2">commands</span>
                 <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⌘</kbd>
                 <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">↵</kbd>
                 <span className="ml-0.5">send</span>
               </div>
-              <Button
-                onClick={() => submit()}
-                disabled={busy || !prompt.trim()}
-                size="sm"
-                className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] disabled:opacity-40 disabled:shadow-none disabled:ring-0 transition-all"
-              >
-                {busy ? (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin" strokeWidth={2} />
-                    <span className="ml-1 text-[11px] font-medium">Thinking</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-[11px] font-semibold">Send</span>
-                    <Send className="h-3 w-3 ml-1" strokeWidth={2} />
-                  </>
-                )}
-              </Button>
-
+              {busy ? (
+                <Button
+                  onClick={stop}
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-3 ml-auto rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10"
+                >
+                  <Square className="h-3 w-3 fill-current" strokeWidth={2} />
+                  <span className="ml-1 text-[11px] font-semibold">Stop</span>
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => submit()}
+                  disabled={!prompt.trim()}
+                  size="sm"
+                  className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] disabled:opacity-40 disabled:shadow-none disabled:ring-0 transition-all"
+                >
+                  <span className="text-[11px] font-semibold">Send</span>
+                  <Send className="h-3 w-3 ml-1" strokeWidth={2} />
+                </Button>
+              )}
             </div>
           </div>
         </div>
+
+
 
         {/* Suggestion chips — hidden on mobile (autotyped in placeholder), shown ≥sm */}
         <div className="hidden sm:flex px-4 py-2.5 flex-wrap gap-1.5">
