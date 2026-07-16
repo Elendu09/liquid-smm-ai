@@ -1,8 +1,12 @@
-import { useState } from "react";
-import { MessageCircle, Sparkles, Send, Check, Trash2, Reply, Flag, Heart, MoreHorizontal, RefreshCw, CheckCheck } from "lucide-react";
+import { useMemo, useState } from "react";
+import { MessageCircle, Sparkles, Check, Trash2, Reply, CheckCheck, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
+import { ReplyDialog } from "@/components/engage/ReplyDialog";
+import { FilterDialog, DEFAULT_FILTERS, type CommentFilters } from "@/components/engage/FilterDialog";
+
 
 const mockComments = [
   {
