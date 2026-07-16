@@ -24,6 +24,9 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { pushLocalCollection } from "@/hooks/useLocalCollection";
+import { useAccounts } from "@/contexts/AccountContext";
+import { buildReportData } from "@/lib/reportAnalytics";
+import { logRun } from "@/hooks/useRunHistory";
 
 interface ReportTemplate {
   id: string;
@@ -76,6 +79,7 @@ interface NewReportDialogProps {
 }
 
 export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewReportDialogProps) {
+  const { accounts } = useAccounts();
   const [step, setStep] = useState<1 | 2>(1);
   const [templateId, setTemplateId] = useState<string>(initialTemplateId ?? "");
   const [name, setName] = useState("");
@@ -121,32 +125,57 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
         : range === "last90"
         ? "Last 90 days"
         : "Custom range";
-    pushLocalCollection("reports", "generated", [
-      {
-        id: `rpt-${Date.now()}`,
-        name: name || `${template.name} · ${new Date().toLocaleDateString()}`,
-        template: template.name,
-        period: periodLabel,
-        format,
-        size: `${(1 + Math.random() * 5).toFixed(1)} MB`,
-        sections,
-        whitelabel,
-        createdAt: new Date().toISOString(),
-      },
-    ]);
-    if (schedule && email) {
-      pushLocalCollection("reports", "scheduled", [
+    try {
+      const data = buildReportData(accounts, sections, range);
+      const reportName = name || `${template.name} · ${new Date().toLocaleDateString()}`;
+      const sizeMb = 0.6 + sections.length * 0.4 + (format === "pdf" ? 1 : 0);
+      pushLocalCollection("reports", "generated", [
         {
-          id: `sch-${Date.now()}`,
-          name: template.name,
-          cadence: "Every Monday at 9:00 AM",
-          email,
-          active: true,
+          id: `rpt-${Date.now()}`,
+          name: reportName,
+          template: template.name,
+          period: periodLabel,
+          format,
+          size: `${sizeMb.toFixed(1)} MB`,
+          sections,
+          whitelabel,
+          data,
           createdAt: new Date().toISOString(),
         },
       ]);
+      if (schedule && email) {
+        pushLocalCollection("reports", "scheduled", [
+          {
+            id: `sch-${Date.now()}`,
+            name: template.name,
+            cadence: "Every Monday at 9:00 AM",
+            email,
+            active: true,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+      }
+      logRun({
+        toolKey: "reports",
+        action: `generate:${template.id}`,
+        status: "success",
+        input: { template: template.name, range: periodLabel, sections, format },
+        output: { name: reportName, followers: data.totalFollowers, reach: data.totalReach },
+      });
+      toast({ title: "Report generated", description: `${template.name} ready with real analytics.` });
+    } catch (err) {
+      logRun({
+        toolKey: "reports",
+        action: `generate:${template.id}`,
+        status: "failed",
+        error: err instanceof Error ? err.message : String(err),
+      });
+      toast({
+        title: "Generation failed",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
     }
-    toast({ title: "Report generated", description: `${template.name} is ready to download.` });
     reset();
     onOpenChange(false);
   };

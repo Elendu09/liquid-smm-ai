@@ -14,6 +14,8 @@ import {
   MoreHorizontal,
   Check,
   Trash2,
+  History,
+  AlertCircle,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,6 +47,9 @@ import {
   type ReportPreviewData,
 } from "@/components/reports/ReportPreviewDialog";
 import { toast } from "@/hooks/use-toast";
+import { useRunHistory } from "@/hooks/useRunHistory";
+import { useAccounts } from "@/contexts/AccountContext";
+import { buildReportData } from "@/lib/reportAnalytics";
 
 interface ReportTemplate {
   id: string;
@@ -139,6 +144,8 @@ const seedSchedules: ScheduledReport[] = [
 ];
 
 export default function ReportsPage() {
+  const { accounts } = useAccounts();
+  const { rows: runRows } = useRunHistory();
   const {
     items: reports,
     remove: removeReport,
@@ -160,6 +167,18 @@ export default function ReportsPage() {
     setNewTemplateId(id);
     setNewOpen(true);
   };
+
+  const openPreview = (report: GeneratedReport) => {
+    if (!report.data) {
+      const filled = { ...report, data: buildReportData(accounts, report.sections ?? [], "last30") };
+      setPreviewReport(filled);
+    } else {
+      setPreviewReport(report);
+    }
+  };
+
+  const templateRuns = (templateId: string) =>
+    runRows.filter((r) => r.toolKey === "reports" && r.action === `generate:${templateId}`);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
@@ -197,30 +216,83 @@ export default function ReportsPage() {
       <div>
         <h2 className="text-xl font-semibold mb-4">Report Templates</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {reportTemplates.map((template) => (
-            <Card key={template.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div
-                  className={cn(
-                    "h-12 w-12 rounded-xl bg-gradient-to-br mb-4 flex items-center justify-center",
-                    template.color,
-                  )}
-                >
-                  <template.icon className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="font-semibold mb-1">{template.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => openTemplate(template.id)}
-                >
-                  Use Template
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+          {reportTemplates.map((template) => {
+            const runs = templateRuns(template.id);
+            const last = runs[0];
+            return (
+              <Card key={template.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div
+                    className={cn(
+                      "h-12 w-12 rounded-xl bg-gradient-to-br mb-4 flex items-center justify-center",
+                      template.color,
+                    )}
+                  >
+                    <template.icon className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold mb-1">{template.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-3">{template.description}</p>
+
+                  <div className="mb-3 rounded-md border bg-muted/30 p-2 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <History className="h-3 w-3" />
+                        Runs
+                      </span>
+                      <span className="font-medium">{runs.length}</span>
+                    </div>
+                    {last ? (
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={cn(
+                            "flex items-center gap-1",
+                            last.status === "success"
+                              ? "text-emerald-500"
+                              : "text-destructive",
+                          )}
+                        >
+                          {last.status === "success" ? (
+                            <Check className="h-3 w-3" />
+                          ) : (
+                            <AlertCircle className="h-3 w-3" />
+                          )}
+                          {last.status}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {new Date(last.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">Not generated yet</p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => openTemplate(template.id)}
+                    >
+                      Use Template
+                    </Button>
+                    {last && last.status === "success" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const match = reports.find((r) => r.template === template.name);
+                          if (match) openPreview(match);
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 
@@ -262,7 +334,7 @@ export default function ReportsPage() {
                     <Badge variant="outline" className="uppercase">
                       {report.format}
                     </Badge>
-                    <Button variant="outline" size="sm" onClick={() => setPreviewReport(report)}>
+                    <Button variant="outline" size="sm" onClick={() => openPreview(report)}>
                       <Eye className="mr-2 h-4 w-4" />
                       Preview
                     </Button>
@@ -273,7 +345,7 @@ export default function ReportsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setPreviewReport(report)}>
+                        <DropdownMenuItem onClick={() => openPreview(report)}>
                           <Download className="mr-2 h-4 w-4" />
                           Download
                         </DropdownMenuItem>
