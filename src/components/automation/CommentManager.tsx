@@ -179,7 +179,18 @@ export const CommentManager = () => {
     toast.success("Deleted");
   };
 
+  const togglePriority = (id: number) => {
+    setPriority((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const quickAiReply = (c: typeof mockComments[number]) => {
+    const draft = `Hey ${c.user}! 🙌 Thanks so much — DM us and we'll help you out!`;
+    sendReply(c.id, draft);
+  };
+
   const unrepliedCount = comments.filter((c) => !c.replied).length;
+  const priorityCount = priority.length;
+
 
 
   return (
