@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import {
   FileText,
   CalendarClock,
@@ -11,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 
 export interface SlashParam {
   /** Placeholder token used inside `insert`, e.g. `<when>` */
@@ -166,9 +168,11 @@ interface Props {
   open: boolean;
   onPick: (cmd: SlashCommand) => void;
   onClose: () => void;
+  /** Element the menu should anchor beneath (usually the prompt input wrapper). */
+  anchorRef?: RefObject<HTMLElement>;
 }
 
-export function SlashCommandMenu({ query, open, onPick, onClose }: Props) {
+export function SlashCommandMenu({ query, open, onPick, onClose, anchorRef }: Props) {
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
     if (!q) return SLASH_COMMANDS;
@@ -177,11 +181,29 @@ export function SlashCommandMenu({ query, open, onPick, onClose }: Props) {
     );
   }, [query]);
 
-  const activeRef = useRef(0);
+  const [active, setActive] = useState(0);
   useEffect(() => {
-    activeRef.current = 0;
+    setActive(0);
   }, [query, open]);
 
+  // Compute portal position from the anchor rect so no ancestor stacking context can clip us.
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  useLayoutEffect(() => {
+    if (!open || !anchorRef?.current) return;
+    const update = () => {
+      const r = anchorRef.current!.getBoundingClientRect();
+      setPos({ top: r.bottom + 8, left: r.left, width: Math.max(260, Math.min(320, r.width)) });
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open, anchorRef, filtered.length]);
+
+  // Full keyboard nav — focus stays in the textarea; we listen at capture phase.
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -190,85 +212,88 @@ export function SlashCommandMenu({ query, open, onPick, onClose }: Props) {
         onClose();
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
-        activeRef.current = Math.min(filtered.length - 1, activeRef.current + 1);
-        forceRepaint();
+        setActive((i) => Math.min(filtered.length - 1, i + 1));
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        activeRef.current = Math.max(0, activeRef.current - 1);
-        forceRepaint();
+        setActive((i) => Math.max(0, i - 1));
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        setActive(0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        setActive(filtered.length - 1);
       } else if (e.key === "Enter" || e.key === "Tab" || (e.key === "ArrowRight" && filtered.length === 1)) {
-        if (filtered[activeRef.current]) {
+        if (filtered[active]) {
           e.preventDefault();
-          onPick(filtered[activeRef.current]);
+          onPick(filtered[active]);
         }
       }
     };
-    const forceRepaint = () => {
-      const el = document.getElementById("slash-menu");
-      if (!el) return;
-      el.querySelectorAll<HTMLButtonElement>("[data-slash-item]").forEach((b, i) => {
-        b.dataset.active = String(i === activeRef.current);
-      });
-    };
     window.addEventListener("keydown", handler, true);
-    forceRepaint();
     return () => window.removeEventListener("keydown", handler, true);
-  }, [open, filtered, onPick, onClose]);
+  }, [open, filtered, active, onPick, onClose]);
 
-  if (!open || filtered.length === 0) return null;
+  // Scroll active item into view on arrow-key move.
+  const listRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = listRef.current?.querySelector<HTMLElement>(`[data-slash-idx="${active}"]`);
+    el?.scrollIntoView({ block: "nearest" });
+  }, [active]);
 
-  return (
+  if (!open || filtered.length === 0 || !pos) return null;
+
+  const menu = (
     <div
       id="slash-menu"
       role="listbox"
       aria-label="Slash commands"
-      className="absolute top-full left-0 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-border/70 bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50 animate-in fade-in-0 slide-in-from-top-1 duration-150"
+      style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
+      className="rounded-xl border border-border/70 bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-[100] animate-in fade-in-0 slide-in-from-top-1 duration-150"
     >
-      <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60 flex items-center justify-between">
+      <div className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60 flex items-center justify-between">
         <span className="flex items-center gap-1.5">
           <Sparkles className="h-3 w-3 text-primary" />
           Commands · {filtered.length}
         </span>
         <span className="normal-case tracking-normal text-muted-foreground/70 hidden sm:inline">
-          <kbd className="font-mono">↵</kbd>
+          ↑↓ · <kbd className="font-mono">↵</kbd>
         </span>
       </div>
-      <div className="max-h-[min(60vh,22rem)] overflow-y-auto overscroll-contain py-1">
-
-
+      <div ref={listRef} className="max-h-[min(45vh,15rem)] overflow-y-auto overscroll-contain py-1">
         {filtered.map((c, i) => {
           const Icon = c.icon;
           return (
             <button
               key={c.id}
               type="button"
-              data-slash-item
-              data-active={i === 0}
+              data-slash-idx={i}
+              data-active={i === active}
+              onMouseEnter={() => setActive(i)}
               onMouseDown={(e) => {
                 e.preventDefault();
                 onPick(c);
               }}
               className={cn(
-                "w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors",
+                "w-full flex items-center gap-2.5 px-3 py-1.5 text-left transition-colors",
                 "hover:bg-primary/10 data-[active=true]:bg-primary/15",
               )}
             >
-              <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Icon className="h-3.5 w-3.5 text-primary" />
+              <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Icon className="h-3 w-3 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[12px] font-medium text-foreground leading-tight flex items-center gap-1.5 flex-wrap">
+                <div className="text-[11.5px] font-medium text-foreground leading-tight flex items-center gap-1.5 flex-wrap">
                   <span>{c.label}</span>
                   {c.params?.map((p) => (
                     <span
                       key={p.name}
-                      className="text-[9.5px] font-mono px-1 py-0.5 rounded bg-muted/70 text-muted-foreground border border-border/50"
+                      className="text-[9px] font-mono px-1 py-0 rounded bg-muted/70 text-muted-foreground border border-border/50"
                     >
                       {p.label}
                     </span>
                   ))}
                 </div>
-                <div className="text-[10.5px] text-muted-foreground leading-tight mt-0.5">{c.hint}</div>
+                <div className="text-[10px] text-muted-foreground leading-tight mt-0.5 truncate">{c.hint}</div>
               </div>
               {c.submit && (
                 <span className="text-[9px] uppercase tracking-wider text-primary/80 font-semibold">
@@ -281,4 +306,7 @@ export function SlashCommandMenu({ query, open, onPick, onClose }: Props) {
       </div>
     </div>
   );
+
+  return createPortal(menu, document.body);
 }
+

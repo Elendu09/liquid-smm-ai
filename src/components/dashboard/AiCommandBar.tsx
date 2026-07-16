@@ -112,6 +112,8 @@ export function AiCommandBar() {
   const { items: history, clear } = useAiCommandHistory();
   const abortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const promptAnchorRef = useRef<HTMLDivElement | null>(null);
+
 
   // Persist prompt drafts so a reload doesn't lose in-progress work.
   useEffect(() => {
@@ -649,13 +651,15 @@ export function AiCommandBar() {
 
         {/* Prompt input area — compact Horizon glass */}
         <div className="px-4 pt-2">
-          <div className="relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all">
+          <div ref={promptAnchorRef} className="relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all">
             <SlashCommandMenu
               open={slashOpen}
               query={slashQuery}
               onPick={onSlashPick}
               onClose={() => setPrompt("")}
+              anchorRef={promptAnchorRef}
             />
+
             <div className="relative">
               <Textarea
                 ref={textareaRef}
