@@ -138,7 +138,9 @@ export default function BioEditor() {
               <span className="text-sm font-semibold truncate">
                 {rail === "design" && "Design Editor"}
                 {rail === "theme" && "Theme Library"}
-                {rail === "content" && "Links & Blocks"}
+                {rail === "content" && "Links"}
+                {rail === "blocks" && "Content Blocks"}
+                {rail === "motion" && "Motion & Animations"}
                 {rail === "profile" && "Profile"}
                 {rail === "socials" && "Social Icons"}
                 {rail === "seo" && "SEO & Sharing"}
