@@ -24,6 +24,9 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { pushLocalCollection } from "@/hooks/useLocalCollection";
+import { useAccounts } from "@/contexts/AccountContext";
+import { buildReportData } from "@/lib/reportAnalytics";
+import { logRun } from "@/hooks/useRunHistory";
 
 interface ReportTemplate {
   id: string;
