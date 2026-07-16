@@ -128,6 +128,15 @@ export function AiCommandBar() {
   const promptAnchorRef = useRef<HTMLDivElement | null>(null);
   const refocusOnIdleRef = useRef(false);
 
+  // Phase 2/3 — image attachments + voice-call state.
+  const attachments = useImageAttachments();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const attachmentsRef = useRef(attachments.items);
+  useEffect(() => { attachmentsRef.current = attachments.items; }, [attachments.items]);
+
   // When Send is clicked we ask the textarea to re-focus as soon as busy flips off,
   // so the user can keep editing without hunting for the caret.
   useEffect(() => {
