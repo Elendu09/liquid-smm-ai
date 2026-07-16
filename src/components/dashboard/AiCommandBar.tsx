@@ -29,6 +29,7 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { cn } from "@/lib/utils";
 import { InlineMarkdown } from "./InlineMarkdown";
 import { CaptionDraftIntent } from "./ai-intents/CaptionDraftIntent";
+import { ScheduledPostIntent } from "./ai-intents/ScheduledPostIntent";
 
 const SUGGESTIONS = [
   "Draft 3 caption ideas about a new product launch",
