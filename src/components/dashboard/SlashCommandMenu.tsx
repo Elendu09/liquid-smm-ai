@@ -221,24 +221,18 @@ export function SlashCommandMenu({ query, open, onPick, onClose }: Props) {
       id="slash-menu"
       role="listbox"
       aria-label="Slash commands"
-      className={cn(
-        "absolute bottom-full mb-2 z-30 animate-in fade-in-0 slide-in-from-bottom-1 duration-150",
-        // Responsive placement: full width on mobile, compact popover on ≥sm
-        "left-1 right-1 sm:right-auto sm:left-2 sm:w-[300px]",
-        "rounded-xl border border-border/70 bg-popover/95 backdrop-blur-xl shadow-xl overflow-hidden",
-      )}
+      className="absolute bottom-full left-2 right-2 mb-2 rounded-xl border border-border/70 bg-popover/95 backdrop-blur-xl shadow-lg overflow-hidden z-30 animate-in fade-in-0 slide-in-from-bottom-1 duration-150"
     >
-      <div className="px-2.5 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60 flex items-center justify-between gap-2">
+      <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60 flex items-center justify-between">
         <span className="flex items-center gap-1.5">
           <Sparkles className="h-3 w-3 text-primary" />
-          Commands
+          Slash commands
         </span>
-        <span className="normal-case tracking-normal text-muted-foreground/70 hidden sm:flex items-center gap-1">
-          <kbd className="font-mono px-1 py-px rounded border border-border/60 bg-muted/60 text-[9.5px]">Tab</kbd>
-          <span>to pick</span>
+        <span className="normal-case tracking-normal text-muted-foreground/70 hidden sm:inline">
+          ↑↓ nav · <kbd className="font-mono">Tab</kbd>/<kbd className="font-mono">↵</kbd> pick
         </span>
       </div>
-      <div className="max-h-[280px] sm:max-h-[320px] overflow-y-auto p-1">
+      <div className="max-h-64 overflow-y-auto py-1">
         {filtered.map((c, i) => {
           const Icon = c.icon;
           return (
@@ -252,43 +246,32 @@ export function SlashCommandMenu({ query, open, onPick, onClose }: Props) {
                 onPick(c);
               }}
               className={cn(
-                "group/row w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-left transition-colors",
-                "hover:bg-muted/60",
-                "data-[active=true]:bg-primary data-[active=true]:text-primary-foreground",
+                "w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors",
+                "hover:bg-primary/10 data-[active=true]:bg-primary/15",
               )}
             >
-              <div
-                className={cn(
-                  "w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors",
-                  "bg-muted/70 text-muted-foreground",
-                  "group-hover/row:bg-background/70 group-hover/row:text-foreground",
-                  "group-data-[active=true]/row:bg-primary-foreground/15 group-data-[active=true]/row:text-primary-foreground",
-                )}
-              >
-                <Icon className="h-3.5 w-3.5" />
+              <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Icon className="h-3.5 w-3.5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[12.5px] font-semibold leading-tight truncate">{c.label}</div>
-                <div
-                  className={cn(
-                    "text-[10.5px] leading-tight mt-0.5 truncate",
-                    "text-muted-foreground",
-                    "group-data-[active=true]/row:text-primary-foreground/80",
-                  )}
-                >
-                  {c.hint}
+                <div className="text-[12px] font-medium text-foreground leading-tight flex items-center gap-1.5 flex-wrap">
+                  <span>{c.label}</span>
+                  {c.params?.map((p) => (
+                    <span
+                      key={p.name}
+                      className="text-[9.5px] font-mono px-1 py-0.5 rounded bg-muted/70 text-muted-foreground border border-border/50"
+                    >
+                      {p.label}
+                    </span>
+                  ))}
                 </div>
+                <div className="text-[10.5px] text-muted-foreground leading-tight mt-0.5">{c.hint}</div>
               </div>
-              <span
-                className={cn(
-                  "text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded transition-colors flex-shrink-0",
-                  c.submit
-                    ? "text-primary group-data-[active=true]/row:text-primary-foreground group-data-[active=true]/row:bg-primary-foreground/15"
-                    : "text-muted-foreground/60 group-data-[active=true]/row:text-primary-foreground/80",
-                )}
-              >
-                {c.submit ? "Run" : c.params?.length ? `${c.params.length} args` : "Insert"}
-              </span>
+              {c.submit && (
+                <span className="text-[9px] uppercase tracking-wider text-primary/80 font-semibold">
+                  run
+                </span>
+              )}
             </button>
           );
         })}
