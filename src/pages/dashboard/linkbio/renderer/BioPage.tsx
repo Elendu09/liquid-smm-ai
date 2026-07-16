@@ -308,14 +308,18 @@ function renderLayout(layout: ThemeLayout, s: Shared) {
 
 /* Small shared bits */
 function Avatar({ config, accent, size = 72 }: { config: BioConfig; accent: string; size?: number }) {
-  const { avatarScale } = useContext(BioCtx);
-  const s = Math.round(size * avatarScale);
+  const { avatarScale, avatarShape, avatarBorder } = useContext(BioCtx);
+  const o = config.overrides;
+  const s = Math.round((o.avatarSizePx ?? size) * (o.avatarSizePx ? 1 : avatarScale));
+  const radius = avatarShape === "circle" ? "9999px" : avatarShape === "squircle" ? "24%" : "0px";
   return (
     <div
-      className="rounded-full border-2 border-white/30 shadow-lg shrink-0 bg-cover bg-center"
+      className="shrink-0 bg-cover bg-center shadow-lg"
       style={{
         width: s,
         height: s,
+        borderRadius: radius,
+        border: `${avatarBorder}px solid rgba(255,255,255,.35)`,
         background: config.avatarUrl ? `center/cover url(${config.avatarUrl})` : accent,
       }}
       aria-hidden
@@ -326,7 +330,7 @@ function Avatar({ config, accent, size = 72 }: { config: BioConfig; accent: stri
 function Socials({ config, className }: { config: BioConfig; className?: string }) {
   if (!config.socials.length) return null;
   return (
-    <div className={cn("flex gap-2 justify-center", className)}>
+    <div data-bio-socials className={cn("flex gap-2 justify-center", className)}>
       {config.socials.map((s) => {
         const Icon = socialIcons[s.platform] ?? ExternalLink;
         return (
