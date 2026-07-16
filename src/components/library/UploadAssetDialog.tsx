@@ -25,16 +25,27 @@ export function UploadAssetDialog({
   const [tags, setTags] = useState("");
   const [type, setType] = useState<(typeof TYPES)[number]>("image");
   const [file, setFile] = useState<File | null>(null);
+  const [drag, setDrag] = useState(false);
 
-  const handleFile = (f: File | null) => {
+  const handleFile = useCallback((f: File | null) => {
     if (!f) return;
     setFile(f);
-    if (!title) setTitle(f.name.replace(/\.[^.]+$/, ""));
+    setTitle((prev) => prev || f.name.replace(/\.[^.]+$/, ""));
     if (f.type.startsWith("video/")) setType("video");
     else if (f.type.startsWith("image/")) setType("image");
     else setType("doc");
-    // Local blob URL — good for preview; persists for the session only.
     setUrl(URL.createObjectURL(f));
+  }, []);
+
+  useEffect(() => {
+    if (open && initialFile) handleFile(initialFile);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialFile]);
+
+  const onDrop = (e: DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setDrag(false);
+    handleFile(e.dataTransfer.files?.[0] ?? null);
   };
 
   const save = () => {
