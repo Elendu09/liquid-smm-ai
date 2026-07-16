@@ -311,14 +311,14 @@ export function AiCommandBar() {
         <div className="flex items-center gap-2.5 px-4 pt-3.5 pb-1">
           <div className="relative">
             <div className="absolute inset-0 rounded-lg bg-primary/40 blur-md" />
-            <div className="relative w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-brand-purple flex items-center justify-center shadow-md">
-              <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
+            <div className="relative w-7 h-7 rounded-lg bg-primary flex items-center justify-center shadow-[0_4px_12px_-2px_hsl(var(--primary)/0.5)] ring-1 ring-inset ring-primary-foreground/20">
+              <Sparkles className="h-3.5 w-3.5 text-primary-foreground" strokeWidth={2} />
             </div>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <h3 className="text-[13px] font-semibold tracking-tight leading-none">AI Command</h3>
-              <Badge variant="outline" className="h-4 text-[9px] px-1.5 border-primary/25 bg-primary/[0.06] text-primary font-medium">
+              <h3 className="text-[13px] font-semibold tracking-tight leading-none text-foreground">AI Command</h3>
+              <Badge variant="outline" className="h-4 text-[9px] px-1.5 border-primary/25 bg-primary/[0.08] text-primary font-medium">
                 Gemini 3
               </Badge>
             </div>
@@ -326,11 +326,12 @@ export function AiCommandBar() {
           </div>
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 px-2 rounded-lg hover:bg-primary/10">
-                <History className="h-3.5 w-3.5" />
+              <Button variant="ghost" size="sm" className="h-7 px-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-primary/10">
+                <History className="h-3.5 w-3.5" strokeWidth={1.75} />
                 <span className="ml-1 text-[11px] font-medium">{history.length}</span>
               </Button>
             </SheetTrigger>
+
             <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
               <SheetHeader>
                 <SheetTitle className="flex items-center justify-between">
@@ -398,20 +399,21 @@ export function AiCommandBar() {
                 onClick={() => submit()}
                 disabled={busy || !prompt.trim()}
                 size="sm"
-                className="h-7 px-3 ml-auto rounded-lg bg-gradient-to-br from-primary to-brand-purple text-primary-foreground shadow-md shadow-primary/25 hover:shadow-primary/40 hover:brightness-110 disabled:opacity-40 disabled:shadow-none transition-all"
+                className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] disabled:opacity-40 disabled:shadow-none disabled:ring-0 transition-all"
               >
                 {busy ? (
                   <>
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" strokeWidth={2} />
                     <span className="ml-1 text-[11px] font-medium">Thinking</span>
                   </>
                 ) : (
                   <>
                     <span className="text-[11px] font-semibold">Send</span>
-                    <Send className="h-3 w-3 ml-1" />
+                    <Send className="h-3 w-3 ml-1" strokeWidth={2} />
                   </>
                 )}
               </Button>
+
             </div>
           </div>
         </div>
@@ -426,7 +428,7 @@ export function AiCommandBar() {
               disabled={busy}
               className="group/chip text-[10.5px] pl-1.5 pr-2 py-0.5 rounded-full border border-border/60 dark:border-white/[0.06] bg-background/60 dark:bg-white/[0.03] hover:border-primary/50 hover:bg-primary/[0.06] hover:text-foreground transition-all text-muted-foreground disabled:opacity-40 inline-flex items-center gap-1"
             >
-              <Sparkles className="h-2.5 w-2.5 text-primary/70 group-hover/chip:text-primary transition-colors" />
+              <Sparkles className="h-2.5 w-2.5 text-primary/70 group-hover/chip:text-primary transition-colors" strokeWidth={1.75} />
               {s}
             </button>
           ))}
