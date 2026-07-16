@@ -376,7 +376,7 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold truncate">Set up SMM Pilot</div>
+            <div className="text-sm font-semibold truncate">Set up SMMSAAS</div>
             <div className="text-xs text-muted-foreground">
               Step {step + 1} of {totalSteps} · {current.title}
             </div>

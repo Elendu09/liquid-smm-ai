@@ -1,9 +1,10 @@
 import { Route, Routes, Navigate, Outlet } from "react-router-dom";
-import { UserCog, Bell, Link2, CreditCard, Shield, Users, ScrollText } from "lucide-react";
+import { UserCog, Bell, BellRing, Link2, CreditCard, Shield, Users, ScrollText } from "lucide-react";
 import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import {
   AccountPanel,
-  NotificationsPanel,
+  NotificationPreferencesPanel,
+  TeamActivityNotificationsPanel,
   ConnectedPanel,
   BillingPanel,
   SecurityPanel,
@@ -14,6 +15,7 @@ import Team from "../Team";
 const tabs: HubTab[] = [
   { label: "Account", href: "/dashboard/settings/account", icon: UserCog },
   { label: "Notifications", href: "/dashboard/settings/notifications", icon: Bell },
+  { label: "Team alerts", href: "/dashboard/settings/team-alerts", icon: BellRing },
   { label: "Connected", href: "/dashboard/settings/connected", icon: Link2 },
   { label: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
   { label: "Security", href: "/dashboard/settings/security", icon: Shield },
@@ -51,7 +53,8 @@ export default function SettingsHub() {
       <Route element={<SettingsLayout />}>
         <Route index element={<Navigate to="account" replace />} />
         <Route path="account" element={<Wrap><AccountPanel /></Wrap>} />
-        <Route path="notifications" element={<Wrap><NotificationsPanel /></Wrap>} />
+        <Route path="notifications" element={<Wrap><NotificationPreferencesPanel /></Wrap>} />
+        <Route path="team-alerts" element={<Wrap><TeamActivityNotificationsPanel /></Wrap>} />
         <Route path="connected" element={<Wrap><ConnectedPanel /></Wrap>} />
         <Route path="billing" element={<Wrap><BillingPanel /></Wrap>} />
         <Route path="security" element={<Wrap><SecurityPanel /></Wrap>} />

@@ -191,11 +191,18 @@ export function AccountPanel() {
 
 /* ============================ Notifications =========================== */
 
-export function NotificationsPanel() {
+export function NotificationPreferencesPanel() {
+  return (
+    <div className="space-y-6">
+      <NotificationPreferencesMatrix />
+    </div>
+  );
+}
+
+export function TeamActivityNotificationsPanel() {
   return (
     <div className="space-y-6">
       <TeamNotificationSection />
-      <NotificationPreferencesMatrix />
     </div>
   );
 }

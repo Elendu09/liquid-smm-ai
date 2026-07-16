@@ -264,7 +264,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
           {showLabels && (
             <div className="flex flex-col leading-tight min-w-0">
               <span className="text-[13px] font-black tracking-tight text-foreground truncate">
-                HOME OF SMM
+                SMMSAAS
               </span>
               <span className="text-[9px] font-semibold tracking-[0.16em] text-primary/80 uppercase">
                 Panel Manager
@@ -598,7 +598,7 @@ export function DashboardSidebar() {
           <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
             <Zap className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="text-base font-black tracking-tight text-foreground">HOME OF SMM</span>
+          <span className="text-base font-black tracking-tight text-foreground">SMMSAAS</span>
         </Link>
         <div className="w-9" />
       </div>
