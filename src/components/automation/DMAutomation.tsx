@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { logRun } from "@/hooks/useRunHistory";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { NewDmFlowDialog, type DmFlow } from "@/components/engage/NewDmFlowDialog";
+
 
 const welcomeTemplates = [
   { id: 1, name: "New Follower Welcome", trigger: "new_follow", message: "Hey! 👋 Thanks for following! How can I help you today?", active: true, sent: 1247 },
