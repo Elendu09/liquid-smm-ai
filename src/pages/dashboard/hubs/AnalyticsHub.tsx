@@ -44,24 +44,7 @@ export default function AnalyticsHub() {
       <Route element={<AnalyticsLayout />}>
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<Analytics />} />
-        <Route
-          path="reports"
-          element={
-            <StatusBoard
-              storageKey="analytics:reports"
-              hubKey="analytics-reports"
-              icon={FileText}
-              searchPlaceholder="Search reports…"
-              addPlaceholder="New report…"
-              seed={reportSeed}
-              columns={[
-                { id: "draft", label: "Draft" },
-                { id: "scheduled", label: "Scheduled" },
-                { id: "sent", label: "Sent" },
-              ]}
-            />
-          }
-        />
+        <Route path="reports" element={<Reports />} />
         <Route
           path="health"
           element={
