@@ -24,7 +24,9 @@ import {
   EmptyState,
 } from "@/components/dashboard/shell";
 import { OnboardingChecklistCard } from "@/components/dashboard/OnboardingChecklistCard";
+import { AiCommandBar } from "@/components/dashboard/AiCommandBar";
 import { useOnboarding } from "@/hooks/useOnboarding";
+
 
 import { useAccounts } from "@/contexts/AccountContext";
 import { useRunHistory } from "@/hooks/useRunHistory";
