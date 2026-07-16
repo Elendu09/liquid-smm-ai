@@ -18,6 +18,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { cn } from "@/lib/utils";
 import type { Segment } from "@/pages/dashboard/views/SegmentsBoard";
+import { BulkAutomationProgressDialog, type BulkTarget } from "./BulkAutomationProgressDialog";
+import { DEFAULT_RATE_LIMIT, RATE_LIMIT_KEY, type RateLimitSettings } from "./RateLimitSettingsDialog";
 
 type Tone = "friendly" | "professional" | "witty";
 
