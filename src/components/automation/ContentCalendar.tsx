@@ -163,7 +163,7 @@ export const ContentCalendar = () => {
       draggable
       onDragStart={() => setDragId(p.id)}
       onDragEnd={() => { setDragId(null); setDropTarget(null); }}
-      onClick={(e) => { e.stopPropagation(); setSelectedDay(new Date(p.scheduledAt)); }}
+      onClick={(e) => { e.stopPropagation(); setDetailsPost(p); }}
       className={cn(
         "group text-[11px] rounded-md px-1.5 py-1 border cursor-grab active:cursor-grabbing",
         "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15 transition-colors",
