@@ -266,6 +266,30 @@ export function AiCommandBar() {
       );
     }
 
+    // Inline schedule widget — writes straight to useScheduledPosts.
+    if (intent.kind === "scheduled-post") {
+      return (
+        <ScheduledPostIntent
+          key={call.id}
+          payload={intent.payload as never}
+          approved={call.approved}
+          rejected={call.rejected}
+          onApprove={() => {
+            updateTool(entry.id, call.id, { approved: true });
+            if (latest?.id === entry.id) {
+              setLatest({
+                ...entry,
+                toolCalls: entry.toolCalls.map((c) =>
+                  c.id === call.id ? { ...c, approved: true } : c,
+                ),
+              });
+            }
+          }}
+          onReject={() => reject(entry, call)}
+        />
+      );
+    }
+
     const Icon = iconFor(intent.kind);
     const needsAction = intent.needsApproval && !call.approved && !call.rejected;
     return (
