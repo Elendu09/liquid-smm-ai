@@ -114,12 +114,20 @@ export function ActivityFeedView() {
   }, [items, posts]);
 
   const filtered = useMemo(() => {
+    const fromTs = advancedFilters.from ? new Date(advancedFilters.from).getTime() : 0;
+    const toTs = advancedFilters.to
+      ? new Date(advancedFilters.to).getTime() + 24 * 3_600_000
+      : Number.POSITIVE_INFINITY;
     return merged.filter((e) => {
       if (filter !== "all" && e.category !== filter) return false;
+      if (advancedFilters.category !== "all" && e.category !== advancedFilters.category) return false;
+      if (advancedFilters.status !== "all" && e.status !== advancedFilters.status) return false;
+      const ts = new Date(e.timestamp).getTime();
+      if (ts < fromTs || ts > toTs) return false;
       if (!search) return true;
       return (e.title + " " + (e.subtitle ?? "")).toLowerCase().includes(search.toLowerCase());
     });
-  }, [merged, filter, search]);
+  }, [merged, filter, search, advancedFilters]);
 
   const filteredItems = useMemo(() => {
     const ids = new Set(filtered.map((e) => e.id));
@@ -136,6 +144,32 @@ export function ActivityFeedView() {
     });
     setNewTitle("");
     toast.success("Added");
+  };
+
+  const rerun = (run: StatusItem) => {
+    add({
+      id: crypto.randomUUID(),
+      title: run.title,
+      subtitle: run.subtitle,
+      status: "pending",
+      meta: "re-running",
+      createdAt: new Date().toISOString(),
+    });
+    toast.success("Re-run queued");
+  };
+
+  const handleBulkClear = (scope: "all" | "success" | "failed" | "old") => {
+    const cutoff = Date.now() - 7 * 24 * 3_600_000;
+    setItems((prev) =>
+      prev.filter((i) => {
+        if (scope === "all") return false;
+        if (scope === "success") return i.status !== "success";
+        if (scope === "failed") return i.status !== "failed";
+        if (scope === "old") return new Date(i.createdAt).getTime() >= cutoff;
+        return true;
+      }),
+    );
+    toast.success(`Cleared ${scope === "all" ? "all runs" : scope + " runs"}`);
   };
 
   const card = (i: StatusItem) => (
