@@ -264,17 +264,8 @@ export function AuditPanel() {
 }
 
 export function logAudit(entry: Omit<AuditEntry, "id" | "createdAt">) {
-  const key = "smmpilot:settings:audit";
-  try {
-    const raw = window.localStorage.getItem(key);
-    const list: AuditEntry[] = raw ? JSON.parse(raw) : [];
-    const next: AuditEntry[] = [
-      { id: crypto.randomUUID(), createdAt: new Date().toISOString(), ...entry },
-      ...list,
-    ].slice(0, 500);
-    window.localStorage.setItem(key, JSON.stringify(next));
-    window.dispatchEvent(new StorageEvent("storage", { key }));
-  } catch {
-    /* ignore */
-  }
+  pushLocalCollection<AuditEntry>("settings", "audit", [
+    { id: crypto.randomUUID(), createdAt: new Date().toISOString(), ...entry },
+  ]);
 }
+
