@@ -763,8 +763,8 @@ export function AiCommandBar() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder={typed ? `${typed}▏` : "Ask anything… type / for commands"}
-                rows={2}
-                className="resize-none text-[13px] leading-snug min-h-[48px] sm:min-h-[58px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-3 pt-2.5 pb-9 sm:pb-10 placeholder:text-muted-foreground/60 relative z-[1]"
+                rows={3}
+                className="resize-none text-[13px] leading-snug min-h-[72px] sm:min-h-[84px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-3 pt-2.5 pb-11 sm:pb-12 placeholder:text-muted-foreground/60 relative z-[1]"
                 onKeyDown={(e) => {
                   // SlashCommandMenu owns Enter / arrows while it's visible.
                   if (slashOpen && (e.key === "Enter" || e.key === "Tab" || e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Escape")) {
@@ -809,7 +809,7 @@ export function AiCommandBar() {
               {/<[a-z_-]+>/i.test(prompt) && (
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 px-3 pt-2.5 pb-9 sm:pb-10 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words z-0"
+                  className="pointer-events-none absolute inset-0 px-3 pt-2.5 pb-11 sm:pb-12 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words z-0"
                 >
                   {prompt.split(/(<[a-z_-]+>)/i).map((part, i) => {
                     const m = /^<([a-z_-]+)>$/i.exec(part);
@@ -839,7 +839,7 @@ export function AiCommandBar() {
               {ghostSuffix && (
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 px-3 pt-2.5 pb-9 sm:pb-10 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words"
+                  className="pointer-events-none absolute inset-0 px-3 pt-2.5 pb-11 sm:pb-12 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words"
                 >
                   <span className="invisible">{prompt}</span>
                   <span className="text-muted-foreground/50">{ghostSuffix}</span>
@@ -893,13 +893,19 @@ export function AiCommandBar() {
                 </Button>
               ) : (
                 <Button
-                  onClick={() => submit()}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    submit();
+                  }}
+                  onMouseDown={(e) => e.preventDefault()}
                   disabled={!prompt.trim()}
                   size="sm"
-                  className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] disabled:opacity-40 disabled:shadow-none disabled:ring-0 disabled:cursor-not-allowed enabled:cursor-pointer transition-all"
+                  className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] active:scale-[0.97] disabled:opacity-40 disabled:shadow-none disabled:ring-0 disabled:cursor-not-allowed cursor-pointer transition-all"
                 >
-                  <span className="text-[11px] font-semibold">Send</span>
-                  <Send className="h-3 w-3 ml-1" strokeWidth={2} />
+                  <span className="text-[11px] font-semibold pointer-events-none">Send</span>
+                  <Send className="h-3 w-3 ml-1 pointer-events-none" strokeWidth={2} />
                 </Button>
               )}
             </div>
