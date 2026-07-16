@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Circle, X, Sparkles } from "lucide-react";
+import { CheckCircle2, Circle, Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAccounts } from "@/contexts/AccountContext";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -30,20 +32,23 @@ export function OnboardingChecklistCard({ onReopen }: Props) {
   const { totalAccounts } = useAccounts();
   const { posts } = useScheduledPosts();
   const { state, complete } = useOnboarding();
+  const [open, setOpen] = useState(false);
 
   const items = [
     {
       id: "profile",
       label: "Complete your profile",
+      hint: "Tell us your role and brand voice so AI can tailor suggestions.",
       done: !!state.profile.role && !!state.profile.name,
-      action: <Button variant="ghost" size="sm" onClick={onReopen}>Resume</Button>,
+      action: <Button variant="secondary" size="sm" onClick={onReopen}>Resume tour</Button>,
     },
     {
       id: "connect",
       label: "Connect an account",
+      hint: "Link at least one social account to publish and pull analytics.",
       done: totalAccounts > 0,
       action: (
-        <Button asChild variant="ghost" size="sm">
+        <Button asChild variant="secondary" size="sm">
           <Link to="/dashboard/settings/connected">Connect</Link>
         </Button>
       ),
@@ -51,19 +56,21 @@ export function OnboardingChecklistCard({ onReopen }: Props) {
     {
       id: "caption",
       label: "Save your first caption",
+      hint: "Generate or write a caption and save it to your library.",
       done: hasCaptions(),
       action: (
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/dashboard/library/captions">Open</Link>
+        <Button asChild variant="secondary" size="sm">
+          <Link to="/dashboard/library/captions">Open captions</Link>
         </Button>
       ),
     },
     {
       id: "schedule",
       label: "Schedule your first post",
+      hint: "Queue a post so the Scheduler starts learning your cadence.",
       done: posts.length > 0,
       action: (
-        <Button asChild variant="ghost" size="sm">
+        <Button asChild variant="secondary" size="sm">
           <Link to="/dashboard/publish/queue">Schedule</Link>
         </Button>
       ),
@@ -74,53 +81,76 @@ export function OnboardingChecklistCard({ onReopen }: Props) {
   const pct = (doneCount / items.length) * 100;
   const allDone = doneCount === items.length;
 
+  // Auto-dismiss forever when all tasks are done.
+  useEffect(() => {
+    if (allDone && !state.completed) complete();
+  }, [allDone, state.completed, complete]);
+
+  // Hide entirely once fully complete.
+  if (allDone) return null;
+
   return (
-    <Card className="p-4 sm:p-5 border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold">Get started</h3>
-            <p className="text-xs text-muted-foreground">
-              {allDone ? "Nice work — all set." : `${doneCount} of ${items.length} complete`}
-            </p>
-          </div>
-        </div>
-        {allDone && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={complete}
-            aria-label="Dismiss"
+    <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent overflow-hidden">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="w-full text-left p-4 sm:p-5 flex items-center gap-3 hover:bg-muted/30 transition-colors"
+            aria-expanded={open}
           >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-      <Progress value={pct} className="h-1.5 mb-3" />
-      <ul className="space-y-1.5">
-        {items.map((it) => (
-          <li
-            key={it.id}
-            className="flex items-center justify-between gap-2 rounded-md px-1.5 py-1 hover:bg-muted/40"
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              {it.done ? (
-                <CheckCircle2 className="h-4 w-4 text-brand-green flex-shrink-0" />
-              ) : (
-                <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              )}
-              <span className={cn("text-sm truncate", it.done && "text-muted-foreground line-through")}>
-                {it.label}
-              </span>
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="h-4 w-4 text-primary" />
             </div>
-            {!it.done && it.action}
-          </li>
-        ))}
-      </ul>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold">Get started</h3>
+                <span className="text-[11px] text-muted-foreground">
+                  {doneCount}/{items.length}
+                </span>
+              </div>
+              <Progress value={pct} className="h-1.5 mt-2" />
+            </div>
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 text-muted-foreground transition-transform flex-shrink-0",
+                open && "rotate-180",
+              )}
+            />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <ul className="px-2 sm:px-3 pb-3 space-y-1">
+            {items.map((it) => (
+              <li
+                key={it.id}
+                className="flex items-start justify-between gap-3 rounded-lg px-2 py-2 hover:bg-muted/40"
+              >
+                <div className="flex items-start gap-2 min-w-0 flex-1">
+                  {it.done ? (
+                    <CheckCircle2 className="h-4 w-4 text-brand-green flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  )}
+                  <div className="min-w-0">
+                    <div
+                      className={cn(
+                        "text-sm font-medium",
+                        it.done && "text-muted-foreground line-through",
+                      )}
+                    >
+                      {it.label}
+                    </div>
+                    {!it.done && (
+                      <div className="text-xs text-muted-foreground mt-0.5">{it.hint}</div>
+                    )}
+                  </div>
+                </div>
+                {!it.done && <div className="flex-shrink-0">{it.action}</div>}
+              </li>
+            ))}
+          </ul>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }
