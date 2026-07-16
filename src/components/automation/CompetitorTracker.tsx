@@ -1,16 +1,23 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   Users,
-  TrendingUp,
   TrendingDown,
-  Eye,
   Heart,
   MessageCircle,
   Plus,
@@ -19,13 +26,14 @@ import {
   BarChart3,
   Calendar,
   Hash,
-  Bell,
   Target,
   Crown,
   ArrowUp,
   ArrowDown,
   Download,
 } from "lucide-react";
+import { AddCompetitorDialog, type NewCompetitorInput } from "@/components/audience/AddCompetitorDialog";
+import { CompareCompetitorDialog, type CompareStats } from "@/components/audience/CompareCompetitorDialog";
 
 const CompetitorTracker = () => {
   const [newCompetitor, setNewCompetitor] = useState("");
