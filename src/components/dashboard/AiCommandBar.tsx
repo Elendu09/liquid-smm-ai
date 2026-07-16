@@ -28,6 +28,7 @@ import { useAccounts } from "@/contexts/AccountContext";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { cn } from "@/lib/utils";
 import { InlineMarkdown } from "./InlineMarkdown";
+import { CaptionDraftIntent } from "./ai-intents/CaptionDraftIntent";
 
 const SUGGESTIONS = [
   "Draft 3 caption ideas about a new product launch",
@@ -239,6 +240,31 @@ export function AiCommandBar() {
   const renderCall = (entry: AiCommandEntry, call: AiCommandToolCall) => {
     const intent = call.result as ToolIntent | null;
     if (!intent) return null;
+
+    // Rich inline caption editor with quick tweaks + Save to Library.
+    if (intent.kind === "caption-draft") {
+      return (
+        <CaptionDraftIntent
+          key={call.id}
+          payload={intent.payload as never}
+          approved={call.approved}
+          rejected={call.rejected}
+          onApprove={() => {
+            updateTool(entry.id, call.id, { approved: true });
+            if (latest?.id === entry.id) {
+              setLatest({
+                ...entry,
+                toolCalls: entry.toolCalls.map((c) =>
+                  c.id === call.id ? { ...c, approved: true } : c,
+                ),
+              });
+            }
+          }}
+          onReject={() => reject(entry, call)}
+        />
+      );
+    }
+
     const Icon = iconFor(intent.kind);
     const needsAction = intent.needsApproval && !call.approved && !call.rejected;
     return (
@@ -264,9 +290,6 @@ export function AiCommandBar() {
             {call.rejected && <Badge variant="destructive" className="text-[10px] h-5">Rejected</Badge>}
           </div>
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{shortSummary(intent) || call.name}</p>
-          {intent.kind === "caption-draft" && (
-            <p className="text-xs mt-1.5 line-clamp-3 whitespace-pre-wrap">{String(intent.payload.body ?? "")}</p>
-          )}
           {intent.kind === "hashtag-list" && (
             <div className="flex flex-wrap gap-1 mt-1.5">
               {((intent.payload.tags as string[]) ?? []).map((t) => (

@@ -148,6 +148,38 @@ export default function CreateStudio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // "Send to Studio" prefill dropped by AI intents via sessionStorage.
+  useEffect(() => {
+    try {
+      const raw = window.sessionStorage.getItem("smmpilot:create-studio:prefill");
+      if (!raw) return;
+      window.sessionStorage.removeItem("smmpilot:create-studio:prefill");
+      const pl = JSON.parse(raw) as {
+        title?: string;
+        body?: string;
+        hashtags?: string[];
+        platformIds?: string[];
+      };
+      const body =
+        (pl.hashtags?.length ?? 0) > 0
+          ? `${pl.body ?? ""}\n\n${(pl.hashtags ?? []).map((h) => `#${h}`).join(" ")}`
+          : (pl.body ?? "");
+      const draft: Draft = {
+        id: crypto.randomUUID(),
+        title: pl.title || "AI draft",
+        status: "draft",
+        caption: body,
+        platform: pl.platformIds?.[0] ?? "instagram",
+        createdAt: new Date().toISOString(),
+      };
+      setItems((prev) => [draft, ...prev]);
+      toast.success("Loaded AI draft into Studio");
+    } catch {
+      /* noop */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState("");
