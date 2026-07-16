@@ -112,14 +112,22 @@ export const CommentManager = () => {
   const platforms = useMemo(() => Array.from(new Set(mockComments.map((c) => c.platform))), []);
 
   const filteredComments = useMemo(() => {
-    return comments.filter((c) => {
+    const kw = keyword.trim().toLowerCase();
+    const list = comments.filter((c) => {
       if (filters.platform !== "all" && c.platform !== filters.platform) return false;
       if (filters.sentiment !== "all" && c.sentiment !== filters.sentiment) return false;
       if (filters.status === "pending" && c.replied) return false;
       if (filters.status === "replied" && !c.replied) return false;
+      if (kw && !(c.content.toLowerCase().includes(kw) || c.user.toLowerCase().includes(kw))) return false;
       return true;
     });
-  }, [comments, filters]);
+    // Priority pinned first
+    return [...list].sort((a, b) => {
+      const ap = priority.includes(a.id) ? 1 : 0;
+      const bp = priority.includes(b.id) ? 1 : 0;
+      return bp - ap;
+    });
+  }, [comments, filters, keyword, priority]);
 
   const activeFilterCount =
     (filters.platform !== "all" ? 1 : 0) +
