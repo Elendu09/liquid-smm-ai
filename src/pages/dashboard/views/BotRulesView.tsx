@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Bot, Plus, Trash2, Power, LayoutGrid, List } from "lucide-react";
+import { Bot, Plus, Trash2, Power, LayoutGrid, List, PlayCircle, Pencil, Copy } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -8,10 +8,11 @@ import {
   ListView,
 } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { cn } from "@/lib/utils";
+import { NewRuleDialog, type RuleDraft } from "@/components/engage/NewRuleDialog";
+import { TestRuleDialog } from "@/components/engage/TestRuleDialog";
 
 interface BotRule {
   id: string;
@@ -24,15 +25,18 @@ interface BotRule {
 
 const seed: BotRule[] = [
   { id: "r1", name: "Welcome new followers", trigger: "New follower", action: "Send welcome DM", enabled: true, runs: 128 },
-  { id: "r2", name: "Auto-like niche hashtags", trigger: "Hashtag #photography", action: "Like recent posts", enabled: true, runs: 542 },
-  { id: "r3", name: "Reply to keywords", trigger: 'Comment contains "price"', action: "Reply with DM prompt", enabled: false, runs: 34 },
+  { id: "r2", name: "Auto-like niche hashtags", trigger: 'Hashtag match "photography"', action: "Like recent posts", enabled: true, runs: 542 },
+  { id: "r3", name: "Reply to keywords", trigger: 'Comment contains keyword "price"', action: "Reply to comment", enabled: false, runs: 34 },
 ];
 
 export default function BotRulesView() {
-  const [view, setView] = useViewMode("engage-bot", "grid", );
+  const [view, setView] = useViewMode("engage-bot", "grid");
   const { items, setItems, add, update, remove } = useLocalCollection<BotRule>("engage", "bot-rules");
   const [search, setSearch] = useState("");
-  const [name, setName] = useState("");
+  const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<BotRule | null>(null);
+  const [testOpen, setTestOpen] = useState(false);
+  const [testing, setTesting] = useState<BotRule | null>(null);
 
   useEffect(() => { if (items.length === 0) setItems(seed); }, [items.length, setItems]);
 
@@ -41,11 +45,20 @@ export default function BotRulesView() {
     [items, search],
   );
 
-  const addRule = () => {
-    if (!name.trim()) return;
-    add({ id: crypto.randomUUID(), name: name.trim(), trigger: "Custom", action: "Custom", enabled: false, runs: 0 });
-    setName("");
-    toast.success("Rule created");
+  const handleSubmit = (draft: RuleDraft) => {
+    if (draft.id) {
+      update(draft.id, { name: draft.name, trigger: draft.trigger, action: draft.action, enabled: draft.enabled });
+      toast.success("Rule updated");
+    } else {
+      add({ id: crypto.randomUUID(), name: draft.name, trigger: draft.trigger, action: draft.action, enabled: draft.enabled, runs: 0 });
+      toast.success("Rule created");
+    }
+    setEditing(null);
+  };
+
+  const duplicate = (r: BotRule) => {
+    add({ ...r, id: crypto.randomUUID(), name: `${r.name} (copy)`, enabled: false, runs: 0 });
+    toast.success("Rule duplicated");
   };
 
   const RuleCard = ({ r, dense = false }: { r: BotRule; dense?: boolean }) => (
@@ -73,12 +86,26 @@ export default function BotRulesView() {
           <span className="text-[11px] text-muted-foreground flex items-center gap-1">
             <Power className="h-3 w-3" /> {r.runs.toLocaleString()} runs
           </span>
-          <Button
-            variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
-            aria-label="Delete rule" onClick={() => { remove(r.id); toast.success("Rule deleted"); }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Test rule"
+              onClick={() => { setTesting(r); setTestOpen(true); }}>
+              <PlayCircle className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Edit rule"
+              onClick={() => { setEditing(r); setRuleDialogOpen(true); }}>
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Duplicate rule"
+              onClick={() => duplicate(r)}>
+              <Copy className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
+              aria-label="Delete rule" onClick={() => { remove(r.id); toast.success("Rule deleted"); }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -101,17 +128,9 @@ export default function BotRulesView() {
           />
         }
         actions={
-          <div className="flex gap-1.5">
-            <Input
-              value={name} onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addRule()}
-              placeholder="New rule name…" className="h-9 w-40 sm:w-56"
-              aria-label="New rule name"
-            />
-            <Button size="sm" onClick={addRule} disabled={!name.trim()}>
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
+          <Button size="sm" onClick={() => { setEditing(null); setRuleDialogOpen(true); }}>
+            <Plus className="h-4 w-4 mr-1" /> New rule
+          </Button>
         }
       />
 
@@ -131,6 +150,14 @@ export default function BotRulesView() {
       ) : (
         <ListView items={filtered} getKey={(r) => r.id} renderItem={(r) => <RuleCard r={r} dense />} />
       )}
+
+      <NewRuleDialog
+        open={ruleDialogOpen}
+        onOpenChange={setRuleDialogOpen}
+        initial={editing}
+        onSubmit={handleSubmit}
+      />
+      <TestRuleDialog open={testOpen} onOpenChange={setTestOpen} rule={testing} />
     </div>
   );
 }
