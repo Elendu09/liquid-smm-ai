@@ -185,12 +185,17 @@ export const HashtagResearchTool = ({ defaultPlatformId }: HashtagResearchToolPr
             <p className="text-sm text-muted-foreground">Find trending hashtags with AI-powered suggestions</p>
           </div>
         </div>
-        {selectedTags.length > 0 && (
-          <Button onClick={copySelected} className="bg-primary hover:bg-primary/90">
-            {copiedSet === "selected" ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-            Copy {selectedTags.length} Tags
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {selectedTags.length > 0 && (
+            <>
+              <Button size="sm" variant="ghost" onClick={clearSelection}>Clear</Button>
+              <Button onClick={copySelected} className="bg-primary hover:bg-primary/90">
+                {copiedSet === "selected" ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                Copy {selectedTags.length} Selected
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Search with AI Generate */}
