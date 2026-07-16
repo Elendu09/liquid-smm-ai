@@ -24,6 +24,15 @@ import {
   Star,
   Smartphone,
   GripVertical,
+  Layers,
+  Zap,
+  Type as TypeIcon,
+  Image as ImageIcon2,
+  Video,
+  Code2,
+  Minus,
+  Timer,
+  Quote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -44,6 +53,8 @@ const railItems = [
   { id: "design", label: "Design", icon: Wand2 },
   { id: "theme", label: "Themes", icon: Palette },
   { id: "content", label: "Content", icon: Link2 },
+  { id: "blocks", label: "Blocks", icon: Layers },
+  { id: "motion", label: "Motion", icon: Zap },
   { id: "profile", label: "Profile", icon: User },
   { id: "socials", label: "Socials", icon: Share2 },
   { id: "seo", label: "SEO", icon: Globe },
@@ -127,7 +138,9 @@ export default function BioEditor() {
               <span className="text-sm font-semibold truncate">
                 {rail === "design" && "Design Editor"}
                 {rail === "theme" && "Theme Library"}
-                {rail === "content" && "Links & Blocks"}
+                {rail === "content" && "Links"}
+                {rail === "blocks" && "Content Blocks"}
+                {rail === "motion" && "Motion & Animations"}
                 {rail === "profile" && "Profile"}
                 {rail === "socials" && "Social Icons"}
                 {rail === "seo" && "SEO & Sharing"}
@@ -165,6 +178,8 @@ export default function BioEditor() {
             {rail === "design" && <DesignPanel />}
             {rail === "theme" && <ThemesPanel />}
             {rail === "content" && <LinksPanel />}
+            {rail === "blocks" && <BlocksPanel />}
+            {rail === "motion" && <MotionPanel />}
             {rail === "profile" && <ProfilePanel />}
             {rail === "socials" && <SocialsPanel />}
             {rail === "seo" && <SeoPanel />}
@@ -774,6 +789,149 @@ function FontChooser({
             {f}
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------ Blocks Panel ------------------------------ */
+
+const blockTypes: Array<{ id: "header" | "text" | "image" | "video" | "embed" | "divider" | "countdown" | "quote"; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: "header", label: "Header", icon: TypeIcon },
+  { id: "text", label: "Text", icon: TypeIcon },
+  { id: "quote", label: "Quote", icon: Quote },
+  { id: "image", label: "Image", icon: ImageIcon2 },
+  { id: "video", label: "Video", icon: Video },
+  { id: "embed", label: "Embed", icon: Code2 },
+  { id: "countdown", label: "Countdown", icon: Timer },
+  { id: "divider", label: "Divider", icon: Minus },
+];
+
+function BlocksPanel() {
+  const cfg = useBioConfig();
+  const blocks = cfg.blocks ?? [];
+  return (
+    <div className="space-y-4 max-w-2xl">
+      <div>
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Add block</p>
+        <div className="grid grid-cols-4 gap-1.5">
+          {blockTypes.map((b) => (
+            <button
+              key={b.id}
+              onClick={() => bioStore.addBlock(b.id)}
+              className="flex flex-col items-center gap-1 p-2 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-muted/50 transition"
+            >
+              <b.icon className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[10px] font-medium">{b.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="space-y-2">
+        {blocks.length === 0 && (
+          <div className="p-6 rounded-lg border border-dashed border-border/60 bg-muted/20 text-center text-xs text-muted-foreground">
+            No content blocks yet. Add one above to enrich your bio page.
+          </div>
+        )}
+        {blocks.map((b, i) => (
+          <div key={b.id} className="p-3 rounded-lg border border-border/50 bg-card/50 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">{b.type}</span>
+              <div className="flex-1" />
+              <Switch checked={b.enabled} onCheckedChange={(v) => bioStore.updateBlock(b.id, { enabled: v })} />
+              <Button variant="ghost" size="icon" className="h-7 w-7" disabled={i === 0} onClick={() => bioStore.moveBlock(b.id, -1)}><ArrowUp className="w-3.5 h-3.5" /></Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" disabled={i === blocks.length - 1} onClick={() => bioStore.moveBlock(b.id, 1)}><ArrowDown className="w-3.5 h-3.5" /></Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-rose-500" onClick={() => bioStore.removeBlock(b.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+            </div>
+            {(b.type === "header" || b.type === "text" || b.type === "quote") && (
+              <Textarea value={b.text ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { text: e.target.value })} className="text-xs" rows={2} placeholder="Text…" />
+            )}
+            {(b.type === "image" || b.type === "video" || b.type === "embed") && (
+              <Input value={b.src ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { src: e.target.value })} className="h-8 text-xs" placeholder={b.type === "video" ? "https://youtube.com/watch?v=…" : "https://…"} />
+            )}
+            {b.type === "countdown" && (
+              <div className="grid grid-cols-2 gap-2">
+                <Input value={b.text ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { text: e.target.value })} className="h-8 text-xs" placeholder="Label" />
+                <Input type="datetime-local" value={b.target ? b.target.slice(0, 16) : ""} onChange={(e) => bioStore.updateBlock(b.id, { target: e.target.value ? new Date(e.target.value).toISOString() : undefined })} className="h-8 text-xs" />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------ Motion Panel ------------------------------ */
+
+const entrances: Array<{ id: "none" | "fade" | "slide" | "scale"; label: string; blurb: string }> = [
+  { id: "none", label: "None", blurb: "Instant" },
+  { id: "fade", label: "Fade", blurb: "Soft rise" },
+  { id: "scale", label: "Scale", blurb: "Pop in" },
+  { id: "slide", label: "Slide", blurb: "From right" },
+];
+
+const hovers: Array<{ id: "none" | "scale" | "lift" | "glow"; label: string }> = [
+  { id: "none", label: "None" },
+  { id: "scale", label: "Scale" },
+  { id: "lift", label: "Lift" },
+  { id: "glow", label: "Glow" },
+];
+
+function MotionPanel() {
+  const cfg = useBioConfig();
+  const o = cfg.overrides;
+  return (
+    <div className="space-y-4 max-w-lg">
+      <div>
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Entrance animation</Label>
+        <div className="grid grid-cols-4 gap-1.5 mt-1.5">
+          {entrances.map((e) => (
+            <button
+              key={e.id}
+              onClick={() => bioStore.patchOverrides({ entrance: e.id })}
+              className={cn(
+                "px-2 py-2 rounded-md text-[11px] font-medium border transition-colors text-left",
+                (o.entrance ?? "fade") === e.id ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
+              )}
+            >
+              <div className="font-semibold">{e.label}</div>
+              <div className="text-[9px] opacity-70">{e.blurb}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Link hover effect</Label>
+        <div className="grid grid-cols-4 gap-1.5 mt-1.5">
+          {hovers.map((h) => (
+            <button
+              key={h.id}
+              onClick={() => bioStore.patchOverrides({ hover: h.id })}
+              className={cn(
+                "px-2 py-1.5 rounded-md text-[11px] font-medium border transition-colors",
+                (o.hover ?? "scale") === h.id ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
+              )}
+            >
+              {h.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Stagger between items ({o.stagger ?? 60}ms)</Label>
+        <input
+          type="range"
+          min={0}
+          max={200}
+          step={10}
+          value={o.stagger ?? 60}
+          onChange={(e) => bioStore.patchOverrides({ stagger: Number(e.target.value) })}
+          className="w-full mt-2 accent-primary"
+        />
+      </div>
+      <div className="p-3 rounded-lg border border-dashed border-border/60 bg-muted/30 text-[11px] text-muted-foreground">
+        Motion applies to the profile section, blocks, and link buttons. Preview updates live.
       </div>
     </div>
   );

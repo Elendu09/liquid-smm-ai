@@ -17,6 +17,29 @@ export type Radius = "sm" | "md" | "xl" | "full";
 export type Alignment = "center" | "left";
 export type BgType = "theme" | "solid" | "gradient" | "mesh";
 
+export type BioBlockType =
+  | "header"
+  | "text"
+  | "image"
+  | "video"
+  | "embed"
+  | "divider"
+  | "countdown"
+  | "quote";
+
+export interface BioBlock {
+  id: string;
+  type: BioBlockType;
+  enabled: boolean;
+  text?: string; // header/text/quote/countdown label
+  src?: string; // image url / video url / embed url
+  target?: string; // ISO date for countdown
+  align?: "left" | "center";
+}
+
+export type EntranceAnimation = "none" | "fade" | "slide" | "scale";
+export type HoverAnimation = "none" | "scale" | "lift" | "glow";
+
 export interface BioConfig {
   version: 1;
   handle: string;
@@ -40,9 +63,13 @@ export interface BioConfig {
     buttonStyle?: ButtonStyle;
     alignment?: Alignment;
     avatarSize?: "sm" | "md" | "lg";
+    entrance?: EntranceAnimation;
+    hover?: HoverAnimation;
+    stagger?: number; // ms between items
   };
   links: BioLink[];
   socials: BioSocial[];
+  blocks: BioBlock[];
 }
 
 export const CONFIG_KEY = "smmpilot:linkbio:config";
@@ -58,6 +85,9 @@ const defaultConfig: BioConfig = {
     bgType: "theme",
     alignment: "center",
     avatarSize: "md",
+    entrance: "fade",
+    hover: "scale",
+    stagger: 60,
   },
   links: [
     { id: "l1", title: "Online classes", url: "https://example.com/classes", enabled: true, highlight: true },
@@ -69,6 +99,7 @@ const defaultConfig: BioConfig = {
     { platform: "facebook", url: "https://facebook.com" },
     { platform: "linkedin", url: "https://linkedin.com" },
   ],
+  blocks: [],
 };
 
 function migrate(): BioConfig {
@@ -77,7 +108,7 @@ function migrate(): BioConfig {
   if (raw) {
     try {
       const parsed = JSON.parse(raw) as BioConfig;
-      if (parsed && parsed.version === 1) return { ...defaultConfig, ...parsed, overrides: { ...defaultConfig.overrides, ...parsed.overrides } };
+      if (parsed && parsed.version === 1) return { ...defaultConfig, ...parsed, overrides: { ...defaultConfig.overrides, ...parsed.overrides }, blocks: parsed.blocks ?? [] };
     } catch {}
   }
   // Migrate from legacy keys
@@ -175,6 +206,38 @@ export const bioStore = {
     const [item] = next.splice(from, 1);
     next.splice(to, 0, item);
     commit({ ...state, links: next });
+  },
+  addBlock: (type: BioBlockType) => {
+    const id = `b${Date.now()}`;
+    const defaults: Record<BioBlockType, Partial<BioBlock>> = {
+      header: { text: "New Section" },
+      text: { text: "Add a short description here." },
+      image: { src: "https://images.unsplash.com/photo-1520975916090-3105956dac38?w=600" },
+      video: { src: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      embed: { src: "https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC" },
+      divider: {},
+      countdown: { text: "Launch in", target: new Date(Date.now() + 7 * 864e5).toISOString() },
+      quote: { text: "Design is intelligence made visible." },
+    };
+    const block: BioBlock = { id, type, enabled: true, align: "center", ...defaults[type] };
+    commit({ ...state, blocks: [...(state.blocks ?? []), block] });
+  },
+  updateBlock: (id: string, patch: Partial<BioBlock>) => {
+    commit({ ...state, blocks: (state.blocks ?? []).map((b) => (b.id === id ? { ...b, ...patch } : b)) });
+  },
+  removeBlock: (id: string) => {
+    commit({ ...state, blocks: (state.blocks ?? []).filter((b) => b.id !== id) });
+  },
+  moveBlock: (id: string, dir: -1 | 1) => {
+    const list = state.blocks ?? [];
+    const idx = list.findIndex((b) => b.id === id);
+    if (idx < 0) return;
+    const to = idx + dir;
+    if (to < 0 || to >= list.length) return;
+    const next = [...list];
+    const [item] = next.splice(idx, 1);
+    next.splice(to, 0, item);
+    commit({ ...state, blocks: next });
   },
   subscribe: (l: () => void) => {
     listeners.add(l);
