@@ -263,107 +263,162 @@ export function AiCommandBar() {
   };
 
   return (
-    <Card className="border-primary/30 bg-gradient-to-br from-primary/[0.06] via-transparent to-transparent p-3 sm:p-4">
-      <div className="flex items-center gap-2 mb-2.5">
-        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Sparkles className="h-4 w-4 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold">Ask AI to do anything</h3>
-          <p className="text-[11px] text-muted-foreground">Drafts and schedules require your approval.</p>
-        </div>
-        <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 px-2">
-              <History className="h-4 w-4" />
-              <span className="hidden sm:inline ml-1.5 text-xs">{history.length}</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle className="flex items-center justify-between">
-                <span>AI command history</span>
-                {history.length > 0 && (
-                  <Button variant="ghost" size="sm" onClick={clear} className="text-xs">
-                    <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear
-                  </Button>
-                )}
-              </SheetTitle>
-            </SheetHeader>
-            <div className="mt-4 space-y-3">
-              {history.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-8">No commands yet.</p>
-              )}
-              {history.map((e) => (
-                <div key={e.id} className="rounded-lg border p-3 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium line-clamp-2">{e.prompt}</p>
-                    <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                      {formatDistanceToNow(new Date(e.createdAt), { addSuffix: true })}
-                    </span>
-                  </div>
-                  {e.text && <p className="text-xs text-muted-foreground line-clamp-3">{e.text}</p>}
-                  {e.error && <p className="text-xs text-destructive">{e.error}</p>}
-                  {e.toolCalls.length > 0 && (
-                    <div className="space-y-1.5">
-                      {e.toolCalls.map((c) => renderCall(e, c))}
-                    </div>
+    <div className="relative group">
+      {/* Ambient gradient glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-[1px] rounded-[26px] bg-[conic-gradient(from_140deg_at_50%_50%,hsl(var(--brand-blue)/0.35),hsl(var(--brand-purple)/0.25),hsl(var(--brand-cyan)/0.3),hsl(var(--brand-blue)/0.35))] opacity-60 blur-[6px] transition-opacity duration-500 group-focus-within:opacity-100"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-[1px] rounded-[26px] bg-gradient-to-br from-primary/40 via-brand-purple/30 to-brand-cyan/40"
+      />
+
+      <Card className="relative rounded-[25px] border-0 bg-card/95 backdrop-blur-xl shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.35)] overflow-hidden">
+        {/* Top header row */}
+        <div className="flex items-center gap-2.5 px-4 sm:px-5 pt-4">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-xl bg-primary/30 blur-md" />
+            <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-brand-purple flex items-center justify-center shadow-lg">
+              <Sparkles className="h-4 w-4 text-primary-foreground" />
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold tracking-tight">AI Command</h3>
+              <Badge variant="outline" className="h-5 text-[10px] px-1.5 border-primary/30 bg-primary/5 text-primary">
+                Gemini 3
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Draft, schedule, generate — you approve every write.</p>
+          </div>
+          <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 px-2.5 rounded-lg hover:bg-primary/10">
+                <History className="h-3.5 w-3.5" />
+                <span className="ml-1.5 text-xs font-medium">{history.length}</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle className="flex items-center justify-between">
+                  <span>AI command history</span>
+                  {history.length > 0 && (
+                    <Button variant="ghost" size="sm" onClick={clear} className="text-xs">
+                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear
+                    </Button>
                   )}
-                </div>
-              ))}
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      <div className="flex gap-2 items-end">
-        <Textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="e.g. Draft a launch caption and schedule it for tomorrow 9am on Instagram…"
-          rows={2}
-          className="resize-none text-sm min-h-[52px]"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-              e.preventDefault();
-              submit();
-            }
-          }}
-          disabled={busy}
-        />
-        <Button onClick={() => submit()} disabled={busy || !prompt.trim()} size="icon" className="h-[52px] w-[52px] flex-shrink-0">
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        </Button>
-      </div>
-
-      <div className="flex flex-wrap gap-1.5 mt-2.5">
-        {SUGGESTIONS.map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => submit(s)}
-            disabled={busy}
-            className="text-[11px] px-2.5 py-1 rounded-full border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors text-muted-foreground disabled:opacity-50"
-          >
-            {s}
-          </button>
-        ))}
-      </div>
-
-      {latest && (
-        <div className="mt-3 pt-3 border-t space-y-2">
-          {latest.text && (
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{latest.text}</p>
-          )}
-          {latest.error && <p className="text-sm text-destructive">{latest.error}</p>}
-          {latest.toolCalls.length > 0 && (
-            <div className="space-y-2">
-              {latest.toolCalls.map((c) => renderCall(latest, c))}
-            </div>
-          )}
+                </SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 space-y-3">
+                {history.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-8">No commands yet.</p>
+                )}
+                {history.map((e) => (
+                  <div key={e.id} className="rounded-lg border p-3 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-medium line-clamp-2">{e.prompt}</p>
+                      <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                        {formatDistanceToNow(new Date(e.createdAt), { addSuffix: true })}
+                      </span>
+                    </div>
+                    {e.text && <p className="text-xs text-muted-foreground line-clamp-3">{e.text}</p>}
+                    {e.error && <p className="text-xs text-destructive">{e.error}</p>}
+                    {e.toolCalls.length > 0 && (
+                      <div className="space-y-1.5">
+                        {e.toolCalls.map((c) => renderCall(e, c))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
-      )}
-    </Card>
+
+        {/* Prompt input area — Lovable/Replit style */}
+        <div className="px-4 sm:px-5 pt-3">
+          <div className="relative rounded-2xl bg-muted/40 border border-border/60 focus-within:border-primary/50 focus-within:bg-muted/60 focus-within:shadow-[0_0_0_4px_hsl(var(--primary)/0.08)] transition-all">
+            <Textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Ask anything… e.g. Draft a launch caption and schedule it for tomorrow 9am on Instagram"
+              rows={3}
+              className="resize-none text-sm min-h-[92px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-4 pt-3.5 pb-14 placeholder:text-muted-foreground/60"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  submit();
+                }
+              }}
+              disabled={busy}
+            />
+
+            {/* Floating toolbar inside prompt box */}
+            <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground pl-2">
+                <kbd className="px-1.5 py-0.5 rounded-md bg-background/80 border border-border/60 font-mono text-[10px]">⌘</kbd>
+                <kbd className="px-1.5 py-0.5 rounded-md bg-background/80 border border-border/60 font-mono text-[10px]">↵</kbd>
+                <span className="hidden sm:inline ml-1">to send</span>
+              </div>
+              <Button
+                onClick={() => submit()}
+                disabled={busy || !prompt.trim()}
+                size="sm"
+                className="h-9 px-3.5 rounded-xl bg-gradient-to-br from-primary to-brand-purple text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:brightness-110 disabled:opacity-40 disabled:shadow-none transition-all"
+              >
+                {busy ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span className="ml-1.5 text-xs font-medium">Thinking</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs font-semibold">Send</span>
+                    <Send className="h-3.5 w-3.5 ml-1.5" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Suggestion chips */}
+        <div className="px-4 sm:px-5 py-3 flex flex-wrap gap-1.5">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => submit(s)}
+              disabled={busy}
+              className="group/chip text-[11px] pl-2 pr-2.5 py-1 rounded-full border border-border/60 bg-background/60 hover:border-primary/50 hover:bg-primary/[0.06] hover:text-foreground transition-all text-muted-foreground disabled:opacity-40 inline-flex items-center gap-1"
+            >
+              <Sparkles className="h-2.5 w-2.5 text-primary/70 group-hover/chip:text-primary transition-colors" />
+              {s}
+            </button>
+          ))}
+        </div>
+
+        {/* Latest response */}
+        {latest && (
+          <div className="mx-4 sm:mx-5 mb-4 rounded-2xl border border-border/60 bg-gradient-to-br from-muted/40 to-transparent p-4 space-y-2.5">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+              <div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
+              Response
+            </div>
+            {latest.text && (
+              <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">{latest.text}</p>
+            )}
+            {latest.error && <p className="text-sm text-destructive">{latest.error}</p>}
+            {latest.toolCalls.length > 0 && (
+              <div className="space-y-2 pt-1">
+                {latest.toolCalls.map((c) => renderCall(latest, c))}
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }
 
