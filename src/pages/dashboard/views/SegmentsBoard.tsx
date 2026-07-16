@@ -266,7 +266,7 @@ export default function SegmentsBoard() {
               <Zap className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">Run automation</span>
             </Button>
-            <Button size="sm" onClick={startNew} aria-label="New segment">
+            <Button size="sm" onClick={() => setNewOpen(true)} aria-label="New segment">
               <Plus className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">New segment</span>
             </Button>
