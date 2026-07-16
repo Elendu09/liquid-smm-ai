@@ -82,7 +82,40 @@ export function AiCommandBar() {
   const { items: history, log, update, updateTool, clear } = useAiCommandHistory();
   const abortRef = useRef<AbortController | null>(null);
 
+  // Typewriter placeholder cycling through SUGGESTIONS while input is empty & idle
+  const [typed, setTyped] = useState("");
+  useEffect(() => {
+    if (prompt || busy) return;
+    let sIdx = 0;
+    let cIdx = 0;
+    let deleting = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const full = SUGGESTIONS[sIdx];
+      if (!deleting) {
+        cIdx++;
+        setTyped(full.slice(0, cIdx));
+        if (cIdx === full.length) {
+          deleting = true;
+          timer = setTimeout(tick, 1600);
+          return;
+        }
+      } else {
+        cIdx--;
+        setTyped(full.slice(0, cIdx));
+        if (cIdx === 0) {
+          deleting = false;
+          sIdx = (sIdx + 1) % SUGGESTIONS.length;
+        }
+      }
+      timer = setTimeout(tick, deleting ? 22 : 42);
+    };
+    timer = setTimeout(tick, 400);
+    return () => clearTimeout(timer);
+  }, [prompt, busy]);
+
   useEffect(() => () => abortRef.current?.abort(), []);
+
 
   const submit = async (value?: string) => {
     const text = (value ?? prompt).trim();
@@ -341,9 +374,10 @@ export function AiCommandBar() {
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Ask anything… draft a caption, schedule a post, find hashtags"
+              placeholder={typed ? `${typed}▏` : "Ask anything…"}
               rows={2}
-              className="resize-none text-[13px] leading-snug min-h-[58px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-3 pt-2.5 pb-10 placeholder:text-muted-foreground/60"
+              className="resize-none text-[13px] leading-snug min-h-[48px] sm:min-h-[58px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-3 pt-2.5 pb-9 sm:pb-10 placeholder:text-muted-foreground/60"
+
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   e.preventDefault();
@@ -382,8 +416,8 @@ export function AiCommandBar() {
           </div>
         </div>
 
-        {/* Suggestion chips */}
-        <div className="px-4 py-2.5 flex flex-wrap gap-1.5">
+        {/* Suggestion chips — hidden on mobile (autotyped in placeholder), shown ≥sm */}
+        <div className="hidden sm:flex px-4 py-2.5 flex-wrap gap-1.5">
           {SUGGESTIONS.map((s) => (
             <button
               key={s}
@@ -397,6 +431,9 @@ export function AiCommandBar() {
             </button>
           ))}
         </div>
+        {/* Mobile spacing filler */}
+        <div className="sm:hidden h-2.5" />
+
 
 
         {/* Latest response */}
