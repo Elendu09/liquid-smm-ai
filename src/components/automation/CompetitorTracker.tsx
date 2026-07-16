@@ -164,16 +164,9 @@ const CompetitorTracker = () => {
           <p className="text-muted-foreground">Monitor and analyze your competitors' performance</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Input
-            placeholder="@username"
-            value={newCompetitor}
-            onChange={(e) => setNewCompetitor(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addCompetitor()}
-            className="w-48"
-          />
-          <Button onClick={addCompetitor} className="gap-2">
+          <Button onClick={() => setAddOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
-            Add
+            Add competitor
           </Button>
           <Button variant="outline" onClick={refresh} disabled={refreshing} className="gap-2">
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
