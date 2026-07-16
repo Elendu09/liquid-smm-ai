@@ -177,8 +177,14 @@ export const CommentManager = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => setFilterOpen(true)}>
+            <Filter className="h-3.5 w-3.5 mr-1" /> Filter
+            {activeFilterCount > 0 && (
+              <Badge className="ml-1 h-4 px-1 text-[10px] bg-primary text-primary-foreground">{activeFilterCount}</Badge>
+            )}
+          </Button>
           <Badge variant="secondary" className="bg-primary/10 text-primary">
-            {comments.length} Total
+            {filteredComments.length} / {comments.length}
           </Badge>
           <Badge variant="secondary" className="bg-brand-green/10 text-brand-green">
             {comments.filter((c) => c.replied).length} Replied
@@ -208,11 +214,12 @@ export const CommentManager = () => {
       {/* Select All */}
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
         <Checkbox
-          checked={selectedComments.length === comments.length && comments.length > 0}
+          checked={selectedComments.length === filteredComments.length && filteredComments.length > 0}
           onCheckedChange={selectAll}
         />
         <span className="text-sm text-muted-foreground">Select all</span>
       </div>
+
 
       {/* Comments List */}
       <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
