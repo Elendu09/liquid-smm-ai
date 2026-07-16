@@ -246,13 +246,31 @@ export const CommentManager = () => {
         </div>
       )}
 
-      {/* Select All */}
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
-        <Checkbox
-          checked={selectedComments.length === filteredComments.length && filteredComments.length > 0}
-          onCheckedChange={selectAll}
-        />
-        <span className="text-sm text-muted-foreground">Select all</span>
+      {/* Search + Select All */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4 pb-3 border-b border-border">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          <Input
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="Search text or @handle…"
+            className="h-9 pl-8"
+            aria-label="Search comments"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="cm-select-all"
+            checked={selectedComments.length === filteredComments.length && filteredComments.length > 0}
+            onCheckedChange={selectAll}
+          />
+          <label htmlFor="cm-select-all" className="text-sm text-muted-foreground cursor-pointer">Select all</label>
+          {priorityCount > 0 && (
+            <Badge variant="secondary" className="bg-brand-orange/10 text-brand-orange">
+              <Star className="h-3 w-3 mr-1 fill-current" /> {priorityCount} pinned
+            </Badge>
+          )}
+        </div>
       </div>
 
 
