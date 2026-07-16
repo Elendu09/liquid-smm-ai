@@ -651,7 +651,37 @@ export function AiCommandBar() {
 
         {/* Prompt input area — compact Horizon glass */}
         <div className="px-4 pt-2">
-          <div ref={promptAnchorRef} className="relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all">
+          <div
+            ref={promptAnchorRef}
+            className="relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all cursor-text"
+            onMouseDown={(e) => {
+              // Clicking padding/toolbar gap focuses the textarea so paste/typing lands there.
+              if (e.target === e.currentTarget) {
+                e.preventDefault();
+                textareaRef.current?.focus();
+              }
+            }}
+            onPaste={(e) => {
+              // Ensure pasted content always lands inside the textarea even if focus drifted
+              // (e.g. after opening/closing the slash menu portal).
+              if (document.activeElement !== textareaRef.current) {
+                const text = e.clipboardData.getData("text");
+                if (text) {
+                  e.preventDefault();
+                  const el = textareaRef.current;
+                  const start = el?.selectionStart ?? prompt.length;
+                  const end = el?.selectionEnd ?? prompt.length;
+                  const next = prompt.slice(0, start) + text + prompt.slice(end);
+                  setPrompt(next);
+                  requestAnimationFrame(() => {
+                    el?.focus();
+                    const pos = start + text.length;
+                    el?.setSelectionRange(pos, pos);
+                  });
+                }
+              }
+            }}
+          >
             <SlashCommandMenu
               open={slashOpen}
               query={slashQuery}
@@ -688,7 +718,10 @@ export function AiCommandBar() {
                     selectPlaceholder(activeParam.name);
                     return;
                   }
-                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  // Default Enter = send. Shift+Enter inserts newline.
+                  // Cmd/Ctrl+Enter also sends (kept for muscle memory).
+                  // TODO(settings): make Enter-behavior configurable per user.
+                  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                     e.preventDefault();
                     submit();
                   }
