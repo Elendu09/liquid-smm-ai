@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   Sparkles,
   Send,
-  Loader2,
+  
   History,
   Check,
   X,
