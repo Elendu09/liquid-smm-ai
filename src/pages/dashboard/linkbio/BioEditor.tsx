@@ -36,9 +36,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import BioPreview from "./BioPreview";
 import { bioStore, useBioConfig, useSyncLegacyTheme } from "./state/bioConfig";
-import { linkBioThemes } from "@/pages/dashboard/views/linkbio/themePresets";
+import { linkBioThemes, phaseMeta, themesByPhase, THEME_STORAGE_KEY, type ThemePhase } from "@/pages/dashboard/views/linkbio/themePresets";
 import { linkBioTemplates, APPLIED_TEMPLATE_KEY } from "@/pages/dashboard/views/linkbio/templatePresets";
-import { THEME_STORAGE_KEY } from "@/pages/dashboard/views/linkbio/themePresets";
+
 
 const railItems = [
   { id: "design", label: "Design", icon: Wand2 },
