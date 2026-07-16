@@ -98,29 +98,24 @@ const CompetitorTracker = () => {
     postingFreq: "1x daily"
   };
 
-  const addCompetitor = () => {
-    if (newCompetitor.trim()) {
-      setCompetitors([...competitors, {
-        id: Date.now(),
-        username: newCompetitor,
-        platform: "Instagram",
-        followers: Math.floor(Math.random() * 500000),
-        followersChange: Number((Math.random() * 10 - 5).toFixed(1)),
-        engagement: Number((Math.random() * 8).toFixed(1)),
-        engagementChange: Number((Math.random() * 2 - 1).toFixed(1)),
-        posts: Math.floor(Math.random() * 1000),
-        avgLikes: Math.floor(Math.random() * 20000),
-        avgComments: Math.floor(Math.random() * 500),
-        postingFreq: "1x daily",
-        topHashtags: ["#trending", "#viral", "#fyp"],
-        lastPost: "Just now",
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${newCompetitor}`
-      }]);
-      setNewCompetitor("");
-      toast.success(`Added ${newCompetitor}`);
-    } else {
-      toast.error("Enter a username");
-    }
+  const addCompetitor = (v: NewCompetitorInput) => {
+    setCompetitors((prev) => [...prev, {
+      id: Date.now(),
+      username: v.username,
+      platform: v.platform,
+      followers: Math.floor(Math.random() * 500000),
+      followersChange: Number((Math.random() * 10 - 5).toFixed(1)),
+      engagement: Number((Math.random() * 8).toFixed(1)),
+      engagementChange: Number((Math.random() * 2 - 1).toFixed(1)),
+      posts: Math.floor(Math.random() * 1000),
+      avgLikes: Math.floor(Math.random() * 20000),
+      avgComments: Math.floor(Math.random() * 500),
+      postingFreq: "1x daily",
+      topHashtags: ["#trending", "#viral", "#fyp"],
+      lastPost: "Just now",
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(v.username)}`,
+    }]);
+    toast.success(`Tracking ${v.username}`, { description: v.notes || undefined });
   };
 
   const removeCompetitor = (id: number) => {
