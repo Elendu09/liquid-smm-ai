@@ -14,7 +14,192 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      milestone_state: {
+        Row: {
+          account_id: string
+          id: string
+          last_threshold: number
+          metric: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          id?: string
+          last_threshold?: number
+          metric: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          id?: string
+          last_threshold?: number
+          metric?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          channels: Json
+          created_at: string
+          digest_mode: string
+          muted_accounts: string[]
+          muted_platforms: string[]
+          quiet_hours: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channels?: Json
+          created_at?: string
+          digest_mode?: string
+          muted_accounts?: string[]
+          muted_platforms?: string[]
+          quiet_hours?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channels?: Json
+          created_at?: string
+          digest_mode?: string
+          muted_accounts?: string[]
+          muted_platforms?: string[]
+          quiet_hours?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_rules: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          params: Json
+          rule_key: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          params?: Json
+          rule_key: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          params?: Json
+          rule_key?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          account_id: string | null
+          action_url: string | null
+          created_at: string
+          group_key: string | null
+          id: string
+          message: string
+          metric: Json | null
+          pinned: boolean
+          platform_id: string | null
+          post_id: string | null
+          read_at: string | null
+          severity: string
+          snoozed_until: string | null
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          action_url?: string | null
+          created_at?: string
+          group_key?: string | null
+          id?: string
+          message: string
+          metric?: Json | null
+          pinned?: boolean
+          platform_id?: string | null
+          post_id?: string | null
+          read_at?: string | null
+          severity?: string
+          snoozed_until?: string | null
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          action_url?: string | null
+          created_at?: string
+          group_key?: string | null
+          id?: string
+          message?: string
+          metric?: Json | null
+          pinned?: boolean
+          platform_id?: string | null
+          post_id?: string | null
+          read_at?: string | null
+          severity?: string
+          snoozed_until?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      post_metrics_baseline: {
+        Row: {
+          account_id: string
+          id: string
+          metric: string
+          sample_size: number
+          updated_at: string
+          user_id: string
+          value: number
+          window_hours: number
+        }
+        Insert: {
+          account_id: string
+          id?: string
+          metric: string
+          sample_size?: number
+          updated_at?: string
+          user_id: string
+          value?: number
+          window_hours?: number
+        }
+        Update: {
+          account_id?: string
+          id?: string
+          metric?: string
+          sample_size?: number
+          updated_at?: string
+          user_id?: string
+          value?: number
+          window_hours?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
