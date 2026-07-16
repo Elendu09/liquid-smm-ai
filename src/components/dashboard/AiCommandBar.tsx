@@ -292,7 +292,7 @@ export function AiCommandBar() {
     setBusy(false);
   };
 
-  const submit = async (value?: string) => {
+  const submit = async (value?: string, opts?: { mode?: "text" | "voice"; keepAttachments?: boolean }) => {
     // Warn if there are still unfilled <placeholder> tokens from a slash template.
     const raw = (value ?? prompt).trim();
     if (/<[a-z_-]+>/i.test(raw)) {
@@ -302,7 +302,8 @@ export function AiCommandBar() {
       return;
     }
     const text = raw;
-    if (!text || busy) return;
+    const currentAttachments = attachmentsRef.current;
+    if ((!text && currentAttachments.length === 0) || busy) return;
     lastPromptRef.current = text;
     setBusy(true);
     setPrompt("");
@@ -314,7 +315,7 @@ export function AiCommandBar() {
     let workingEntry: AiCommandEntry = {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
-      prompt: text,
+      prompt: text || (currentAttachments.length ? `[${currentAttachments.length} image]` : ""),
       text: "",
       toolCalls: [],
       status: "success",
@@ -337,8 +338,12 @@ export function AiCommandBar() {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
-          prompt: text,
+          prompt: text || "Describe what you see and suggest what I can do with it.",
           nowIso: new Date().toISOString(),
+          mode: opts?.mode ?? "text",
+          attachments: currentAttachments.map((a) => ({
+            kind: "image" as const, dataUrl: a.dataUrl, name: a.name, mime: a.mime, size: a.size,
+          })),
           context: {
             connectedPlatformIds: [...new Set(accounts.map((a) => a.platformId))],
             activeAccountHandle: activeAccount?.username ?? null,
