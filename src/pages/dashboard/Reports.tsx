@@ -47,6 +47,9 @@ import {
   type ReportPreviewData,
 } from "@/components/reports/ReportPreviewDialog";
 import { toast } from "@/hooks/use-toast";
+import { useRunHistory } from "@/hooks/useRunHistory";
+import { useAccounts } from "@/contexts/AccountContext";
+import { buildReportData } from "@/lib/reportAnalytics";
 
 interface ReportTemplate {
   id: string;
