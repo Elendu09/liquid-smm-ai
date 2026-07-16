@@ -506,8 +506,9 @@ export default function TeamPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* keep setItems used to silence lint if never invoked */}
-      <span hidden aria-hidden onClick={() => setItems(members)} />
+        {/* keep setItems used to silence lint if never invoked */}
+        <span hidden aria-hidden onClick={() => setItems(members)} />
+      </div>
     </div>
   );
 }
