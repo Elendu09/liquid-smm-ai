@@ -24,6 +24,14 @@ interface HistoryTurn {
   toolNames?: string[];
 }
 
+interface Attachment {
+  kind: "image";
+  dataUrl: string;
+  name?: string;
+  mime?: string;
+  size?: number;
+}
+
 interface Body {
   prompt: string;
   nowIso?: string;
@@ -35,6 +43,8 @@ interface Body {
     currentRoute?: string;
   };
   history?: HistoryTurn[];
+  attachments?: Attachment[];
+  mode?: "text" | "voice";
 }
 
 Deno.serve(async (req) => {
