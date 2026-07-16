@@ -278,6 +278,65 @@ export function CaptionDraftIntent({ payload, approved, rejected, onApprove, onR
 
       {!rejected && (
         <>
+          {/* Variant carousel — only surfaces once >1 exists */}
+          {variants.length > 1 && (
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/[0.04] px-2 py-1.5">
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0"
+                  disabled={done || activeIdx === 0}
+                  onClick={() => switchToVariant(activeIdx - 1)}
+                  aria-label="Previous variant"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                <div className="flex items-center gap-0.5">
+                  {variants.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      disabled={done}
+                      onClick={() => switchToVariant(i)}
+                      aria-label={`Variant ${i + 1}`}
+                      className={cn(
+                        "h-1.5 rounded-full transition-all",
+                        i === activeIdx ? "w-4 bg-primary" : "w-1.5 bg-primary/30 hover:bg-primary/60",
+                      )}
+                    />
+                  ))}
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0"
+                  disabled={done || activeIdx >= variants.length - 1}
+                  onClick={() => switchToVariant(activeIdx + 1)}
+                  aria-label="Next variant"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground font-medium">
+                  Variant {activeIdx + 1}/{variants.length}
+                </span>
+                {!done && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-6 px-2 text-[10px] gap-1"
+                    onClick={useThisVariant}
+                  >
+                    <Check className="h-3 w-3" />
+                    Use this one
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -306,20 +365,20 @@ export function CaptionDraftIntent({ payload, approved, rejected, onApprove, onR
             <div className="flex flex-wrap gap-1.5">
               {QUICK_TWEAKS.map((t) => {
                 const Icon = t.icon;
-                const active = tweaking === t.id;
+                const isActive = tweaking === t.id;
                 return (
                   <button
                     key={t.id}
                     type="button"
                     onClick={() => applyTweak(t)}
-                    disabled={!!tweaking}
+                    disabled={!!tweaking || generatingMore}
                     className={cn(
                       "inline-flex items-center gap-1 text-[10.5px] px-2 py-1 rounded-full border transition-all",
                       "border-border/60 bg-background/60 hover:border-primary/50 hover:bg-primary/10",
                       "disabled:opacity-40",
                     )}
                   >
-                    {active ? (
+                    {isActive ? (
                       <Loader2 className="h-2.5 w-2.5 animate-spin" />
                     ) : (
                       <Icon className="h-2.5 w-2.5 text-primary/80" />
@@ -328,6 +387,23 @@ export function CaptionDraftIntent({ payload, approved, rejected, onApprove, onR
                   </button>
                 );
               })}
+              <button
+                type="button"
+                onClick={generateMoreVariants}
+                disabled={generatingMore || !!tweaking}
+                className={cn(
+                  "inline-flex items-center gap-1 text-[10.5px] px-2 py-1 rounded-full border transition-all",
+                  "border-primary/40 bg-primary/[0.08] text-primary hover:bg-primary/15",
+                  "disabled:opacity-40",
+                )}
+              >
+                {generatingMore ? (
+                  <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                ) : (
+                  <Wand2 className="h-2.5 w-2.5" />
+                )}
+                More variants
+              </button>
             </div>
           )}
 
