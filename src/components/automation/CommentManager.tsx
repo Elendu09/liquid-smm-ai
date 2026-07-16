@@ -303,6 +303,11 @@ export const CommentManager = () => {
                   <Badge className={`text-xs border ${getSentimentColor(comment.sentiment)}`}>
                     {comment.sentiment}
                   </Badge>
+                  {priority.includes(comment.id) && (
+                    <Badge variant="secondary" className="text-xs bg-brand-orange/10 text-brand-orange border-brand-orange/30">
+                      <Star className="h-3 w-3 mr-1 fill-current" /> Priority
+                    </Badge>
+                  )}
                   {comment.replied && (
                     <Badge variant="secondary" className="text-xs bg-brand-green/10 text-brand-green border-brand-green/30">
                       <Check className="mr-1 h-3 w-3" /> Replied
