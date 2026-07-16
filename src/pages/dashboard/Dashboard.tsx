@@ -110,31 +110,29 @@ export default function Dashboard() {
         breadcrumbs={[{ label: "Dashboard" }]}
         actions={
           <div className="grid grid-cols-3 gap-2 w-full md:w-auto md:flex md:items-center">
-            {/* Primary — filled with inner highlight for a lifted glass feel */}
+            {/* Unified glass button style: translucent surface, gradient sheen on top edge, primary hover */}
             <Button
               asChild
               size="sm"
-              className="w-full md:w-auto relative overflow-hidden ring-1 ring-inset ring-primary-foreground/20 shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.55)] hover:shadow-[0_8px_20px_-6px_hsl(var(--primary)/0.7)] transition-shadow before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/40 before:to-transparent"
+              className="w-full md:w-auto group relative overflow-hidden rounded-lg border border-primary/40 bg-gradient-to-b from-primary/90 to-primary text-primary-foreground shadow-[0_4px_16px_-6px_hsl(var(--primary)/0.6)] hover:shadow-[0_8px_22px_-6px_hsl(var(--primary)/0.75)] hover:from-primary hover:to-primary/90 transition-all before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary-foreground/60 before:to-transparent"
             >
               <Link to="/dashboard/create">
                 <Zap className="mr-2 h-4 w-4" /> Quick action
               </Link>
             </Button>
-            {/* Ghost + subtle glass stroke */}
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={openTour}
-              className="w-full md:w-auto relative rounded-md border border-border/50 bg-background/40 backdrop-blur-sm hover:bg-background/70 hover:border-primary/40 ring-1 ring-inset ring-white/5 dark:ring-white/[0.04] transition-colors"
+              className="w-full md:w-auto group relative overflow-hidden rounded-lg border border-border/60 bg-card/60 text-foreground backdrop-blur-md hover:bg-card/80 hover:border-primary/50 hover:text-foreground transition-all before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-foreground/25 before:to-transparent"
             >
               <Sparkles className="mr-2 h-4 w-4" /> Take the tour
             </Button>
-            {/* Outline + glass gradient border */}
             <Button
               asChild
               variant="outline"
               size="sm"
-              className="w-full md:w-auto relative bg-background/50 backdrop-blur-sm ring-1 ring-inset ring-white/5 dark:ring-white/[0.04] hover:bg-background/80 hover:border-primary/40 transition-colors"
+              className="w-full md:w-auto group relative overflow-hidden rounded-lg border border-border/60 bg-card/60 text-foreground backdrop-blur-md hover:bg-card/80 hover:border-primary/50 hover:text-foreground transition-all before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-foreground/25 before:to-transparent"
             >
               <Link to="/dashboard/activity/runs">
                 <Clock className="mr-2 h-4 w-4" /> Activity
