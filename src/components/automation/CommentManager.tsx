@@ -101,11 +101,13 @@ const getPlatformColor = (platform: string) => {
 export const CommentManager = () => {
   const [comments, setComments] = useState(mockComments);
   const [selectedComments, setSelectedComments] = useState<number[]>([]);
+  const [priority, setPriority] = useState<number[]>([]);
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyTarget, setReplyTarget] = useState<typeof mockComments[number] | null>(null);
   const [bulkReplyOpen, setBulkReplyOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<CommentFilters>(DEFAULT_FILTERS);
+  const [keyword, setKeyword] = useState("");
 
   const platforms = useMemo(() => Array.from(new Set(mockComments.map((c) => c.platform))), []);
 
