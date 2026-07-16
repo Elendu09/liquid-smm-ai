@@ -300,15 +300,27 @@ const CompetitorTracker = () => {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" className="gap-1">
-                        <Eye className="h-4 w-4" />
-                        View
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1"
+                        onClick={() => setCompareTarget({
+                          username: competitor.username,
+                          followers: competitor.followers,
+                          engagement: competitor.engagement,
+                          avgLikes: competitor.avgLikes,
+                          avgComments: competitor.avgComments,
+                          postingFreq: competitor.postingFreq,
+                        })}
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                        Compare
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         className="text-destructive"
-                        onClick={() => removeCompetitor(competitor.id)}
+                        onClick={() => setRemoveTarget({ id: competitor.id, username: competitor.username })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
