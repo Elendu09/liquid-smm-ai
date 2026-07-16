@@ -46,6 +46,8 @@ export const ContentCalendar = () => {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
+  const [fillWeekOpen, setFillWeekOpen] = useState(false);
+  const [detailsPost, setDetailsPost] = useState<ScheduledPost | null>(null);
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
