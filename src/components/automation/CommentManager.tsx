@@ -228,11 +228,17 @@ export const CommentManager = () => {
   };
 
   const quickAiReply = (c: typeof mockComments[number]) => {
+    const gate = checkRateLimit(rateLimit);
+    if (!gate.allowed) {
+      toast.warning("Quick AI paused", { description: gate.reason });
+      return;
+    }
     const draft = renderQuickReply(qrSettings, {
       user: c.user,
       platform: c.platform,
       sentiment: c.sentiment,
     });
+    recordAction();
     sendReply(c.id, draft);
   };
 
