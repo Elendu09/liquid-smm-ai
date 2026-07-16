@@ -26,11 +26,6 @@ function AnalyticsLayout() {
   );
 }
 
-const reportSeed = [
-  { id: "r1", title: "Weekly performance", subtitle: "IG · TikTok · YouTube", status: "sent", meta: "Every Monday · 8am", createdAt: new Date().toISOString() },
-  { id: "r2", title: "Q3 audit", subtitle: "Full account audit", status: "scheduled", meta: "Sends Oct 1", createdAt: new Date().toISOString() },
-  { id: "r3", title: "Competitor pulse", subtitle: "Top 5 rivals", status: "draft", createdAt: new Date().toISOString() },
-];
 
 const healthSeed = [
   { id: "h1", title: "Instagram · @smmpilot", subtitle: "Reach down 12% w/w", status: "warning", createdAt: new Date().toISOString() },
