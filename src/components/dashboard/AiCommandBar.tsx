@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import {
   Sparkles,
   Send,
-  
   History,
   Check,
   X,
@@ -15,7 +14,15 @@ import {
   ArrowUpRight,
   Trash2,
   Square,
+  Settings2,
+  RotateCcw,
+  Copy,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useAiCommandSettings } from "@/hooks/useAiCommandSettings";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
