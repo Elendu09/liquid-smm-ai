@@ -23,6 +23,8 @@ import {
   SectionCard,
   EmptyState,
 } from "@/components/dashboard/shell";
+import { OnboardingChecklistCard } from "@/components/dashboard/OnboardingChecklistCard";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 import { useAccounts } from "@/contexts/AccountContext";
 import { useRunHistory } from "@/hooks/useRunHistory";
