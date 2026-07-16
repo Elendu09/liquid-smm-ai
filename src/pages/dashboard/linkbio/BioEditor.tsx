@@ -134,14 +134,25 @@ export default function BioEditor() {
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8" disabled title="Undo (coming)">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => bioStore.undo()} disabled={!bioStore.canUndo()} title="Undo">
                 <Undo2 className="w-3.5 h-3.5" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" disabled title="Redo (coming)">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => bioStore.redo()} disabled={!bioStore.canRedo()} title="Redo">
                 <Redo2 className="w-3.5 h-3.5" />
               </Button>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => window.open(`https://bio.smmsaas.com/${cfg.slug}`, "_blank")}>
-                <Eye className="w-3.5 h-3.5" /> Preview
+              {/* Mobile preview trigger */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5 lg:hidden">
+                    <Smartphone className="w-3.5 h-3.5" /> Preview
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="p-0 w-[92vw] sm:w-[420px]">
+                  <BioPreview />
+                </SheetContent>
+              </Sheet>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 hidden lg:inline-flex" onClick={() => window.open(`https://bio.smmsaas.com/${cfg.slug}`, "_blank")}>
+                <Eye className="w-3.5 h-3.5" /> Visit
               </Button>
               <Button size="sm" className="h-8 gap-1.5" onClick={() => toast.success("Bio saved")}>
                 <Save className="w-3.5 h-3.5" /> Save
