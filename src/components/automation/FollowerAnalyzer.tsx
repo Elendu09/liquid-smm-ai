@@ -1,10 +1,13 @@
-import { useState } from "react";
-import { Users, UserMinus, UserCheck, Clock, TrendingUp, TrendingDown, BarChart3, Search, Filter, Ghost, Star, Shield, Download } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Users, UserMinus, UserCheck, TrendingUp, TrendingDown, BarChart3, Search, Ghost, Star, Download, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AnalyzeAccountDialog, type AnalysisResult } from "@/components/audience/AnalyzeAccountDialog";
+import { ExportDialog, type ExportRow } from "@/components/audience/ExportDialog";
+import { FollowerDetailsDrawer, type FollowerDetail } from "@/components/audience/FollowerDetailsDrawer";
 
 const followerQualityData = [
   { name: "High Quality", value: 62, color: "hsl(142, 70%, 45%)" },
