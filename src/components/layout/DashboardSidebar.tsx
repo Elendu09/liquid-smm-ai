@@ -36,6 +36,7 @@ import {
   Terminal,
   Bell,
   CornerDownLeft,
+  Palette,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
