@@ -737,12 +737,19 @@ export function AiCommandBar() {
                     selectPlaceholder(activeParam.name);
                     return;
                   }
-                  // Default Enter = send. Shift+Enter inserts newline.
-                  // Cmd/Ctrl+Enter also sends (kept for muscle memory).
-                  // TODO(settings): make Enter-behavior configurable per user.
-                  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                    e.preventDefault();
-                    submit();
+                  // Enter behavior is user-configurable via the settings popover.
+                  //   "send"    → Enter sends, Shift+Enter = newline (default).
+                  //   "newline" → Enter = newline, Cmd/Ctrl+Enter sends.
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                    const mod = e.metaKey || e.ctrlKey;
+                    const shouldSend =
+                      settings.enterBehavior === "send"
+                        ? !e.shiftKey || mod
+                        : mod;
+                    if (shouldSend) {
+                      e.preventDefault();
+                      submit();
+                    }
                   }
                 }}
                 disabled={busy}
