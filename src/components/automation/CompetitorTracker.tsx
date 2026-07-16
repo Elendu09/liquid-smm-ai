@@ -440,7 +440,7 @@ const CompetitorTracker = () => {
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
+                <Target className="h-5 w-5" />
                 Competitor Alerts
               </CardTitle>
             </CardHeader>
