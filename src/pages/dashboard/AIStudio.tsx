@@ -228,6 +228,56 @@ Format as a numbered list.`;
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleSpeak = () => {
+    if (!("speechSynthesis" in window)) {
+      toast({ title: "Text-to-speech not supported in this browser", variant: "destructive" });
+      return;
+    }
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    if (!outputText.trim()) return;
+    const utter = new SpeechSynthesisUtterance(outputText);
+    utter.rate = 1;
+    utter.pitch = 1;
+    utter.onend = () => setIsSpeaking(false);
+    utter.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utter);
+    setIsSpeaking(true);
+    toast({ title: "Playing voiceover…" });
+  };
+
+  const downloadFile = (filename: string, content: string | Blob, mime = "text/plain") => {
+    const blob = content instanceof Blob ? content : new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadScript = () => {
+    if (!outputText.trim()) return;
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadFile(`video-script-${stamp}.txt`, outputText);
+    toast({ title: "Script downloaded" });
+  };
+
+  const handleDownloadImage = async () => {
+    if (!generatedImage) return;
+    try {
+      const res = await fetch(generatedImage);
+      const blob = await res.blob();
+      downloadFile(`ai-image-${Date.now()}.png`, blob);
+      toast({ title: "Image downloaded" });
+    } catch {
+      window.open(generatedImage, "_blank");
+    }
+  };
+
   const handleQuickIdea = async (topic: string) => {
     setInputText(`Create content about ${topic}`);
     setSelectedTool("ideas");
