@@ -471,6 +471,38 @@ const CompetitorTracker = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AddCompetitorDialog open={addOpen} onOpenChange={setAddOpen} onAdd={addCompetitor} />
+      <CompareCompetitorDialog
+        open={!!compareTarget}
+        onOpenChange={(o) => !o && setCompareTarget(null)}
+        you={yourStats}
+        competitor={compareTarget}
+      />
+      <AlertDialog open={!!removeTarget} onOpenChange={(o) => !o && setRemoveTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Stop tracking {removeTarget?.username}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes them from your tracker. You can add them again anytime.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (removeTarget) {
+                  removeCompetitor(removeTarget.id);
+                  setRemoveTarget(null);
+                }
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
