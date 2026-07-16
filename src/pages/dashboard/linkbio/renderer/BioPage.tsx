@@ -269,7 +269,7 @@ function GlassList({ config, accent, links, compact, fontHeading }: Shared) {
       <p className="text-xs opacity-80">{config.headline}</p>
       <div className="w-full space-y-2 mt-2">
         {links.map((l) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium rounded-xl bg-white/15 backdrop-blur-md border border-white/25 hover:bg-white/25 transition">
             {l.title}
           </a>
@@ -292,7 +292,7 @@ function RowDivider({ config, accent, links, fontHeading }: Shared) {
       </div>
       <div className="mt-2 border-t border-white/10">
         {links.map((l) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="flex items-center justify-between py-3 border-b border-white/10 text-sm hover:pl-1 transition-all">
             <span className="truncate">{l.title}</span>
             <ArrowUpRight className="w-4 h-4 opacity-60" />
@@ -368,7 +368,7 @@ function Brutal({ config, accent, links, fontHeading }: Shared) {
       <Avatar config={config} accent={accent} size={64} />
       <div className="space-y-3 mt-4">
         {links.map((l) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="block bg-white border-2 border-black px-3 py-2.5 font-bold uppercase text-sm shadow-[4px_4px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
             → {l.title}
           </a>
@@ -389,7 +389,7 @@ function CardStack({ config, accent, links, fontHeading }: Shared) {
         </div>
       </div>
       {links.map((l, i) => (
-        <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+        <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
            className="block rounded-2xl overflow-hidden shadow-lg group border border-black/5">
           <div className="h-24 relative"
                style={{ background: `linear-gradient(135deg, ${accent}, ${i % 2 ? "#0f172a" : "#334155"})` }}>
@@ -426,7 +426,7 @@ function Bento({ config, accent, links, fontHeading }: Shared) {
       )}
       <div className="grid grid-cols-2 gap-3">
         {rest.map((l, i) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className={cn("rounded-2xl p-3 h-24 flex flex-col justify-end shadow-md bg-white border border-slate-200",
                i % 3 === 0 && "bg-slate-900 text-white border-transparent")}>
             <span className="text-[10px] opacity-60 uppercase tracking-wide">Link</span>
@@ -449,7 +449,7 @@ function Reels({ config, accent, links, fontHeading }: Shared) {
       {/* Story circles */}
       <div className="mt-4 flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
         {links.slice(0, 6).map((l, i) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener" className="flex flex-col items-center gap-1 shrink-0">
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener" className="flex flex-col items-center gap-1 shrink-0">
             <div className="w-14 h-14 rounded-full p-[2px]"
                  style={{ background: `conic-gradient(from 0deg, ${accent}, #f472b6, #fb923c, ${accent})` }}>
               <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[10px] font-bold text-neutral-800">
@@ -462,7 +462,7 @@ function Reels({ config, accent, links, fontHeading }: Shared) {
       </div>
       <div className="mt-4 space-y-2">
         {links.map((l) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="block w-full text-center px-4 py-2.5 rounded-full bg-white border border-rose-200 text-sm font-medium text-neutral-800 hover:bg-rose-50">
             {l.title}
           </a>
@@ -484,7 +484,7 @@ function Chrome({ config, accent, links, fontHeading }: Shared) {
       <p className="text-[11px] opacity-80">{config.headline}</p>
       <div className="w-full space-y-2 mt-2">
         {links.map((l) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="block w-full px-4 py-3 rounded-full text-sm font-semibold text-slate-900 border-2 border-white"
              style={{ background: "linear-gradient(180deg,#ffffff 0%,#e5e7eb 50%,#cbd5e1 51%,#f8fafc 100%)", boxShadow: "0 4px 0 #94a3b8, 0 6px 20px rgba(0,0,0,0.2)" }}>
             {l.title}
@@ -510,7 +510,7 @@ function Vaporwave({ config, links, fontHeading }: Shared) {
         <p className="text-[11px] uppercase tracking-[0.3em] opacity-90">{config.headline}</p>
         <div className="w-full space-y-2 mt-3">
           {links.map((l) => (
-            <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+            <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
                className="block w-full px-4 py-2.5 rounded-md bg-white/10 border-2 border-fuchsia-300/70 backdrop-blur-sm text-sm font-bold uppercase tracking-wider hover:bg-white/20">
               ▸ {l.title}
             </a>
@@ -532,7 +532,7 @@ function Polaroid({ config, accent, links, fontHeading }: Shared) {
         {links.map((l, i) => {
           const rot = ((i % 5) - 2) * 2.5;
           return (
-            <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+            <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
                className="block bg-white p-2 pb-4 shadow-[0_6px_16px_rgba(0,0,0,0.15)] mx-auto max-w-[220px] hover:rotate-0 transition-transform"
                style={{ transform: `rotate(${rot}deg)` }}>
               <div className="h-24" style={{ background: `linear-gradient(135deg, ${accent}, #94a3b8)` }} />
@@ -561,7 +561,7 @@ function Luxe({ config, accent, links, fontHeading }: Shared) {
       <p className="text-[10px] tracking-[0.3em] uppercase opacity-70 mt-2">{config.headline}</p>
       <div className="w-full mt-6 space-y-0">
         {links.map((l, idx) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className={cn("flex items-center justify-between py-3 text-sm tracking-wide", idx > 0 && "border-t")}
              style={{ borderColor: `${accent}44` }}>
             <span className="font-serif italic">{l.title}</span>
@@ -586,7 +586,7 @@ function Tiles({ config, accent, links, fontHeading }: Shared) {
       </div>
       <div className="grid grid-cols-2 gap-3 mt-4">
         {links.map((l, i) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="rounded-2xl h-24 p-3 flex flex-col justify-between shadow-md text-slate-900 font-semibold text-xs hover:-translate-y-0.5 transition"
              style={{ background: palette[i % palette.length] }}>
             <span className="text-[9px] uppercase tracking-widest opacity-70">0{(i % 6) + 1}</span>
@@ -611,7 +611,7 @@ function CRT({ config, accent, links, fontHeading }: Shared) {
         </div>
         <div className="mt-4 space-y-2">
           {links.map((l, i) => (
-            <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+            <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
                className="block px-3 py-2 border-2 uppercase text-xs font-bold hover:bg-amber-500/10"
                style={{ borderColor: accent, boxShadow: `3px 3px 0 ${accent}` }}>
               CH.{String(i + 1).padStart(2, "0")} — {l.title}
@@ -638,7 +638,7 @@ function Botanical({ config, accent, links, fontHeading }: Shared) {
       </div>
       <div className="mt-5 space-y-2.5">
         {links.map((l) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="flex items-center gap-2 px-4 py-2.5 rounded-md border bg-white/40 backdrop-blur-sm text-sm font-serif hover:bg-white/70"
              style={{ borderColor: `${accent}55` }}>
             <Leaf className="w-3.5 h-3.5 shrink-0" style={{ color: accent }} />
@@ -663,7 +663,7 @@ function Widgets({ config, accent, links, fontHeading }: Shared) {
       </div>
       <div className="grid grid-cols-2 gap-3 mt-4">
         {links.map((l, i) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className={cn("rounded-2xl p-3 backdrop-blur-md border border-white/15 bg-white/5 hover:bg-white/10",
                i === 0 && "col-span-2 h-24")}>
             <div className="flex items-center justify-between">
