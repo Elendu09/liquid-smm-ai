@@ -1169,6 +1169,9 @@ export function AiCommandBar() {
           </div>
         </div>
 
+          </div>
+        </div>
+
         {/* Image suggestion chips — visible only while images are attached. */}
         {imageSuggestions.length > 0 && (
           <div className="flex flex-wrap gap-1.5 px-4 pt-2.5">
@@ -1192,8 +1195,6 @@ export function AiCommandBar() {
           onOpenChange={setVoiceOpen}
           onTranscript={handleVoiceTranscript}
         />
-          </div>
-        </div>
 
 
 
