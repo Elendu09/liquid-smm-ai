@@ -29,6 +29,7 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { cn } from "@/lib/utils";
 import { InlineMarkdown } from "./InlineMarkdown";
 import { CaptionDraftIntent } from "./ai-intents/CaptionDraftIntent";
+import { ScheduledPostIntent } from "./ai-intents/ScheduledPostIntent";
 
 const SUGGESTIONS = [
   "Draft 3 caption ideas about a new product launch",
@@ -245,6 +246,30 @@ export function AiCommandBar() {
     if (intent.kind === "caption-draft") {
       return (
         <CaptionDraftIntent
+          key={call.id}
+          payload={intent.payload as never}
+          approved={call.approved}
+          rejected={call.rejected}
+          onApprove={() => {
+            updateTool(entry.id, call.id, { approved: true });
+            if (latest?.id === entry.id) {
+              setLatest({
+                ...entry,
+                toolCalls: entry.toolCalls.map((c) =>
+                  c.id === call.id ? { ...c, approved: true } : c,
+                ),
+              });
+            }
+          }}
+          onReject={() => reject(entry, call)}
+        />
+      );
+    }
+
+    // Inline schedule widget — writes straight to useScheduledPosts.
+    if (intent.kind === "scheduled-post") {
+      return (
+        <ScheduledPostIntent
           key={call.id}
           payload={intent.payload as never}
           approved={call.approved}
