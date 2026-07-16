@@ -108,6 +108,9 @@ export default function Dashboard() {
         breadcrumbs={[{ label: "Dashboard" }]}
         actions={
           <>
+            <Button variant="ghost" size="sm" onClick={openTour}>
+              <Sparkles className="mr-2 h-4 w-4" /> Take the tour
+            </Button>
             <Button asChild variant="outline" size="sm">
               <Link to="/dashboard/activity/runs">
                 <Clock className="mr-2 h-4 w-4" /> Activity
@@ -121,6 +124,8 @@ export default function Dashboard() {
           </>
         }
       />
+
+      {!onboarding.completed && <OnboardingChecklistCard onReopen={openTour} />}
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
