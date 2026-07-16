@@ -223,7 +223,7 @@ export const CommentManager = () => {
 
       {/* Comments List */}
       <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-        {comments.map((comment) => (
+        {filteredComments.map((comment) => (
           <div
             key={comment.id}
             className={`p-4 rounded-xl border transition-all ${
@@ -237,7 +237,7 @@ export const CommentManager = () => {
                 checked={selectedComments.includes(comment.id)}
                 onCheckedChange={() => toggleSelect(comment.id)}
               />
-              
+
               {/* Avatar */}
               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${getPlatformColor(comment.platform)}`}>
                 {comment.avatar}
@@ -259,14 +259,14 @@ export const CommentManager = () => {
                 <p className="text-sm text-foreground mb-2">{comment.content}</p>
                 <div className="flex items-center gap-4">
                   <span className="text-xs text-muted-foreground">{comment.time}</span>
-                  
+
                   {!comment.replied && (
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
                         variant="ghost"
                         className="h-7 text-xs hover:text-primary"
-                        onClick={() => generateAIReply(comment.id)}
+                        onClick={() => openReply(comment)}
                       >
                         <Sparkles className="mr-1 h-3 w-3" />
                         AI Reply
@@ -275,7 +275,7 @@ export const CommentManager = () => {
                         size="sm"
                         variant="ghost"
                         className="h-7 text-xs hover:text-primary"
-                        onClick={() => setActiveReply(comment.id)}
+                        onClick={() => openReply(comment)}
                       >
                         <Reply className="mr-1 h-3 w-3" />
                         Reply
@@ -283,52 +283,15 @@ export const CommentManager = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Reply Input */}
-                {activeReply === comment.id && (
-                  <div className="mt-3 animate-fade-in-scale">
-                    <div className="flex gap-2">
-                      <div className="flex-1 relative">
-                        <textarea
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          placeholder="Type your reply..."
-                          className="w-full p-3 rounded-lg bg-background border border-border focus:border-primary resize-none text-sm min-h-[80px]"
-                        />
-                        {isGenerating && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
-                            <RefreshCw className="h-5 w-5 animate-spin text-primary" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2 mt-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setActiveReply(null);
-                          setReplyText("");
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="bg-primary hover:bg-primary/90"
-                        onClick={() => sendReply(comment.id)}
-                        disabled={!replyText.trim()}
-                      >
-                        <Send className="mr-1 h-3 w-3" />
-                        Send Reply
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         ))}
+        {filteredComments.length === 0 && (
+          <div className="text-center text-sm text-muted-foreground py-8">
+            No comments match the current filter.
+          </div>
+        )}
       </div>
 
       {/* Quick Stats */}
@@ -345,6 +308,21 @@ export const CommentManager = () => {
           </div>
         ))}
       </div>
+
+      <ReplyDialog
+        open={replyOpen}
+        onOpenChange={setReplyOpen}
+        comment={replyTarget}
+        onSend={(text) => replyTarget && sendReply(replyTarget.id, text)}
+      />
+      <FilterDialog
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        initial={filters}
+        onApply={setFilters}
+        platforms={platforms}
+      />
     </div>
   );
 };
+
