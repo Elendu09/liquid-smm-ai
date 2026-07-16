@@ -22,6 +22,8 @@ import {
   ArrowUp,
   ArrowDown,
   Star,
+  Smartphone,
+  GripVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import BioPreview from "./BioPreview";
 import { bioStore, useBioConfig, useSyncLegacyTheme } from "./state/bioConfig";
@@ -131,14 +134,25 @@ export default function BioEditor() {
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8" disabled title="Undo (coming)">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => bioStore.undo()} disabled={!bioStore.canUndo()} title="Undo">
                 <Undo2 className="w-3.5 h-3.5" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" disabled title="Redo (coming)">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => bioStore.redo()} disabled={!bioStore.canRedo()} title="Redo">
                 <Redo2 className="w-3.5 h-3.5" />
               </Button>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => window.open(`https://bio.smmsaas.com/${cfg.slug}`, "_blank")}>
-                <Eye className="w-3.5 h-3.5" /> Preview
+              {/* Mobile preview trigger */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5 lg:hidden">
+                    <Smartphone className="w-3.5 h-3.5" /> Preview
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="p-0 w-[92vw] sm:w-[420px]">
+                  <BioPreview />
+                </SheetContent>
+              </Sheet>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 hidden lg:inline-flex" onClick={() => window.open(`https://bio.smmsaas.com/${cfg.slug}`, "_blank")}>
+                <Eye className="w-3.5 h-3.5" /> Visit
               </Button>
               <Button size="sm" className="h-8 gap-1.5" onClick={() => toast.success("Bio saved")}>
                 <Save className="w-3.5 h-3.5" /> Save
@@ -381,18 +395,34 @@ function ThemesPanel() {
 
 function LinksPanel() {
   const cfg = useBioConfig();
+  const [dragId, setDragId] = useState<string | null>(null);
   return (
     <div className="space-y-3 max-w-2xl">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">Reorder, toggle visibility, feature a link as highlighted.</p>
+        <p className="text-xs text-muted-foreground">Drag to reorder, toggle visibility, or feature a link.</p>
         <Button size="sm" className="h-8 gap-1.5" onClick={() => bioStore.addLink()}>
           <Plus className="w-3.5 h-3.5" /> Add link
         </Button>
       </div>
       <div className="space-y-2">
         {cfg.links.map((l, i) => (
-          <div key={l.id} className="p-3 rounded-lg border border-border/50 bg-card/50 space-y-2">
+          <div
+            key={l.id}
+            draggable
+            onDragStart={() => setDragId(l.id)}
+            onDragEnd={() => setDragId(null)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => {
+              if (dragId && dragId !== l.id) bioStore.reorderLinks(dragId, l.id);
+              setDragId(null);
+            }}
+            className={cn(
+              "p-3 rounded-lg border bg-card/50 space-y-2 transition-all",
+              dragId === l.id ? "border-primary/70 opacity-60" : "border-border/50",
+            )}
+          >
             <div className="flex items-center gap-2">
+              <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab shrink-0" />
               <Input
                 value={l.title}
                 onChange={(e) => bioStore.updateLink(l.id, { title: e.target.value })}
@@ -404,10 +434,10 @@ function LinksPanel() {
             <Input
               value={l.url}
               onChange={(e) => bioStore.updateLink(l.id, { url: e.target.value })}
-              className="h-8 text-xs"
+              className="h-8 text-xs ml-6"
               placeholder="https://"
             />
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between ml-6">
               <button
                 onClick={() => bioStore.updateLink(l.id, { highlight: !l.highlight })}
                 className={cn(

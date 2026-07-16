@@ -106,6 +106,9 @@ function migrate(): BioConfig {
 
 let state: BioConfig = migrate();
 const listeners = new Set<() => void>();
+const past: BioConfig[] = [];
+const future: BioConfig[] = [];
+const HISTORY_MAX = 50;
 
 function emit() {
   if (typeof window !== "undefined") {
@@ -114,35 +117,45 @@ function emit() {
   listeners.forEach((l) => l());
 }
 
+function commit(next: BioConfig) {
+  past.push(state);
+  if (past.length > HISTORY_MAX) past.shift();
+  future.length = 0;
+  state = next;
+  emit();
+}
+
 export const bioStore = {
   get: () => state,
-  set: (patch: Partial<BioConfig>) => {
-    state = { ...state, ...patch };
+  canUndo: () => past.length > 0,
+  canRedo: () => future.length > 0,
+  undo: () => {
+    const prev = past.pop();
+    if (!prev) return;
+    future.push(state);
+    state = prev;
     emit();
   },
-  update: (fn: (c: BioConfig) => BioConfig) => {
-    state = fn(state);
+  redo: () => {
+    const nxt = future.pop();
+    if (!nxt) return;
+    past.push(state);
+    state = nxt;
     emit();
   },
-  patchOverrides: (patch: Partial<BioConfig["overrides"]>) => {
-    state = { ...state, overrides: { ...state.overrides, ...patch } };
-    emit();
-  },
+  set: (patch: Partial<BioConfig>) => commit({ ...state, ...patch }),
+  update: (fn: (c: BioConfig) => BioConfig) => commit(fn(state)),
+  patchOverrides: (patch: Partial<BioConfig["overrides"]>) =>
+    commit({ ...state, overrides: { ...state.overrides, ...patch } }),
   addLink: () => {
     const id = `l${Date.now()}`;
-    state = {
-      ...state,
-      links: [...state.links, { id, title: "New link", url: "https://", enabled: true }],
-    };
-    emit();
+    commit({ ...state, links: [...state.links, { id, title: "New link", url: "https://", enabled: true }] });
   },
   updateLink: (id: string, patch: Partial<BioLink>) => {
-    state = { ...state, links: state.links.map((l) => (l.id === id ? { ...l, ...patch } : l)) };
-    emit();
+    commit({ ...state, links: state.links.map((l) => (l.id === id ? { ...l, ...patch } : l)) });
   },
   removeLink: (id: string) => {
-    state = { ...state, links: state.links.filter((l) => l.id !== id) };
-    emit();
+    commit({ ...state, links: state.links.filter((l) => l.id !== id) });
   },
   moveLink: (id: string, dir: -1 | 1) => {
     const idx = state.links.findIndex((l) => l.id === id);
@@ -152,8 +165,16 @@ export const bioStore = {
     const next = [...state.links];
     const [item] = next.splice(idx, 1);
     next.splice(to, 0, item);
-    state = { ...state, links: next };
-    emit();
+    commit({ ...state, links: next });
+  },
+  reorderLinks: (fromId: string, toId: string) => {
+    const from = state.links.findIndex((l) => l.id === fromId);
+    const to = state.links.findIndex((l) => l.id === toId);
+    if (from < 0 || to < 0 || from === to) return;
+    const next = [...state.links];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    commit({ ...state, links: next });
   },
   subscribe: (l: () => void) => {
     listeners.add(l);
