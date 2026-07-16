@@ -1,22 +1,8 @@
 import { Outlet } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { MobileHubNav } from "@/components/dashboard/shell/MobileHubNav";
-import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
-import { useOnboarding } from "@/hooks/useOnboarding";
 
 export function DashboardLayout() {
-  const { state } = useOnboarding();
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!state.completed) {
-      // Slight delay so the dashboard paints first.
-      const t = setTimeout(() => setOpen(true), 400);
-      return () => clearTimeout(t);
-    }
-  }, [state.completed]);
-
   return (
     <div className="flex min-h-dvh w-full bg-background">
       <DashboardSidebar />
@@ -27,7 +13,6 @@ export function DashboardLayout() {
         <div className="h-20 lg:hidden" aria-hidden />
       </main>
       <MobileHubNav />
-      <OnboardingWizard open={open} onOpenChange={setOpen} />
     </div>
   );
 }

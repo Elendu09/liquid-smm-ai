@@ -51,7 +51,6 @@ export default function LibraryHub() {
         <Route index element={<Navigate to="captions" replace />} />
         <Route path="captions" element={<CaptionsBoard />} />
         <Route
-          path="assets"
           element={
             <StatusBoard
               storageKey="library:assets"
