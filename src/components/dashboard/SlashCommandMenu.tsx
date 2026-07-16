@@ -222,18 +222,19 @@ export function SlashCommandMenu({ query, open, onPick, onClose }: Props) {
       id="slash-menu"
       role="listbox"
       aria-label="Slash commands"
-      className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-border/70 bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50 animate-in fade-in-0 slide-in-from-bottom-1 duration-150"
+      className="absolute top-full left-0 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-border/70 bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50 animate-in fade-in-0 slide-in-from-top-1 duration-150"
     >
       <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60 flex items-center justify-between">
         <span className="flex items-center gap-1.5">
           <Sparkles className="h-3 w-3 text-primary" />
-          Slash commands · {filtered.length}
+          Commands · {filtered.length}
         </span>
         <span className="normal-case tracking-normal text-muted-foreground/70 hidden sm:inline">
-          ↑↓ nav · <kbd className="font-mono">Tab</kbd>/<kbd className="font-mono">↵</kbd> pick
+          <kbd className="font-mono">↵</kbd>
         </span>
       </div>
       <div className="max-h-[min(60vh,22rem)] overflow-y-auto overscroll-contain py-1">
+
 
         {filtered.map((c, i) => {
           const Icon = c.icon;
