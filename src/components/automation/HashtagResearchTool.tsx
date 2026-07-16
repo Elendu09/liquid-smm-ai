@@ -247,37 +247,17 @@ export const HashtagResearchTool = ({ defaultPlatformId }: HashtagResearchToolPr
         </div>
       )}
 
-      {aiGeneratedTags.length > 0 && !isLoading && (
-        <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-fade-in-scale">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">AI Generated for "{searchQuery}"</span>
-              <Badge variant="secondary" className="text-xs">AI Powered</Badge>
-            </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                navigator.clipboard.writeText(aiGeneratedTags.join(" "));
-                toast({ title: "All AI hashtags copied!" });
-              }}
-            >
-              <Copy className="h-3 w-3 mr-1" />
-              Copy All
-            </Button>
+      {aiRows.length > 0 && !isLoading && (
+        <div className="mb-6 p-3 rounded-xl bg-primary/5 border border-primary/20 flex items-center justify-between animate-fade-in-scale">
+          <div className="flex items-center gap-2 text-sm">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="font-medium">{aiRows.length} AI hashtags</span>
+            {lastTopic && <span className="text-muted-foreground">for "{lastTopic}"</span>}
+            <Badge variant="secondary" className="text-xs">Added to Trending</Badge>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {aiGeneratedTags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-pointer transition-all"
-                onClick={() => copyTag(tag.startsWith('#') ? tag : `#${tag}`)}
-              >
-                {tag.startsWith('#') ? tag : `#${tag}`}
-              </Badge>
-            ))}
+          <div className="flex gap-2">
+            <Button size="sm" variant="ghost" onClick={selectAllVisible}>Select all visible</Button>
+            <Button size="sm" variant="ghost" onClick={clearAiRows}>Clear AI</Button>
           </div>
         </div>
       )}
