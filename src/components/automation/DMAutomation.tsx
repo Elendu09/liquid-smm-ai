@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { logRun } from "@/hooks/useRunHistory";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { NewDmFlowDialog, type DmFlow } from "@/components/engage/NewDmFlowDialog";
+
 
 const welcomeTemplates = [
   { id: 1, name: "New Follower Welcome", trigger: "new_follow", message: "Hey! 👋 Thanks for following! How can I help you today?", active: true, sent: 1247 },
@@ -41,6 +43,9 @@ export const DMAutomation = () => {
   const [templates, setTemplates] = useState(welcomeTemplates);
   const [keywords, setKeywords] = useState(keywordResponses);
   const [messages, setMessages] = useState(recentMessages);
+  const [flows, setFlows] = useState(faqFlows);
+  const [customFlows, setCustomFlows] = useState<DmFlow[]>([]);
+  const [flowDialogOpen, setFlowDialogOpen] = useState(false);
   const [newKeyword, setNewKeyword] = useState("");
   const [newResponse, setNewResponse] = useState("");
   const [welcomeDialog, setWelcomeDialog] = useState(false);
@@ -49,6 +54,7 @@ export const DMAutomation = () => {
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
+
 
   const toggleBot = () => {
     setIsActive((prev) => {
@@ -351,12 +357,17 @@ export const DMAutomation = () => {
 
       {/* FAQ Flows */}
       <div className="glass-card p-6">
-        <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          FAQ Bot Flows
-        </h4>
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-semibold flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            DM Flows
+          </h4>
+          <Button size="sm" variant="outline" onClick={() => setFlowDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" /> New flow
+          </Button>
+        </div>
         <div className="grid md:grid-cols-3 gap-4">
-          {faqFlows.map((flow) => (
+          {flows.map((flow) => (
             <div key={flow.id} className="p-4 rounded-xl bg-secondary/50 border border-border">
               <p className="font-medium mb-2">{flow.name}</p>
               <div className="space-y-1 text-sm">
@@ -375,8 +386,31 @@ export const DMAutomation = () => {
               </div>
             </div>
           ))}
+          {customFlows.map((flow) => (
+            <div key={`custom-${flow.id}`} className="p-4 rounded-xl bg-primary/5 border border-primary/30">
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-medium">{flow.name}</p>
+                <Badge variant="secondary" className="text-[10px]">Custom</Badge>
+              </div>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <div><span className="text-foreground/80">Trigger:</span> {flow.trigger}</div>
+                <div className="truncate"><span className="text-foreground/80">Greeting:</span> {flow.greeting}</div>
+                <div className="truncate"><span className="text-foreground/80">CTA:</span> {flow.cta}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+
+      <NewDmFlowDialog
+        open={flowDialogOpen}
+        onOpenChange={setFlowDialogOpen}
+        onCreate={(f) => {
+          setCustomFlows((prev) => [{ ...f, id: Date.now() }, ...prev]);
+          toast.success(`Flow "${f.name}" created`);
+        }}
+      />
+
 
       {/* Welcome Message Dialog */}
       <Dialog open={welcomeDialog} onOpenChange={setWelcomeDialog}>

@@ -1,8 +1,12 @@
-import { useState } from "react";
-import { MessageCircle, Sparkles, Send, Check, Trash2, Reply, Flag, Heart, MoreHorizontal, RefreshCw, CheckCheck } from "lucide-react";
+import { useMemo, useState } from "react";
+import { MessageCircle, Sparkles, Check, Trash2, Reply, CheckCheck, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
+import { ReplyDialog } from "@/components/engage/ReplyDialog";
+import { FilterDialog, DEFAULT_FILTERS, type CommentFilters } from "@/components/engage/FilterDialog";
+
 
 const mockComments = [
   {
@@ -95,9 +99,27 @@ const getPlatformColor = (platform: string) => {
 export const CommentManager = () => {
   const [comments, setComments] = useState(mockComments);
   const [selectedComments, setSelectedComments] = useState<number[]>([]);
-  const [activeReply, setActiveReply] = useState<number | null>(null);
-  const [replyText, setReplyText] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replyTarget, setReplyTarget] = useState<typeof mockComments[number] | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filters, setFilters] = useState<CommentFilters>(DEFAULT_FILTERS);
+
+  const platforms = useMemo(() => Array.from(new Set(mockComments.map((c) => c.platform))), []);
+
+  const filteredComments = useMemo(() => {
+    return comments.filter((c) => {
+      if (filters.platform !== "all" && c.platform !== filters.platform) return false;
+      if (filters.sentiment !== "all" && c.sentiment !== filters.sentiment) return false;
+      if (filters.status === "pending" && c.replied) return false;
+      if (filters.status === "replied" && !c.replied) return false;
+      return true;
+    });
+  }, [comments, filters]);
+
+  const activeFilterCount =
+    (filters.platform !== "all" ? 1 : 0) +
+    (filters.sentiment !== "all" ? 1 : 0) +
+    (filters.status !== "all" ? 1 : 0);
 
   const toggleSelect = (id: number) => {
     setSelectedComments((prev) =>
@@ -106,29 +128,21 @@ export const CommentManager = () => {
   };
 
   const selectAll = () => {
-    if (selectedComments.length === comments.length) {
+    if (selectedComments.length === filteredComments.length) {
       setSelectedComments([]);
     } else {
-      setSelectedComments(comments.map((c) => c.id));
+      setSelectedComments(filteredComments.map((c) => c.id));
     }
   };
 
-  const generateAIReply = (commentId: number) => {
-    setIsGenerating(true);
-    setActiveReply(commentId);
-    setTimeout(() => {
-      const randomReply = aiReplySuggestions[Math.floor(Math.random() * aiReplySuggestions.length)];
-      setReplyText(randomReply);
-      setIsGenerating(false);
-    }, 1000);
+  const openReply = (c: typeof mockComments[number]) => {
+    setReplyTarget(c);
+    setReplyOpen(true);
   };
 
-  const sendReply = (commentId: number) => {
-    setComments((prev) =>
-      prev.map((c) => (c.id === commentId ? { ...c, replied: true } : c))
-    );
-    setActiveReply(null);
-    setReplyText("");
+  const sendReply = (commentId: number, text: string) => {
+    setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, replied: true } : c)));
+    toast.success(`Reply sent (${text.length} chars)`);
   };
 
   const bulkMarkReplied = () => {
@@ -136,14 +150,17 @@ export const CommentManager = () => {
       prev.map((c) => (selectedComments.includes(c.id) ? { ...c, replied: true } : c))
     );
     setSelectedComments([]);
+    toast.success("Marked as replied");
   };
 
   const bulkDelete = () => {
     setComments((prev) => prev.filter((c) => !selectedComments.includes(c.id)));
     setSelectedComments([]);
+    toast.success("Deleted");
   };
 
   const unrepliedCount = comments.filter((c) => !c.replied).length;
+
 
   return (
     <div className="glass-card p-6 md:p-8">
@@ -160,8 +177,14 @@ export const CommentManager = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => setFilterOpen(true)}>
+            <Filter className="h-3.5 w-3.5 mr-1" /> Filter
+            {activeFilterCount > 0 && (
+              <Badge className="ml-1 h-4 px-1 text-[10px] bg-primary text-primary-foreground">{activeFilterCount}</Badge>
+            )}
+          </Button>
           <Badge variant="secondary" className="bg-primary/10 text-primary">
-            {comments.length} Total
+            {filteredComments.length} / {comments.length}
           </Badge>
           <Badge variant="secondary" className="bg-brand-green/10 text-brand-green">
             {comments.filter((c) => c.replied).length} Replied
@@ -191,15 +214,16 @@ export const CommentManager = () => {
       {/* Select All */}
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
         <Checkbox
-          checked={selectedComments.length === comments.length && comments.length > 0}
+          checked={selectedComments.length === filteredComments.length && filteredComments.length > 0}
           onCheckedChange={selectAll}
         />
         <span className="text-sm text-muted-foreground">Select all</span>
       </div>
 
+
       {/* Comments List */}
       <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-        {comments.map((comment) => (
+        {filteredComments.map((comment) => (
           <div
             key={comment.id}
             className={`p-4 rounded-xl border transition-all ${
@@ -213,7 +237,7 @@ export const CommentManager = () => {
                 checked={selectedComments.includes(comment.id)}
                 onCheckedChange={() => toggleSelect(comment.id)}
               />
-              
+
               {/* Avatar */}
               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${getPlatformColor(comment.platform)}`}>
                 {comment.avatar}
@@ -235,14 +259,14 @@ export const CommentManager = () => {
                 <p className="text-sm text-foreground mb-2">{comment.content}</p>
                 <div className="flex items-center gap-4">
                   <span className="text-xs text-muted-foreground">{comment.time}</span>
-                  
+
                   {!comment.replied && (
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
                         variant="ghost"
                         className="h-7 text-xs hover:text-primary"
-                        onClick={() => generateAIReply(comment.id)}
+                        onClick={() => openReply(comment)}
                       >
                         <Sparkles className="mr-1 h-3 w-3" />
                         AI Reply
@@ -251,7 +275,7 @@ export const CommentManager = () => {
                         size="sm"
                         variant="ghost"
                         className="h-7 text-xs hover:text-primary"
-                        onClick={() => setActiveReply(comment.id)}
+                        onClick={() => openReply(comment)}
                       >
                         <Reply className="mr-1 h-3 w-3" />
                         Reply
@@ -259,52 +283,15 @@ export const CommentManager = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Reply Input */}
-                {activeReply === comment.id && (
-                  <div className="mt-3 animate-fade-in-scale">
-                    <div className="flex gap-2">
-                      <div className="flex-1 relative">
-                        <textarea
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          placeholder="Type your reply..."
-                          className="w-full p-3 rounded-lg bg-background border border-border focus:border-primary resize-none text-sm min-h-[80px]"
-                        />
-                        {isGenerating && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
-                            <RefreshCw className="h-5 w-5 animate-spin text-primary" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2 mt-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setActiveReply(null);
-                          setReplyText("");
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="bg-primary hover:bg-primary/90"
-                        onClick={() => sendReply(comment.id)}
-                        disabled={!replyText.trim()}
-                      >
-                        <Send className="mr-1 h-3 w-3" />
-                        Send Reply
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         ))}
+        {filteredComments.length === 0 && (
+          <div className="text-center text-sm text-muted-foreground py-8">
+            No comments match the current filter.
+          </div>
+        )}
       </div>
 
       {/* Quick Stats */}
@@ -321,6 +308,21 @@ export const CommentManager = () => {
           </div>
         ))}
       </div>
+
+      <ReplyDialog
+        open={replyOpen}
+        onOpenChange={setReplyOpen}
+        comment={replyTarget}
+        onSend={(text) => replyTarget && sendReply(replyTarget.id, text)}
+      />
+      <FilterDialog
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        initial={filters}
+        onApply={setFilters}
+        platforms={platforms}
+      />
     </div>
   );
 };
+
