@@ -1,24 +1,34 @@
-import { useEffect, useState, useCallback, DragEvent } from "react";
+import { useEffect, useState, DragEvent } from "react";
 import { toast } from "sonner";
-import { Upload, Link as LinkIcon } from "lucide-react";
+import { Pencil, RefreshCw, Link as LinkIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { pushLocalCollection } from "@/hooks/useLocalCollection";
 import { cn } from "@/lib/utils";
+
+export interface EditableAsset {
+  id: string;
+  title: string;
+  subtitle?: string;
+  type: "image" | "video" | "doc";
+  url: string;
+  tags: string[];
+}
 
 const TYPES = ["image", "video", "doc"] as const;
 
-export function UploadAssetDialog({
+export function EditAssetDialog({
   open,
   onOpenChange,
-  initialFile,
+  asset,
+  onSave,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  initialFile?: File | null;
+  asset: EditableAsset | null;
+  onSave: (id: string, patch: Partial<EditableAsset>) => void;
 }) {
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
@@ -27,20 +37,23 @@ export function UploadAssetDialog({
   const [file, setFile] = useState<File | null>(null);
   const [drag, setDrag] = useState(false);
 
-  const handleFile = useCallback((f: File | null) => {
+  useEffect(() => {
+    if (!asset) return;
+    setTitle(asset.title);
+    setUrl(asset.url);
+    setTags((asset.tags ?? []).join(", "));
+    setType(asset.type);
+    setFile(null);
+  }, [asset]);
+
+  const handleFile = (f: File | null) => {
     if (!f) return;
     setFile(f);
-    setTitle((prev) => prev || f.name.replace(/\.[^.]+$/, ""));
     if (f.type.startsWith("video/")) setType("video");
     else if (f.type.startsWith("image/")) setType("image");
     else setType("doc");
     setUrl(URL.createObjectURL(f));
-  }, []);
-
-  useEffect(() => {
-    if (open && initialFile) handleFile(initialFile);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initialFile]);
+  };
 
   const onDrop = (e: DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
@@ -49,28 +62,20 @@ export function UploadAssetDialog({
   };
 
   const save = () => {
+    if (!asset) return;
     if (!title.trim() || !url.trim()) {
       toast.error("Title and file/URL are required");
       return;
     }
-    pushLocalCollection("library", "assets", [
-      {
-        id: crypto.randomUUID(),
-        title: title.trim(),
-        subtitle: file ? `${(file.size / 1024).toFixed(0)} KB · ${type}` : `${type} · linked`,
-        status: "active",
-        type,
-        url,
-        tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
-        createdAt: new Date().toISOString(),
-      },
-    ]);
-    toast.success("Asset added");
+    onSave(asset.id, {
+      title: title.trim(),
+      url,
+      type,
+      subtitle: file ? `${(file.size / 1024).toFixed(0)} KB · ${type}` : asset.subtitle,
+      tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+    });
+    toast.success(file ? "Asset replaced" : "Asset updated");
     onOpenChange(false);
-    setTitle("");
-    setUrl("");
-    setTags("");
-    setFile(null);
   };
 
   return (
@@ -78,7 +83,7 @@ export function UploadAssetDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Upload className="h-4 w-4 text-primary" strokeWidth={1.75} /> Add asset
+            <Pencil className="h-4 w-4 text-primary" strokeWidth={1.75} /> Edit asset
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
@@ -89,12 +94,14 @@ export function UploadAssetDialog({
             onDrop={onDrop}
           >
             <div className={cn(
-              "border-2 border-dashed rounded-xl p-6 text-center transition-colors",
+              "border-2 border-dashed rounded-xl p-5 text-center transition-colors",
               drag ? "border-primary bg-primary/10" : "border-border/60 hover:bg-muted/40",
             )}>
-              <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-2" strokeWidth={1.5} />
-              <p className="text-sm font-medium">{file ? file.name : drag ? "Drop file to upload" : "Drop or choose a file"}</p>
-              <p className="text-[11px] text-muted-foreground mt-1">Image, video, or document</p>
+              <RefreshCw className="h-5 w-5 mx-auto text-muted-foreground mb-1.5" strokeWidth={1.5} />
+              <p className="text-sm font-medium">
+                {file ? `Replacing with ${file.name}` : drag ? "Drop to replace" : "Drop a new file to replace"}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1">Optional — keep as-is to only edit metadata</p>
             </div>
             <input
               type="file"
@@ -104,15 +111,9 @@ export function UploadAssetDialog({
             />
           </label>
 
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">or</span>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
-              <LinkIcon className="h-3 w-3" /> Paste URL
+              <LinkIcon className="h-3 w-3" /> URL
             </label>
             <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" />
           </div>
@@ -135,7 +136,7 @@ export function UploadAssetDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={save}>Add</Button>
+          <Button onClick={save}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
