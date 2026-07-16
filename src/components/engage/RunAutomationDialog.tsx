@@ -18,6 +18,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { cn } from "@/lib/utils";
 import type { Segment } from "@/pages/dashboard/views/SegmentsBoard";
+import { BulkAutomationProgressDialog, type BulkTarget } from "./BulkAutomationProgressDialog";
+import { DEFAULT_RATE_LIMIT, RATE_LIMIT_KEY, type RateLimitSettings } from "./RateLimitSettingsDialog";
 
 type Tone = "friendly" | "professional" | "witty";
 
@@ -58,6 +60,9 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId, multi
   const [tone, setTone] = useState<Tone>("friendly");
   const [launching, setLaunching] = useState(false);
 
+  const [progressOpen, setProgressOpen] = useState(false);
+  const [progressTargets, setProgressTargets] = useState<BulkTarget[]>([]);
+
   useEffect(() => {
     if (!open) return;
     setSegmentId(presetSegmentId || segments[0]?.id || "");
@@ -75,19 +80,36 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId, multi
     setSegmentIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
+  const loadRateLimit = (): RateLimitSettings => {
+    try {
+      const raw = localStorage.getItem(RATE_LIMIT_KEY);
+      return raw ? JSON.parse(raw) : DEFAULT_RATE_LIMIT;
+    } catch { return DEFAULT_RATE_LIMIT; }
+  };
+
   const launch = () => {
     if (chosenSegments.length === 0 || !rule) return;
     setLaunching(true);
     setTimeout(() => {
       if (multi && chosenSegments.length > 1) {
-        toast.success(`Automation queued across ${chosenSegments.length} audiences`, {
+        const targets: BulkTarget[] = chosenSegments.map((s) => ({
+          id: s.id,
+          title: s.title,
+          // simulated action count tied to platform/keyword breadth
+          actions: Math.max(6, s.platforms.length * 4 + s.keywords.length * 2),
+        }));
+        setProgressTargets(targets);
+        setProgressOpen(true);
+        setLaunching(false);
+        onOpenChange(false);
+        toast.success(`Bulk automation started · ${targets.length} audiences`, {
           description: `${rule.name} · tone: ${tone}`,
         });
-      } else {
-        toast.success(`Automation queued: ${rule.name} → ${chosenSegments[0].title}`, {
-          description: `Tone: ${tone}. Redirecting to bot rules…`,
-        });
+        return;
       }
+      toast.success(`Automation queued: ${rule.name} → ${chosenSegments[0].title}`, {
+        description: `Tone: ${tone}. Redirecting to bot rules…`,
+      });
       onOpenChange(false);
       const first = chosenSegments[0];
       navigate(`/dashboard/engage/bot?segmentId=${encodeURIComponent(first.id)}&ruleId=${encodeURIComponent(rule.id)}&tone=${tone}`);
@@ -255,6 +277,14 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId, multi
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <BulkAutomationProgressDialog
+        open={progressOpen}
+        onOpenChange={setProgressOpen}
+        targets={progressTargets}
+        rateLimit={loadRateLimit()}
+        ruleName={rule?.name ?? "Automation"}
+      />
     </Dialog>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { MessageCircle, Sparkles, Check, Trash2, Reply, CheckCheck, Filter, Search, Star, Zap, ShieldAlert, EyeOff, Flag, Ban, Settings, Eye } from "lucide-react";
+import { MessageCircle, Sparkles, Check, Trash2, Reply, CheckCheck, Filter, Search, Star, Zap, ShieldAlert, EyeOff, Flag, Ban, Settings, Eye, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +15,14 @@ import {
   renderQuickReply,
   type QuickReplySettings,
 } from "@/components/engage/QuickReplySettingsDialog";
+import {
+  RateLimitSettingsDialog,
+  DEFAULT_RATE_LIMIT,
+  RATE_LIMIT_KEY,
+  checkRateLimit,
+  recordAction,
+  type RateLimitSettings,
+} from "@/components/engage/RateLimitSettingsDialog";
 
 const MOD_RULES_KEY = "smmpilot:engage:moderation-rules";
 const MOD_STATE_KEY = "smmpilot:engage:moderation-state";
@@ -82,9 +90,13 @@ export const CommentManager = () => {
   const [qrSettings, setQrSettings] = useState<QuickReplySettings>(() => loadJSON(QR_SETTINGS_KEY, DEFAULT_QR_SETTINGS));
   const [qrOpen, setQrOpen] = useState(false);
 
+  const [rateLimit, setRateLimit] = useState<RateLimitSettings>(() => loadJSON(RATE_LIMIT_KEY, DEFAULT_RATE_LIMIT));
+  const [rateOpen, setRateOpen] = useState(false);
+
   useEffect(() => { localStorage.setItem(MOD_RULES_KEY, JSON.stringify(modRules)); }, [modRules]);
   useEffect(() => { localStorage.setItem(MOD_STATE_KEY, JSON.stringify(modState)); }, [modState]);
   useEffect(() => { localStorage.setItem(QR_SETTINGS_KEY, JSON.stringify(qrSettings)); }, [qrSettings]);
+  useEffect(() => { localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(rateLimit)); }, [rateLimit]);
 
   const platforms = useMemo(() => Array.from(new Set(mockComments.map((c) => c.platform))), []);
 
@@ -216,11 +228,17 @@ export const CommentManager = () => {
   };
 
   const quickAiReply = (c: typeof mockComments[number]) => {
+    const gate = checkRateLimit(rateLimit);
+    if (!gate.allowed) {
+      toast.warning("Quick AI paused", { description: gate.reason });
+      return;
+    }
     const draft = renderQuickReply(qrSettings, {
       user: c.user,
       platform: c.platform,
       sentiment: c.sentiment,
     });
+    recordAction();
     sendReply(c.id, draft);
   };
 
@@ -248,6 +266,12 @@ export const CommentManager = () => {
               <Badge className="ml-1 h-4 px-1 text-[10px] bg-primary text-primary-foreground">
                 {modRules.filter((r) => r.enabled).length}
               </Badge>
+            )}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setRateOpen(true)}>
+            <Gauge className="h-3.5 w-3.5 mr-1" /> Rate limits
+            {!rateLimit.enabled && (
+              <Badge className="ml-1 h-4 px-1 text-[10px] bg-destructive text-destructive-foreground">off</Badge>
             )}
           </Button>
           <Button size="sm" variant="outline" onClick={() => setQrOpen(true)}>
@@ -486,6 +510,12 @@ export const CommentManager = () => {
         onOpenChange={setQrOpen}
         value={qrSettings}
         onSave={(v) => { setQrSettings(v); toast.success("Quick reply settings saved"); }}
+      />
+      <RateLimitSettingsDialog
+        open={rateOpen}
+        onOpenChange={setRateOpen}
+        value={rateLimit}
+        onSave={(v) => { setRateLimit(v); toast.success("Rate limits saved"); }}
       />
     </div>
   );
