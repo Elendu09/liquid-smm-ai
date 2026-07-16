@@ -315,11 +315,32 @@ export const CommentManager = () => {
                   )}
                 </div>
                 <p className="text-sm text-foreground mb-2">{comment.content}</p>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
                   <span className="text-xs text-muted-foreground">{comment.time}</span>
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs hover:text-brand-orange"
+                    onClick={() => togglePriority(comment.id)}
+                    aria-label={priority.includes(comment.id) ? "Unpin" : "Pin as priority"}
+                  >
+                    <Star className={`mr-1 h-3 w-3 ${priority.includes(comment.id) ? "fill-brand-orange text-brand-orange" : ""}`} />
+                    {priority.includes(comment.id) ? "Pinned" : "Pin"}
+                  </Button>
 
                   {!comment.replied && (
                     <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs hover:text-primary"
+                        onClick={() => quickAiReply(comment)}
+                        aria-label="Quick AI reply"
+                      >
+                        <Zap className="mr-1 h-3 w-3" />
+                        Quick AI
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
