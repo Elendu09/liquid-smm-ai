@@ -328,6 +328,12 @@ export const CommentManager = () => {
         comment={replyTarget}
         onSend={(text) => replyTarget && sendReply(replyTarget.id, text)}
       />
+      <BulkReplyDialog
+        open={bulkReplyOpen}
+        onOpenChange={setBulkReplyOpen}
+        comments={comments.filter((c) => selectedComments.includes(c.id))}
+        onSend={bulkSendReplies}
+      />
       <FilterDialog
         open={filterOpen}
         onOpenChange={setFilterOpen}
