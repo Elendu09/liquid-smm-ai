@@ -758,9 +758,10 @@ export function AiCommandBar() {
               <div className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground pl-1.5">
                 <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">/</kbd>
                 <span className="ml-0.5 mr-2">commands</span>
-                <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⌘</kbd>
                 <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">↵</kbd>
-                <span className="ml-0.5">send</span>
+                <span className="ml-0.5 mr-2">send</span>
+                <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⇧↵</kbd>
+                <span className="ml-0.5">new line</span>
               </div>
               {busy ? (
                 <Button
