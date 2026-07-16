@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { 
-  FileBarChart, 
-  Download, 
-  Calendar, 
-  Clock, 
-  Mail, 
+import {
+  FileBarChart,
+  Download,
+  Calendar,
+  Clock,
+  Mail,
   Plus,
   FileText,
   BarChart3,
@@ -12,21 +12,13 @@ import {
   Users,
   Eye,
   MoreHorizontal,
-  Check
+  Check,
+  Trash2,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,13 +27,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { NewReportDialog } from "@/components/reports/NewReportDialog";
+import { ScheduleReportDialog } from "@/components/reports/ScheduleReportDialog";
+import {
+  ReportPreviewDialog,
+  type ReportPreviewData,
+} from "@/components/reports/ReportPreviewDialog";
+import { toast } from "@/hooks/use-toast";
 
 interface ReportTemplate {
   id: string;
@@ -52,14 +55,18 @@ interface ReportTemplate {
   sections: string[];
 }
 
-interface GeneratedReport {
+interface GeneratedReport extends ReportPreviewData {
+  createdAt: string;
+  whitelabel?: boolean;
+}
+
+interface ScheduledReport {
   id: string;
   name: string;
-  template: string;
-  createdAt: Date;
-  period: string;
-  format: "pdf" | "csv" | "excel";
-  size: string;
+  cadence: string;
+  email: string;
+  active: boolean;
+  createdAt: string;
 }
 
 const reportTemplates: ReportTemplate[] = [
@@ -97,21 +104,65 @@ const reportTemplates: ReportTemplate[] = [
   },
 ];
 
-const generatedReports: GeneratedReport[] = [
-  { id: "1", name: "Weekly Summary - Dec 2024", template: "Weekly Summary", createdAt: new Date(), period: "Dec 1-7, 2024", format: "pdf", size: "2.4 MB" },
-  { id: "2", name: "Monthly Growth - November", template: "Monthly Growth", createdAt: new Date(Date.now() - 86400000 * 7), period: "November 2024", format: "pdf", size: "4.8 MB" },
-  { id: "3", name: "Content Performance Q4", template: "Content Performance", createdAt: new Date(Date.now() - 86400000 * 14), period: "Q4 2024", format: "excel", size: "1.2 MB" },
-  { id: "4", name: "Engagement Analysis - Nov", template: "Engagement Analysis", createdAt: new Date(Date.now() - 86400000 * 21), period: "November 2024", format: "pdf", size: "3.1 MB" },
+const seedReports: GeneratedReport[] = [
+  {
+    id: "seed-1",
+    name: "Weekly Summary · Dec 2024",
+    template: "Weekly Summary",
+    period: "Dec 1-7, 2024",
+    format: "pdf",
+    size: "2.4 MB",
+    sections: ["Follower Growth", "Engagement Rate", "Top Posts", "Reach & Impressions"],
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "seed-2",
+    name: "Monthly Growth · November",
+    template: "Monthly Growth",
+    period: "November 2024",
+    format: "pdf",
+    size: "4.8 MB",
+    sections: ["Growth Metrics", "Audience Demographics", "Content Performance"],
+    createdAt: new Date(Date.now() - 86400000 * 7).toISOString(),
+  },
+];
+
+const seedSchedules: ScheduledReport[] = [
+  {
+    id: "seed-sch-1",
+    name: "Weekly Summary",
+    cadence: "Every Monday at 9:00 AM",
+    email: "john@company.com",
+    active: true,
+    createdAt: new Date().toISOString(),
+  },
 ];
 
 export default function ReportsPage() {
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [scheduleEnabled, setScheduleEnabled] = useState(false);
-  const [whitelabel, setWhitelabel] = useState(false);
+  const {
+    items: reports,
+    remove: removeReport,
+  } = useLocalCollection<GeneratedReport>("reports", "generated", seedReports);
+  const {
+    items: schedules,
+    update: updateSchedule,
+    remove: removeSchedule,
+  } = useLocalCollection<ScheduledReport>("reports", "scheduled", seedSchedules);
+
+  const [newOpen, setNewOpen] = useState(false);
+  const [newTemplateId, setNewTemplateId] = useState<string | undefined>();
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleTemplateName, setScheduleTemplateName] = useState<string | undefined>();
+  const [previewReport, setPreviewReport] = useState<GeneratedReport | null>(null);
+  const [toDelete, setToDelete] = useState<GeneratedReport | null>(null);
+
+  const openTemplate = (id: string) => {
+    setNewTemplateId(id);
+    setNewOpen(true);
+  };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
-      {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -120,128 +171,51 @@ export default function ReportsPage() {
           </h1>
           <p className="text-muted-foreground mt-1">Generate and schedule custom reports</p>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Report
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create New Report</DialogTitle>
-              <DialogDescription>Select a template and customize your report</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-6 py-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                {reportTemplates.map((template) => (
-                  <div
-                    key={template.id}
-                    className={cn(
-                      "p-4 rounded-lg border cursor-pointer transition-all",
-                      selectedTemplate === template.id ? "ring-2 ring-primary border-primary" : "hover:border-primary/50"
-                    )}
-                    onClick={() => setSelectedTemplate(template.id)}
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className={cn("h-10 w-10 rounded-lg bg-gradient-to-br flex items-center justify-center", template.color)}>
-                        <template.icon className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium">{template.name}</h4>
-                        <p className="text-xs text-muted-foreground">{template.description}</p>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-1 mt-3">
-                      {template.sections.slice(0, 3).map((section) => (
-                        <Badge key={section} variant="secondary" className="text-xs">
-                          {section}
-                        </Badge>
-                      ))}
-                      {template.sections.length > 3 && (
-                        <Badge variant="secondary" className="text-xs">+{template.sections.length - 3}</Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-4 pt-4 border-t">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Date Range</Label>
-                    <Select defaultValue="last7">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="last7">Last 7 days</SelectItem>
-                        <SelectItem value="last30">Last 30 days</SelectItem>
-                        <SelectItem value="last90">Last 90 days</SelectItem>
-                        <SelectItem value="custom">Custom range</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Export Format</Label>
-                    <Select defaultValue="pdf">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pdf">PDF Document</SelectItem>
-                        <SelectItem value="csv">CSV Spreadsheet</SelectItem>
-                        <SelectItem value="excel">Excel Workbook</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 rounded-lg border">
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium text-sm">Schedule delivery</p>
-                      <p className="text-xs text-muted-foreground">Receive reports automatically via email</p>
-                    </div>
-                  </div>
-                  <Switch checked={scheduleEnabled} onCheckedChange={setScheduleEnabled} />
-                </div>
-
-                <div className="flex items-center justify-between p-4 rounded-lg border">
-                  <div className="flex items-center gap-3">
-                    <Eye className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium text-sm">White-label</p>
-                      <p className="text-xs text-muted-foreground">Remove branding for client reports</p>
-                    </div>
-                  </div>
-                  <Switch checked={whitelabel} onCheckedChange={setWhitelabel} />
-                </div>
-              </div>
-
-              <Button className="w-full" disabled={!selectedTemplate}>
-                <FileBarChart className="mr-2 h-4 w-4" />
-                Generate Report
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setScheduleTemplateName(undefined);
+              setScheduleOpen(true);
+            }}
+          >
+            <Clock className="mr-2 h-4 w-4" />
+            Schedule
+          </Button>
+          <Button
+            onClick={() => {
+              setNewTemplateId(undefined);
+              setNewOpen(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create Report
+          </Button>
+        </div>
       </div>
 
-      {/* Report Templates */}
       <div>
         <h2 className="text-xl font-semibold mb-4">Report Templates</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {reportTemplates.map((template) => (
-            <Card key={template.id} className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card key={template.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
-                <div className={cn("h-12 w-12 rounded-xl bg-gradient-to-br mb-4 flex items-center justify-center", template.color)}>
+                <div
+                  className={cn(
+                    "h-12 w-12 rounded-xl bg-gradient-to-br mb-4 flex items-center justify-center",
+                    template.color,
+                  )}
+                >
                   <template.icon className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold mb-1">{template.name}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
-                <Button variant="outline" size="sm" className="w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => openTemplate(template.id)}
+                >
                   Use Template
                 </Button>
               </CardContent>
@@ -250,67 +224,86 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Generated Reports */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Reports</CardTitle>
           <CardDescription>View and download your generated reports</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {generatedReports.map((report) => (
-              <div
-                key={report.id}
-                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{report.name}</p>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Badge variant="secondary" className="text-xs">{report.template}</Badge>
-                      <span>•</span>
-                      <span>{report.period}</span>
-                      <span>•</span>
-                      <span>{report.size}</span>
+          {reports.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No reports yet. Create your first report to get started.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {reports.map((report) => (
+                <div
+                  key={report.id}
+                  className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{report.name}</p>
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                        <Badge variant="secondary" className="text-xs">
+                          {report.template}
+                        </Badge>
+                        <span>·</span>
+                        <span>{report.period}</span>
+                        <span>·</span>
+                        <span>{report.size}</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="outline" className="uppercase">
+                      {report.format}
+                    </Badge>
+                    <Button variant="outline" size="sm" onClick={() => setPreviewReport(report)}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Preview
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setPreviewReport(report)}>
+                          <Download className="mr-2 h-4 w-4" />
+                          Download
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setScheduleTemplateName(report.template);
+                            setScheduleOpen(true);
+                          }}
+                        >
+                          <Mail className="mr-2 h-4 w-4" />
+                          Email Report
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => setToDelete(report)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="uppercase">{report.format}</Badge>
-                  <Button variant="outline" size="sm">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Eye className="mr-2 h-4 w-4" />
-                        Preview
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Mail className="mr-2 h-4 w-4" />
-                        Email Report
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Scheduled Reports */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -320,23 +313,109 @@ export default function ReportsPage() {
           <CardDescription>Automatically generate and deliver reports</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 rounded-lg border">
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                <Check className="h-5 w-5 text-green-500" />
-              </div>
-              <div>
-                <p className="font-medium">Weekly Summary</p>
-                <p className="text-sm text-muted-foreground">Every Monday at 9:00 AM • john@company.com</p>
-              </div>
+          {schedules.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No scheduled reports. Set one up to get regular updates.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {schedules.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 rounded-lg border"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div
+                      className={cn(
+                        "h-10 w-10 rounded-lg flex items-center justify-center shrink-0",
+                        s.active ? "bg-green-500/10" : "bg-muted",
+                      )}
+                    >
+                      <Check
+                        className={cn(
+                          "h-5 w-5",
+                          s.active ? "text-green-500" : "text-muted-foreground",
+                        )}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{s.name}</p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {s.cadence} · {s.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <Badge
+                      className={cn(
+                        s.active
+                          ? "bg-green-500/10 text-green-500"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {s.active ? "Active" : "Paused"}
+                    </Badge>
+                    <Switch
+                      checked={s.active}
+                      onCheckedChange={(v) => updateSchedule(s.id, { active: v })}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        removeSchedule(s.id);
+                        toast({ title: "Schedule removed" });
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex items-center gap-2">
-              <Badge className="bg-green-500/10 text-green-500">Active</Badge>
-              <Button variant="outline" size="sm">Edit</Button>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
+
+      <NewReportDialog
+        open={newOpen}
+        onOpenChange={setNewOpen}
+        initialTemplateId={newTemplateId}
+      />
+      <ScheduleReportDialog
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        templateName={scheduleTemplateName}
+      />
+      <ReportPreviewDialog
+        open={!!previewReport}
+        onOpenChange={(o) => !o && setPreviewReport(null)}
+        report={previewReport}
+      />
+      <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this report?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {toDelete?.name} will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (toDelete) {
+                  removeReport(toDelete.id);
+                  toast({ title: "Report deleted" });
+                }
+                setToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

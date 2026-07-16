@@ -2,6 +2,7 @@ import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { BarChart3, FileText, Activity } from "lucide-react";
 import { PageHeader, HubTabs, StatusBoard, type HubTab } from "@/components/dashboard/shell";
 import Analytics from "../Analytics";
+import Reports from "../Reports";
 
 const tabs: HubTab[] = [
   { label: "Overview", href: "/dashboard/analytics/overview", icon: BarChart3 },
@@ -25,11 +26,6 @@ function AnalyticsLayout() {
   );
 }
 
-const reportSeed = [
-  { id: "r1", title: "Weekly performance", subtitle: "IG · TikTok · YouTube", status: "sent", meta: "Every Monday · 8am", createdAt: new Date().toISOString() },
-  { id: "r2", title: "Q3 audit", subtitle: "Full account audit", status: "scheduled", meta: "Sends Oct 1", createdAt: new Date().toISOString() },
-  { id: "r3", title: "Competitor pulse", subtitle: "Top 5 rivals", status: "draft", createdAt: new Date().toISOString() },
-];
 
 const healthSeed = [
   { id: "h1", title: "Instagram · @smmpilot", subtitle: "Reach down 12% w/w", status: "warning", createdAt: new Date().toISOString() },
@@ -43,24 +39,7 @@ export default function AnalyticsHub() {
       <Route element={<AnalyticsLayout />}>
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<Analytics />} />
-        <Route
-          path="reports"
-          element={
-            <StatusBoard
-              storageKey="analytics:reports"
-              hubKey="analytics-reports"
-              icon={FileText}
-              searchPlaceholder="Search reports…"
-              addPlaceholder="New report…"
-              seed={reportSeed}
-              columns={[
-                { id: "draft", label: "Draft" },
-                { id: "scheduled", label: "Scheduled" },
-                { id: "sent", label: "Sent" },
-              ]}
-            />
-          }
-        />
+        <Route path="reports" element={<Reports />} />
         <Route
           path="health"
           element={
