@@ -2,6 +2,7 @@ import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { BarChart3, FileText, Activity } from "lucide-react";
 import { PageHeader, HubTabs, StatusBoard, type HubTab } from "@/components/dashboard/shell";
 import Analytics from "../Analytics";
+import Reports from "../Reports";
 
 const tabs: HubTab[] = [
   { label: "Overview", href: "/dashboard/analytics/overview", icon: BarChart3 },
