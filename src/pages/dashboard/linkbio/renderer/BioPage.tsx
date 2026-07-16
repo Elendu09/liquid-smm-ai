@@ -113,8 +113,10 @@ export function BioPage({ config, compact = false }: { config: BioConfig; compac
           .join("\n")}
         @keyframes bio-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
       `}</style>
-      <BlocksStrip config={config} accent={accent} />
-      {renderLayout(layout, shared)}
+      <BioCtx.Provider value={{ avatarScale }}>
+        <BlocksStrip config={config} accent={accent} />
+        {renderLayout(layout, shared)}
+      </BioCtx.Provider>
     </div>
   );
 }
