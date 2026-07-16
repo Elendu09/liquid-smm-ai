@@ -79,6 +79,7 @@ interface NewReportDialogProps {
 }
 
 export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewReportDialogProps) {
+  const { accounts } = useAccounts();
   const [step, setStep] = useState<1 | 2>(1);
   const [templateId, setTemplateId] = useState<string>(initialTemplateId ?? "");
   const [name, setName] = useState("");
