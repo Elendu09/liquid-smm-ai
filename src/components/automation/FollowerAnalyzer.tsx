@@ -257,9 +257,11 @@ export const FollowerAnalyzer = () => {
         {activeTab === "quality" && (
           <div className="space-y-3">
             {topFollowers.map((follower) => (
-              <div
+              <button
                 key={follower.id}
-                className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border"
+                type="button"
+                onClick={() => openTop(follower)}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border hover:border-primary/50 transition text-left"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-green to-brand-cyan flex items-center justify-center text-white font-bold text-sm">
