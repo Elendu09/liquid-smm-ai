@@ -763,18 +763,28 @@ export function AiCommandBar() {
                   aria-hidden
                   className="pointer-events-none absolute inset-0 px-3 pt-2.5 pb-9 sm:pb-10 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words z-0"
                 >
-                  {prompt.split(/(<[a-z_-]+>)/i).map((part, i) =>
-                    /^<[a-z_-]+>$/i.test(part) ? (
-                      <span
-                        key={i}
-                        className="rounded-[3px] bg-primary/20 ring-1 ring-primary/40"
-                      >
-                        <span className="invisible">{part}</span>
-                      </span>
-                    ) : (
-                      <span key={i} className="invisible">{part}</span>
-                    ),
-                  )}
+                  {prompt.split(/(<[a-z_-]+>)/i).map((part, i) => {
+                    const m = /^<([a-z_-]+)>$/i.exec(part);
+                    if (m) {
+                      const tip = paramTooltip.get(m[1]) ?? m[1];
+                      const isNext = activeParam?.name === m[1];
+                      return (
+                        <span
+                          key={i}
+                          title={tip}
+                          className={cn(
+                            "rounded-[3px] ring-1",
+                            isNext
+                              ? "bg-primary/25 ring-primary/60"
+                              : "bg-primary/15 ring-primary/35",
+                          )}
+                        >
+                          <span className="invisible">{part}</span>
+                        </span>
+                      );
+                    }
+                    return <span key={i} className="invisible">{part}</span>;
+                  })}
                 </div>
               )}
               {/* Ghost autocomplete overlay for slash command labels */}
