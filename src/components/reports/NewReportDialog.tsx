@@ -223,9 +223,14 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
         <DialogHeader>
           <DialogTitle>Create New Report</DialogTitle>
           <DialogDescription>
-            {step === 1 ? "Select a template to get started" : "Customize your report"}
+            {step === 1
+              ? "Select a template to get started"
+              : step === 2
+              ? "Customize your report"
+              : "Generating report"}
           </DialogDescription>
         </DialogHeader>
+
 
         {step === 1 && (
           <div className="grid gap-3 md:grid-cols-2 py-2">
