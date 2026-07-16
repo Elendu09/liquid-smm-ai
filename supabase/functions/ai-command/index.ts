@@ -6,7 +6,7 @@ import { streamText, tool, stepCountIs } from "npm:ai@5.0.60";
 import { z } from "npm:zod@3.25.76";
 import { createLovableAiGatewayProvider, corsHeaders } from "../_shared/ai-gateway.ts";
 
-const SYSTEM = `You are SMM Pilot's in-app command runner. The user types a short instruction and you must translate it into ONE OR MORE tool calls that the app will surface for their approval.
+const SYSTEM = `You are SMMSAAS's in-app command runner. The user types a short instruction and you must translate it into ONE OR MORE tool calls that the app will surface for their approval.
 
 Rules:
 - Prefer taking action via tools over long prose. Reply in at most 1–2 sentences after tool calls.
