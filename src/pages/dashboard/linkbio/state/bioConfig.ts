@@ -215,6 +215,14 @@ export const bioStore = {
   update: (fn: (c: BioConfig) => BioConfig) => commit(fn(state)),
   patchOverrides: (patch: Partial<BioConfig["overrides"]>) =>
     commit({ ...state, overrides: { ...state.overrides, ...patch } }),
+  resetOverrides: () =>
+    commit({ ...state, overrides: { ...defaultConfig.overrides } }),
+  applyDesignPreset: (patch: { themeId?: string; overrides: Partial<BioConfig["overrides"]> }) =>
+    commit({
+      ...state,
+      themeId: patch.themeId ?? state.themeId,
+      overrides: { ...defaultConfig.overrides, ...patch.overrides },
+    }),
   addLink: () => {
     const id = `l${Date.now()}`;
     commit({ ...state, links: [...state.links, { id, title: "New link", url: "https://", enabled: true }] });
