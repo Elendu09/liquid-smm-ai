@@ -11,6 +11,11 @@ import {
   CalendarDays,
   Repeat,
   ArrowUpRight,
+  Plus,
+  Trash2,
+  AlertTriangle,
+  Globe2,
+  Copy,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +29,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useScheduledPosts, type Recurrence } from "@/hooks/useScheduledPosts";
+import {
+  useScheduledPosts,
+  findConflicts,
+  type Recurrence,
+} from "@/hooks/useScheduledPosts";
 import { useAccounts } from "@/contexts/AccountContext";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { logMcpCall } from "@/hooks/useMcpActivity";
@@ -47,17 +56,94 @@ interface Props {
   onReject: () => void;
 }
 
-/** Format a Date for <input type="datetime-local"> in the user's local zone. */
-function toLocalInputValue(d: Date) {
+// ---------- timezone helpers ----------
+const BROWSER_TZ = typeof Intl !== "undefined"
+  ? Intl.DateTimeFormat().resolvedOptions().timeZone
+  : "UTC";
+
+// A small curated timezone list; user's own tz is always included.
+const COMMON_TZS = [
+  "UTC",
+  "America/Los_Angeles",
+  "America/Denver",
+  "America/Chicago",
+  "America/New_York",
+  "America/Sao_Paulo",
+  "Europe/London",
+  "Europe/Paris",
+  "Europe/Berlin",
+  "Africa/Lagos",
+  "Asia/Dubai",
+  "Asia/Kolkata",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+];
+
+/** Parts of an instant expressed inside a target IANA timezone. */
+function partsInTz(d: Date, tz: string) {
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const p = Object.fromEntries(
+    dtf.formatToParts(d).map((x) => [x.type, x.value]),
+  ) as Record<string, string>;
+  return {
+    year: Number(p.year),
+    month: Number(p.month),
+    day: Number(p.day),
+    hour: Number(p.hour === "24" ? "00" : p.hour),
+    minute: Number(p.minute),
+  };
+}
+
+/** Format an instant Date as a datetime-local string INSIDE tz. */
+function toTzLocalInputValue(d: Date, tz: string) {
+  const p = partsInTz(d, tz);
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${p.year}-${pad(p.month)}-${pad(p.day)}T${pad(p.hour)}:${pad(p.minute)}`;
 }
 
-function fromLocalInputValue(v: string) {
-  // Interpreted as local time
-  return new Date(v);
+/**
+ * Interpret a datetime-local string as wall-clock time INSIDE tz and return
+ * the absolute Date. Uses fixed-point iteration on the tz offset.
+ */
+function fromTzLocalInputValue(v: string, tz: string): Date {
+  // Assume UTC first, then correct by the offset that tz maps to at that moment.
+  const [datePart, timePart] = v.split("T");
+  if (!datePart || !timePart) return new Date(NaN);
+  const [y, m, d] = datePart.split("-").map(Number);
+  const [hh, mm] = timePart.split(":").map(Number);
+  // Guess: treat v as UTC
+  let guess = new Date(Date.UTC(y, m - 1, d, hh, mm));
+  for (let i = 0; i < 2; i++) {
+    const parts = partsInTz(guess, tz);
+    const guessAsWallMs = Date.UTC(
+      parts.year,
+      parts.month - 1,
+      parts.day,
+      parts.hour,
+      parts.minute,
+    );
+    const targetMs = Date.UTC(y, m - 1, d, hh, mm);
+    const drift = targetMs - guessAsWallMs;
+    if (drift === 0) break;
+    guess = new Date(guess.getTime() + drift);
+  }
+  return guess;
 }
 
+function tzShortLabel(tz: string) {
+  return tz.split("/").slice(-1)[0].replace(/_/g, " ");
+}
+
+// ---------- quick-time helpers (return absolute Date) ----------
 function inOneHour() {
   const d = new Date();
   d.setHours(d.getHours() + 1, 0, 0, 0);
@@ -71,16 +157,21 @@ function tomorrowAt9() {
 }
 function nextMondayAt9() {
   const d = new Date();
-  const day = d.getDay(); // 0..6
+  const day = d.getDay();
   const add = ((1 - day + 7) % 7) || 7;
   d.setDate(d.getDate() + add);
   d.setHours(9, 0, 0, 0);
   return d;
 }
 
+interface Slot {
+  id: string;
+  local: string; // datetime-local, interpreted in the selected timezone
+}
+
 export function ScheduledPostIntent({ payload, approved, rejected, onApprove, onReject }: Props) {
   const navigate = useNavigate();
-  const { add } = useScheduledPosts();
+  const { add, posts } = useScheduledPosts();
   const { accounts } = useAccounts();
 
   const connectedPlatformIds = useMemo(
@@ -88,13 +179,17 @@ export function ScheduledPostIntent({ payload, approved, rejected, onApprove, on
     [accounts],
   );
 
-  const initialWhen = useMemo(() => {
+  const [timezone, setTimezone] = useState<string>(BROWSER_TZ);
+
+  const initialDate = useMemo(() => {
     const d = new Date(payload.scheduledAt);
     return isNaN(d.getTime()) ? inOneHour() : d;
   }, [payload.scheduledAt]);
 
   const [caption, setCaption] = useState(payload.caption ?? "");
-  const [whenLocal, setWhenLocal] = useState(toLocalInputValue(initialWhen));
+  const [slots, setSlots] = useState<Slot[]>([
+    { id: crypto.randomUUID(), local: toTzLocalInputValue(initialDate, BROWSER_TZ) },
+  ]);
   const [platformIds, setPlatformIds] = useState<string[]>(
     (payload.platformIds ?? []).filter(Boolean),
   );
@@ -102,60 +197,145 @@ export function ScheduledPostIntent({ payload, approved, rejected, onApprove, on
     useState<Recurrence["freq"] | "none">("none");
   const [recurrenceCount, setRecurrenceCount] = useState<number>(4);
   const [saved, setSaved] = useState(false);
+  const [confirmOverride, setConfirmOverride] = useState(false);
 
   const togglePlatform = (id: string) => {
     setPlatformIds((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
     );
+    setConfirmOverride(false);
   };
 
-  const applyQuickTime = (d: Date) => setWhenLocal(toLocalInputValue(d));
+  const setSlotLocal = (id: string, local: string) => {
+    setSlots((prev) => prev.map((s) => (s.id === id ? { ...s, local } : s)));
+    setConfirmOverride(false);
+  };
+  const addSlot = (fromLocal?: string) =>
+    setSlots((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        local: fromLocal ?? prev[prev.length - 1]?.local ?? toTzLocalInputValue(inOneHour(), timezone),
+      },
+    ]);
+  const duplicateSlot = (id: string) => {
+    const s = slots.find((x) => x.id === id);
+    if (s) addSlot(s.local);
+  };
+  const removeSlot = (id: string) =>
+    setSlots((prev) => (prev.length === 1 ? prev : prev.filter((s) => s.id !== id)));
+  const applyQuickTime = (d: Date) => {
+    // apply to the first slot
+    setSlots((prev) =>
+      prev.length === 0
+        ? [{ id: crypto.randomUUID(), local: toTzLocalInputValue(d, timezone) }]
+        : prev.map((s, i) => (i === 0 ? { ...s, local: toTzLocalInputValue(d, timezone) } : s)),
+    );
+    setConfirmOverride(false);
+  };
+
+  const onTimezoneChange = (nextTz: string) => {
+    // Re-anchor each slot: treat the current local as wall-clock in previous tz,
+    // then rewrite as wall-clock in the new tz for the same absolute instant.
+    setSlots((prev) =>
+      prev.map((s) => ({
+        ...s,
+        local: toTzLocalInputValue(fromTzLocalInputValue(s.local, timezone), nextTz),
+      })),
+    );
+    setTimezone(nextTz);
+    setConfirmOverride(false);
+  };
+
+  // Resolve slots → absolute ISOs (for conflict detection + save)
+  const resolvedInstants = useMemo(
+    () => slots.map((s) => fromTzLocalInputValue(s.local, timezone)),
+    [slots, timezone],
+  );
+
+  // Conflict detection across every slot × recurrence occurrence
+  const conflicts = useMemo(() => {
+    if (platformIds.length === 0) return [];
+    const all: ReturnType<typeof findConflicts> = [];
+    const totalPer = recurrenceFreq === "none" ? 1 : Math.max(1, recurrenceCount);
+    resolvedInstants.forEach((base) => {
+      for (let i = 0; i < totalPer; i++) {
+        const when = new Date(base);
+        if (recurrenceFreq === "daily") when.setDate(when.getDate() + i);
+        else if (recurrenceFreq === "weekly") when.setDate(when.getDate() + i * 7);
+        else if (recurrenceFreq === "monthly") when.setMonth(when.getMonth() + i);
+        all.push(
+          ...findConflicts(posts, {
+            scheduledAt: when.toISOString(),
+            platformIds,
+            caption,
+          }),
+        );
+      }
+    });
+    // Also detect duplicates within the batch itself (same instant + platform).
+    const seen = new Map<string, number>();
+    resolvedInstants.forEach((d) => {
+      const key = `${d.getTime()}|${[...platformIds].sort().join(",")}`;
+      seen.set(key, (seen.get(key) ?? 0) + 1);
+    });
+    const dupWithin = [...seen.entries()].filter(([, n]) => n > 1);
+    return { external: all, internalDupCount: dupWithin.length };
+  }, [posts, resolvedInstants, platformIds, caption, recurrenceFreq, recurrenceCount]);
+
+  const totalConflicts =
+    Array.isArray(conflicts) ? 0 : conflicts.external.length + conflicts.internalDupCount;
 
   const doSchedule = () => {
-    const when = fromLocalInputValue(whenLocal);
-    if (isNaN(when.getTime())) {
-      toast.error("Pick a valid date & time");
+    if (!caption.trim()) return toast.error("Caption can't be empty");
+    if (platformIds.length === 0) return toast.error("Select at least one platform");
+    if (resolvedInstants.some((d) => isNaN(d.getTime())))
+      return toast.error("Pick a valid date & time for every slot");
+
+    if (totalConflicts > 0 && !confirmOverride) {
+      setConfirmOverride(true);
+      toast.warning(
+        `${totalConflicts} conflict${totalConflicts === 1 ? "" : "s"} detected — review then confirm again to override.`,
+      );
       return;
     }
-    if (!caption.trim()) {
-      toast.error("Caption can't be empty");
-      return;
-    }
-    if (platformIds.length === 0) {
-      toast.error("Select at least one platform");
-      return;
-    }
+
     const recurrence: Recurrence | undefined =
       recurrenceFreq !== "none"
         ? { freq: recurrenceFreq, count: Math.max(1, recurrenceCount) }
         : undefined;
 
+    const scheduledAts = resolvedInstants.map((d) => d.toISOString());
+
     const first = add(
       {
         caption: caption.trim(),
-        scheduledAt: when.toISOString(),
+        scheduledAt: scheduledAts[0],
         platformIds,
         hashtags: payload.hashtags,
         mediaUrl: payload.mediaUrls?.[0],
+        timezone,
+        status: "queued",
       },
-      recurrence ? { recurrence } : undefined,
+      { recurrence, scheduledAts },
     );
+
+    const totalCount =
+      scheduledAts.length * (recurrence?.count ?? 1);
 
     logMcpCall({
       tool: "queue_cross_platform_post",
       status: "success",
-      summary: `Scheduled ${platformIds.length} platform${platformIds.length === 1 ? "" : "s"} for ${format(when, "MMM d, h:mm a")}${
-        recurrence ? ` (×${recurrence.count} ${recurrence.freq})` : ""
-      }`,
+      summary: `Scheduled ${totalCount} post${totalCount === 1 ? "" : "s"} across ${platformIds.length} platform${platformIds.length === 1 ? "" : "s"} (${tzShortLabel(timezone)})`,
       resources: [{ kind: "scheduled-post", id: first.id, label: caption.slice(0, 60) }],
-      payload: { ...first, recurrence },
+      payload: { ...first, recurrence, timezone, scheduledAts },
     });
 
     setSaved(true);
     toast.success(
-      recurrence
-        ? `Scheduled ${recurrence.count} posts (${recurrence.freq})`
-        : `Scheduled for ${format(when, "MMM d, h:mm a")}`,
+      totalCount > 1
+        ? `Scheduled ${totalCount} posts (${tzShortLabel(timezone)})`
+        : `Scheduled for ${format(resolvedInstants[0], "MMM d, h:mm a")} · ${tzShortLabel(timezone)}`,
       {
         duration: 6000,
         action: {
@@ -197,7 +377,7 @@ export function ScheduledPostIntent({ payload, approved, rejected, onApprove, on
             )}
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            Adjust time, platforms, or caption — then schedule directly.
+            Bulk-schedule across time slots and platforms with timezone-aware timing.
           </p>
         </div>
         {!done && !rejected && (
@@ -222,23 +402,86 @@ export function ScheduledPostIntent({ payload, approved, rejected, onApprove, on
         <>
           <Textarea
             value={caption}
-            onChange={(e) => setCaption(e.target.value)}
+            onChange={(e) => {
+              setCaption(e.target.value);
+              setConfirmOverride(false);
+            }}
             rows={3}
             className="text-xs resize-none"
-            placeholder="Caption"
+            placeholder="Caption applied to every slot"
           />
 
-          {/* When */}
+          {/* Timezone */}
           <div className="space-y-1.5">
-            <label className="text-[10.5px] font-medium uppercase tracking-wide text-muted-foreground">
-              When
+            <label className="text-[10.5px] font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+              <Globe2 className="h-3 w-3" />
+              Timezone
             </label>
-            <Input
-              type="datetime-local"
-              value={whenLocal}
-              onChange={(e) => setWhenLocal(e.target.value)}
-              className="h-8 text-xs"
-            />
+            <Select value={timezone} onValueChange={onTimezoneChange}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[BROWSER_TZ, ...COMMON_TZS.filter((t) => t !== BROWSER_TZ)].map((tz) => (
+                  <SelectItem key={tz} value={tz}>
+                    {tz} {tz === BROWSER_TZ ? "· your device" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Slots */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[10.5px] font-medium uppercase tracking-wide text-muted-foreground">
+                Time slots ({slots.length})
+              </label>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-6 gap-1 text-[10.5px] px-2"
+                onClick={() => addSlot()}
+              >
+                <Plus className="h-3 w-3" />
+                Add slot
+              </Button>
+            </div>
+            <div className="space-y-1.5">
+              {slots.map((s, i) => (
+                <div key={s.id} className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-muted-foreground w-4">{i + 1}</span>
+                  <Input
+                    type="datetime-local"
+                    value={s.local}
+                    onChange={(e) => setSlotLocal(s.id, e.target.value)}
+                    className="h-8 text-xs flex-1"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    aria-label="Duplicate slot"
+                    onClick={() => duplicateSlot(s.id)}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0 text-destructive"
+                    aria-label="Remove slot"
+                    disabled={slots.length === 1}
+                    onClick={() => removeSlot(s.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
             <div className="flex flex-wrap gap-1.5">
               <QuickTimeChip icon={Clock} label="+1h" onClick={() => applyQuickTime(inOneHour())} />
               <QuickTimeChip icon={Sunrise} label="Tomorrow 9am" onClick={() => applyQuickTime(tomorrowAt9())} />
@@ -282,12 +525,15 @@ export function ScheduledPostIntent({ payload, approved, rejected, onApprove, on
           <div className="space-y-1.5">
             <label className="text-[10.5px] font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-1">
               <Repeat className="h-3 w-3" />
-              Repeat
+              Repeat (per slot)
             </label>
             <div className="flex items-center gap-1.5">
               <Select
                 value={recurrenceFreq}
-                onValueChange={(v) => setRecurrenceFreq(v as Recurrence["freq"] | "none")}
+                onValueChange={(v) => {
+                  setRecurrenceFreq(v as Recurrence["freq"] | "none");
+                  setConfirmOverride(false);
+                }}
               >
                 <SelectTrigger className="h-8 text-xs w-[110px]">
                   <SelectValue />
@@ -307,7 +553,10 @@ export function ScheduledPostIntent({ payload, approved, rejected, onApprove, on
                     min={1}
                     max={52}
                     value={recurrenceCount}
-                    onChange={(e) => setRecurrenceCount(Number(e.target.value) || 1)}
+                    onChange={(e) => {
+                      setRecurrenceCount(Number(e.target.value) || 1);
+                      setConfirmOverride(false);
+                    }}
                     className="h-8 w-16 text-xs"
                   />
                 </>
@@ -315,10 +564,35 @@ export function ScheduledPostIntent({ payload, approved, rejected, onApprove, on
             </div>
           </div>
 
+          {/* Conflict warning */}
+          {totalConflicts > 0 && (
+            <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2.5 text-[11px] space-y-1">
+              <div className="flex items-center gap-1.5 font-medium text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                {totalConflicts} scheduling conflict{totalConflicts === 1 ? "" : "s"} detected
+              </div>
+              {!Array.isArray(conflicts) && conflicts.external.slice(0, 3).map((c, i) => (
+                <div key={i} className="text-muted-foreground">
+                  · {c.kind === "duplicate" ? "Duplicate caption" : "Overlaps within"} {c.minutesApart}m on {c.platformIds.join(", ")}
+                </div>
+              ))}
+              {!Array.isArray(conflicts) && conflicts.internalDupCount > 0 && (
+                <div className="text-muted-foreground">
+                  · {conflicts.internalDupCount} duplicate slot{conflicts.internalDupCount === 1 ? "" : "s"} inside this batch
+                </div>
+              )}
+              {confirmOverride && (
+                <div className="text-amber-600 dark:text-amber-400 pt-1">
+                  Confirm again to schedule anyway.
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-1.5 pt-1">
             <Button size="sm" className="h-7 gap-1" onClick={doSchedule}>
               <Check className="h-3 w-3" />
-              Schedule
+              {confirmOverride && totalConflicts > 0 ? "Schedule anyway" : `Schedule ${slots.length > 1 ? `× ${slots.length}` : ""}`.trim()}
             </Button>
             <Button
               size="sm"
@@ -329,6 +603,10 @@ export function ScheduledPostIntent({ payload, approved, rejected, onApprove, on
               <ArrowUpRight className="h-3 w-3" />
               Open queue
             </Button>
+            <span className="text-[10.5px] text-muted-foreground self-center ml-auto">
+              {tzShortLabel(timezone)} · {slots.length} slot{slots.length === 1 ? "" : "s"}
+              {recurrenceFreq !== "none" && ` × ${recurrenceCount} ${recurrenceFreq}`}
+            </span>
           </div>
         </>
       )}

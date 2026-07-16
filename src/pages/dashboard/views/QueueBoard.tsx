@@ -1,11 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Trash2, Clock, Calendar as CalendarIcon, Plus, ChevronDown } from "lucide-react";
+import {
+  Trash2,
+  Clock,
+  Calendar as CalendarIcon,
+  Plus,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  RotateCw,
+} from "lucide-react";
 import { format, parseISO, isBefore } from "date-fns";
 import { useMcpInbox } from "@/hooks/useMcpInbox";
 import { logMcpCall } from "@/hooks/useMcpActivity";
 import {
-  PageHeader,
   ToolbarBar,
   ViewToggle,
   useViewMode,
@@ -14,50 +22,120 @@ import {
   type KanbanColumnDef,
 } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
-import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { useScheduledPosts, type ScheduledPost, type SendStatus } from "@/hooks/useScheduledPosts";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { SmartPostScheduler } from "@/components/automation/SmartPostScheduler";
 import { PlatformGate } from "@/components/shared/PlatformGate";
 import { Input } from "@/components/ui/input";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 
-type Status = "draft" | "scheduled" | "published" | "failed";
+type Column = "queued" | "sending" | "completed" | "failed";
 
-const columns: KanbanColumnDef<Status>[] = [
-  { id: "draft", label: "Draft", emptyLabel: "No drafts" },
-  { id: "scheduled", label: "Scheduled", emptyLabel: "No upcoming posts" },
-  { id: "published", label: "Published", emptyLabel: "Nothing published yet" },
+const columns: KanbanColumnDef<Column>[] = [
+  { id: "queued", label: "Queued", emptyLabel: "No queued posts" },
+  { id: "sending", label: "Sending", emptyLabel: "Nothing sending right now" },
+  { id: "completed", label: "Completed", emptyLabel: "Nothing published yet" },
   { id: "failed", label: "Failed", emptyLabel: "No failures — 🎉" },
 ];
 
-function deriveStatus(p: ScheduledPost & { status?: Status }): Status {
-  if (p.status) return p.status;
-  if (!p.scheduledAt) return "draft";
-  return isBefore(parseISO(p.scheduledAt), new Date()) ? "published" : "scheduled";
+function deriveStatus(p: ScheduledPost): Column {
+  const s = p.status;
+  if (s === "sending" || s === "completed" || s === "failed") return s;
+  // queued or unset: still awaiting send-time
+  if (p.scheduledAt && isBefore(parseISO(p.scheduledAt), new Date())) return "sending";
+  return "queued";
+}
+
+function StatusPill({ post }: { post: ScheduledPost }) {
+  const s: SendStatus = post.status ?? "queued";
+  if (s === "sending") {
+    return (
+      <Badge variant="secondary" className="gap-1 border-primary/30 bg-primary/10 text-primary">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        Sending {Math.round(post.sendProgress ?? 0)}%
+      </Badge>
+    );
+  }
+  if (s === "completed") {
+    return (
+      <Badge variant="secondary" className="gap-1 border-brand-green/30 bg-brand-green/10 text-brand-green">
+        <CheckCircle2 className="h-3 w-3" />
+        Sent
+      </Badge>
+    );
+  }
+  if (s === "failed") {
+    return (
+      <Badge variant="destructive" className="gap-1">
+        <AlertCircle className="h-3 w-3" />
+        Failed
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="secondary" className="gap-1">
+      <Clock className="h-3 w-3" />
+      Queued
+    </Badge>
+  );
 }
 
 function PostCard({
   post,
   onDelete,
   onReschedule,
+  onRetry,
 }: {
   post: ScheduledPost;
   onDelete: () => void;
   onReschedule: () => void;
+  onRetry: () => void;
 }) {
+  const status: SendStatus = post.status ?? "queued";
+  const tz = post.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   return (
     <div className="p-3 space-y-2">
-      <p className="text-sm line-clamp-3 text-foreground">{post.caption || "Untitled post"}</p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm line-clamp-3 text-foreground flex-1">{post.caption || "Untitled post"}</p>
+        <StatusPill post={post} />
+      </div>
+      {status === "sending" && (
+        <Progress value={post.sendProgress ?? 0} className="h-1" />
+      )}
+      {status === "failed" && post.error && (
+        <p className="text-[11px] text-destructive/90">{post.error}</p>
+      )}
       <div className="flex items-center gap-2 flex-wrap">
         {post.platformIds?.slice(0, 4).map((id) => (
           <PlatformIcon key={id} platform={id} className="h-4 w-4" />
         ))}
       </div>
       <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-        <span className="flex items-center gap-1">
+        <span className="flex items-center gap-1" title={tz}>
           <Clock className="h-3 w-3" />
           {post.scheduledAt ? format(parseISO(post.scheduledAt), "MMM d, HH:mm") : "No date"}
+          <span className="opacity-60">· {tz.split("/").pop()}</span>
         </span>
         <div className="flex items-center gap-1">
+          {status === "failed" && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              aria-label="Retry send"
+              onClick={onRetry}
+            >
+              <RotateCw className="h-3.5 w-3.5" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -91,7 +169,6 @@ export default function QueueBoard() {
   const [rescheduling, setRescheduling] = useState<ScheduledPost | null>(null);
   const [rescheduleValue, setRescheduleValue] = useState("");
 
-  // Drain approved cross-platform post proposals from MCP tools.
   useEffect(() => {
     const pending = drain("scheduled-post");
     if (pending.length === 0) return;
@@ -103,6 +180,7 @@ export default function QueueBoard() {
         scheduledAt?: string;
         hashtags?: string[];
         mediaUrl?: string;
+        timezone?: string;
       };
       const rec = add({
         caption: pl.caption ?? "",
@@ -110,6 +188,7 @@ export default function QueueBoard() {
         scheduledAt: pl.scheduledAt ?? new Date().toISOString(),
         hashtags: pl.hashtags,
         mediaUrl: pl.mediaUrl,
+        timezone: pl.timezone,
       });
       added.push(rec);
     });
@@ -143,9 +222,25 @@ export default function QueueBoard() {
   };
   const confirmReschedule = () => {
     if (!rescheduling || !rescheduleValue) return;
-    update(rescheduling.id, { scheduledAt: new Date(rescheduleValue).toISOString() });
+    update(rescheduling.id, {
+      scheduledAt: new Date(rescheduleValue).toISOString(),
+      status: "queued",
+      sendProgress: 0,
+      error: undefined,
+      sentAt: undefined,
+    });
     toast.success("Post rescheduled");
     setRescheduling(null);
+  };
+
+  const retrySend = (post: ScheduledPost) => {
+    update(post.id, {
+      status: "queued",
+      sendProgress: 0,
+      error: undefined,
+      scheduledAt: new Date(Date.now() - 1000).toISOString(),
+    });
+    toast.success("Retrying send…");
   };
 
   return (
@@ -158,9 +253,8 @@ export default function QueueBoard() {
         actions={
           <Button
             size="sm"
-            onClick={() => setComposerOpen((v) => !v)}
+            onClick={() => setComposerOpen(true)}
             className="min-h-9"
-            aria-expanded={composerOpen}
           >
             <Plus className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">New post</span>
@@ -169,13 +263,19 @@ export default function QueueBoard() {
       />
 
       {view === "kanban" ? (
-        <KanbanBoard<ScheduledPost & { status?: Status }, Status>
+        <KanbanBoard<ScheduledPost, Column>
           columns={columns}
           items={filtered}
           getKey={(p) => p.id}
           getStatus={deriveStatus}
           onMove={(item, _from, to) => {
-            update(item.id, { ...(item as any), status: to } as any);
+            if (to === "queued") {
+              update(item.id, { status: "queued", sendProgress: 0, error: undefined });
+            } else if (to === "completed") {
+              update(item.id, { status: "completed", sendProgress: 100 });
+            } else if (to === "failed") {
+              update(item.id, { status: "failed", sendProgress: 100, error: "Marked failed manually" });
+            }
             toast.success(`Moved to ${to}`);
           }}
           renderItem={(p) => (
@@ -183,6 +283,7 @@ export default function QueueBoard() {
               post={p}
               onDelete={() => handleDelete(p.id)}
               onReschedule={() => openReschedule(p)}
+              onRetry={() => retrySend(p)}
             />
           )}
         />
@@ -197,6 +298,7 @@ export default function QueueBoard() {
                 post={p}
                 onDelete={() => handleDelete(p.id)}
                 onReschedule={() => openReschedule(p)}
+                onRetry={() => retrySend(p)}
               />
             </div>
           )}
@@ -225,25 +327,24 @@ export default function QueueBoard() {
         </div>
       )}
 
-      {composerOpen && (
-        <section className="mt-6 rounded-xl border border-border/60 bg-card/50 p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Compose</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setComposerOpen(false)}
-              aria-label="Close composer"
-            >
-              <ChevronDown className="h-4 w-4 mr-1" />
-              Hide
-            </Button>
+      <Sheet open={composerOpen} onOpenChange={setComposerOpen}>
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-2xl lg:max-w-3xl overflow-y-auto p-0"
+        >
+          <SheetHeader className="px-6 pt-6 pb-2">
+            <SheetTitle>Compose scheduled post</SheetTitle>
+            <SheetDescription>
+              Plan a single post or bulk-schedule across time slots and platforms.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="px-4 sm:px-6 pb-6 pt-4">
+            <PlatformGate toolKey="scheduler">
+              {(ctx) => <SmartPostScheduler selectedPlatforms={ctx.platforms} />}
+            </PlatformGate>
           </div>
-          <PlatformGate toolKey="scheduler">
-            {(ctx) => <SmartPostScheduler selectedPlatforms={ctx.platforms} />}
-          </PlatformGate>
-        </section>
-      )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
