@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { NotificationSeverity, NotificationType } from "./useNotifications";
+import type { NotificationSeverity, NotificationType } from "@/hooks/useNotifications";
 
 export interface EmitAppNotificationInput {
   type: NotificationType;
