@@ -110,8 +110,8 @@ export function useNotificationPreferences() {
       await supabase.from("notification_preferences").upsert(
         {
           user_id: userId,
-          channels: next.channels,
-          quiet_hours: next.quietHours,
+          channels: next.channels as never,
+          quiet_hours: next.quietHours as never,
           digest_mode: next.digestMode,
           muted_platforms: next.mutedPlatforms,
           muted_accounts: next.mutedAccounts,
