@@ -38,7 +38,16 @@ import { cn } from "@/lib/utils";
 import { InlineMarkdown } from "./InlineMarkdown";
 import { CaptionDraftIntent } from "./ai-intents/CaptionDraftIntent";
 import { ScheduledPostIntent } from "./ai-intents/ScheduledPostIntent";
-import { SlashCommandMenu, SLASH_COMMANDS, type SlashCommand } from "./SlashCommandMenu";
+import {
+  SlashCommandMenu,
+  SLASH_COMMANDS,
+  matchActiveCommand,
+  nextPlaceholder,
+  fillPlaceholder,
+  type SlashCommand,
+  type SlashParam,
+} from "./SlashCommandMenu";
+import { SlashParamHints } from "./SlashParamHints";
 
 const DRAFT_KEY = "smmpilot:ai-command-draft";
 const HISTORY_TURNS = 6;
