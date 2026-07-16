@@ -392,34 +392,48 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 lg:py-10 grid lg:grid-cols-[240px_1fr] gap-8">
           {/* Stepper — desktop */}
-          <nav className="hidden lg:block">
-            <ol className="space-y-1 sticky top-6">
+          <nav className="hidden lg:block" aria-label="Onboarding steps">
+            <ol className="relative space-y-1 sticky top-6">
+              <div className="absolute left-[26px] top-4 bottom-4 w-px bg-border" aria-hidden />
+              <div
+                className="absolute left-[26px] top-4 w-px bg-primary transition-all duration-500"
+                style={{ height: `calc(${(step / Math.max(totalSteps - 1, 1)) * 100}% )` }}
+                aria-hidden
+              />
               {STEP_META.map((s, i) => {
                 const done = i < step;
                 const active = i === step;
-                const StepIcon = s.icon;
+                const valid = stepValid(i);
                 return (
-                  <li key={s.title}>
+                  <li key={s.title} className="relative">
                     <button
                       type="button"
                       onClick={() => setStep(i)}
                       className={cn(
-                        "w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors",
-                        active && "bg-primary/10 text-primary",
+                        "relative z-10 w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-all",
+                        active && "bg-primary/10 text-primary shadow-sm",
                         !active && "hover:bg-muted",
                       )}
                     >
                       <span
                         className={cn(
-                          "flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold flex-shrink-0",
+                          "flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-semibold flex-shrink-0 bg-background transition-all",
                           done && "bg-primary text-primary-foreground border-primary",
-                          active && "border-primary text-primary",
+                          active && "border-primary text-primary ring-4 ring-primary/15 scale-110",
                           !done && !active && "border-border text-muted-foreground",
                         )}
                       >
-                        {done ? <Check className="h-3.5 w-3.5" /> : i + 1}
+                        {done ? <Check className="h-4 w-4" /> : i + 1}
                       </span>
-                      <span className="truncate">{s.title}</span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block truncate font-medium">{s.title}</span>
+                        <span className={cn(
+                          "block truncate text-[11px]",
+                          active ? "text-primary/80" : "text-muted-foreground",
+                        )}>
+                          {done ? "Completed" : active ? "In progress" : valid ? "Ready" : "Pending"}
+                        </span>
+                      </span>
                     </button>
                   </li>
                 );
@@ -427,30 +441,50 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
             </ol>
           </nav>
 
-          {/* Stepper — mobile/tablet dots */}
-          <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
-            {STEP_META.map((s, i) => {
-              const done = i < step;
-              const active = i === step;
-              return (
-                <button
-                  key={s.title}
-                  type="button"
-                  onClick={() => setStep(i)}
+          {/* Stepper — mobile/tablet */}
+          <div className="lg:hidden -mx-1 px-1">
+            <div className="flex items-center gap-1 mb-2" aria-hidden>
+              {STEP_META.map((_, i) => (
+                <div
+                  key={i}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium whitespace-nowrap transition-colors",
-                    active && "border-primary bg-primary/10 text-primary",
-                    done && !active && "border-primary/40 text-primary/80",
-                    !done && !active && "border-border text-muted-foreground",
+                    "h-1 flex-1 rounded-full transition-all duration-300",
+                    i < step && "bg-primary",
+                    i === step && "bg-primary animate-pulse",
+                    i > step && "bg-muted",
                   )}
-                >
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-current/10">
-                    {done ? <Check className="h-3 w-3" /> : i + 1}
-                  </span>
-                  {s.short}
-                </button>
-              );
-            })}
+                />
+              ))}
+            </div>
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+              {STEP_META.map((s, i) => {
+                const done = i < step;
+                const active = i === step;
+                return (
+                  <button
+                    key={s.title}
+                    type="button"
+                    onClick={() => setStep(i)}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium whitespace-nowrap transition-all",
+                      active && "border-primary bg-primary/10 text-primary ring-2 ring-primary/20",
+                      done && !active && "border-primary/40 bg-primary/5 text-primary/80",
+                      !done && !active && "border-border text-muted-foreground",
+                    )}
+                  >
+                    <span className={cn(
+                      "flex h-4 w-4 items-center justify-center rounded-full text-[10px]",
+                      done && "bg-primary text-primary-foreground",
+                      active && "bg-primary/20 text-primary",
+                      !done && !active && "bg-muted",
+                    )}>
+                      {done ? <Check className="h-2.5 w-2.5" /> : i + 1}
+                    </span>
+                    {s.short}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Content */}
