@@ -14,7 +14,10 @@ import {
   MessageSquare,
   Check,
   Download,
-  Languages
+  Languages,
+  Volume2,
+  Square,
+  FileDown
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -122,6 +125,7 @@ export default function AIStudioPage() {
   const [selectedPlatform, setSelectedPlatform] = useState("instagram");
   const [rewriteStyle, setRewriteStyle] = useState("professional");
   const [copied, setCopied] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   // API hooks
   const { isLoading: captionLoading, generate: generateCaption } = useCaption();
@@ -222,6 +226,56 @@ Format as a numbered list.`;
     setCopied(true);
     toast({ title: "Copied to clipboard!" });
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSpeak = () => {
+    if (!("speechSynthesis" in window)) {
+      toast({ title: "Text-to-speech not supported in this browser", variant: "destructive" });
+      return;
+    }
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    if (!outputText.trim()) return;
+    const utter = new SpeechSynthesisUtterance(outputText);
+    utter.rate = 1;
+    utter.pitch = 1;
+    utter.onend = () => setIsSpeaking(false);
+    utter.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utter);
+    setIsSpeaking(true);
+    toast({ title: "Playing voiceover…" });
+  };
+
+  const downloadFile = (filename: string, content: string | Blob, mime = "text/plain") => {
+    const blob = content instanceof Blob ? content : new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadScript = () => {
+    if (!outputText.trim()) return;
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadFile(`video-script-${stamp}.txt`, outputText);
+    toast({ title: "Script downloaded" });
+  };
+
+  const handleDownloadImage = async () => {
+    if (!generatedImage) return;
+    try {
+      const res = await fetch(generatedImage);
+      const blob = await res.blob();
+      downloadFile(`ai-image-${Date.now()}.png`, blob);
+      toast({ title: "Image downloaded" });
+    } catch {
+      window.open(generatedImage, "_blank");
+    }
   };
 
   const handleQuickIdea = async (topic: string) => {
@@ -379,11 +433,26 @@ Format as a numbered list.`;
                     Generated Content
                     <Badge variant="secondary" className="text-xs">AI</Badge>
                   </CardTitle>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" onClick={handleGenerate}>
                       <RefreshCw className="mr-2 h-3 w-3" />
                       Regenerate
                     </Button>
+                    {outputText && (
+                      <Button variant="outline" size="sm" onClick={handleSpeak}>
+                        {isSpeaking ? (
+                          <><Square className="mr-2 h-3 w-3 text-destructive" />Stop</>
+                        ) : (
+                          <><Volume2 className="mr-2 h-3 w-3" />Voiceover</>
+                        )}
+                      </Button>
+                    )}
+                    {selectedTool === "script" && outputText && (
+                      <Button variant="outline" size="sm" onClick={handleDownloadScript}>
+                        <FileDown className="mr-2 h-3 w-3" />
+                        Download Script
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm" onClick={handleCopy}>
                       {copied ? (
                         <Check className="mr-2 h-3 w-3 text-brand-green" />
@@ -407,7 +476,7 @@ Format as a numbered list.`;
                       size="sm"
                       variant="secondary"
                       className="absolute bottom-2 right-2"
-                      onClick={() => window.open(generatedImage, '_blank')}
+                      onClick={handleDownloadImage}
                     >
                       <Download className="h-3 w-3 mr-1" />
                       Download
