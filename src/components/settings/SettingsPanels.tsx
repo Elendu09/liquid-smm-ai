@@ -200,6 +200,12 @@ export function ConnectedPanel() {
 }
 
 export function BillingPanel() {
+  const usage = [
+    { label: "Scheduled posts", used: 148, cap: 200, unit: "posts / mo" },
+    { label: "AI credits", used: 720, cap: 1000, unit: "credits / mo" },
+    { label: "Connected accounts", used: 3, cap: 5, unit: "accounts" },
+    { label: "Team seats", used: 4, cap: 10, unit: "seats" },
+  ];
   return (
     <div className="space-y-6">
       <Card className="border-primary/50 bg-gradient-to-br from-primary/5 to-accent/5">
@@ -222,11 +228,54 @@ export function BillingPanel() {
             <Badge variant="outline" className="ml-2">Billed annually</Badge>
           </div>
           <p className="text-sm text-muted-foreground mb-4">Next billing date: February 15, 2024</p>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Button variant="outline" asChild>
               <Link to="/pricing">Change Plan</Link>
             </Button>
             <Button variant="ghost" className="text-destructive hover:text-destructive" onClick={() => confirm("Cancel your subscription?") && toast.success("Subscription cancelled")}>Cancel Subscription</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Usage this cycle</CardTitle>
+          <CardDescription>Included quotas for your Professional plan</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {usage.map((u) => {
+            const pct = Math.min(100, Math.round((u.used / u.cap) * 100));
+            const near = pct >= 80;
+            return (
+              <div key={u.label} className="space-y-1.5">
+                <div className="flex items-baseline justify-between text-sm">
+                  <span className="font-medium">{u.label}</span>
+                  <span className={near ? "text-amber-500" : "text-muted-foreground"}>
+                    {u.used.toLocaleString()} / {u.cap.toLocaleString()} {u.unit}
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={`h-full transition-all ${near ? "bg-amber-500" : "bg-primary"}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                {near && (
+                  <p className="text-[11px] text-amber-500 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Approaching plan limit
+                  </p>
+                )}
+              </div>
+            );
+          })}
+          <div className="pt-2 flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" asChild>
+              <Link to="/pricing">Upgrade for more</Link>
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => toast.success("Usage report exported")}>
+              Export usage CSV
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -286,6 +335,7 @@ export function BillingPanel() {
     </div>
   );
 }
+
 
 export function SecurityPanel() {
   return (
