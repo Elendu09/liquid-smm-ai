@@ -136,7 +136,7 @@ function estimatedSize(s: Segment): string {
 }
 
 export default function SegmentsBoard() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [view, setView] = useViewMode("audience-segments", "kanban");
   const { items, setItems, add, update, remove } = useLocalCollection<Segment>("audience", "segments");
   const [search, setSearch] = useState("");
