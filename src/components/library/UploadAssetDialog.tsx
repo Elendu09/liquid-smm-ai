@@ -42,7 +42,7 @@ export function UploadAssetDialog({
     setState("uploading");
     stateRef.current = "uploading";
     while (cursorRef.current < f.size) {
-      const s: UploadState = stateRef.current;
+      const s = stateRef.current as UploadState;
       if (s === "paused" || s === "idle") return;
       f.slice(cursorRef.current, cursorRef.current + CHUNK_SIZE);
       await new Promise((r) => setTimeout(r, 120));
