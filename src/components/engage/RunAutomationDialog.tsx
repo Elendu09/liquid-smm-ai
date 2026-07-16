@@ -102,20 +102,59 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId, multi
             <Zap className="h-5 w-5 text-primary" /> Run automation
           </DialogTitle>
           <DialogDescription>
-            One-click launch — pick a saved audience, a bot rule, and a reply tone.
+            {multi
+              ? "Select one or more saved audiences, a bot rule, and a reply tone."
+              : "One-click launch — pick a saved audience, a bot rule, and a reply tone."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Segment */}
+          {/* Segment(s) */}
           <div>
             <Label className="flex items-center gap-1.5 text-xs">
-              <Target className="h-3.5 w-3.5 text-primary" /> Audience segment
+              <Target className="h-3.5 w-3.5 text-primary" />
+              {multi ? `Audience segments (${segmentIds.length} selected)` : "Audience segment"}
             </Label>
             {segments.length === 0 ? (
               <p className="text-xs text-muted-foreground border border-dashed border-border/60 rounded-md p-3 mt-1">
                 No saved segments yet — create one in Audience → Segments.
               </p>
+            ) : multi ? (
+              <div className="mt-1 max-h-56 overflow-y-auto space-y-1 rounded-md border border-border/60 p-1.5">
+                <div className="flex items-center justify-between px-1.5 pb-1 border-b border-border/60 mb-1">
+                  <span className="text-[10px] text-muted-foreground">Select audiences to run in parallel</span>
+                  <button
+                    type="button"
+                    className="text-[10px] text-primary hover:underline"
+                    onClick={() => setSegmentIds(segmentIds.length === segments.length ? [] : segments.map((s) => s.id))}
+                  >
+                    {segmentIds.length === segments.length ? "Clear" : "Select all"}
+                  </button>
+                </div>
+                {segments.map((s) => {
+                  const checked = segmentIds.includes(s.id);
+                  return (
+                    <label
+                      key={s.id}
+                      className={cn(
+                        "flex items-start gap-2 p-2 rounded-md cursor-pointer text-xs",
+                        checked ? "bg-primary/10" : "hover:bg-muted",
+                      )}
+                    >
+                      <Checkbox checked={checked} onCheckedChange={() => toggleSegment(s.id)} className="mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{s.title}</p>
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {s.niche && <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5">{s.niche}</Badge>}
+                          {s.platforms.slice(0, 3).map((p) => (
+                            <Badge key={p} variant="outline" className="text-[9px] px-1 py-0 h-3.5 capitalize">{p}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
             ) : (
               <Select value={segmentId} onValueChange={setSegmentId}>
                 <SelectTrigger><SelectValue placeholder="Choose a saved audience" /></SelectTrigger>
@@ -129,7 +168,7 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId, multi
                 </SelectContent>
               </Select>
             )}
-            {segment && (
+            {!multi && segment && (
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {segment.niche && <Badge variant="secondary" className="text-[10px]">{segment.niche}</Badge>}
                 {segment.platforms.slice(0, 3).map((p) => (
@@ -141,6 +180,7 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId, multi
               </div>
             )}
           </div>
+
 
           {/* Bot rule */}
           <div>
