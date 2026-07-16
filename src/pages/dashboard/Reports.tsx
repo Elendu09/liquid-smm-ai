@@ -144,6 +144,8 @@ const seedSchedules: ScheduledReport[] = [
 ];
 
 export default function ReportsPage() {
+  const { accounts } = useAccounts();
+  const { rows: runRows } = useRunHistory();
   const {
     items: reports,
     remove: removeReport,
@@ -165,6 +167,18 @@ export default function ReportsPage() {
     setNewTemplateId(id);
     setNewOpen(true);
   };
+
+  const openPreview = (report: GeneratedReport) => {
+    if (!report.data) {
+      const filled = { ...report, data: buildReportData(accounts, report.sections ?? [], "last30") };
+      setPreviewReport(filled);
+    } else {
+      setPreviewReport(report);
+    }
+  };
+
+  const templateRuns = (templateId: string) =>
+    runRows.filter((r) => r.toolKey === "reports" && r.action === `generate:${templateId}`);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
