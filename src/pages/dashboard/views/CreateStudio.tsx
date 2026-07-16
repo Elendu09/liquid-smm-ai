@@ -295,12 +295,34 @@ export default function CreateStudio() {
           Open
         </Button>
         <Button
-          variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
-          aria-label="Delete draft" onClick={() => { remove(d.id); toast.success("Draft deleted"); }}
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          aria-label="Duplicate draft"
+          onClick={() => duplicateDraft(d)}
+        >
+          <Copy className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-primary hover:text-primary"
+          aria-label="Send to queue"
+          onClick={() => sendToQueue(d)}
+        >
+          <CalendarPlus className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-destructive hover:text-destructive"
+          aria-label="Delete draft"
+          onClick={() => setConfirmDelete(d)}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
+
     </div>
   );
 
