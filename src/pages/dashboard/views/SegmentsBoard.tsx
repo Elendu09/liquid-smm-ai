@@ -207,6 +207,11 @@ export default function SegmentsBoard() {
               {s.platforms.slice(0, 4).map((p) => (
                 <PlatformIcon key={p} platform={p} size="xs" showBackground />
               ))}
+              {s.niche && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary">
+                  {s.niche}
+                </Badge>
+              )}
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
                 {fb}
               </Badge>
