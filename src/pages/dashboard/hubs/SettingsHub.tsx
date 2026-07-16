@@ -53,7 +53,8 @@ export default function SettingsHub() {
       <Route element={<SettingsLayout />}>
         <Route index element={<Navigate to="account" replace />} />
         <Route path="account" element={<Wrap><AccountPanel /></Wrap>} />
-        <Route path="notifications" element={<Wrap><NotificationsPanel /></Wrap>} />
+        <Route path="notifications" element={<Wrap><NotificationPreferencesPanel /></Wrap>} />
+        <Route path="team-alerts" element={<Wrap><TeamActivityNotificationsPanel /></Wrap>} />
         <Route path="connected" element={<Wrap><ConnectedPanel /></Wrap>} />
         <Route path="billing" element={<Wrap><BillingPanel /></Wrap>} />
         <Route path="security" element={<Wrap><SecurityPanel /></Wrap>} />
