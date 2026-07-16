@@ -143,6 +143,7 @@ export default function SegmentsBoard() {
   const [editing, setEditing] = useState<Segment | null>(null);
   const [previewing, setPreviewing] = useState<Segment | null>(null);
   const [runSegmentId, setRunSegmentId] = useState<string | null>(null);
+  const [runMulti, setRunMulti] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Segment | null>(null);
 
   useEffect(() => {
