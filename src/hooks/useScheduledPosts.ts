@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 export type Recurrence = { freq: "daily" | "weekly" | "monthly"; count: number };
-export type SendStatus = "queued" | "sending" | "completed" | "failed";
+export type SendStatus = "queued" | "paused" | "sending" | "completed" | "failed";
 
 export interface ScheduledPost {
   id: string;
@@ -10,7 +10,11 @@ export interface ScheduledPost {
   scheduledAt: string; // ISO (absolute UTC instant)
   timezone?: string; // IANA — the tz the user picked when scheduling
   platformIds: string[];
+  /** Optional per-platform caption / hashtag overrides, keyed by platformId. */
+  platformOverrides?: Record<string, { caption?: string; hashtags?: string[] }>;
   hashtags?: string[];
+  /** First comment (Instagram/TikTok style) auto-posted right after publish. */
+  firstComment?: string;
   seriesId?: string; // groups recurring occurrences
   createdAt: string;
   status?: SendStatus; // real-time send status
