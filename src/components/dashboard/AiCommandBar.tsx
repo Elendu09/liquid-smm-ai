@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -14,6 +14,7 @@ import {
   Hash,
   ArrowUpRight,
   Trash2,
+  Square,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,7 +22,14 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { useAiCommandHistory, type AiCommandEntry, type AiCommandToolCall } from "@/hooks/useAiCommandHistory";
+import {
+  useAiCommandHistory,
+  logAiCommand,
+  updateAiCommand,
+  updateToolCall,
+  type AiCommandEntry,
+  type AiCommandToolCall,
+} from "@/hooks/useAiCommandHistory";
 import { enqueueInbox } from "@/hooks/useMcpInbox";
 import { logMcpCall } from "@/hooks/useMcpActivity";
 import { useAccounts } from "@/contexts/AccountContext";
@@ -30,6 +38,11 @@ import { cn } from "@/lib/utils";
 import { InlineMarkdown } from "./InlineMarkdown";
 import { CaptionDraftIntent } from "./ai-intents/CaptionDraftIntent";
 import { ScheduledPostIntent } from "./ai-intents/ScheduledPostIntent";
+import { SlashCommandMenu, SLASH_COMMANDS, type SlashCommand } from "./SlashCommandMenu";
+
+const DRAFT_KEY = "smmpilot:ai-command-draft";
+const HISTORY_TURNS = 6;
+
 
 const SUGGESTIONS = [
   "Draft 3 caption ideas about a new product launch",
