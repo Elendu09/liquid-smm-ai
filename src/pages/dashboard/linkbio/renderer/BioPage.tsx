@@ -260,7 +260,7 @@ function Socials({ config, className }: { config: BioConfig; className?: string 
 function GlassList({ config, accent, links, compact, fontHeading }: Shared) {
   return (
     <div className="min-h-full flex flex-col items-center text-center px-5 py-6 gap-3">
-      <Avatar config={config} accent={accent} size={Math.round((compact?60:84)*avatarScale)} />
+      <Avatar config={config} accent={accent} size={compact?60:84} />
       <p className={cn("font-bold", fontHeading, compact ? "text-sm" : "text-lg")}>{config.handle}</p>
       <p className="text-xs opacity-80">{config.headline}</p>
       <div className="w-full space-y-2 mt-2">
@@ -280,7 +280,7 @@ function RowDivider({ config, accent, links, fontHeading }: Shared) {
   return (
     <div className="min-h-full flex flex-col px-6 py-8 gap-4">
       <div className="flex items-center gap-3">
-        <Avatar config={config} accent={accent} size={Math.round(44*avatarScale)} />
+        <Avatar config={config} accent={accent} size={44} />
         <div>
           <p className={cn("font-semibold text-sm", fontHeading)}>{config.handle}</p>
           <p className="text-[11px] text-slate-400">{config.headline}</p>
@@ -308,7 +308,7 @@ function Magazine({ config, accent, links, fontHeading }: Shared) {
         <h1 className={cn("text-3xl leading-none mt-2 font-serif italic", fontHeading)}>{config.handle}</h1>
       </div>
       <div className="grid grid-cols-[auto,1fr] gap-4 mt-4">
-        <Avatar config={config} accent={accent} size={Math.round(72*avatarScale)} />
+        <Avatar config={config} accent={accent} size={72} />
         <p className="text-xs leading-relaxed italic border-l-2 border-black/60 pl-3">{config.headline}</p>
       </div>
       <p className="text-[9px] tracking-[0.3em] uppercase mt-5 mb-2 opacity-70">Contents</p>
@@ -361,7 +361,7 @@ function Brutal({ config, accent, links, fontHeading }: Shared) {
         <h1 className={cn("text-2xl font-black uppercase leading-none", fontHeading)}>{config.handle}</h1>
         <p className="text-[11px] uppercase font-bold mt-1">{config.headline}</p>
       </div>
-      <Avatar config={config} accent={accent} size={Math.round(64*avatarScale)} />
+      <Avatar config={config} accent={accent} size={64} />
       <div className="space-y-3 mt-4">
         {links.map((l) => (
           <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
@@ -378,7 +378,7 @@ function CardStack({ config, accent, links, fontHeading }: Shared) {
   return (
     <div className="min-h-full px-4 py-5 space-y-3">
       <div className="flex items-center gap-3">
-        <Avatar config={config} accent={accent} size={Math.round(52*avatarScale)} />
+        <Avatar config={config} accent={accent} size={52} />
         <div>
           <p className={cn("font-bold text-base", fontHeading)}>{config.handle}</p>
           <p className="text-[11px] opacity-70">{config.headline}</p>
@@ -406,7 +406,7 @@ function Bento({ config, accent, links, fontHeading }: Shared) {
   return (
     <div className="min-h-full px-4 py-5 space-y-3">
       <div className="flex items-center gap-3">
-        <Avatar config={config} accent={accent} size={Math.round(48*avatarScale)} />
+        <Avatar config={config} accent={accent} size={48} />
         <div>
           <p className={cn("font-bold text-sm", fontHeading)}>{config.handle}</p>
           <p className="text-[10px] opacity-70">{config.headline}</p>
@@ -438,7 +438,7 @@ function Reels({ config, accent, links, fontHeading }: Shared) {
   return (
     <div className="min-h-full px-4 py-5">
       <div className="flex flex-col items-center gap-2">
-        <Avatar config={config} accent={accent} size={Math.round(72*avatarScale)} />
+        <Avatar config={config} accent={accent} size={72} />
         <p className={cn("font-bold text-sm", fontHeading)}>{config.handle}</p>
         <p className="text-[11px] opacity-70 text-center">{config.headline}</p>
       </div>
@@ -472,7 +472,7 @@ function Chrome({ config, accent, links, fontHeading }: Shared) {
   return (
     <div className="min-h-full px-5 py-6 flex flex-col items-center text-center gap-3">
       <div className="p-[3px] rounded-full" style={{ background: "conic-gradient(from 0deg, #f0abfc, #a5f3fc, #fde68a, #f0abfc)" }}>
-        <Avatar config={config} accent={accent} size={Math.round(76*avatarScale)} />
+        <Avatar config={config} accent={accent} size={76} />
       </div>
       <p className={cn("font-black text-lg tracking-tight", fontHeading)} style={{ textShadow: "0 1px 0 #fff, 0 2px 0 rgba(0,0,0,0.15)" }}>
         {config.handle}
@@ -545,7 +545,7 @@ function Luxe({ config, accent, links, fontHeading }: Shared) {
   return (
     <div className="min-h-full px-6 py-8 flex flex-col items-center text-center">
       <div className="p-[2px] rounded-full" style={{ background: `linear-gradient(135deg, ${accent}, #7a5c1e)` }}>
-        <Avatar config={config} accent="#000" size={Math.round(72*avatarScale)} />
+        <Avatar config={config} accent="#000" size={72} />
       </div>
       <div className="mt-4 relative">
         <div className="absolute -left-6 top-1/2 w-4 h-px" style={{ background: accent }} />
@@ -574,7 +574,7 @@ function Tiles({ config, accent, links, fontHeading }: Shared) {
   return (
     <div className="min-h-full px-4 py-5">
       <div className="flex items-center gap-3">
-        <Avatar config={config} accent={accent} size={Math.round(48*avatarScale)} />
+        <Avatar config={config} accent={accent} size={48} />
         <div>
           <p className={cn("font-bold text-sm", fontHeading)}>{config.handle}</p>
           <p className="text-[10px] opacity-70">{config.headline}</p>
@@ -650,7 +650,7 @@ function Widgets({ config, accent, links, fontHeading }: Shared) {
   return (
     <div className="min-h-full px-4 py-5">
       <div className="flex items-center gap-3">
-        <Avatar config={config} accent={accent} size={Math.round(52*avatarScale)} />
+        <Avatar config={config} accent={accent} size={52} />
         <div className="flex-1">
           <p className={cn("font-semibold text-sm", fontHeading)}>{config.handle}</p>
           <p className="text-[10px] opacity-70">{config.headline}</p>
