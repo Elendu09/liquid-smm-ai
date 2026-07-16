@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,8 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   /** Preselect a saved segment (e.g. from Segments board Zap button). */
   presetSegmentId?: string | null;
+  /** When true, allow selecting multiple audiences to run automation across. */
+  multi?: boolean;
 }
 
 const TONES: { id: Tone; label: string; blurb: string }[] = [
@@ -42,7 +45,7 @@ const TONES: { id: Tone; label: string; blurb: string }[] = [
   { id: "witty", label: "Witty", blurb: "Playful, cheeky one-liners" },
 ];
 
-export function RunAutomationDialog({ open, onOpenChange, presetSegmentId }: Props) {
+export function RunAutomationDialog({ open, onOpenChange, presetSegmentId, multi = false }: Props) {
   const navigate = useNavigate();
   const { items: segments } = useLocalCollection<Segment>("audience", "segments");
   const { items: rules } = useLocalCollection<BotRule>("engage", "bot-rules");
@@ -50,6 +53,7 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId }: Pro
   const enabledRules = useMemo(() => rules.filter((r) => r.enabled), [rules]);
 
   const [segmentId, setSegmentId] = useState<string>("");
+  const [segmentIds, setSegmentIds] = useState<string[]>([]);
   const [ruleId, setRuleId] = useState<string>("");
   const [tone, setTone] = useState<Tone>("friendly");
   const [launching, setLaunching] = useState(false);
@@ -57,6 +61,7 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId }: Pro
   useEffect(() => {
     if (!open) return;
     setSegmentId(presetSegmentId || segments[0]?.id || "");
+    setSegmentIds(presetSegmentId ? [presetSegmentId] : segments.slice(0, 1).map((s) => s.id));
     setRuleId(enabledRules[0]?.id || rules[0]?.id || "");
     setTone("friendly");
     setLaunching(false);
@@ -64,16 +69,28 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId }: Pro
 
   const segment = segments.find((s) => s.id === segmentId) || null;
   const rule = rules.find((r) => r.id === ruleId) || null;
+  const chosenSegments = multi ? segments.filter((s) => segmentIds.includes(s.id)) : segment ? [segment] : [];
+
+  const toggleSegment = (id: string) => {
+    setSegmentIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
 
   const launch = () => {
-    if (!segment || !rule) return;
+    if (chosenSegments.length === 0 || !rule) return;
     setLaunching(true);
     setTimeout(() => {
-      toast.success(`Automation queued: ${rule.name} → ${segment.title}`, {
-        description: `Tone: ${tone}. Redirecting to bot rules…`,
-      });
+      if (multi && chosenSegments.length > 1) {
+        toast.success(`Automation queued across ${chosenSegments.length} audiences`, {
+          description: `${rule.name} · tone: ${tone}`,
+        });
+      } else {
+        toast.success(`Automation queued: ${rule.name} → ${chosenSegments[0].title}`, {
+          description: `Tone: ${tone}. Redirecting to bot rules…`,
+        });
+      }
       onOpenChange(false);
-      navigate(`/dashboard/engage/bot?segmentId=${encodeURIComponent(segment.id)}&ruleId=${encodeURIComponent(rule.id)}&tone=${tone}`);
+      const first = chosenSegments[0];
+      navigate(`/dashboard/engage/bot?segmentId=${encodeURIComponent(first.id)}&ruleId=${encodeURIComponent(rule.id)}&tone=${tone}`);
     }, 500);
   };
 
@@ -85,20 +102,59 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId }: Pro
             <Zap className="h-5 w-5 text-primary" /> Run automation
           </DialogTitle>
           <DialogDescription>
-            One-click launch — pick a saved audience, a bot rule, and a reply tone.
+            {multi
+              ? "Select one or more saved audiences, a bot rule, and a reply tone."
+              : "One-click launch — pick a saved audience, a bot rule, and a reply tone."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Segment */}
+          {/* Segment(s) */}
           <div>
             <Label className="flex items-center gap-1.5 text-xs">
-              <Target className="h-3.5 w-3.5 text-primary" /> Audience segment
+              <Target className="h-3.5 w-3.5 text-primary" />
+              {multi ? `Audience segments (${segmentIds.length} selected)` : "Audience segment"}
             </Label>
             {segments.length === 0 ? (
               <p className="text-xs text-muted-foreground border border-dashed border-border/60 rounded-md p-3 mt-1">
                 No saved segments yet — create one in Audience → Segments.
               </p>
+            ) : multi ? (
+              <div className="mt-1 max-h-56 overflow-y-auto space-y-1 rounded-md border border-border/60 p-1.5">
+                <div className="flex items-center justify-between px-1.5 pb-1 border-b border-border/60 mb-1">
+                  <span className="text-[10px] text-muted-foreground">Select audiences to run in parallel</span>
+                  <button
+                    type="button"
+                    className="text-[10px] text-primary hover:underline"
+                    onClick={() => setSegmentIds(segmentIds.length === segments.length ? [] : segments.map((s) => s.id))}
+                  >
+                    {segmentIds.length === segments.length ? "Clear" : "Select all"}
+                  </button>
+                </div>
+                {segments.map((s) => {
+                  const checked = segmentIds.includes(s.id);
+                  return (
+                    <label
+                      key={s.id}
+                      className={cn(
+                        "flex items-start gap-2 p-2 rounded-md cursor-pointer text-xs",
+                        checked ? "bg-primary/10" : "hover:bg-muted",
+                      )}
+                    >
+                      <Checkbox checked={checked} onCheckedChange={() => toggleSegment(s.id)} className="mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{s.title}</p>
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {s.niche && <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5">{s.niche}</Badge>}
+                          {s.platforms.slice(0, 3).map((p) => (
+                            <Badge key={p} variant="outline" className="text-[9px] px-1 py-0 h-3.5 capitalize">{p}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
             ) : (
               <Select value={segmentId} onValueChange={setSegmentId}>
                 <SelectTrigger><SelectValue placeholder="Choose a saved audience" /></SelectTrigger>
@@ -112,7 +168,7 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId }: Pro
                 </SelectContent>
               </Select>
             )}
-            {segment && (
+            {!multi && segment && (
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {segment.niche && <Badge variant="secondary" className="text-[10px]">{segment.niche}</Badge>}
                 {segment.platforms.slice(0, 3).map((p) => (
@@ -124,6 +180,7 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId }: Pro
               </div>
             )}
           </div>
+
 
           {/* Bot rule */}
           <div>
@@ -186,10 +243,15 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId }: Pro
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button
-            disabled={!segment || !rule || launching}
+            disabled={chosenSegments.length === 0 || !rule || launching}
             onClick={launch}
           >
-            <Zap className="h-3.5 w-3.5 mr-1" /> {launching ? "Launching…" : "Launch"}
+            <Zap className="h-3.5 w-3.5 mr-1" />
+            {launching
+              ? "Launching…"
+              : multi && chosenSegments.length > 1
+                ? `Launch × ${chosenSegments.length}`
+                : "Launch"}
           </Button>
         </DialogFooter>
       </DialogContent>

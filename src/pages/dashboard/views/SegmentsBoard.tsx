@@ -143,6 +143,7 @@ export default function SegmentsBoard() {
   const [editing, setEditing] = useState<Segment | null>(null);
   const [previewing, setPreviewing] = useState<Segment | null>(null);
   const [runSegmentId, setRunSegmentId] = useState<string | null>(null);
+  const [runMulti, setRunMulti] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Segment | null>(null);
 
   useEffect(() => {
@@ -259,7 +260,7 @@ export default function SegmentsBoard() {
         viewToggle={<ViewToggle value={view} onChange={setView} />}
         actions={
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => setRunSegmentId(items[0]?.id || null)} aria-label="Run automation one-click">
+            <Button size="sm" variant="outline" onClick={() => { setRunMulti(true); setRunSegmentId(items[0]?.id || "__multi__"); }} aria-label="Run automation across multiple audiences">
               <Zap className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">Run automation</span>
             </Button>
@@ -447,8 +448,9 @@ export default function SegmentsBoard() {
 
       <RunAutomationDialog
         open={!!runSegmentId}
-        onOpenChange={(o) => !o && setRunSegmentId(null)}
-        presetSegmentId={runSegmentId}
+        onOpenChange={(o) => { if (!o) { setRunSegmentId(null); setRunMulti(false); } }}
+        presetSegmentId={runMulti ? null : runSegmentId}
+        multi={runMulti}
       />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
