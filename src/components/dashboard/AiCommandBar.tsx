@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import {
   Sparkles,
   Send,
-  
   History,
   Check,
   X,
@@ -15,7 +14,15 @@ import {
   ArrowUpRight,
   Trash2,
   Square,
+  Settings2,
+  RotateCcw,
+  Copy,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useAiCommandSettings } from "@/hooks/useAiCommandSettings";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -115,12 +122,17 @@ export function AiCommandBar() {
   const promptAnchorRef = useRef<HTMLDivElement | null>(null);
 
 
+  const { settings, update: updateSettings } = useAiCommandSettings();
+
   // Persist prompt drafts so a reload doesn't lose in-progress work.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (prompt) window.sessionStorage.setItem(DRAFT_KEY, prompt);
     else window.sessionStorage.removeItem(DRAFT_KEY);
   }, [prompt]);
+
+  // Track the last-submitted prompt so a Retry button can re-send after errors.
+  const lastPromptRef = useRef<string>("");
 
   // Slash command menu state — opens when input starts with "/" and no space typed yet.
   const slashOpen = prompt.startsWith("/") && !prompt.includes(" ") && !prompt.includes("\n");
@@ -132,7 +144,7 @@ export function AiCommandBar() {
 
   // Ghost autocomplete: if the current /query uniquely matches one command, show the rest as ghost text.
   const ghostSuffix = useMemo(() => {
-    if (!slashOpen) return "";
+    if (!slashOpen || !settings.ghostAutocomplete) return "";
     const q = slashQuery.toLowerCase();
     if (!q) return "";
     const matches = SLASH_COMMANDS.filter(
@@ -140,7 +152,14 @@ export function AiCommandBar() {
     );
     if (matches.length !== 1) return "";
     return matches[0].label.slice(1 + q.length);
-  }, [slashOpen, slashQuery]);
+  }, [slashOpen, slashQuery, settings.ghostAutocomplete]);
+
+  // Map "<name>" -> "label: hint" for tooltips on highlighted tokens.
+  const paramTooltip = useMemo(() => {
+    const map = new Map<string, string>();
+    activeCmd?.params?.forEach((p) => map.set(p.name, `${p.label}: ${p.hint}`));
+    return map;
+  }, [activeCmd]);
 
   const selectPlaceholder = (name: string) => {
     requestAnimationFrame(() => {
@@ -259,8 +278,7 @@ export function AiCommandBar() {
     }
     const text = raw;
     if (!text || busy) return;
-    setBusy(true);
-    setPrompt("");
+    lastPromptRef.current = text;
     setBusy(true);
     setPrompt("");
     abortRef.current?.abort();
@@ -604,6 +622,54 @@ export function AiCommandBar() {
             </div>
             <p className="text-[10.5px] text-muted-foreground mt-1 leading-none">You approve every write.</p>
           </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Command bar settings"
+                className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-primary/10"
+              >
+                <Settings2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72 p-3 space-y-3">
+              <div>
+                <p className="text-xs font-semibold mb-1.5">Enter key behavior</p>
+                <RadioGroup
+                  value={settings.enterBehavior}
+                  onValueChange={(v) => updateSettings({ enterBehavior: v as "send" | "newline" })}
+                  className="gap-1.5"
+                >
+                  <label className="flex items-start gap-2 rounded-md p-1.5 hover:bg-muted/40 cursor-pointer">
+                    <RadioGroupItem value="send" id="enter-send" className="mt-0.5" />
+                    <div className="flex-1">
+                      <Label htmlFor="enter-send" className="text-xs font-medium cursor-pointer">Enter sends</Label>
+                      <p className="text-[10.5px] text-muted-foreground leading-tight">Shift+Enter for new line</p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-2 rounded-md p-1.5 hover:bg-muted/40 cursor-pointer">
+                    <RadioGroupItem value="newline" id="enter-newline" className="mt-0.5" />
+                    <div className="flex-1">
+                      <Label htmlFor="enter-newline" className="text-xs font-medium cursor-pointer">Enter is new line</Label>
+                      <p className="text-[10.5px] text-muted-foreground leading-tight">Cmd/Ctrl+Enter to send</p>
+                    </div>
+                  </label>
+                </RadioGroup>
+              </div>
+              <div className="flex items-center justify-between border-t border-border/60 pt-2.5">
+                <div>
+                  <Label htmlFor="ghost-ac" className="text-xs font-medium">Ghost autocomplete</Label>
+                  <p className="text-[10.5px] text-muted-foreground leading-tight">Preview slash-command suffix</p>
+                </div>
+                <Switch
+                  id="ghost-ac"
+                  checked={settings.ghostAutocomplete}
+                  onCheckedChange={(v) => updateSettings({ ghostAutocomplete: v })}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="sm" className="h-7 px-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-primary/10">
@@ -719,12 +785,19 @@ export function AiCommandBar() {
                     selectPlaceholder(activeParam.name);
                     return;
                   }
-                  // Default Enter = send. Shift+Enter inserts newline.
-                  // Cmd/Ctrl+Enter also sends (kept for muscle memory).
-                  // TODO(settings): make Enter-behavior configurable per user.
-                  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                    e.preventDefault();
-                    submit();
+                  // Enter behavior is user-configurable via the settings popover.
+                  //   "send"    → Enter sends, Shift+Enter = newline (default).
+                  //   "newline" → Enter = newline, Cmd/Ctrl+Enter sends.
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                    const mod = e.metaKey || e.ctrlKey;
+                    const shouldSend =
+                      settings.enterBehavior === "send"
+                        ? !e.shiftKey || mod
+                        : mod;
+                    if (shouldSend) {
+                      e.preventDefault();
+                      submit();
+                    }
                   }
                 }}
                 disabled={busy}
@@ -738,18 +811,28 @@ export function AiCommandBar() {
                   aria-hidden
                   className="pointer-events-none absolute inset-0 px-3 pt-2.5 pb-9 sm:pb-10 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words z-0"
                 >
-                  {prompt.split(/(<[a-z_-]+>)/i).map((part, i) =>
-                    /^<[a-z_-]+>$/i.test(part) ? (
-                      <span
-                        key={i}
-                        className="rounded-[3px] bg-primary/20 ring-1 ring-primary/40"
-                      >
-                        <span className="invisible">{part}</span>
-                      </span>
-                    ) : (
-                      <span key={i} className="invisible">{part}</span>
-                    ),
-                  )}
+                  {prompt.split(/(<[a-z_-]+>)/i).map((part, i) => {
+                    const m = /^<([a-z_-]+)>$/i.exec(part);
+                    if (m) {
+                      const tip = paramTooltip.get(m[1]) ?? m[1];
+                      const isNext = activeParam?.name === m[1];
+                      return (
+                        <span
+                          key={i}
+                          title={tip}
+                          className={cn(
+                            "rounded-[3px] ring-1",
+                            isNext
+                              ? "bg-primary/25 ring-primary/60"
+                              : "bg-primary/15 ring-primary/35",
+                          )}
+                        >
+                          <span className="invisible">{part}</span>
+                        </span>
+                      );
+                    }
+                    return <span key={i} className="invisible">{part}</span>;
+                  })}
                 </div>
               )}
               {/* Ghost autocomplete overlay for slash command labels */}
@@ -782,10 +865,21 @@ export function AiCommandBar() {
               <div className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground pl-1.5">
                 <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">/</kbd>
                 <span className="ml-0.5 mr-2">commands</span>
-                <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">↵</kbd>
-                <span className="ml-0.5 mr-2">send</span>
-                <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⇧↵</kbd>
-                <span className="ml-0.5">new line</span>
+                {settings.enterBehavior === "send" ? (
+                  <>
+                    <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">↵</kbd>
+                    <span className="ml-0.5 mr-2">send</span>
+                    <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⇧↵</kbd>
+                    <span className="ml-0.5">new line</span>
+                  </>
+                ) : (
+                  <>
+                    <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⌘↵</kbd>
+                    <span className="ml-0.5 mr-2">send</span>
+                    <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">↵</kbd>
+                    <span className="ml-0.5">new line</span>
+                  </>
+                )}
               </div>
               {busy ? (
                 <Button
@@ -837,14 +931,51 @@ export function AiCommandBar() {
         {/* Latest response */}
         {latest && (
           <div className="mx-4 sm:mx-5 mb-4 rounded-2xl border border-border/60 bg-gradient-to-br from-muted/40 to-transparent p-4 space-y-2.5">
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-              <div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
-              Response
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                <div className={cn(
+                  "w-1.5 h-1.5 rounded-full",
+                  latest.status === "error" ? "bg-destructive" : "bg-brand-green animate-pulse",
+                )} />
+                {latest.status === "error" ? "Error" : "Response"}
+              </div>
+              <div className="flex items-center gap-1">
+                {latest.text && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[10.5px] cursor-pointer"
+                    onClick={() => {
+                      navigator.clipboard.writeText(latest.text).then(
+                        () => toast.success("Copied response"),
+                        () => toast.error("Copy failed"),
+                      );
+                    }}
+                  >
+                    <Copy className="h-3 w-3 mr-1" /> Copy
+                  </Button>
+                )}
+                {(latest.status === "error" || (lastPromptRef.current && latest.prompt === lastPromptRef.current)) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={busy || !latest.prompt}
+                    className="h-6 px-2 text-[10.5px] cursor-pointer"
+                    onClick={() => submit(latest.prompt)}
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1" /> Retry
+                  </Button>
+                )}
+              </div>
             </div>
             {latest.text && (
               <InlineMarkdown text={latest.text} className="text-sm text-foreground/90 space-y-1" />
             )}
-            {latest.error && <p className="text-sm text-destructive">{latest.error}</p>}
+            {latest.error && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                {latest.error}
+              </div>
+            )}
             {latest.toolCalls.length > 0 && (
               <div className="space-y-2 pt-1">
                 {latest.toolCalls.map((c) => renderCall(latest, c))}
