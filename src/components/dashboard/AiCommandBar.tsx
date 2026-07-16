@@ -447,6 +447,7 @@ export function AiCommandBar() {
       });
       setLatest(committed);
       if (streamError) toast.error(streamError);
+      else if (!opts?.keepAttachments) attachments.clear();
     } catch (e) {
       if (ctrl.signal.aborted) {
         // Preserve whatever we streamed so far.
