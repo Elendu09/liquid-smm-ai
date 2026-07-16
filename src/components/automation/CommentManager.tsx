@@ -268,6 +268,12 @@ export const CommentManager = () => {
               </Badge>
             )}
           </Button>
+          <Button size="sm" variant="outline" onClick={() => setRateOpen(true)}>
+            <Gauge className="h-3.5 w-3.5 mr-1" /> Rate limits
+            {!rateLimit.enabled && (
+              <Badge className="ml-1 h-4 px-1 text-[10px] bg-destructive text-destructive-foreground">off</Badge>
+            )}
+          </Button>
           <Button size="sm" variant="outline" onClick={() => setQrOpen(true)}>
             <Settings className="h-3.5 w-3.5 mr-1" /> Quick AI
           </Button>
