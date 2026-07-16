@@ -1,5 +1,5 @@
 import { Route, Routes, Navigate, Outlet } from "react-router-dom";
-import { UserCog, Bell, Link2, CreditCard, Shield, Users } from "lucide-react";
+import { UserCog, Bell, Link2, CreditCard, Shield, Users, ScrollText } from "lucide-react";
 import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import {
   AccountPanel,
@@ -8,6 +8,7 @@ import {
   BillingPanel,
   SecurityPanel,
 } from "@/components/settings/SettingsPanels";
+import { AuditPanel } from "@/components/settings/AuditPanel";
 import Team from "../Team";
 
 const tabs: HubTab[] = [
@@ -17,6 +18,7 @@ const tabs: HubTab[] = [
   { label: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
   { label: "Security", href: "/dashboard/settings/security", icon: Shield },
   { label: "Team", href: "/dashboard/settings/team", icon: Users },
+  { label: "Audit log", href: "/dashboard/settings/audit", icon: ScrollText },
 ];
 
 function SettingsLayout() {
@@ -25,7 +27,7 @@ function SettingsLayout() {
       <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
         <PageHeader
           title="Settings"
-          description="Profile, notifications, connected platforms, billing, security, and team."
+          description="Profile, notifications, connected platforms, billing, security, team, and audit log."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Settings" }]}
         />
         <HubTabs tabs={tabs} />
@@ -50,7 +52,9 @@ export default function SettingsHub() {
         <Route path="billing" element={<Wrap><BillingPanel /></Wrap>} />
         <Route path="security" element={<Wrap><SecurityPanel /></Wrap>} />
         <Route path="team" element={<Team />} />
+        <Route path="audit" element={<Wrap><AuditPanel /></Wrap>} />
       </Route>
     </Routes>
   );
 }
+
