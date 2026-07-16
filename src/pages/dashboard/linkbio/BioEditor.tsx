@@ -36,9 +36,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import BioPreview from "./BioPreview";
 import { bioStore, useBioConfig, useSyncLegacyTheme } from "./state/bioConfig";
-import { linkBioThemes } from "@/pages/dashboard/views/linkbio/themePresets";
+import { linkBioThemes, phaseMeta, themesByPhase, THEME_STORAGE_KEY, type ThemePhase } from "@/pages/dashboard/views/linkbio/themePresets";
 import { linkBioTemplates, APPLIED_TEMPLATE_KEY } from "@/pages/dashboard/views/linkbio/templatePresets";
-import { THEME_STORAGE_KEY } from "@/pages/dashboard/views/linkbio/themePresets";
+
 
 const railItems = [
   { id: "design", label: "Design", icon: Wand2 },
@@ -356,14 +356,31 @@ function DesignPanel() {
 
 function ThemesPanel() {
   const cfg = useBioConfig();
+  const [phase, setPhase] = useState<ThemePhase>(1);
+  const themes = themesByPhase(phase);
+  const meta = phaseMeta[phase];
   return (
     <div className="space-y-4 max-w-3xl">
+      <div className="flex items-center gap-1 p-1 rounded-lg border border-border/50 bg-card/50 w-fit">
+        {([1, 2, 3, 4] as ThemePhase[]).map((p) => (
+          <button
+            key={p}
+            onClick={() => setPhase(p)}
+            className={cn(
+              "px-3 py-1.5 rounded-md text-[11px] font-semibold transition-colors",
+              phase === p ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Phase {p}
+          </button>
+        ))}
+      </div>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Sparkles className="w-3.5 h-3.5 text-primary" />
-        Phase 1 — Foundations · {linkBioThemes.length} themes. Editorial, Motion & Niche phases coming next.
+        {meta.title} — {meta.blurb} · {themes.length} themes ({linkBioThemes.length} total)
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {linkBioThemes.map((t) => {
+        {themes.map((t) => {
           const active = t.id === cfg.themeId;
           return (
             <button
@@ -379,7 +396,7 @@ function ThemesPanel() {
               )}
             >
               <div className={cn("h-32 flex items-center justify-center", t.bg)}>
-                <div className="w-10 h-10 rounded-full" style={{ background: t.accent }} />
+                <div className="w-10 h-10 rounded-full shadow-lg" style={{ background: t.accent }} />
               </div>
               <div className="p-2.5">
                 <div className="text-xs font-semibold truncate">{t.name}</div>
@@ -392,6 +409,7 @@ function ThemesPanel() {
     </div>
   );
 }
+
 
 function LinksPanel() {
   const cfg = useBioConfig();
