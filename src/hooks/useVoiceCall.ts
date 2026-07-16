@@ -8,6 +8,13 @@ export type VoiceCallStatus =
   | "speaking"
   | "error";
 
+export interface VoiceTurn {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  at: number;
+}
+
 interface Options {
   onTranscript: (text: string) => Promise<string | void> | string | void;
   windowMs?: number;
@@ -49,6 +56,9 @@ function encodeWav(chunks: Float32Array[], srcRate: number): Blob {
   return new Blob([buffer], { type: "audio/wav" });
 }
 
+let TURN_ID = 0;
+const nextId = () => `t${Date.now().toString(36)}${(TURN_ID++).toString(36)}`;
+
 export function useVoiceCall(opts: Options) {
   const { onTranscript, windowMs = 4500, silenceGapMs = 900 } = opts;
   const [status, setStatus] = useState<VoiceCallStatus>("idle");
@@ -56,8 +66,9 @@ export function useVoiceCall(opts: Options) {
   const [muted, setMuted] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(true);
   const [amplitude, setAmplitude] = useState(0);
-  const [transcript, setTranscript] = useState("");
-  const [assistantText, setAssistantText] = useState("");
+  const [bars, setBars] = useState<number[]>(() => Array(24).fill(0));
+  const [messages, setMessages] = useState<VoiceTurn[]>([]);
+  const [partial, setPartial] = useState<string>("");
 
   const streamRef = useRef<MediaStream | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
@@ -75,6 +86,18 @@ export function useVoiceCall(opts: Options) {
 
   useEffect(() => { mutedRef.current = muted; }, [muted]);
   useEffect(() => { speakerRef.current = speakerOn; if (audioRef.current) audioRef.current.muted = !speakerOn; }, [speakerOn]);
+
+  const pushTurn = useCallback((role: "user" | "assistant", text: string) => {
+    setMessages((prev) => [...prev, { id: nextId(), role, text, at: Date.now() }]);
+  }, []);
+
+  const stopSpeaking = useCallback(() => {
+    if (audioRef.current) {
+      try { audioRef.current.pause(); } catch { /* noop */ }
+      audioRef.current.src = "";
+    }
+    if (activeRef.current) setStatus("listening");
+  }, []);
 
   const speak = useCallback(async (text: string) => {
     if (!text || !speakerRef.current) {
@@ -113,6 +136,31 @@ export function useVoiceCall(opts: Options) {
     }
   }, []);
 
+  const runTurn = useCallback(async (userText: string) => {
+    pushTurn("user", userText);
+    setPartial("");
+    setStatus("processing");
+    try {
+      const reply = await onTranscript(userText);
+      if (reply && typeof reply === "string") {
+        pushTurn("assistant", reply);
+        await speak(reply);
+      } else if (activeRef.current) {
+        setStatus("listening");
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      if (activeRef.current) setStatus("listening");
+    }
+  }, [onTranscript, pushTurn, speak]);
+
+  const sendText = useCallback(async (text: string) => {
+    const t = text.trim();
+    if (!t || busyRef.current) return;
+    busyRef.current = true;
+    try { await runTurn(t); } finally { busyRef.current = false; }
+  }, [runTurn]);
+
   const flushWindow = useCallback(async () => {
     if (busyRef.current) return;
     const chunks = chunksRef.current;
@@ -143,22 +191,14 @@ export function useVoiceCall(opts: Options) {
         if (activeRef.current) setStatus("listening");
         return;
       }
-      setTranscript((prev) => (prev ? `${prev} ${text}` : text));
-      const reply = await onTranscript(text);
-      if (reply && typeof reply === "string") {
-        setAssistantText((prev) => (prev ? `${prev}\n\n${reply}` : reply));
-        await speak(reply);
-      } else if (activeRef.current) {
-        setStatus("listening");
-      }
+      await runTurn(text);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
+      setError(e instanceof Error ? e.message : String(e));
       if (activeRef.current) setStatus("listening");
     } finally {
       busyRef.current = false;
     }
-  }, [onTranscript, speak]);
+  }, [runTurn]);
 
   const stop = useCallback(() => {
     activeRef.current = false;
@@ -178,13 +218,14 @@ export function useVoiceCall(opts: Options) {
     }
     chunksRef.current = [];
     setAmplitude(0);
+    setBars(Array(24).fill(0));
     setStatus("idle");
   }, []);
 
   const start = useCallback(async () => {
     setError(null);
-    setTranscript("");
-    setAssistantText("");
+    setMessages([]);
+    setPartial("");
     setStatus("requesting-mic");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -225,12 +266,22 @@ export function useVoiceCall(opts: Options) {
       processor.connect(ctx.destination);
 
       const data = new Uint8Array(analyser.frequencyBinCount);
+      const barCount = 24;
       const tick = () => {
         if (!activeRef.current || !analyserRef.current) return;
         analyserRef.current.getByteFrequencyData(data);
         let s = 0;
         for (let i = 0; i < data.length; i++) s += data[i];
         setAmplitude(s / data.length / 255);
+        // sample bars from the low-mid frequency range
+        const bucket = Math.floor(data.length / barCount);
+        const nextBars = new Array(barCount);
+        for (let i = 0; i < barCount; i++) {
+          let acc = 0;
+          for (let j = 0; j < bucket; j++) acc += data[i * bucket + j];
+          nextBars[i] = (acc / bucket) / 255;
+        }
+        setBars(nextBars);
         rafRef.current = requestAnimationFrame(tick);
       };
       tick();
@@ -247,9 +298,11 @@ export function useVoiceCall(opts: Options) {
 
   const toggleMute = useCallback(() => setMuted((v) => !v), []);
   const toggleSpeaker = useCallback(() => setSpeakerOn((v) => !v), []);
+  const clear = useCallback(() => { setMessages([]); setPartial(""); }, []);
 
   return {
-    status, error, muted, speakerOn, amplitude, transcript, assistantText,
-    start, stop, toggleMute, toggleSpeaker,
+    status, error, muted, speakerOn, amplitude, bars,
+    messages, partial,
+    start, stop, toggleMute, toggleSpeaker, sendText, stopSpeaking, clear,
   };
 }
