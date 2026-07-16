@@ -125,8 +125,8 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     hint: "Rewrite my last caption punchier",
     icon: Wand2,
     insert: "Rewrite the last caption to be punchier and add a CTA",
-    submit: true,
   },
+
   {
     id: "clear",
     label: "/clear",
