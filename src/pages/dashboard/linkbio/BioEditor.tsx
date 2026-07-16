@@ -22,6 +22,8 @@ import {
   ArrowUp,
   ArrowDown,
   Star,
+  Smartphone,
+  GripVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import BioPreview from "./BioPreview";
 import { bioStore, useBioConfig, useSyncLegacyTheme } from "./state/bioConfig";
