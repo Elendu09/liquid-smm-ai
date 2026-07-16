@@ -259,6 +259,9 @@ export const ContentCalendar = () => {
         </div>
 
         <Button size="sm" variant="outline" onClick={today}>Today</Button>
+        <Button size="sm" variant="outline" onClick={() => setFillWeekOpen(true)}>
+          <Sparkles className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">AI Fill Week</span>
+        </Button>
         <Button size="sm" onClick={() => setNewOpen(true)}>
           <Plus className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Schedule</span>
         </Button>
