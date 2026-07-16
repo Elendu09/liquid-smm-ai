@@ -131,7 +131,6 @@ export function McpActivityView() {
           {filtered.map((e) => {
             const meta = STATUS_META[e.status];
             const Icon = meta.icon;
-            const open = expanded.has(e.id);
             return (
               <li
                 key={e.id}
@@ -139,9 +138,8 @@ export function McpActivityView() {
               >
                 <button
                   type="button"
-                  onClick={() => toggle(e.id)}
+                  onClick={() => setDetailsFor(e)}
                   className="w-full text-left flex items-start gap-3 p-3 hover:bg-muted/40 transition-colors"
-                  aria-expanded={open}
                 >
                   <div
                     className={cn(
@@ -185,25 +183,24 @@ export function McpActivityView() {
                       </div>
                     )}
                   </div>
-                  <ChevronRight
-                    className={cn(
-                      "h-4 w-4 text-muted-foreground shrink-0 mt-1 transition-transform",
-                      open && "rotate-90",
-                    )}
-                  />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
                 </button>
-                {open && (
-                  <div className="border-t border-border/60 bg-muted/20 p-3">
-                    <pre className="text-[11px] leading-relaxed overflow-x-auto text-muted-foreground">
-                      {JSON.stringify(e.payload ?? {}, null, 2)}
-                    </pre>
-                  </div>
-                )}
               </li>
             );
           })}
         </ol>
       )}
+
+      <McpCallDetailsDrawer
+        open={!!detailsFor}
+        onOpenChange={(v) => !v && setDetailsFor(null)}
+        entry={detailsFor}
+        onRerun={rerun}
+        onDelete={(id) => {
+          remove(id);
+          toast.success("Entry removed");
+        }}
+      />
     </div>
   );
 }
