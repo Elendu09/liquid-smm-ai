@@ -282,7 +282,7 @@ export const FollowerAnalyzer = () => {
                     {follower.quality}
                   </Badge>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
