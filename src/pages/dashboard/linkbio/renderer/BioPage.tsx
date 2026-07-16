@@ -227,12 +227,14 @@ function renderLayout(layout: ThemeLayout, s: Shared) {
 
 /* Small shared bits */
 function Avatar({ config, accent, size = 72 }: { config: BioConfig; accent: string; size?: number }) {
+  const { avatarScale } = useContext(BioCtx);
+  const s = Math.round(size * avatarScale);
   return (
     <div
       className="rounded-full border-2 border-white/30 shadow-lg shrink-0 bg-cover bg-center"
       style={{
-        width: size,
-        height: size,
+        width: s,
+        height: s,
         background: config.avatarUrl ? `center/cover url(${config.avatarUrl})` : accent,
       }}
       aria-hidden
