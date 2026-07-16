@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Sparkles, Zap, X } from "lucide-react";
+import { Users, Sparkles, Zap, X, TrendingUp, GitMerge } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -11,7 +11,9 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { useLocalCollection } from "@/hooks/useLocalCollection";
 import type { Segment } from "@/pages/dashboard/views/SegmentsBoard";
 
 /** Deterministic hash → seeded PRNG so sample rows are stable per segment. */
@@ -79,6 +81,7 @@ interface Props {
 
 export function SegmentPreviewSheet({ segment, onClose }: Props) {
   const navigate = useNavigate();
+  const { items: allSegments } = useLocalCollection<Segment>("audience", "segments");
 
   const preview = useMemo(() => {
     if (!segment) return null;
@@ -118,6 +121,45 @@ export function SegmentPreviewSheet({ segment, onClose }: Props) {
     return { total, samples };
   }, [segment]);
 
+  const overlaps = useMemo(() => {
+    if (!segment || !preview) return [];
+    return allSegments
+      .filter((s) => s.id !== segment.id)
+      .map((s) => {
+        const platformShared = s.platforms.filter((p) => segment.platforms.includes(p)).length;
+        const platformUnion = new Set([...s.platforms, ...segment.platforms]).size || 1;
+        const kwShared = s.keywords.filter((k) => segment.keywords.includes(k)).length;
+        const kwUnion = new Set([...s.keywords, ...segment.keywords]).size || 1;
+        const bucketMatch =
+          (s.followerBucket === segment.followerBucket ? 0.5 : 0) +
+          (s.engagementBucket === segment.engagementBucket ? 0.5 : 0);
+        const score = Math.min(
+          0.95,
+          0.5 * (platformShared / platformUnion) + 0.3 * (kwShared / kwUnion) + 0.2 * bucketMatch,
+        );
+        const seed = hashSeed(segment.id + ":" + s.id);
+        const jitter = (mulberry(seed)() - 0.5) * 0.05;
+        const pct = Math.max(0, Math.min(0.95, score + jitter));
+        return { id: s.id, title: s.title, pct, shared: Math.round(preview.total * pct) };
+      })
+      .filter((o) => o.pct > 0.02)
+      .sort((a, b) => b.pct - a.pct)
+      .slice(0, 3);
+  }, [allSegments, segment, preview]);
+
+  const growth = useMemo(() => {
+    if (!segment || !preview) return null;
+    const engMult =
+      segment.engagementBucket === "high" ? 0.018
+      : segment.engagementBucket === "mid" ? 0.011
+      : segment.engagementBucket === "low" ? 0.005
+      : 0.009;
+    const followers = Math.round(preview.total * engMult);
+    const impressions = Math.round(preview.total * 2.4);
+    const uplift = Math.min(42, Math.round(engMult * 100 * (1 + segment.platforms.length * 0.15)));
+    return { followers, impressions, uplift };
+  }, [segment, preview]);
+
   const platformCount = segment?.platforms.length ?? 0;
   const keywordCount = segment?.keywords.length ?? 0;
 
@@ -152,6 +194,63 @@ export function SegmentPreviewSheet({ segment, onClose }: Props) {
                 <CriteriaTile label="Engagement" count={1} sub={ENGAGEMENT_LABELS[segment.engagementBucket] ?? "Any"} />
                 <CriteriaTile label="Keywords" count={keywordCount} sub={segment.keywords.join(", ") || "none"} />
               </div>
+
+              {/* Expected growth impact */}
+              {growth && (
+                <div className="p-4 rounded-xl bg-gradient-to-br from-brand-green/10 to-brand-cyan/5 border border-brand-green/20">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <TrendingUp className="h-3.5 w-3.5" /> Expected growth impact (weekly)
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mt-2">
+                    <div>
+                      <p className="text-xl font-bold text-brand-green">+{fmt(growth.followers)}</p>
+                      <p className="text-[11px] text-muted-foreground">New followers</p>
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold">{fmt(growth.impressions)}</p>
+                      <p className="text-[11px] text-muted-foreground">Impressions</p>
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold text-primary">+{growth.uplift}%</p>
+                      <p className="text-[11px] text-muted-foreground">Engagement uplift</p>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-2">
+                    Projection based on segment size × engagement band × platform mix.
+                  </p>
+                </div>
+              )}
+
+              {/* Overlap with existing segments */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-semibold flex items-center gap-1.5">
+                    <GitMerge className="h-3.5 w-3.5 text-primary" />
+                    Overlap with other segments
+                  </p>
+                  <span className="text-[11px] text-muted-foreground">{overlaps.length} matches</span>
+                </div>
+                {overlaps.length === 0 ? (
+                  <p className="text-xs text-muted-foreground rounded-lg border border-dashed border-border/60 p-3">
+                    No meaningful overlap — this segment is unique in your library.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {overlaps.map((o) => (
+                      <div key={o.id} className="p-2.5 rounded-lg border border-border/60 bg-card/40">
+                        <div className="flex items-baseline justify-between gap-2 mb-1">
+                          <span className="text-xs font-medium truncate">{o.title}</span>
+                          <span className="text-[11px] text-primary tabular-nums shrink-0">
+                            {Math.round(o.pct * 100)}% · ~{fmt(o.shared)} shared
+                          </span>
+                        </div>
+                        <Progress value={o.pct * 100} className="h-1.5" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
 
               {/* Platforms */}
               {segment.platforms.length > 0 && (

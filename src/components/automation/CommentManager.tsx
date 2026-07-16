@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ReplyDialog } from "@/components/engage/ReplyDialog";
+import { BulkReplyDialog } from "@/components/engage/BulkReplyDialog";
 import { FilterDialog, DEFAULT_FILTERS, type CommentFilters } from "@/components/engage/FilterDialog";
 
 
@@ -101,6 +102,7 @@ export const CommentManager = () => {
   const [selectedComments, setSelectedComments] = useState<number[]>([]);
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyTarget, setReplyTarget] = useState<typeof mockComments[number] | null>(null);
+  const [bulkReplyOpen, setBulkReplyOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<CommentFilters>(DEFAULT_FILTERS);
 
@@ -153,6 +155,13 @@ export const CommentManager = () => {
     toast.success("Marked as replied");
   };
 
+  const bulkSendReplies = (payload: { id: number; text: string }[]) => {
+    const ids = new Set(payload.map((p) => p.id));
+    setComments((prev) => prev.map((c) => (ids.has(c.id) ? { ...c, replied: true } : c)));
+    setSelectedComments([]);
+    toast.success(`Sent ${payload.length} repl${payload.length === 1 ? "y" : "ies"}`);
+  };
+
   const bulkDelete = () => {
     setComments((prev) => prev.filter((c) => !selectedComments.includes(c.id)));
     setSelectedComments([]);
@@ -198,7 +207,11 @@ export const CommentManager = () => {
           <span className="text-sm font-medium">
             {selectedComments.length} comment{selectedComments.length > 1 ? "s" : ""} selected
           </span>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm" onClick={() => setBulkReplyOpen(true)}>
+              <Sparkles className="mr-1 h-4 w-4" />
+              AI Bulk Reply
+            </Button>
             <Button size="sm" variant="outline" onClick={bulkMarkReplied} className="border-brand-green text-brand-green hover:bg-brand-green/10">
               <CheckCheck className="mr-1 h-4 w-4" />
               Mark Replied
@@ -314,6 +327,12 @@ export const CommentManager = () => {
         onOpenChange={setReplyOpen}
         comment={replyTarget}
         onSend={(text) => replyTarget && sendReply(replyTarget.id, text)}
+      />
+      <BulkReplyDialog
+        open={bulkReplyOpen}
+        onOpenChange={setBulkReplyOpen}
+        comments={comments.filter((c) => selectedComments.includes(c.id))}
+        onSend={bulkSendReplies}
       />
       <FilterDialog
         open={filterOpen}
