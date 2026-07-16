@@ -64,13 +64,48 @@ interface HashtagResearchToolProps {
   defaultPlatformId?: string;
 }
 
+type TrendingRow = {
+  tag: string;
+  posts: string;
+  difficulty: string;
+  growth: string;
+  category: string;
+  isAI?: boolean;
+};
+
+// Deterministic pseudo-random from tag string
+const hashCode = (s: string) => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i) | 0;
+  return Math.abs(h);
+};
+
+const buildAiRow = (rawTag: string, category: string): TrendingRow => {
+  const tag = rawTag.startsWith("#") ? rawTag : `#${rawTag}`;
+  const seed = hashCode(tag);
+  const postsNum = (seed % 900) + 100;
+  const unit = seed % 3 === 0 ? "M" : "K";
+  const difficulties = ["low", "medium", "high"];
+  const difficulty = difficulties[seed % 3];
+  const growth = `+${(seed % 45) + 5}%`;
+  return {
+    tag,
+    posts: `${postsNum}${unit}`,
+    difficulty,
+    growth,
+    category: category || "AI",
+    isAI: true,
+  };
+};
+
 export const HashtagResearchTool = ({ defaultPlatformId }: HashtagResearchToolProps = {}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState(defaultPlatformId || "instagram");
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
   const [copiedSet, setCopiedSet] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [aiGeneratedTags, setAiGeneratedTags] = useState<string[]>([]);
+  const [aiRows, setAiRows] = useState<TrendingRow[]>([]);
+  const [lastTopic, setLastTopic] = useState<string>("");
 
   const { isLoading, generate } = useHashtags();
 
@@ -81,15 +116,35 @@ export const HashtagResearchTool = ({ defaultPlatformId }: HashtagResearchToolPr
     }
     const result = await generate(searchQuery, selectedPlatform);
     if (result) {
-      setAiGeneratedTags(result);
-      toast({ title: "AI hashtags generated!", description: `Found ${result.length} relevant hashtags` });
+      const category = searchQuery.trim().slice(0, 20);
+      const rows = result.map((t) => buildAiRow(t, category));
+      // merge with existing AI rows, dedupe by tag
+      setAiRows((prev) => {
+        const map = new Map<string, TrendingRow>();
+        [...rows, ...prev].forEach((r) => map.set(r.tag.toLowerCase(), r));
+        return Array.from(map.values());
+      });
+      setLastTopic(searchQuery);
+      toast({ title: "AI hashtags added to Trending", description: `${result.length} new hashtags` });
     }
   };
 
-  const filteredHashtags = staticTrendingHashtags.filter((h) =>
+  const clearAiRows = () => {
+    setAiRows([]);
+    setSelectedTags((prev) => prev.filter((t) => !aiRows.some((r) => r.tag === t)));
+  };
+
+  const combinedRows: TrendingRow[] = [...aiRows, ...staticTrendingHashtags];
+  const filteredHashtags = combinedRows.filter((h) =>
     h.tag.toLowerCase().includes(searchQuery.toLowerCase()) ||
     h.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const selectAllVisible = () => {
+    setSelectedTags(Array.from(new Set([...selectedTags, ...filteredHashtags.map((h) => h.tag)])));
+  };
+
+  const clearSelection = () => setSelectedTags([]);
 
   const copyTag = (tag: string) => {
     navigator.clipboard.writeText(tag);
