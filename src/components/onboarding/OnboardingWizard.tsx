@@ -117,12 +117,41 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
     commit({ [key]: nextArr } as Partial<OnboardingProfile>);
   };
 
-  const goNext = () => setStep((s) => Math.min(s + 1, totalSteps - 1));
+  const stepValid = (i: number, d = draft): boolean => {
+    switch (i) {
+      case 0: return d.name.trim().length > 0 && !!d.role;
+      case 1: return d.connectedPlatformIds.length > 0;
+      case 2: return d.niches.length > 0;
+      case 3: return d.goals.length > 0;
+      case 4: return !!d.tone;
+      case 5: return d.postsPerWeek >= 1 && d.preferredTimes.length > 0;
+      case 6: return !!d.autonomy;
+      case 7: return true;
+      default: return true;
+    }
+  };
+  const stepHint = (i: number): string => {
+    switch (i) {
+      case 0: return "Enter your name and pick a role to continue.";
+      case 1: return "Select at least one platform (or skip the tour).";
+      case 2: return "Pick at least one niche.";
+      case 3: return "Choose at least one goal.";
+      case 4: return "Pick a brand tone.";
+      case 5: return "Choose at least one preferred posting time.";
+      case 6: return "Pick an autonomy level.";
+      default: return "";
+    }
+  };
+
+  const canProceed = stepValid(step);
+  const goNext = () => { if (canProceed) setStep((s) => Math.min(s + 1, totalSteps - 1)); };
   const back = () => setStep((s) => Math.max(s - 1, 0));
   const finish = () => {
     complete();
     onOpenChange(false);
   };
+
+
 
   if (!open) return null;
 
