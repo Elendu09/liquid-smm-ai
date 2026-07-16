@@ -12,9 +12,12 @@ import {
   Leaf,
   Star,
 } from "lucide-react";
+import { createContext, useContext } from "react";
 import { cn } from "@/lib/utils";
 import { BioConfig, resolveTheme } from "../state/bioConfig";
 import type { LinkBioTheme, ThemeLayout } from "@/pages/dashboard/views/linkbio/themePresets";
+
+const BioCtx = createContext<{ avatarScale: number }>({ avatarScale: 1 });
 
 const socialIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   instagram: Instagram,
