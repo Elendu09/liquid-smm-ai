@@ -233,7 +233,7 @@ export default function SegmentsBoard() {
           <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Duplicate segment" onClick={() => duplicate(s)}>
             <Copy className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Use in automation" onClick={() => setPreviewing(s)}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Run automation with this segment" onClick={() => setRunSegmentId(s.id)}>
             <Zap className="h-3.5 w-3.5" />
           </Button>
           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditing(s)}>
@@ -244,10 +244,7 @@ export default function SegmentsBoard() {
             size="icon"
             className="h-7 w-7 text-destructive hover:text-destructive"
             aria-label="Delete segment"
-            onClick={() => {
-              remove(s.id);
-              toast.success("Deleted");
-            }}
+            onClick={() => setDeleteTarget(s)}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
