@@ -124,9 +124,6 @@ const navItems: NavItem[] = [
     href: "/dashboard/link-in-bio",
     icon: Link2,
     children: [
-      { label: "Pages", href: "/dashboard/link-in-bio/pages", icon: Link2 },
-      { label: "Themes", href: "/dashboard/link-in-bio/themes", icon: Palette },
-      { label: "Templates", href: "/dashboard/link-in-bio/templates", icon: Sparkles },
       { label: "Analytics", href: "/dashboard/link-in-bio/analytics", icon: BarChart3 },
     ],
   },
