@@ -146,6 +146,7 @@ export default function SegmentsBoard() {
   const [runSegmentId, setRunSegmentId] = useState<string | null>(null);
   const [runMulti, setRunMulti] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Segment | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
 
   useEffect(() => {
     if (items.length === 0) setItems(seed);
