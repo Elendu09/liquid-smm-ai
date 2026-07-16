@@ -121,6 +121,45 @@ export function SegmentPreviewSheet({ segment, onClose }: Props) {
     return { total, samples };
   }, [segment]);
 
+  const overlaps = useMemo(() => {
+    if (!segment || !preview) return [];
+    return allSegments
+      .filter((s) => s.id !== segment.id)
+      .map((s) => {
+        const platformShared = s.platforms.filter((p) => segment.platforms.includes(p)).length;
+        const platformUnion = new Set([...s.platforms, ...segment.platforms]).size || 1;
+        const kwShared = s.keywords.filter((k) => segment.keywords.includes(k)).length;
+        const kwUnion = new Set([...s.keywords, ...segment.keywords]).size || 1;
+        const bucketMatch =
+          (s.followerBucket === segment.followerBucket ? 0.5 : 0) +
+          (s.engagementBucket === segment.engagementBucket ? 0.5 : 0);
+        const score = Math.min(
+          0.95,
+          0.5 * (platformShared / platformUnion) + 0.3 * (kwShared / kwUnion) + 0.2 * bucketMatch,
+        );
+        const seed = hashSeed(segment.id + ":" + s.id);
+        const jitter = (mulberry(seed)() - 0.5) * 0.05;
+        const pct = Math.max(0, Math.min(0.95, score + jitter));
+        return { id: s.id, title: s.title, pct, shared: Math.round(preview.total * pct) };
+      })
+      .filter((o) => o.pct > 0.02)
+      .sort((a, b) => b.pct - a.pct)
+      .slice(0, 3);
+  }, [allSegments, segment, preview]);
+
+  const growth = useMemo(() => {
+    if (!segment || !preview) return null;
+    const engMult =
+      segment.engagementBucket === "high" ? 0.018
+      : segment.engagementBucket === "mid" ? 0.011
+      : segment.engagementBucket === "low" ? 0.005
+      : 0.009;
+    const followers = Math.round(preview.total * engMult);
+    const impressions = Math.round(preview.total * 2.4);
+    const uplift = Math.min(42, Math.round(engMult * 100 * (1 + segment.platforms.length * 0.15)));
+    return { followers, impressions, uplift };
+  }, [segment, preview]);
+
   const platformCount = segment?.platforms.length ?? 0;
   const keywordCount = segment?.keywords.length ?? 0;
 
