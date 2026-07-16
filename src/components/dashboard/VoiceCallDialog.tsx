@@ -1,5 +1,7 @@
-import { useEffect } from "react";
-import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Mic, MicOff, PhoneOff, Volume2, VolumeX, Send, Loader2, AlertCircle, Sparkles, X,
+} from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,15 +15,26 @@ interface Props {
 
 const STATUS_LABEL: Record<string, string> = {
   idle: "Ready",
-  "requesting-mic": "Requesting microphone…",
-  listening: "Listening…",
-  processing: "Thinking…",
-  speaking: "Speaking…",
-  error: "Error",
+  "requesting-mic": "Requesting microphone",
+  listening: "Listening",
+  processing: "Thinking",
+  speaking: "Speaking",
+  error: "Something went wrong",
+};
+
+const STATUS_HINT: Record<string, string> = {
+  idle: "Tap the mic to begin",
+  "requesting-mic": "Allow microphone access to continue",
+  listening: "Just talk — I'll listen and act",
+  processing: "Working on your request…",
+  speaking: "Tap the orb to interrupt",
+  error: "Retry or type your request below",
 };
 
 export function VoiceCallDialog({ open, onOpenChange, onTranscript }: Props) {
   const call = useVoiceCall({ onTranscript });
+  const [draft, setDraft] = useState("");
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (open) void call.start();
@@ -29,94 +42,251 @@ export function VoiceCallDialog({ open, onOpenChange, onTranscript }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const end = () => {
-    call.stop();
-    onOpenChange(false);
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [call.messages.length, call.status]);
+
+  const end = () => { call.stop(); onOpenChange(false); };
+
+  const activeGlow = call.status === "speaking" || call.status === "processing";
+  const orbScale = 1 + Math.min(0.18, call.amplitude * 0.9);
+  const glowScale = 1 + Math.min(0.55, call.amplitude * 1.8);
+
+  const submit = async () => {
+    const t = draft.trim();
+    if (!t) return;
+    setDraft("");
+    await call.sendText(t);
   };
 
-  const scale = 1 + Math.min(0.4, call.amplitude * 1.4);
+  const statusPulse = useMemo(() => {
+    switch (call.status) {
+      case "listening": return "bg-emerald-500";
+      case "processing": return "bg-amber-500";
+      case "speaking": return "bg-primary";
+      case "error": return "bg-destructive";
+      default: return "bg-muted-foreground";
+    }
+  }, [call.status]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : end())}>
-      <DialogContent className="max-w-md p-0 overflow-hidden border-border/60 bg-gradient-to-b from-background to-background/95 sm:rounded-3xl">
-        <DialogTitle className="sr-only">Voice call with AI</DialogTitle>
-        <div className="relative flex flex-col items-center px-6 pt-8 pb-6">
-          <div className="relative h-40 w-40 flex items-center justify-center">
-            <div
-              aria-hidden
-              className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/40 via-brand-purple/30 to-brand-cyan/40 blur-2xl transition-transform"
-              style={{ transform: `scale(${scale})` }}
-            />
-            <div
-              className="relative h-28 w-28 rounded-full bg-gradient-to-br from-primary to-brand-purple flex items-center justify-center shadow-[0_10px_40px_-8px_hsl(var(--primary)/0.6)] ring-1 ring-inset ring-white/20 transition-transform"
-              style={{ transform: `scale(${1 + Math.min(0.15, call.amplitude * 0.6)})` }}
-            >
-              <Sparkles className="h-9 w-9 text-primary-foreground" strokeWidth={1.75} />
+      <DialogContent
+        className="max-w-lg p-0 overflow-hidden border-border/60 bg-gradient-to-b from-background via-background to-background/95 sm:rounded-3xl shadow-2xl"
+        // hide the built-in close so we can render our own
+      >
+        <DialogTitle className="sr-only">Voice call with AI assistant</DialogTitle>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-2 border-b border-border/40">
+          <div className="flex items-center gap-2.5">
+            <span className={cn("h-2 w-2 rounded-full animate-pulse", statusPulse)} />
+            <div>
+              <p className="text-sm font-semibold tracking-tight leading-tight">
+                {STATUS_LABEL[call.status] ?? call.status}
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-tight">
+                {STATUS_HINT[call.status] ?? ""}
+              </p>
             </div>
           </div>
+          <Button
+            variant="ghost" size="icon"
+            onClick={end}
+            aria-label="Close voice call"
+            className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
 
-          <div className="mt-5 text-center">
-            <p className="text-sm font-semibold tracking-tight">
-              {STATUS_LABEL[call.status] ?? call.status}
+        {/* Orb + waveform */}
+        <div className="relative flex flex-col items-center px-6 pt-6 pb-4">
+          <button
+            type="button"
+            onClick={call.status === "speaking" ? call.stopSpeaking : undefined}
+            className="relative h-32 w-32 flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
+            aria-label={call.status === "speaking" ? "Interrupt assistant" : "AI voice orb"}
+          >
+            {/* soft outer glow */}
+            <div
+              aria-hidden
+              className={cn(
+                "absolute inset-0 rounded-full blur-2xl transition-all duration-300",
+                "bg-gradient-to-br from-primary/50 via-brand-purple/40 to-brand-cyan/40",
+                activeGlow && "opacity-100",
+              )}
+              style={{ transform: `scale(${glowScale})` }}
+            />
+            {/* ring pulse */}
+            <div
+              aria-hidden
+              className={cn(
+                "absolute inset-0 rounded-full border border-primary/30",
+                call.status === "listening" && "animate-ping",
+              )}
+            />
+            {/* core */}
+            <div
+              className="relative h-24 w-24 rounded-full bg-gradient-to-br from-primary via-brand-purple to-brand-cyan flex items-center justify-center shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.65)] ring-1 ring-inset ring-white/25 transition-transform duration-100"
+              style={{ transform: `scale(${orbScale})` }}
+            >
+              {call.status === "processing" ? (
+                <Loader2 className="h-8 w-8 text-primary-foreground animate-spin" />
+              ) : call.status === "error" ? (
+                <AlertCircle className="h-8 w-8 text-primary-foreground" />
+              ) : (
+                <Sparkles className="h-8 w-8 text-primary-foreground" strokeWidth={1.75} />
+              )}
+            </div>
+          </button>
+
+          {/* live waveform bars */}
+          <div className="mt-5 flex items-end justify-center gap-[3px] h-8 w-full max-w-[240px]">
+            {call.bars.map((v, i) => {
+              const h = Math.max(4, Math.min(32, 4 + v * 46));
+              const active = call.status === "listening" && !call.muted;
+              return (
+                <span
+                  key={i}
+                  className={cn(
+                    "w-[3px] rounded-full transition-[height,background] duration-75",
+                    active ? "bg-gradient-to-t from-primary to-brand-cyan" : "bg-muted-foreground/30",
+                  )}
+                  style={{ height: `${h}px` }}
+                />
+              );
+            })}
+          </div>
+
+          {call.error && (
+            <div className="mt-3 flex items-center gap-2 text-xs text-destructive">
+              <AlertCircle className="h-3.5 w-3.5" />
+              <span>{call.error}</span>
+              <button
+                className="underline underline-offset-2 hover:text-destructive/80"
+                onClick={() => call.start()}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Conversation transcript */}
+        <div
+          ref={scrollRef}
+          className="px-4 pb-3 max-h-[260px] min-h-[80px] overflow-y-auto space-y-2"
+        >
+          {call.messages.length === 0 && !call.error ? (
+            <p className="text-center text-xs text-muted-foreground py-4">
+              Just talk — the assistant listens and acts. You can also type below.
             </p>
-            {call.error && (
-              <p className="mt-1 text-xs text-destructive">
-                {call.error}{" "}
-                {call.error === "Microphone blocked" && (
-                  <button className="underline underline-offset-2" onClick={() => call.start()}>
-                    Retry
-                  </button>
+          ) : (
+            call.messages.map((m) => (
+              <div
+                key={m.id}
+                className={cn(
+                  "flex",
+                  m.role === "user" ? "justify-end" : "justify-start",
                 )}
-              </p>
-            )}
-          </div>
-
-          <div className="mt-5 w-full max-h-40 overflow-y-auto space-y-2 text-sm">
-            {call.transcript && (
-              <div className="rounded-xl bg-muted/40 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">You</p>
-                <p className="text-foreground/90 leading-snug">{call.transcript}</p>
+              >
+                <div
+                  className={cn(
+                    "max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-snug",
+                    m.role === "user"
+                      ? "bg-primary text-primary-foreground rounded-br-md"
+                      : "bg-muted/60 text-foreground rounded-bl-md border border-border/40",
+                  )}
+                >
+                  {m.role === "assistant" && (
+                    <p className="text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-primary flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" /> Assistant
+                    </p>
+                  )}
+                  <p className="whitespace-pre-line">{m.text}</p>
+                </div>
               </div>
-            )}
-            {call.assistantText && (
-              <div className="rounded-xl bg-primary/10 border border-primary/20 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-primary font-semibold mb-0.5">Assistant</p>
-                <p className="text-foreground/90 leading-snug whitespace-pre-line">{call.assistantText}</p>
+            ))
+          )}
+          {call.status === "processing" && (
+            <div className="flex justify-start">
+              <div className="rounded-2xl rounded-bl-md bg-muted/60 border border-border/40 px-3.5 py-2 text-xs text-muted-foreground flex items-center gap-2">
+                <Loader2 className="h-3 w-3 animate-spin" /> Thinking…
               </div>
-            )}
-            {!call.transcript && !call.assistantText && (
-              <p className="text-center text-xs text-muted-foreground py-6">
-                Just talk — the assistant listens and acts.
-              </p>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
 
-          <div className="mt-6 flex items-center gap-4">
-            <Button
-              type="button" size="icon" variant="secondary"
+        {/* Composer + controls */}
+        <div className="border-t border-border/40 bg-muted/20 px-3 py-3 space-y-2">
+          <form
+            onSubmit={(e) => { e.preventDefault(); void submit(); }}
+            className="flex items-center gap-2 rounded-full border border-border/60 bg-background/80 pl-3 pr-1.5 py-1.5 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20 transition"
+          >
+            <button
+              type="button"
               onClick={call.toggleMute}
               aria-label={call.muted ? "Unmute microphone" : "Mute microphone"}
-              className={cn("h-12 w-12 rounded-full", call.muted && "bg-destructive/15 text-destructive hover:bg-destructive/20")}
+              className={cn(
+                "h-7 w-7 rounded-full flex items-center justify-center transition",
+                call.muted
+                  ? "bg-destructive/15 text-destructive hover:bg-destructive/25"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
             >
-              {call.muted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-            </Button>
-
-            <Button
-              type="button" size="icon" onClick={end}
-              aria-label="End call"
-              className="h-14 w-14 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-[0_8px_24px_-6px_hsl(var(--destructive)/0.5)]"
-            >
-              <PhoneOff className="h-6 w-6" />
-            </Button>
-
-            <Button
-              type="button" size="icon" variant="secondary"
+              {call.muted ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+            </button>
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="Type to ask…"
+              aria-label="Type a message to the assistant"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/70"
+            />
+            <button
+              type="button"
               onClick={call.toggleSpeaker}
               aria-label={call.speakerOn ? "Mute speaker" : "Unmute speaker"}
-              className={cn("h-12 w-12 rounded-full", !call.speakerOn && "bg-muted text-muted-foreground")}
+              className={cn(
+                "h-7 w-7 rounded-full flex items-center justify-center transition",
+                call.speakerOn
+                  ? "text-muted-foreground hover:text-foreground"
+                  : "bg-muted text-muted-foreground",
+              )}
             >
-              {call.speakerOn ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+              {call.speakerOn ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            </button>
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!draft.trim()}
+              aria-label="Send message"
+              className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
+            >
+              <Send className="h-3.5 w-3.5" />
             </Button>
+            <Button
+              type="button"
+              size="icon"
+              onClick={end}
+              aria-label="End call"
+              className="h-8 w-8 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <PhoneOff className="h-3.5 w-3.5" />
+            </Button>
+          </form>
+
+          <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <kbd className="rounded bg-muted px-1 py-0.5 font-mono">Esc</kbd> end
+            </span>
+            <span>·</span>
+            <span className="flex items-center gap-1">
+              <kbd className="rounded bg-muted px-1 py-0.5 font-mono">↵</kbd> send text
+            </span>
+            <span>·</span>
+            <span>Tap orb to interrupt</span>
           </div>
         </div>
       </DialogContent>
