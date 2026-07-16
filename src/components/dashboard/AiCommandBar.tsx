@@ -931,14 +931,51 @@ export function AiCommandBar() {
         {/* Latest response */}
         {latest && (
           <div className="mx-4 sm:mx-5 mb-4 rounded-2xl border border-border/60 bg-gradient-to-br from-muted/40 to-transparent p-4 space-y-2.5">
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-              <div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
-              Response
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                <div className={cn(
+                  "w-1.5 h-1.5 rounded-full",
+                  latest.status === "error" ? "bg-destructive" : "bg-brand-green animate-pulse",
+                )} />
+                {latest.status === "error" ? "Error" : "Response"}
+              </div>
+              <div className="flex items-center gap-1">
+                {latest.text && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[10.5px] cursor-pointer"
+                    onClick={() => {
+                      navigator.clipboard.writeText(latest.text).then(
+                        () => toast.success("Copied response"),
+                        () => toast.error("Copy failed"),
+                      );
+                    }}
+                  >
+                    <Copy className="h-3 w-3 mr-1" /> Copy
+                  </Button>
+                )}
+                {(latest.status === "error" || (lastPromptRef.current && latest.prompt === lastPromptRef.current)) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={busy || !latest.prompt}
+                    className="h-6 px-2 text-[10.5px] cursor-pointer"
+                    onClick={() => submit(latest.prompt)}
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1" /> Retry
+                  </Button>
+                )}
+              </div>
             </div>
             {latest.text && (
               <InlineMarkdown text={latest.text} className="text-sm text-foreground/90 space-y-1" />
             )}
-            {latest.error && <p className="text-sm text-destructive">{latest.error}</p>}
+            {latest.error && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                {latest.error}
+              </div>
+            )}
             {latest.toolCalls.length > 0 && (
               <div className="space-y-2 pt-1">
                 {latest.toolCalls.map((c) => renderCall(latest, c))}
