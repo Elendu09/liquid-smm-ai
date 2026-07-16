@@ -1,7 +1,7 @@
-import { useMemo, useState, DragEvent } from "react";
+import { useMemo, useState } from "react";
 import {
   CalendarDays, Plus, ChevronLeft, ChevronRight, MoreHorizontal,
-  Search, Trash2, Copy, ExternalLink, Clock, LayoutGrid, ListFilter,
+  Search, Trash2, Copy, ExternalLink, Clock, ListFilter, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NewPostDialog } from "@/components/create/NewPostDialog";
+import { EventDetailsDialog } from "@/components/publish/EventDetailsDialog";
+import { AiFillWeekDialog } from "@/components/publish/AiFillWeekDialog";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
 import { cn } from "@/lib/utils";
@@ -44,6 +46,8 @@ export const ContentCalendar = () => {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
+  const [fillWeekOpen, setFillWeekOpen] = useState(false);
+  const [detailsPost, setDetailsPost] = useState<ScheduledPost | null>(null);
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -159,7 +163,7 @@ export const ContentCalendar = () => {
       draggable
       onDragStart={() => setDragId(p.id)}
       onDragEnd={() => { setDragId(null); setDropTarget(null); }}
-      onClick={(e) => { e.stopPropagation(); setSelectedDay(new Date(p.scheduledAt)); }}
+      onClick={(e) => { e.stopPropagation(); setDetailsPost(p); }}
       className={cn(
         "group text-[11px] rounded-md px-1.5 py-1 border cursor-grab active:cursor-grabbing",
         "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15 transition-colors",
@@ -255,6 +259,9 @@ export const ContentCalendar = () => {
         </div>
 
         <Button size="sm" variant="outline" onClick={today}>Today</Button>
+        <Button size="sm" variant="outline" onClick={() => setFillWeekOpen(true)}>
+          <Sparkles className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">AI Fill Week</span>
+        </Button>
         <Button size="sm" onClick={() => setNewOpen(true)}>
           <Plus className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Schedule</span>
         </Button>
@@ -469,6 +476,8 @@ export const ContentCalendar = () => {
       </Sheet>
 
       <NewPostDialog open={newOpen} onOpenChange={setNewOpen} />
+      <AiFillWeekDialog open={fillWeekOpen} onOpenChange={setFillWeekOpen} startDate={selectedDay ?? undefined} />
+      <EventDetailsDialog post={detailsPost} open={!!detailsPost} onOpenChange={(o) => !o && setDetailsPost(null)} />
     </div>
   );
 };

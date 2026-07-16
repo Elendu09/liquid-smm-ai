@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   AlertCircle,
   RotateCw,
+  Pause,
+  PauseCircle,
 } from "lucide-react";
 import { format, parseISO, isBefore } from "date-fns";
 import { useMcpInbox } from "@/hooks/useMcpInbox";
@@ -26,16 +28,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useScheduledPosts, type ScheduledPost, type SendStatus } from "@/hooks/useScheduledPosts";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
-import { SmartPostScheduler } from "@/components/automation/SmartPostScheduler";
-import { PlatformGate } from "@/components/shared/PlatformGate";
-import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+import { ScheduleDialog } from "@/components/publish/ScheduleDialog";
+import { RescheduleDialog } from "@/components/publish/RescheduleDialog";
+import { PauseAllDialog } from "@/components/publish/PauseAllDialog";
 
 type Column = "queued" | "sending" | "completed" | "failed";
 
@@ -56,6 +51,14 @@ function deriveStatus(p: ScheduledPost): Column {
 
 function StatusPill({ post }: { post: ScheduledPost }) {
   const s: SendStatus = post.status ?? "queued";
+  if (s === "paused") {
+    return (
+      <Badge variant="secondary" className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+        <Pause className="h-3 w-3" />
+        Paused
+      </Badge>
+    );
+  }
   if (s === "sending") {
     return (
       <Badge variant="secondary" className="gap-1 border-primary/30 bg-primary/10 text-primary">
@@ -165,9 +168,9 @@ export default function QueueBoard() {
   const { posts, add, remove, update } = useScheduledPosts();
   const { drain } = useMcpInbox();
   const [search, setSearch] = useState("");
-  const [composerOpen, setComposerOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const [rescheduling, setRescheduling] = useState<ScheduledPost | null>(null);
-  const [rescheduleValue, setRescheduleValue] = useState("");
+  const [pauseOpen, setPauseOpen] = useState(false);
 
   useEffect(() => {
     const pending = drain("scheduled-post");
@@ -216,23 +219,6 @@ export default function QueueBoard() {
     toast.success("Post removed from queue");
   };
 
-  const openReschedule = (post: ScheduledPost) => {
-    setRescheduling(post);
-    setRescheduleValue(post.scheduledAt?.slice(0, 16) ?? "");
-  };
-  const confirmReschedule = () => {
-    if (!rescheduling || !rescheduleValue) return;
-    update(rescheduling.id, {
-      scheduledAt: new Date(rescheduleValue).toISOString(),
-      status: "queued",
-      sendProgress: 0,
-      error: undefined,
-      sentAt: undefined,
-    });
-    toast.success("Post rescheduled");
-    setRescheduling(null);
-  };
-
   const retrySend = (post: ScheduledPost) => {
     update(post.id, {
       status: "queued",
@@ -243,6 +229,8 @@ export default function QueueBoard() {
     toast.success("Retrying send…");
   };
 
+  const anyQueuedOrPaused = posts.some((p) => p.status === "queued" || p.status === "paused");
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 pb-8">
       <ToolbarBar
@@ -251,14 +239,18 @@ export default function QueueBoard() {
         searchPlaceholder="Search posts…"
         viewToggle={<ViewToggle value={view} onChange={setView} />}
         actions={
-          <Button
-            size="sm"
-            onClick={() => setComposerOpen(true)}
-            className="min-h-9"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">New post</span>
-          </Button>
+          <div className="flex items-center gap-1.5">
+            {anyQueuedOrPaused && (
+              <Button size="sm" variant="outline" onClick={() => setPauseOpen(true)} className="min-h-9">
+                <PauseCircle className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Pause all</span>
+              </Button>
+            )}
+            <Button size="sm" onClick={() => setScheduleOpen(true)} className="min-h-9">
+              <Plus className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Schedule post</span>
+            </Button>
+          </div>
         }
       />
 
@@ -282,7 +274,7 @@ export default function QueueBoard() {
             <PostCard
               post={p}
               onDelete={() => handleDelete(p.id)}
-              onReschedule={() => openReschedule(p)}
+              onReschedule={() => setRescheduling(p)}
               onRetry={() => retrySend(p)}
             />
           )}
@@ -291,13 +283,13 @@ export default function QueueBoard() {
         <ListView
           items={filtered}
           getKey={(p) => p.id}
-          emptyLabel="No posts in your queue yet — hit New post to add one."
+          emptyLabel="No posts in your queue yet — hit Schedule post to add one."
           renderItem={(p) => (
             <div className="p-4">
               <PostCard
                 post={p}
                 onDelete={() => handleDelete(p.id)}
-                onReschedule={() => openReschedule(p)}
+                onReschedule={() => setRescheduling(p)}
                 onRetry={() => retrySend(p)}
               />
             </div>
@@ -305,46 +297,13 @@ export default function QueueBoard() {
         />
       )}
 
-      {rescheduling && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-5 space-y-4 shadow-lg">
-            <h3 className="font-semibold">Reschedule post</h3>
-            <Input
-              type="datetime-local"
-              value={rescheduleValue}
-              onChange={(e) => setRescheduleValue(e.target.value)}
-              aria-label="New scheduled time"
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setRescheduling(null)}>
-                Cancel
-              </Button>
-              <Button onClick={confirmReschedule} disabled={!rescheduleValue}>
-                Save
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <Sheet open={composerOpen} onOpenChange={setComposerOpen}>
-        <SheetContent
-          side="right"
-          className="w-full sm:max-w-2xl lg:max-w-3xl overflow-y-auto p-0"
-        >
-          <SheetHeader className="px-6 pt-6 pb-2">
-            <SheetTitle>Compose scheduled post</SheetTitle>
-            <SheetDescription>
-              Plan a single post or bulk-schedule across time slots and platforms.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="px-4 sm:px-6 pb-6 pt-4">
-            <PlatformGate toolKey="scheduler">
-              {(ctx) => <SmartPostScheduler selectedPlatforms={ctx.platforms} />}
-            </PlatformGate>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <ScheduleDialog open={scheduleOpen} onOpenChange={setScheduleOpen} />
+      <RescheduleDialog
+        post={rescheduling}
+        open={!!rescheduling}
+        onOpenChange={(o) => !o && setRescheduling(null)}
+      />
+      <PauseAllDialog open={pauseOpen} onOpenChange={setPauseOpen} />
     </div>
   );
 }
