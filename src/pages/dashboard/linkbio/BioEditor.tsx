@@ -53,6 +53,8 @@ const railItems = [
   { id: "design", label: "Design", icon: Wand2 },
   { id: "theme", label: "Themes", icon: Palette },
   { id: "content", label: "Content", icon: Link2 },
+  { id: "blocks", label: "Blocks", icon: Layers },
+  { id: "motion", label: "Motion", icon: Zap },
   { id: "profile", label: "Profile", icon: User },
   { id: "socials", label: "Socials", icon: Share2 },
   { id: "seo", label: "SEO", icon: Globe },
