@@ -51,13 +51,14 @@ export function AiFillWeekDialog({
     }
     setBusy(true);
     try {
-      const { captions } = await aiCreate.captions({
+      const res = await aiCreate.captions({
         topic: topic.trim(),
         tone,
         platform: platforms[0],
         count: 7,
       });
-      if (!captions?.length) {
+      const captions = res?.captions ?? [];
+      if (!captions.length) {
         toast.error("AI returned no captions — try a different topic.");
         return;
       }
