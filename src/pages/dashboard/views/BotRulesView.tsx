@@ -95,8 +95,8 @@ export default function BotRulesView() {
             value={view}
             onChange={setView}
             options={[
-              { value: "grid", label: "Cards", icon: (p) => <Bot {...p} /> },
-              { value: "list", label: "List", icon: (p) => <Bot {...p} /> },
+              { value: "grid", label: "Cards", icon: (p) => <LayoutGrid {...p} /> },
+              { value: "list", label: "List", icon: (p) => <List {...p} /> },
             ]}
           />
         }
