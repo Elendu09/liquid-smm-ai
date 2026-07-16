@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { BarChart3 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/shell";
 import BioEditor from "../linkbio/BioEditor";
 import AnalyticsView from "../views/linkbio/AnalyticsView";
@@ -11,7 +10,6 @@ function AnalyticsPage() {
         <PageHeader
           title="Link in Bio · Analytics"
           description="Click-through performance for your bio page."
-          icon={BarChart3}
         />
       </div>
       <AnalyticsView />
