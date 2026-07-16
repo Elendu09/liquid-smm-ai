@@ -24,6 +24,15 @@ import {
   Star,
   Smartphone,
   GripVertical,
+  Layers,
+  Zap,
+  Type as TypeIcon,
+  Image as ImageIcon2,
+  Video,
+  Code2,
+  Minus,
+  Timer,
+  Quote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
