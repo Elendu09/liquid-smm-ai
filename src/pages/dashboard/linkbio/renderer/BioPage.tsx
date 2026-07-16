@@ -44,6 +44,9 @@ export function BioPage({ config, compact = false }: { config: BioConfig; compac
         : {};
   const useThemeBg = !o.bgType || o.bgType === "theme";
 
+  // Avatar size scale (sm/md/lg -> 0.8 / 1 / 1.2)
+  const avatarScale = o.avatarSize === "sm" ? 0.8 : o.avatarSize === "lg" ? 1.2 : 1;
+
   const shared = {
     theme,
     config,
@@ -53,6 +56,7 @@ export function BioPage({ config, compact = false }: { config: BioConfig; compac
     fontBody: fontClass(o.fontBody ?? undefined),
     fontHeading: fontClass(o.fontHeading ?? undefined),
     textOverride: o.textColor,
+    avatarScale,
   };
 
   const layout: ThemeLayout = theme.layout ?? "glass-list";
@@ -67,17 +71,45 @@ export function BioPage({ config, compact = false }: { config: BioConfig; compac
           ? "animate-slide-in-right"
           : "";
 
+  const hover = o.hover ?? "scale";
+  const stagger = o.stagger ?? 60;
+
+  // CSS variables + scoped style block drive design/motion overrides across every layout.
+  const rootId = `bio-${theme.id}`;
+  const rootStyle = {
+    ...bgStyle,
+    ...(o.textColor ? { color: o.textColor } : {}),
+    ["--bio-accent" as string]: accent,
+    ["--bio-btn-bg" as string]: o.buttonBg ?? "",
+    ["--bio-btn-text" as string]: o.buttonText ?? "",
+    ["--bio-stagger" as string]: `${stagger}ms`,
+  } as React.CSSProperties;
+
   return (
     <div
+      id={rootId}
       className={cn(
-        "w-full h-full overflow-y-auto relative",
+        "bio-root w-full h-full overflow-y-auto relative",
         useThemeBg && theme.bg,
         theme.textClass,
         shared.fontBody,
         entranceClass,
       )}
-      style={{ ...bgStyle, ...(o.textColor ? { color: o.textColor } : {}) }}
+      style={rootStyle}
     >
+      <style>{`
+        #${rootId} a { transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
+        ${hover === "scale" ? `#${rootId} a:hover { transform: scale(1.03); }` : ""}
+        ${hover === "lift" ? `#${rootId} a:hover { transform: translateY(-3px); box-shadow: 0 10px 24px -12px rgba(0,0,0,.35); }` : ""}
+        ${hover === "glow" ? `#${rootId} a:hover { box-shadow: 0 0 0 2px ${accent}55, 0 0 24px ${accent}66; }` : ""}
+        ${o.buttonBg ? `#${rootId} a[data-bio-btn] { background: ${o.buttonBg} !important; border-color: ${o.buttonBg} !important; }` : ""}
+        ${o.buttonText ? `#${rootId} a[data-bio-btn] { color: ${o.buttonText} !important; }` : ""}
+        #${rootId} [data-bio-list] > * { animation: bio-in .35s ease-out both; }
+        ${Array.from({ length: 24 })
+          .map((_, i) => `#${rootId} [data-bio-list] > *:nth-child(${i + 1}) { animation-delay: calc(var(--bio-stagger) * ${i}); }`)
+          .join("\n")}
+        @keyframes bio-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+      `}</style>
       <BlocksStrip config={config} accent={accent} />
       {renderLayout(layout, shared)}
     </div>
