@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Clock, Plus, Trash2, GitCommitVertical, LayoutGrid, List } from "lucide-react";
+import { Clock, Plus, Trash2, GitCommitVertical, LayoutGrid, List, Filter } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -14,9 +14,17 @@ import {
 } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { cn } from "@/lib/utils";
+import { RunDetailsDrawer } from "@/components/activity/RunDetailsDrawer";
+import {
+  RunFiltersDialog,
+  DEFAULT_FILTERS,
+  type RunFilters,
+} from "@/components/activity/RunFiltersDialog";
+import { BulkClearDialog } from "@/components/activity/BulkClearDialog";
 
 const runSeed: StatusItem[] = [
   { id: "r1", title: "Auto-reply to @jordan.creates", subtitle: "Engagement bot · Instagram", status: "success", meta: "2m ago", createdAt: new Date(Date.now() - 2 * 60_000).toISOString() },
@@ -56,6 +64,16 @@ export function ActivityFeedView() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | TimelineCategory>("all");
   const [newTitle, setNewTitle] = useState("");
+  const [advancedFilters, setAdvancedFilters] = useState<RunFilters>(DEFAULT_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [detailsFor, setDetailsFor] = useState<StatusItem | null>(null);
+
+  const activeAdvancedCount =
+    (advancedFilters.category !== "all" ? 1 : 0) +
+    (advancedFilters.status !== "all" ? 1 : 0) +
+    (advancedFilters.from ? 1 : 0) +
+    (advancedFilters.to ? 1 : 0);
 
   useEffect(() => {
     if (items.length === 0) setItems(runSeed);
@@ -96,12 +114,20 @@ export function ActivityFeedView() {
   }, [items, posts]);
 
   const filtered = useMemo(() => {
+    const fromTs = advancedFilters.from ? new Date(advancedFilters.from).getTime() : 0;
+    const toTs = advancedFilters.to
+      ? new Date(advancedFilters.to).getTime() + 24 * 3_600_000
+      : Number.POSITIVE_INFINITY;
     return merged.filter((e) => {
       if (filter !== "all" && e.category !== filter) return false;
+      if (advancedFilters.category !== "all" && e.category !== advancedFilters.category) return false;
+      if (advancedFilters.status !== "all" && e.status !== advancedFilters.status) return false;
+      const ts = new Date(e.timestamp).getTime();
+      if (ts < fromTs || ts > toTs) return false;
       if (!search) return true;
       return (e.title + " " + (e.subtitle ?? "")).toLowerCase().includes(search.toLowerCase());
     });
-  }, [merged, filter, search]);
+  }, [merged, filter, search, advancedFilters]);
 
   const filteredItems = useMemo(() => {
     const ids = new Set(filtered.map((e) => e.id));
@@ -118,6 +144,32 @@ export function ActivityFeedView() {
     });
     setNewTitle("");
     toast.success("Added");
+  };
+
+  const rerun = (run: StatusItem) => {
+    add({
+      id: crypto.randomUUID(),
+      title: run.title,
+      subtitle: run.subtitle,
+      status: "pending",
+      meta: "re-running",
+      createdAt: new Date().toISOString(),
+    });
+    toast.success("Re-run queued");
+  };
+
+  const handleBulkClear = (scope: "all" | "success" | "failed" | "old") => {
+    const cutoff = Date.now() - 7 * 24 * 3_600_000;
+    setItems((prev) =>
+      prev.filter((i) => {
+        if (scope === "all") return false;
+        if (scope === "success") return i.status !== "success";
+        if (scope === "failed") return i.status !== "failed";
+        if (scope === "old") return new Date(i.createdAt).getTime() >= cutoff;
+        return true;
+      }),
+    );
+    toast.success(`Cleared ${scope === "all" ? "all runs" : scope + " runs"}`);
   };
 
   const card = (i: StatusItem) => (
@@ -183,13 +235,34 @@ export function ActivityFeedView() {
           />
         }
         actions={
-          <div className="flex gap-1.5">
+          <div className="flex flex-wrap gap-1.5">
+            <Button
+              size="sm"
+              variant={activeAdvancedCount ? "default" : "outline"}
+              onClick={() => setFiltersOpen(true)}
+              aria-label="More filters"
+            >
+              <Filter className="h-4 w-4 mr-1.5" />
+              Filters
+              {activeAdvancedCount > 0 && (
+                <Badge className="ml-1.5 h-4 min-w-4 px-1 text-[10px]">{activeAdvancedCount}</Badge>
+              )}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setBulkOpen(true)}
+              disabled={items.length === 0}
+            >
+              <Trash2 className="h-4 w-4 mr-1.5" /> Clear
+            </Button>
             <Input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addItem()}
               placeholder="Manual entry…"
-              className="h-9 w-40 sm:w-56"
+              className="h-9 w-32 sm:w-56"
               aria-label="Manual entry"
             />
             <Button size="sm" onClick={addItem} disabled={!newTitle.trim()} aria-label="Add">
@@ -202,7 +275,11 @@ export function ActivityFeedView() {
       {view === "timeline" ? (
         <TimelineView
           events={filtered}
-          onSelect={(ev) => toast.message(ev.title, { description: ev.subtitle })}
+          onSelect={(ev) => {
+            const found = items.find((i) => i.id === ev.id);
+            if (found) setDetailsFor(found);
+            else toast.message(ev.title, { description: ev.subtitle });
+          }}
           onDelete={(ev) => {
             remove(ev.id);
             toast.success("Deleted");
@@ -218,11 +295,49 @@ export function ActivityFeedView() {
             update(item.id, { status: to as string });
             toast.success(`Moved to ${to}`);
           }}
-          renderItem={(i) => card(i)}
+          renderItem={(i) => (
+            <button type="button" className="w-full text-left" onClick={() => setDetailsFor(i)}>
+              {card(i)}
+            </button>
+          )}
         />
       ) : (
-        <ListView items={filteredItems} getKey={(i) => i.id} renderItem={(i) => card(i)} />
+        <ListView
+          items={filteredItems}
+          getKey={(i) => i.id}
+          renderItem={(i) => (
+            <button type="button" className="w-full text-left" onClick={() => setDetailsFor(i)}>
+              {card(i)}
+            </button>
+          )}
+        />
       )}
+
+      <RunFiltersDialog
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        value={advancedFilters}
+        onApply={setAdvancedFilters}
+      />
+      <BulkClearDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        totalCount={items.length}
+        onConfirm={(scope) => {
+          handleBulkClear(scope);
+          setBulkOpen(false);
+        }}
+      />
+      <RunDetailsDrawer
+        open={!!detailsFor}
+        onOpenChange={(v) => !v && setDetailsFor(null)}
+        run={detailsFor}
+        onRerun={rerun}
+        onDelete={(id) => {
+          remove(id);
+          toast.success("Deleted");
+        }}
+      />
     </div>
   );
 }

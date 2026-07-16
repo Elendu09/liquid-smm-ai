@@ -15,8 +15,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/dashboard/shell";
-import { useMcpActivity, type McpActivityStatus } from "@/hooks/useMcpActivity";
+import { useMcpActivity, type McpActivityEntry, type McpActivityStatus } from "@/hooks/useMcpActivity";
 import { ApprovalPanel } from "@/components/dashboard/mcp/ApprovalPanel";
+import { McpCallDetailsDrawer } from "@/components/activity/McpCallDetailsDrawer";
 import { cn } from "@/lib/utils";
 
 const STATUS_META: Record<McpActivityStatus, { label: string; icon: typeof CheckCircle2; className: string }> = {
@@ -33,21 +34,24 @@ const FILTERS = [
 type FilterId = (typeof FILTERS)[number]["id"];
 
 export function McpActivityView() {
-  const { entries, clear, log } = useMcpActivity();
+  const { entries, clear, remove, log } = useMcpActivity();
   const [filter, setFilter] = useState<FilterId>("all");
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [detailsFor, setDetailsFor] = useState<McpActivityEntry | null>(null);
 
   const filtered = useMemo(
     () => (filter === "all" ? entries : entries.filter((e) => e.status === filter)),
     [entries, filter],
   );
 
-  const toggle = (id: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
+  const rerun = (e: McpActivityEntry) => {
+    log({
+      tool: e.tool,
+      status: "pending",
+      summary: `Re-run of ${e.tool}`,
+      resources: e.resources,
+      payload: e.payload,
     });
+    toast.success("Re-run queued");
   };
 
   const simulate = () => {
@@ -127,7 +131,6 @@ export function McpActivityView() {
           {filtered.map((e) => {
             const meta = STATUS_META[e.status];
             const Icon = meta.icon;
-            const open = expanded.has(e.id);
             return (
               <li
                 key={e.id}
@@ -135,9 +138,8 @@ export function McpActivityView() {
               >
                 <button
                   type="button"
-                  onClick={() => toggle(e.id)}
+                  onClick={() => setDetailsFor(e)}
                   className="w-full text-left flex items-start gap-3 p-3 hover:bg-muted/40 transition-colors"
-                  aria-expanded={open}
                 >
                   <div
                     className={cn(
@@ -181,25 +183,24 @@ export function McpActivityView() {
                       </div>
                     )}
                   </div>
-                  <ChevronRight
-                    className={cn(
-                      "h-4 w-4 text-muted-foreground shrink-0 mt-1 transition-transform",
-                      open && "rotate-90",
-                    )}
-                  />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
                 </button>
-                {open && (
-                  <div className="border-t border-border/60 bg-muted/20 p-3">
-                    <pre className="text-[11px] leading-relaxed overflow-x-auto text-muted-foreground">
-                      {JSON.stringify(e.payload ?? {}, null, 2)}
-                    </pre>
-                  </div>
-                )}
               </li>
             );
           })}
         </ol>
       )}
+
+      <McpCallDetailsDrawer
+        open={!!detailsFor}
+        onOpenChange={(v) => !v && setDetailsFor(null)}
+        entry={detailsFor}
+        onRerun={rerun}
+        onDelete={(id) => {
+          remove(id);
+          toast.success("Entry removed");
+        }}
+      />
     </div>
   );
 }
