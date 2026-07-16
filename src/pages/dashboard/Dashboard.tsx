@@ -23,6 +23,8 @@ import {
   SectionCard,
   EmptyState,
 } from "@/components/dashboard/shell";
+import { OnboardingChecklistCard } from "@/components/dashboard/OnboardingChecklistCard";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 import { useAccounts } from "@/contexts/AccountContext";
 import { useRunHistory } from "@/hooks/useRunHistory";
@@ -79,6 +81,8 @@ function accountStatusDot(status: string) {
 
 export default function Dashboard() {
   const { accounts, totalAccounts } = useAccounts();
+  const { state: onboarding } = useOnboarding();
+  const openTour = () => window.dispatchEvent(new Event("smmpilot:open-onboarding"));
   const { rows: runs } = useRunHistory();
   const { posts } = useScheduledPosts();
 
@@ -104,6 +108,9 @@ export default function Dashboard() {
         breadcrumbs={[{ label: "Dashboard" }]}
         actions={
           <>
+            <Button variant="ghost" size="sm" onClick={openTour}>
+              <Sparkles className="mr-2 h-4 w-4" /> Take the tour
+            </Button>
             <Button asChild variant="outline" size="sm">
               <Link to="/dashboard/activity/runs">
                 <Clock className="mr-2 h-4 w-4" /> Activity
@@ -117,6 +124,8 @@ export default function Dashboard() {
           </>
         }
       />
+
+      {!onboarding.completed && <OnboardingChecklistCard onReopen={openTour} />}
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
