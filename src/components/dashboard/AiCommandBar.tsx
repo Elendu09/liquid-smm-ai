@@ -651,7 +651,37 @@ export function AiCommandBar() {
 
         {/* Prompt input area — compact Horizon glass */}
         <div className="px-4 pt-2">
-          <div ref={promptAnchorRef} className="relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all">
+          <div
+            ref={promptAnchorRef}
+            className="relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all cursor-text"
+            onMouseDown={(e) => {
+              // Clicking padding/toolbar gap focuses the textarea so paste/typing lands there.
+              if (e.target === e.currentTarget) {
+                e.preventDefault();
+                textareaRef.current?.focus();
+              }
+            }}
+            onPaste={(e) => {
+              // Ensure pasted content always lands inside the textarea even if focus drifted
+              // (e.g. after opening/closing the slash menu portal).
+              if (document.activeElement !== textareaRef.current) {
+                const text = e.clipboardData.getData("text");
+                if (text) {
+                  e.preventDefault();
+                  const el = textareaRef.current;
+                  const start = el?.selectionStart ?? prompt.length;
+                  const end = el?.selectionEnd ?? prompt.length;
+                  const next = prompt.slice(0, start) + text + prompt.slice(end);
+                  setPrompt(next);
+                  requestAnimationFrame(() => {
+                    el?.focus();
+                    const pos = start + text.length;
+                    el?.setSelectionRange(pos, pos);
+                  });
+                }
+              }
+            }}
+          >
             <SlashCommandMenu
               open={slashOpen}
               query={slashQuery}
@@ -688,7 +718,10 @@ export function AiCommandBar() {
                     selectPlaceholder(activeParam.name);
                     return;
                   }
-                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  // Default Enter = send. Shift+Enter inserts newline.
+                  // Cmd/Ctrl+Enter also sends (kept for muscle memory).
+                  // TODO(settings): make Enter-behavior configurable per user.
+                  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                     e.preventDefault();
                     submit();
                   }
@@ -725,16 +758,17 @@ export function AiCommandBar() {
               <div className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground pl-1.5">
                 <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">/</kbd>
                 <span className="ml-0.5 mr-2">commands</span>
-                <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⌘</kbd>
                 <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">↵</kbd>
-                <span className="ml-0.5">send</span>
+                <span className="ml-0.5 mr-2">send</span>
+                <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⇧↵</kbd>
+                <span className="ml-0.5">new line</span>
               </div>
               {busy ? (
                 <Button
                   onClick={stop}
                   size="sm"
                   variant="outline"
-                  className="h-7 px-3 ml-auto rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10"
+                  className="h-7 px-3 ml-auto rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10 cursor-pointer"
                 >
                   <Square className="h-3 w-3 fill-current" strokeWidth={2} />
                   <span className="ml-1 text-[11px] font-semibold">Stop</span>
@@ -744,7 +778,7 @@ export function AiCommandBar() {
                   onClick={() => submit()}
                   disabled={!prompt.trim()}
                   size="sm"
-                  className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] disabled:opacity-40 disabled:shadow-none disabled:ring-0 transition-all"
+                  className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] disabled:opacity-40 disabled:shadow-none disabled:ring-0 disabled:cursor-not-allowed enabled:cursor-pointer transition-all"
                 >
                   <span className="text-[11px] font-semibold">Send</span>
                   <Send className="h-3 w-3 ml-1" strokeWidth={2} />
