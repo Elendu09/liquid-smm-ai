@@ -122,12 +122,17 @@ export function AiCommandBar() {
   const promptAnchorRef = useRef<HTMLDivElement | null>(null);
 
 
+  const { settings, update: updateSettings } = useAiCommandSettings();
+
   // Persist prompt drafts so a reload doesn't lose in-progress work.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (prompt) window.sessionStorage.setItem(DRAFT_KEY, prompt);
     else window.sessionStorage.removeItem(DRAFT_KEY);
   }, [prompt]);
+
+  // Track the last-submitted prompt so a Retry button can re-send after errors.
+  const lastPromptRef = useRef<string>("");
 
   // Slash command menu state — opens when input starts with "/" and no space typed yet.
   const slashOpen = prompt.startsWith("/") && !prompt.includes(" ") && !prompt.includes("\n");
