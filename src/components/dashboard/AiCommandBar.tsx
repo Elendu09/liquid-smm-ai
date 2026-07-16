@@ -120,6 +120,16 @@ export function AiCommandBar() {
   const abortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const promptAnchorRef = useRef<HTMLDivElement | null>(null);
+  const refocusOnIdleRef = useRef(false);
+
+  // When Send is clicked we ask the textarea to re-focus as soon as busy flips off,
+  // so the user can keep editing without hunting for the caret.
+  useEffect(() => {
+    if (!busy && refocusOnIdleRef.current) {
+      refocusOnIdleRef.current = false;
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    }
+  }, [busy]);
 
 
   const { settings, update: updateSettings } = useAiCommandSettings();
