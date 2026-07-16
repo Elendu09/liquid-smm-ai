@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { FileBarChart, Calendar, TrendingUp, Users, BarChart3, Check, Mail, Eye } from "lucide-react";
+import { FileBarChart, Calendar, TrendingUp, Users, BarChart3, Check, Mail, Eye, Loader2, AlertCircle, RefreshCw, CheckCircle2, Clock } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
