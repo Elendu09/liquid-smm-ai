@@ -729,6 +729,29 @@ export function AiCommandBar() {
                 }}
                 disabled={busy}
               />
+              {/* Placeholder highlight overlay — colors <name> tokens behind the textarea text
+                  so users can see exactly which slots (<topic>, <when>, <platforms>, …) still
+                  need to be filled. Overlay sits behind the textarea (z-0); textarea text sits
+                  on top (z-1) with matching typography so glyphs align pixel-for-pixel. */}
+              {/<[a-z_-]+>/i.test(prompt) && (
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 px-3 pt-2.5 pb-9 sm:pb-10 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words z-0"
+                >
+                  {prompt.split(/(<[a-z_-]+>)/i).map((part, i) =>
+                    /^<[a-z_-]+>$/i.test(part) ? (
+                      <span
+                        key={i}
+                        className="rounded-[3px] bg-primary/20 ring-1 ring-primary/40 text-primary font-mono"
+                      >
+                        {part}
+                      </span>
+                    ) : (
+                      <span key={i} className="invisible">{part}</span>
+                    ),
+                  )}
+                </div>
+              )}
               {/* Ghost autocomplete overlay for slash command labels */}
               {ghostSuffix && (
                 <div
