@@ -1,3 +1,5 @@
+export type ThemePhase = 1 | 2 | 3 | 4;
+
 export interface LinkBioTheme {
   id: string;
   name: string;
@@ -10,7 +12,16 @@ export interface LinkBioTheme {
   fontClass: string;
   radius: "sm" | "md" | "xl" | "full";
   buttonStyle: "solid" | "outline" | "pill" | "glass" | "brutal";
+  phase?: ThemePhase;
 }
+
+export const phaseMeta: Record<ThemePhase, { title: string; blurb: string }> = {
+  1: { title: "Foundations", blurb: "Core versatile looks for any creator." },
+  2: { title: "Editorial & Premium", blurb: "Fashion, print and luxury inspired." },
+  3: { title: "Motion & Immersive", blurb: "Gradients, glass and animated depth." },
+  4: { title: "Niche & Playful", blurb: "Bold, indie and character-driven." },
+};
+
 
 export const linkBioThemes: LinkBioTheme[] = [
   {
