@@ -85,6 +85,7 @@ const App = () => (
                 <Route path="audience/*" element={<AudienceHub />} />
                 <Route path="analytics/*" element={<AnalyticsHub />} />
                 <Route path="library/*" element={<LibraryHub />} />
+                <Route path="link-in-bio/*" element={<LinkInBioHub />} />
                 <Route path="activity/*" element={<ActivityHub />} />
                 <Route path="settings/*" element={<SettingsHub />} />
 
