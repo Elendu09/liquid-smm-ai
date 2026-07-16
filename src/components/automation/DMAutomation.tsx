@@ -43,6 +43,9 @@ export const DMAutomation = () => {
   const [templates, setTemplates] = useState(welcomeTemplates);
   const [keywords, setKeywords] = useState(keywordResponses);
   const [messages, setMessages] = useState(recentMessages);
+  const [flows, setFlows] = useState(faqFlows);
+  const [customFlows, setCustomFlows] = useState<DmFlow[]>([]);
+  const [flowDialogOpen, setFlowDialogOpen] = useState(false);
   const [newKeyword, setNewKeyword] = useState("");
   const [newResponse, setNewResponse] = useState("");
   const [welcomeDialog, setWelcomeDialog] = useState(false);
@@ -51,6 +54,7 @@ export const DMAutomation = () => {
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
+
 
   const toggleBot = () => {
     setIsActive((prev) => {
