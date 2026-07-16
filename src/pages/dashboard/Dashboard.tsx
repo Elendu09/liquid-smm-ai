@@ -81,6 +81,8 @@ function accountStatusDot(status: string) {
 
 export default function Dashboard() {
   const { accounts, totalAccounts } = useAccounts();
+  const { state: onboarding } = useOnboarding();
+  const openTour = () => window.dispatchEvent(new Event("smmpilot:open-onboarding"));
   const { rows: runs } = useRunHistory();
   const { posts } = useScheduledPosts();
 
