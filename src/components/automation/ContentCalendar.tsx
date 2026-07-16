@@ -1,7 +1,7 @@
-import { useMemo, useState, DragEvent } from "react";
+import { useMemo, useState } from "react";
 import {
   CalendarDays, Plus, ChevronLeft, ChevronRight, MoreHorizontal,
-  Search, Trash2, Copy, ExternalLink, Clock, LayoutGrid, ListFilter,
+  Search, Trash2, Copy, ExternalLink, Clock, ListFilter, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NewPostDialog } from "@/components/create/NewPostDialog";
+import { EventDetailsDialog } from "@/components/publish/EventDetailsDialog";
+import { AiFillWeekDialog } from "@/components/publish/AiFillWeekDialog";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
 import { cn } from "@/lib/utils";
