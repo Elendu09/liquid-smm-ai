@@ -907,8 +907,8 @@ export function AiCommandBar() {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    refocusOnIdleRef.current = true;
                     submit();
-                    requestAnimationFrame(() => textareaRef.current?.focus());
                   }}
                   onMouseDown={(e) => e.preventDefault()}
                   disabled={!prompt.trim()}
