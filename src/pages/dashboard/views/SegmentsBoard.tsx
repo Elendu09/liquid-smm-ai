@@ -480,6 +480,28 @@ export default function SegmentsBoard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <NewSegmentDialog
+        open={newOpen}
+        onOpenChange={setNewOpen}
+        onCreate={(v) => {
+          const s: Segment = {
+            id: crypto.randomUUID(),
+            title: v.title,
+            description: v.description,
+            status: "testing",
+            niche: v.niche,
+            platforms: v.platforms,
+            followerBucket: v.followerBucket,
+            engagementBucket: v.engagementBucket,
+            keywords: v.keywords,
+            createdAt: new Date().toISOString(),
+          };
+          add(s);
+          toast.success("Segment created");
+          setEditing(s);
+        }}
+      />
     </div>
   );
 }
