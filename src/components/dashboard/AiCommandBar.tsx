@@ -264,39 +264,38 @@ export function AiCommandBar() {
 
   return (
     <div className="relative group">
-      {/* Ambient gradient glow */}
+      {/* Ambient gradient glow — softer, Horizon-style */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -inset-[1px] rounded-[26px] bg-[conic-gradient(from_140deg_at_50%_50%,hsl(var(--brand-blue)/0.35),hsl(var(--brand-purple)/0.25),hsl(var(--brand-cyan)/0.3),hsl(var(--brand-blue)/0.35))] opacity-60 blur-[6px] transition-opacity duration-500 group-focus-within:opacity-100"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -inset-[1px] rounded-[26px] bg-gradient-to-br from-primary/40 via-brand-purple/30 to-brand-cyan/40"
+        className="pointer-events-none absolute -inset-[2px] rounded-[24px] bg-[conic-gradient(from_140deg_at_50%_50%,hsl(var(--brand-blue)/0.25),hsl(var(--brand-purple)/0.18),hsl(var(--brand-cyan)/0.22),hsl(var(--brand-blue)/0.25))] opacity-40 blur-[10px] transition-opacity duration-500 group-focus-within:opacity-80"
       />
 
-      <Card className="relative rounded-[25px] border-0 bg-card/95 backdrop-blur-xl shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.35)] overflow-hidden">
-        {/* Top header row */}
-        <div className="flex items-center gap-2.5 px-4 sm:px-5 pt-4">
+      <Card className="relative rounded-[22px] border border-border/70 dark:border-white/[0.08] bg-gradient-to-b from-card/95 to-card/70 dark:from-white/[0.04] dark:to-white/[0.02] backdrop-blur-2xl shadow-[0_8px_32px_-12px_hsl(var(--primary)/0.18)] dark:shadow-[0_8px_32px_-12px_hsl(220_60%_5%/0.6)] overflow-hidden">
+        {/* subtle inner highlight */}
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-white/20 to-transparent" />
+
+        {/* Header */}
+        <div className="flex items-center gap-2.5 px-4 pt-3.5 pb-1">
           <div className="relative">
-            <div className="absolute inset-0 rounded-xl bg-primary/30 blur-md" />
-            <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-brand-purple flex items-center justify-center shadow-lg">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
+            <div className="absolute inset-0 rounded-lg bg-primary/40 blur-md" />
+            <div className="relative w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-brand-purple flex items-center justify-center shadow-md">
+              <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold tracking-tight">AI Command</h3>
-              <Badge variant="outline" className="h-5 text-[10px] px-1.5 border-primary/30 bg-primary/5 text-primary">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-[13px] font-semibold tracking-tight leading-none">AI Command</h3>
+              <Badge variant="outline" className="h-4 text-[9px] px-1.5 border-primary/25 bg-primary/[0.06] text-primary font-medium">
                 Gemini 3
               </Badge>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Draft, schedule, generate — you approve every write.</p>
+            <p className="text-[10.5px] text-muted-foreground mt-1 leading-none">You approve every write.</p>
           </div>
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 px-2.5 rounded-lg hover:bg-primary/10">
+              <Button variant="ghost" size="sm" className="h-7 px-2 rounded-lg hover:bg-primary/10">
                 <History className="h-3.5 w-3.5" />
-                <span className="ml-1.5 text-xs font-medium">{history.length}</span>
+                <span className="ml-1 text-[11px] font-medium">{history.length}</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
@@ -336,15 +335,15 @@ export function AiCommandBar() {
           </Sheet>
         </div>
 
-        {/* Prompt input area — Lovable/Replit style */}
-        <div className="px-4 sm:px-5 pt-3">
-          <div className="relative rounded-2xl bg-muted/40 border border-border/60 focus-within:border-primary/50 focus-within:bg-muted/60 focus-within:shadow-[0_0_0_4px_hsl(var(--primary)/0.08)] transition-all">
+        {/* Prompt input area — compact Horizon glass */}
+        <div className="px-4 pt-2">
+          <div className="relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all">
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Ask anything… e.g. Draft a launch caption and schedule it for tomorrow 9am on Instagram"
-              rows={3}
-              className="resize-none text-sm min-h-[92px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-4 pt-3.5 pb-14 placeholder:text-muted-foreground/60"
+              placeholder="Ask anything… draft a caption, schedule a post, find hashtags"
+              rows={2}
+              className="resize-none text-[13px] leading-snug min-h-[58px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-3 pt-2.5 pb-10 placeholder:text-muted-foreground/60"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   e.preventDefault();
@@ -354,28 +353,28 @@ export function AiCommandBar() {
               disabled={busy}
             />
 
-            {/* Floating toolbar inside prompt box */}
-            <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground pl-2">
-                <kbd className="px-1.5 py-0.5 rounded-md bg-background/80 border border-border/60 font-mono text-[10px]">⌘</kbd>
-                <kbd className="px-1.5 py-0.5 rounded-md bg-background/80 border border-border/60 font-mono text-[10px]">↵</kbd>
-                <span className="hidden sm:inline ml-1">to send</span>
+            {/* Floating toolbar */}
+            <div className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-2">
+              <div className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground pl-1.5">
+                <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⌘</kbd>
+                <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">↵</kbd>
+                <span className="ml-0.5">send</span>
               </div>
               <Button
                 onClick={() => submit()}
                 disabled={busy || !prompt.trim()}
                 size="sm"
-                className="h-9 px-3.5 rounded-xl bg-gradient-to-br from-primary to-brand-purple text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:brightness-110 disabled:opacity-40 disabled:shadow-none transition-all"
+                className="h-7 px-3 ml-auto rounded-lg bg-gradient-to-br from-primary to-brand-purple text-primary-foreground shadow-md shadow-primary/25 hover:shadow-primary/40 hover:brightness-110 disabled:opacity-40 disabled:shadow-none transition-all"
               >
                 {busy ? (
                   <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span className="ml-1.5 text-xs font-medium">Thinking</span>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span className="ml-1 text-[11px] font-medium">Thinking</span>
                   </>
                 ) : (
                   <>
-                    <span className="text-xs font-semibold">Send</span>
-                    <Send className="h-3.5 w-3.5 ml-1.5" />
+                    <span className="text-[11px] font-semibold">Send</span>
+                    <Send className="h-3 w-3 ml-1" />
                   </>
                 )}
               </Button>
@@ -384,20 +383,21 @@ export function AiCommandBar() {
         </div>
 
         {/* Suggestion chips */}
-        <div className="px-4 sm:px-5 py-3 flex flex-wrap gap-1.5">
+        <div className="px-4 py-2.5 flex flex-wrap gap-1.5">
           {SUGGESTIONS.map((s) => (
             <button
               key={s}
               type="button"
               onClick={() => submit(s)}
               disabled={busy}
-              className="group/chip text-[11px] pl-2 pr-2.5 py-1 rounded-full border border-border/60 bg-background/60 hover:border-primary/50 hover:bg-primary/[0.06] hover:text-foreground transition-all text-muted-foreground disabled:opacity-40 inline-flex items-center gap-1"
+              className="group/chip text-[10.5px] pl-1.5 pr-2 py-0.5 rounded-full border border-border/60 dark:border-white/[0.06] bg-background/60 dark:bg-white/[0.03] hover:border-primary/50 hover:bg-primary/[0.06] hover:text-foreground transition-all text-muted-foreground disabled:opacity-40 inline-flex items-center gap-1"
             >
               <Sparkles className="h-2.5 w-2.5 text-primary/70 group-hover/chip:text-primary transition-colors" />
               {s}
             </button>
           ))}
         </div>
+
 
         {/* Latest response */}
         {latest && (
