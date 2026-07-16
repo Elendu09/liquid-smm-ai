@@ -646,25 +646,65 @@ export function AiCommandBar() {
               onPick={onSlashPick}
               onClose={() => setPrompt("")}
             />
-            <Textarea
-              ref={textareaRef}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder={typed ? `${typed}▏` : "Ask anything… type / for commands"}
-              rows={2}
-              className="resize-none text-[13px] leading-snug min-h-[48px] sm:min-h-[58px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-3 pt-2.5 pb-9 sm:pb-10 placeholder:text-muted-foreground/60"
-              onKeyDown={(e) => {
-                // SlashCommandMenu owns Enter / arrows while it's visible.
-                if (slashOpen && (e.key === "Enter" || e.key === "Tab" || e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Escape")) {
-                  return;
-                }
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                  e.preventDefault();
-                  submit();
-                }
-              }}
-              disabled={busy}
-            />
+            <div className="relative">
+              <Textarea
+                ref={textareaRef}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder={typed ? `${typed}▏` : "Ask anything… type / for commands"}
+                rows={2}
+                className="resize-none text-[13px] leading-snug min-h-[48px] sm:min-h-[58px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-3 pt-2.5 pb-9 sm:pb-10 placeholder:text-muted-foreground/60 relative z-[1]"
+                onKeyDown={(e) => {
+                  // SlashCommandMenu owns Enter / arrows while it's visible.
+                  if (slashOpen && (e.key === "Enter" || e.key === "Tab" || e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Escape")) {
+                    return;
+                  }
+                  // Tab or → to accept ghost-text autocomplete on the slash label.
+                  if (ghostSuffix && (e.key === "Tab" || e.key === "ArrowRight")) {
+                    const el = textareaRef.current;
+                    if (el && el.selectionStart === prompt.length) {
+                      e.preventDefault();
+                      setPrompt(prompt + ghostSuffix);
+                      return;
+                    }
+                  }
+                  // Tab jumps to next placeholder inside the prompt template.
+                  if (e.key === "Tab" && activeParam) {
+                    e.preventDefault();
+                    selectPlaceholder(activeParam.name);
+                    return;
+                  }
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault();
+                    submit();
+                  }
+                }}
+                disabled={busy}
+              />
+              {/* Ghost autocomplete overlay for slash command labels */}
+              {ghostSuffix && (
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 px-3 pt-2.5 pb-9 sm:pb-10 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words"
+                >
+                  <span className="invisible">{prompt}</span>
+                  <span className="text-muted-foreground/50">{ghostSuffix}</span>
+                  <span className="ml-2 text-[9.5px] uppercase tracking-wider text-muted-foreground/60 align-middle border border-border/60 rounded px-1 py-px">
+                    Tab
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Inline parameter hints for the active slash command */}
+            {activeCmd?.params && activeCmd.params.length > 0 && (
+              <SlashParamHints
+                cmd={activeCmd}
+                prompt={prompt}
+                onPick={onParamPick}
+                onFocusPlaceholder={(p) => selectPlaceholder(p.name)}
+              />
+            )}
 
             {/* Floating toolbar */}
             <div className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-2">
