@@ -1,8 +1,8 @@
-// AI command runner. Non-streaming: accepts a user prompt (+ optional context)
-// and returns { text, toolCalls[] } after a bounded server-side tool loop.
-// Tool results are pure intent payloads that the client applies through the
-// existing MCP inbox / approval flow.
-import { generateText, tool, stepCountIs } from "npm:ai@5.0.60";
+// AI command runner — STREAMING (SSE).
+// Streams AI SDK `fullStream` events (text-delta, tool-call, tool-result, finish)
+// as `data:` frames the client parses incrementally. Also honors a bounded
+// per-user conversation history to give the assistant short-term context memory.
+import { streamText, tool, stepCountIs } from "npm:ai@5.0.60";
 import { z } from "npm:zod@3.25.76";
 import { createLovableAiGatewayProvider, corsHeaders } from "../_shared/ai-gateway.ts";
 
@@ -15,7 +15,14 @@ Rules:
 - Every write tool result requires the user's manual approval in the app; make that clear when useful.
 - Never invent connected accounts. If the user references a platform, pass its lowercase id (instagram, tiktok, youtube, twitter, linkedin, facebook, threads, pinterest, snapchat, reddit, discord, telegram, whatsapp, twitch).
 - Dates: use ISO 8601. If the user says "tomorrow 9am", resolve against the provided \`nowIso\`.
+- Use the conversation history to resolve references like "the last one", "same platforms", or "reschedule that". Do not repeat identical tool calls the user already approved unless asked.
 `;
+
+interface HistoryTurn {
+  prompt: string;
+  text?: string;
+  toolNames?: string[];
+}
 
 interface Body {
   prompt: string;
@@ -25,7 +32,9 @@ interface Body {
     activeAccountHandle?: string | null;
     tone?: string;
     niches?: string[];
+    currentRoute?: string;
   };
+  history?: HistoryTurn[];
 }
 
 Deno.serve(async (req) => {
@@ -64,9 +73,6 @@ Deno.serve(async (req) => {
 
   const nowIso = body.nowIso ?? new Date().toISOString();
 
-  // Tool definitions — all `execute` handlers simply echo a validated intent
-  // back to the client, which decides whether to enqueue it into the MCP
-  // inbox for user approval.
   const tools = {
     create_caption_draft: tool({
       description:
@@ -131,8 +137,6 @@ Deno.serve(async (req) => {
       execute: async (input) => {
         const count = input.count ?? 12;
         const seed = input.topic.toLowerCase().replace(/[^a-z0-9]+/g, "");
-        // Deterministic playful variants — the LLM already wrote the topic;
-        // this just formats. Real research lives in HashtagResearch tool.
         const bases = [seed, `${seed}life`, `${seed}daily`, `${seed}tips`, `${seed}gram`, `love${seed}`];
         const filler = ["viral", "trending", "explore", "reels", "creator", "community", "growth", "socialmedia"];
         const tags = Array.from(new Set([...bases, ...filler])).slice(0, count);
@@ -168,15 +172,29 @@ Deno.serve(async (req) => {
   const model = gateway("google/gemini-3-flash-preview");
 
   const context = body.context ?? {};
+  const historyBlock =
+    body.history && body.history.length
+      ? `Recent conversation (oldest → newest):\n${body.history
+          .slice(-6)
+          .map((h, i) => {
+            const tools = h.toolNames?.length ? ` [tools: ${h.toolNames.join(", ")}]` : "";
+            return `${i + 1}. USER: ${h.prompt}\n   ASSISTANT: ${(h.text ?? "").slice(0, 240)}${tools}`;
+          })
+          .join("\n")}`
+      : "No prior conversation this session.";
+
   const contextBlock = `Current context:
 - Now: ${nowIso}
+- Current route: ${context.currentRoute ?? "(unknown)"}
 - Connected platforms: ${(context.connectedPlatformIds ?? []).join(", ") || "(none)"}
 - Active handle: ${context.activeAccountHandle ?? "(none)"}
 - Brand tone: ${context.tone ?? "(unset)"}
-- Niches: ${(context.niches ?? []).join(", ") || "(unset)"}`;
+- Niches: ${(context.niches ?? []).join(", ") || "(unset)"}
+
+${historyBlock}`;
 
   try {
-    const result = await generateText({
+    const result = streamText({
       model,
       system: `${SYSTEM}\n\n${contextBlock}`,
       prompt: body.prompt,
@@ -184,29 +202,67 @@ Deno.serve(async (req) => {
       stopWhen: stepCountIs(6),
     });
 
-    // Flatten tool calls with their results across all steps.
-    const toolCalls: Array<{
-      id: string;
-      name: string;
-      args: unknown;
-      result: unknown;
-    }> = [];
-    for (const step of result.steps) {
-      for (const call of step.toolCalls ?? []) {
-        const match = step.toolResults?.find((r) => r.toolCallId === call.toolCallId);
-        toolCalls.push({
-          id: call.toolCallId,
-          name: call.toolName,
-          args: call.input,
-          result: match?.output ?? null,
-        });
-      }
-    }
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (obj: unknown) =>
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+        try {
+          for await (const chunk of result.fullStream) {
+            switch (chunk.type) {
+              case "text-delta":
+                // AI SDK v5 exposes streaming text under `chunk.text`; older builds used `textDelta`.
+                send({
+                  type: "text-delta",
+                  // deno-lint-ignore no-explicit-any
+                  text: (chunk as any).text ?? (chunk as any).textDelta ?? "",
+                });
+                break;
+              case "tool-call":
+                send({
+                  type: "tool-call",
+                  id: chunk.toolCallId,
+                  name: chunk.toolName,
+                  // deno-lint-ignore no-explicit-any
+                  args: (chunk as any).input ?? (chunk as any).args ?? null,
+                });
+                break;
+              case "tool-result":
+                send({
+                  type: "tool-result",
+                  id: chunk.toolCallId,
+                  name: chunk.toolName,
+                  // deno-lint-ignore no-explicit-any
+                  result: (chunk as any).output ?? (chunk as any).result ?? null,
+                });
+                break;
+              case "error":
+                send({ type: "error", error: String((chunk as { error: unknown }).error) });
+                break;
+              case "finish":
+                send({ type: "finish" });
+                break;
+            }
+          }
+          send({ type: "done" });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.error("ai-command stream failed:", message);
+          send({ type: "error", error: message });
+        } finally {
+          controller.close();
+        }
+      },
+    });
 
-    return new Response(
-      JSON.stringify({ text: result.text ?? "", toolCalls }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(stream, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+      },
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const isRateLimit = message.toLowerCase().includes("rate") || message.includes("429");

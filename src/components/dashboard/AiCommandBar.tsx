@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import {
   Sparkles,
   Send,
-  Loader2,
+  
   History,
   Check,
   X,
@@ -14,6 +14,7 @@ import {
   Hash,
   ArrowUpRight,
   Trash2,
+  Square,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,7 +22,14 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { useAiCommandHistory, type AiCommandEntry, type AiCommandToolCall } from "@/hooks/useAiCommandHistory";
+import {
+  useAiCommandHistory,
+  logAiCommand,
+  updateAiCommand,
+  updateToolCall,
+  type AiCommandEntry,
+  type AiCommandToolCall,
+} from "@/hooks/useAiCommandHistory";
 import { enqueueInbox } from "@/hooks/useMcpInbox";
 import { logMcpCall } from "@/hooks/useMcpActivity";
 import { useAccounts } from "@/contexts/AccountContext";
@@ -30,6 +38,11 @@ import { cn } from "@/lib/utils";
 import { InlineMarkdown } from "./InlineMarkdown";
 import { CaptionDraftIntent } from "./ai-intents/CaptionDraftIntent";
 import { ScheduledPostIntent } from "./ai-intents/ScheduledPostIntent";
+import { SlashCommandMenu, SLASH_COMMANDS, type SlashCommand } from "./SlashCommandMenu";
+
+const DRAFT_KEY = "smmpilot:ai-command-draft";
+const HISTORY_TURNS = 6;
+
 
 const SUGGESTIONS = [
   "Draft 3 caption ideas about a new product launch",
@@ -75,15 +88,32 @@ function shortSummary(intent: ToolIntent) {
 }
 
 export function AiCommandBar() {
-  const [prompt, setPrompt] = useState("");
+  // Restore any in-progress draft (feature memory item from the plan).
+  const [prompt, setPrompt] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.sessionStorage.getItem(DRAFT_KEY) ?? "";
+  });
   const [busy, setBusy] = useState(false);
   const [latest, setLatest] = useState<AiCommandEntry | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { accounts, activeAccount } = useAccounts();
   const { state: onboarding } = useOnboarding();
-  const { items: history, log, update, updateTool, clear } = useAiCommandHistory();
+  const { items: history, clear } = useAiCommandHistory();
   const abortRef = useRef<AbortController | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Persist prompt drafts so a reload doesn't lose in-progress work.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (prompt) window.sessionStorage.setItem(DRAFT_KEY, prompt);
+    else window.sessionStorage.removeItem(DRAFT_KEY);
+  }, [prompt]);
+
+  // Slash command menu state — opens when input starts with "/".
+  const slashOpen = prompt.startsWith("/") && !prompt.includes("\n");
+  const slashQuery = slashOpen ? prompt.slice(1) : "";
 
   // Typewriter placeholder cycling through SUGGESTIONS while input is empty & idle
   const [typed, setTyped] = useState("");
@@ -119,6 +149,46 @@ export function AiCommandBar() {
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  // Recent conversation memory sent server-side to resolve back-references.
+  const conversationMemory = useMemo(
+    () =>
+      history.slice(0, HISTORY_TURNS).reverse().map((h) => ({
+        prompt: h.prompt,
+        text: h.text,
+        toolNames: h.toolCalls.map((c) => c.name),
+      })),
+    [history],
+  );
+
+  const onSlashPick = (cmd: SlashCommand) => {
+    if (cmd.action === "clear-history") {
+      clear();
+      setPrompt("");
+      setLatest(null);
+      toast.success("Conversation memory cleared");
+      return;
+    }
+    if (cmd.submit) {
+      setPrompt("");
+      submit(cmd.insert);
+      return;
+    }
+    setPrompt(cmd.insert);
+    // Focus & place caret at end
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (el) {
+        el.focus();
+        el.setSelectionRange(cmd.insert.length, cmd.insert.length);
+      }
+    });
+  };
+
+  const stop = () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setBusy(false);
+  };
 
   const submit = async (value?: string) => {
     const text = (value ?? prompt).trim();
@@ -129,6 +199,22 @@ export function AiCommandBar() {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
+    // Optimistic in-memory entry; commit to persistent history when the stream finishes.
+    let workingEntry: AiCommandEntry = {
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      prompt: text,
+      text: "",
+      toolCalls: [],
+      status: "success",
+    };
+    setLatest(workingEntry);
+
+    const patch = (mutate: (e: AiCommandEntry) => AiCommandEntry) => {
+      workingEntry = mutate(workingEntry);
+      setLatest({ ...workingEntry });
+    };
+
     try {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-command`;
       const res = await fetch(url, {
@@ -136,6 +222,7 @@ export function AiCommandBar() {
         signal: ctrl.signal,
         headers: {
           "Content-Type": "application/json",
+          Accept: "text/event-stream",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
@@ -146,12 +233,14 @@ export function AiCommandBar() {
             activeAccountHandle: activeAccount?.username ?? null,
             tone: onboarding.profile.tone || undefined,
             niches: onboarding.profile.niches,
+            currentRoute: location.pathname,
           },
+          history: conversationMemory,
         }),
       });
 
-      if (!res.ok) {
-        const errBody = await res.text();
+      if (!res.ok || !res.body) {
+        const errBody = await res.text().catch(() => "");
         const msg =
           res.status === 429
             ? "Rate limit hit — try again in a moment."
@@ -159,39 +248,113 @@ export function AiCommandBar() {
               ? "AI credits exhausted. Add credits in Settings → Plans & credits."
               : `AI command failed (${res.status}). ${errBody.slice(0, 140)}`;
         toast.error(msg);
-        const entry = log({ prompt: text, text: "", toolCalls: [], status: "error", error: msg });
+        const entry = logAiCommand({ prompt: text, text: "", toolCalls: [], status: "error", error: msg });
         setLatest(entry);
         return;
       }
 
-      const data = (await res.json()) as { text: string; toolCalls: AiCommandToolCall[] };
-      const entry = log({
-        prompt: text,
-        text: data.text ?? "",
-        toolCalls: data.toolCalls ?? [],
-        status: "success",
-      });
-      setLatest(entry);
+      // SSE parsing loop
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let streamError: string | null = null;
 
-      // Auto-execute read-only tools (navigate, hashtag list) immediately.
-      for (const call of entry.toolCalls) {
-        const intent = call.result as ToolIntent | null;
-        if (!intent) continue;
-        if (intent.kind === "navigate" && intent.payload?.route) {
-          navigate(String(intent.payload.route));
-          updateTool(entry.id, call.id, { approved: true });
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const chunks = buffer.split("\n\n");
+        buffer = chunks.pop() ?? "";
+        for (const raw of chunks) {
+          const line = raw.replace(/^data:\s*/, "").trim();
+          if (!line) continue;
+          let evt: Record<string, unknown>;
+          try {
+            evt = JSON.parse(line);
+          } catch {
+            continue;
+          }
+          switch (evt.type) {
+            case "text-delta":
+              patch((e) => ({ ...e, text: e.text + (evt.text as string) }));
+              break;
+            case "tool-call":
+              patch((e) => ({
+                ...e,
+                toolCalls: e.toolCalls.some((c) => c.id === evt.id)
+                  ? e.toolCalls
+                  : [
+                      ...e.toolCalls,
+                      { id: String(evt.id), name: String(evt.name), args: evt.args ?? null, result: null },
+                    ],
+              }));
+              break;
+            case "tool-result":
+              patch((e) => ({
+                ...e,
+                toolCalls: e.toolCalls.map((c) =>
+                  c.id === evt.id ? { ...c, result: evt.result ?? null } : c,
+                ),
+              }));
+              // Auto-execute read-only navigate intents as soon as the tool result arrives.
+              {
+                const intent = evt.result as ToolIntent | null;
+                if (intent?.kind === "navigate" && intent.payload?.route) {
+                  navigate(String(intent.payload.route));
+                  patch((e) => ({
+                    ...e,
+                    toolCalls: e.toolCalls.map((c) =>
+                      c.id === evt.id ? { ...c, approved: true } : c,
+                    ),
+                  }));
+                }
+              }
+              break;
+            case "error":
+              streamError = String(evt.error ?? "stream error");
+              break;
+            case "done":
+              // handled after loop
+              break;
+          }
         }
       }
+
+      // Commit final entry to persistent history and swap `latest` to the stored one so
+      // approvals/rejections mutate storage instead of the ephemeral working copy.
+      const committed = logAiCommand({
+        prompt: workingEntry.prompt,
+        text: workingEntry.text,
+        toolCalls: workingEntry.toolCalls,
+        status: streamError ? "error" : "success",
+        error: streamError ?? undefined,
+      });
+      setLatest(committed);
+      if (streamError) toast.error(streamError);
     } catch (e) {
-      if (ctrl.signal.aborted) return;
+      if (ctrl.signal.aborted) {
+        // Preserve whatever we streamed so far.
+        const committed = logAiCommand({
+          prompt: workingEntry.prompt,
+          text: workingEntry.text,
+          toolCalls: workingEntry.toolCalls,
+          status: "success",
+        });
+        setLatest(committed);
+        toast("Stopped", { description: "Response was cancelled." });
+        return;
+      }
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`AI command failed: ${msg}`);
-      const entry = log({ prompt: text, text: "", toolCalls: [], status: "error", error: msg });
+      const entry = logAiCommand({ prompt: text, text: "", toolCalls: [], status: "error", error: msg });
       setLatest(entry);
     } finally {
       setBusy(false);
+      abortRef.current = null;
     }
   };
+
+
 
   const approve = (entry: AiCommandEntry, call: AiCommandToolCall) => {
     const intent = call.result as ToolIntent | null;
@@ -218,7 +381,7 @@ export function AiCommandBar() {
       });
       toast.success(`${labelFor(intent.kind)} applied — will show on next open.`);
     }
-    updateTool(entry.id, call.id, { approved: true });
+    updateToolCall(entry.id, call.id, { approved: true });
     if (latest?.id === entry.id) {
       setLatest({
         ...entry,
@@ -228,7 +391,7 @@ export function AiCommandBar() {
   };
 
   const reject = (entry: AiCommandEntry, call: AiCommandToolCall) => {
-    updateTool(entry.id, call.id, { rejected: true });
+    updateToolCall(entry.id, call.id, { rejected: true });
     if (latest?.id === entry.id) {
       setLatest({
         ...entry,
@@ -251,7 +414,7 @@ export function AiCommandBar() {
           approved={call.approved}
           rejected={call.rejected}
           onApprove={() => {
-            updateTool(entry.id, call.id, { approved: true });
+            updateToolCall(entry.id, call.id, { approved: true });
             if (latest?.id === entry.id) {
               setLatest({
                 ...entry,
@@ -275,7 +438,7 @@ export function AiCommandBar() {
           approved={call.approved}
           rejected={call.rejected}
           onApprove={() => {
-            updateTool(entry.id, call.id, { approved: true });
+            updateToolCall(entry.id, call.id, { approved: true });
             if (latest?.id === entry.id) {
               setLatest({
                 ...entry,
@@ -421,14 +584,24 @@ export function AiCommandBar() {
         {/* Prompt input area — compact Horizon glass */}
         <div className="px-4 pt-2">
           <div className="relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all">
+            <SlashCommandMenu
+              open={slashOpen}
+              query={slashQuery}
+              onPick={onSlashPick}
+              onClose={() => setPrompt("")}
+            />
             <Textarea
+              ref={textareaRef}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder={typed ? `${typed}▏` : "Ask anything…"}
+              placeholder={typed ? `${typed}▏` : "Ask anything… type / for commands"}
               rows={2}
               className="resize-none text-[13px] leading-snug min-h-[48px] sm:min-h-[58px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-3 pt-2.5 pb-9 sm:pb-10 placeholder:text-muted-foreground/60"
-
               onKeyDown={(e) => {
+                // SlashCommandMenu owns Enter / arrows while it's visible.
+                if (slashOpen && (e.key === "Enter" || e.key === "Tab" || e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Escape")) {
+                  return;
+                }
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   e.preventDefault();
                   submit();
@@ -440,32 +613,38 @@ export function AiCommandBar() {
             {/* Floating toolbar */}
             <div className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-2">
               <div className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground pl-1.5">
+                <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">/</kbd>
+                <span className="ml-0.5 mr-2">commands</span>
                 <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⌘</kbd>
                 <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">↵</kbd>
                 <span className="ml-0.5">send</span>
               </div>
-              <Button
-                onClick={() => submit()}
-                disabled={busy || !prompt.trim()}
-                size="sm"
-                className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] disabled:opacity-40 disabled:shadow-none disabled:ring-0 transition-all"
-              >
-                {busy ? (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin" strokeWidth={2} />
-                    <span className="ml-1 text-[11px] font-medium">Thinking</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-[11px] font-semibold">Send</span>
-                    <Send className="h-3 w-3 ml-1" strokeWidth={2} />
-                  </>
-                )}
-              </Button>
-
+              {busy ? (
+                <Button
+                  onClick={stop}
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-3 ml-auto rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10"
+                >
+                  <Square className="h-3 w-3 fill-current" strokeWidth={2} />
+                  <span className="ml-1 text-[11px] font-semibold">Stop</span>
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => submit()}
+                  disabled={!prompt.trim()}
+                  size="sm"
+                  className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] disabled:opacity-40 disabled:shadow-none disabled:ring-0 transition-all"
+                >
+                  <span className="text-[11px] font-semibold">Send</span>
+                  <Send className="h-3 w-3 ml-1" strokeWidth={2} />
+                </Button>
+              )}
             </div>
           </div>
         </div>
+
+
 
         {/* Suggestion chips — hidden on mobile (autotyped in placeholder), shown ≥sm */}
         <div className="hidden sm:flex px-4 py-2.5 flex-wrap gap-1.5">
