@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Bot, Plus, Trash2, Power } from "lucide-react";
+import { Bot, Plus, Trash2, Power, LayoutGrid, List } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -95,8 +95,8 @@ export default function BotRulesView() {
             value={view}
             onChange={setView}
             options={[
-              { value: "grid", label: "Cards", icon: (p) => <Bot {...p} /> },
-              { value: "list", label: "List", icon: (p) => <Bot {...p} /> },
+              { value: "grid", label: "Cards", icon: (p) => <LayoutGrid {...p} /> },
+              { value: "list", label: "List", icon: (p) => <List {...p} /> },
             ]}
           />
         }
