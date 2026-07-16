@@ -1091,15 +1091,22 @@ function ColorField({
   value,
   onChange,
   placeholder,
+  onClear,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  onClear?: () => void;
 }) {
   return (
     <div>
-      <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label>
+      <div className="flex items-center justify-between">
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label>
+        {onClear && value && (
+          <button onClick={onClear} className="text-[10px] text-muted-foreground hover:text-foreground">clear</button>
+        )}
+      </div>
       <div className="flex items-center gap-2 mt-1">
         <input
           type="color"
