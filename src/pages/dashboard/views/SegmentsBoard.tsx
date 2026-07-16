@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Target, Plus, Copy, Zap, Trash2, X, Eye } from "lucide-react";
 import { SegmentPreviewSheet } from "@/components/dashboard/segments/SegmentPreviewSheet";
 import { RunAutomationDialog } from "@/components/engage/RunAutomationDialog";
+import { NewSegmentDialog } from "@/components/audience/NewSegmentDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -145,6 +146,7 @@ export default function SegmentsBoard() {
   const [runSegmentId, setRunSegmentId] = useState<string | null>(null);
   const [runMulti, setRunMulti] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Segment | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
 
   useEffect(() => {
     if (items.length === 0) setItems(seed);
@@ -264,7 +266,7 @@ export default function SegmentsBoard() {
               <Zap className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">Run automation</span>
             </Button>
-            <Button size="sm" onClick={startNew} aria-label="New segment">
+            <Button size="sm" onClick={() => setNewOpen(true)} aria-label="New segment">
               <Plus className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">New segment</span>
             </Button>
@@ -478,6 +480,28 @@ export default function SegmentsBoard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <NewSegmentDialog
+        open={newOpen}
+        onOpenChange={setNewOpen}
+        onCreate={(v) => {
+          const s: Segment = {
+            id: crypto.randomUUID(),
+            title: v.title,
+            description: v.description,
+            status: "testing",
+            niche: v.niche,
+            platforms: v.platforms,
+            followerBucket: v.followerBucket,
+            engagementBucket: v.engagementBucket,
+            keywords: v.keywords,
+            createdAt: new Date().toISOString(),
+          };
+          add(s);
+          toast.success("Segment created");
+          setEditing(s);
+        }}
+      />
     </div>
   );
 }

@@ -1,10 +1,13 @@
-import { useState } from "react";
-import { Users, UserMinus, UserCheck, Clock, TrendingUp, TrendingDown, BarChart3, Search, Filter, Ghost, Star, Shield, Download } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Users, UserMinus, UserCheck, TrendingUp, TrendingDown, BarChart3, Search, Ghost, Star, Download, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AnalyzeAccountDialog, type AnalysisResult } from "@/components/audience/AnalyzeAccountDialog";
+import { ExportDialog, type ExportRow } from "@/components/audience/ExportDialog";
+import { FollowerDetailsDrawer, type FollowerDetail } from "@/components/audience/FollowerDetailsDrawer";
 
 const followerQualityData = [
   { name: "High Quality", value: 62, color: "hsl(142, 70%, 45%)" },
@@ -55,36 +58,46 @@ export const FollowerAnalyzer = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"quality" | "ghosts" | "unfollowers">("quality");
   const [ghosts, setGhosts] = useState(ghostFollowers);
-
-  const exportReport = () => {
-    const rows = [
-      ["Section", "Value"],
-      ["Total Followers", stats.totalFollowers],
-      ["Quality Score", stats.qualityScore],
-      ["Ghost %", stats.ghostPercentage],
-      ["Weekly Growth", stats.weeklyGrowth],
-      ["Avg Engagement", stats.avgEngagement],
-      ["Active Followers", stats.activeFollowers],
-    ];
-    const csv = rows.map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `follower-report-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Full report exported");
-  };
-
-  const stats = {
+  const [analyzeOpen, setAnalyzeOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [detail, setDetail] = useState<FollowerDetail | null>(null);
+  const [stats, setStats] = useState({
     totalFollowers: "31.2K",
     qualityScore: 87,
     ghostPercentage: "5%",
     weeklyGrowth: "+2.4%",
     avgEngagement: "6.8%",
     activeFollowers: "89%",
+    peakHour: "9PM",
+    account: "@yourbrand",
+  });
+
+  const applyAnalysis = (r: AnalysisResult) => {
+    setStats({
+      totalFollowers: r.totalFollowers,
+      qualityScore: r.qualityScore,
+      ghostPercentage: `${r.ghostPercent}%`,
+      weeklyGrowth: r.weeklyGrowth,
+      avgEngagement: r.avgEngagement,
+      activeFollowers: `${r.activePercent}%`,
+      peakHour: r.peakHour,
+      account: r.username,
+    });
+    toast.success(`Loaded analysis for ${r.username}`);
   };
+
+  const exportRows: ExportRow[] = useMemo(
+    () => [
+      ...topFollowers.map((f) => ({ type: "top", username: f.username, followers: f.followers, engagement: f.engagement, quality: f.quality })),
+      ...ghosts.map((g) => ({ type: "ghost", username: g.username, lastActive: g.lastActive, posts: g.posts, engagement: g.engagement })),
+      ...recentUnfollowers.map((u) => ({ type: "unfollower", username: u.username, unfollowedAt: u.unfollowedAt, wasFollowing: u.wasFollowing ? "yes" : "no" })),
+    ],
+    [ghosts],
+  );
+
+  const openTop = (f: typeof topFollowers[number]) => setDetail({ id: f.id, username: f.username, avatar: f.avatar, followers: f.followers, engagement: f.engagement, quality: f.quality as FollowerDetail["quality"], kind: "top" });
+  const openGhost = (f: typeof ghostFollowers[number]) => setDetail({ id: f.id, username: f.username, avatar: f.avatar, lastActive: f.lastActive, posts: f.posts, engagement: f.engagement, kind: "ghost" });
+  const openUnfollower = (f: typeof recentUnfollowers[number]) => setDetail({ id: f.id, username: f.username, avatar: f.avatar, unfollowedAt: f.unfollowedAt, wasFollowing: f.wasFollowing, kind: "unfollower" });
 
   return (
     <div className="space-y-6">
@@ -96,13 +109,17 @@ export const FollowerAnalyzer = () => {
           </div>
           <div>
             <h3 className="text-xl font-bold">Follower Analyzer</h3>
-            <p className="text-sm text-muted-foreground">Analyze follower quality and engagement</p>
+            <p className="text-sm text-muted-foreground">{stats.account} · quality, growth & engagement</p>
           </div>
         </div>
-        <Button onClick={exportReport} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Download className="mr-2 h-4 w-4" />
-          Full Report
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" onClick={() => setAnalyzeOpen(true)}>
+            <Sparkles className="mr-2 h-4 w-4" /> Analyze account
+          </Button>
+          <Button onClick={() => setExportOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Download className="mr-2 h-4 w-4" /> Export
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -240,9 +257,11 @@ export const FollowerAnalyzer = () => {
         {activeTab === "quality" && (
           <div className="space-y-3">
             {topFollowers.map((follower) => (
-              <div
+              <button
                 key={follower.id}
-                className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border"
+                type="button"
+                onClick={() => openTop(follower)}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border hover:border-primary/50 transition text-left"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-green to-brand-cyan flex items-center justify-center text-white font-bold text-sm">
@@ -263,7 +282,7 @@ export const FollowerAnalyzer = () => {
                     {follower.quality}
                   </Badge>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -279,9 +298,9 @@ export const FollowerAnalyzer = () => {
             {ghosts.map((follower) => (
               <div
                 key={follower.id}
-                className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border"
+                className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border hover:border-primary/50 transition"
               >
-                <div className="flex items-center gap-3">
+                <button type="button" onClick={() => openGhost(follower)} className="flex items-center gap-3 flex-1 text-left">
                   <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground font-bold text-sm">
                     {follower.avatar}
                   </div>
@@ -289,7 +308,7 @@ export const FollowerAnalyzer = () => {
                     <p className="font-medium text-muted-foreground">{follower.username}</p>
                     <p className="text-sm text-muted-foreground">Last active: {follower.lastActive}</p>
                   </div>
-                </div>
+                </button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -310,9 +329,11 @@ export const FollowerAnalyzer = () => {
         {activeTab === "unfollowers" && (
           <div className="space-y-3">
             {recentUnfollowers.map((follower) => (
-              <div
+              <button
                 key={follower.id}
-                className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border"
+                type="button"
+                onClick={() => openUnfollower(follower)}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border hover:border-primary/50 transition text-left"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground font-bold text-sm">
@@ -331,11 +352,19 @@ export const FollowerAnalyzer = () => {
                     </Badge>
                   )}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
       </div>
+
+      <AnalyzeAccountDialog open={analyzeOpen} onOpenChange={setAnalyzeOpen} onApply={applyAnalysis} />
+      <ExportDialog open={exportOpen} onOpenChange={setExportOpen} filename={`followers-${stats.account.replace(/^@/, "")}`} rows={exportRows} />
+      <FollowerDetailsDrawer
+        follower={detail}
+        onClose={() => setDetail(null)}
+        onRemove={(id) => setGhosts((prev) => prev.filter((g) => g.id !== id))}
+      />
     </div>
   );
 };

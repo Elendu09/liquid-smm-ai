@@ -1,16 +1,23 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   Users,
-  TrendingUp,
   TrendingDown,
-  Eye,
   Heart,
   MessageCircle,
   Plus,
@@ -19,16 +26,19 @@ import {
   BarChart3,
   Calendar,
   Hash,
-  Bell,
   Target,
   Crown,
   ArrowUp,
   ArrowDown,
   Download,
 } from "lucide-react";
+import { AddCompetitorDialog, type NewCompetitorInput } from "@/components/audience/AddCompetitorDialog";
+import { CompareCompetitorDialog, type CompareStats } from "@/components/audience/CompareCompetitorDialog";
 
 const CompetitorTracker = () => {
-  const [newCompetitor, setNewCompetitor] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+  const [compareTarget, setCompareTarget] = useState<CompareStats | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<{ id: number; username: string } | null>(null);
   const [competitors, setCompetitors] = useState([
     {
       id: 1,
@@ -80,37 +90,33 @@ const CompetitorTracker = () => {
     }
   ]);
 
-  const yourStats = {
+  const yourStats: CompareStats = {
+    username: "You",
     followers: 145000,
     engagement: 5.4,
     avgLikes: 9800,
     avgComments: 234,
-    postingFreq: "1x daily"
+    postingFreq: "1x daily",
   };
 
-  const addCompetitor = () => {
-    if (newCompetitor.trim()) {
-      setCompetitors([...competitors, {
-        id: Date.now(),
-        username: newCompetitor,
-        platform: "Instagram",
-        followers: Math.floor(Math.random() * 500000),
-        followersChange: Number((Math.random() * 10 - 5).toFixed(1)),
-        engagement: Number((Math.random() * 8).toFixed(1)),
-        engagementChange: Number((Math.random() * 2 - 1).toFixed(1)),
-        posts: Math.floor(Math.random() * 1000),
-        avgLikes: Math.floor(Math.random() * 20000),
-        avgComments: Math.floor(Math.random() * 500),
-        postingFreq: "1x daily",
-        topHashtags: ["#trending", "#viral", "#fyp"],
-        lastPost: "Just now",
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${newCompetitor}`
-      }]);
-      setNewCompetitor("");
-      toast.success(`Added ${newCompetitor}`);
-    } else {
-      toast.error("Enter a username");
-    }
+  const addCompetitor = (v: NewCompetitorInput) => {
+    setCompetitors((prev) => [...prev, {
+      id: Date.now(),
+      username: v.username,
+      platform: v.platform,
+      followers: Math.floor(Math.random() * 500000),
+      followersChange: Number((Math.random() * 10 - 5).toFixed(1)),
+      engagement: Number((Math.random() * 8).toFixed(1)),
+      engagementChange: Number((Math.random() * 2 - 1).toFixed(1)),
+      posts: Math.floor(Math.random() * 1000),
+      avgLikes: Math.floor(Math.random() * 20000),
+      avgComments: Math.floor(Math.random() * 500),
+      postingFreq: "1x daily",
+      topHashtags: ["#trending", "#viral", "#fyp"],
+      lastPost: "Just now",
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(v.username)}`,
+    }]);
+    toast.success(`Tracking ${v.username}`, { description: v.notes || undefined });
   };
 
   const removeCompetitor = (id: number) => {
@@ -159,16 +165,9 @@ const CompetitorTracker = () => {
           <p className="text-muted-foreground">Monitor and analyze your competitors' performance</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Input
-            placeholder="@username"
-            value={newCompetitor}
-            onChange={(e) => setNewCompetitor(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addCompetitor()}
-            className="w-48"
-          />
-          <Button onClick={addCompetitor} className="gap-2">
+          <Button onClick={() => setAddOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
-            Add
+            Add competitor
           </Button>
           <Button variant="outline" onClick={refresh} disabled={refreshing} className="gap-2">
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
@@ -302,15 +301,27 @@ const CompetitorTracker = () => {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" className="gap-1">
-                        <Eye className="h-4 w-4" />
-                        View
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1"
+                        onClick={() => setCompareTarget({
+                          username: competitor.username,
+                          followers: competitor.followers,
+                          engagement: competitor.engagement,
+                          avgLikes: competitor.avgLikes,
+                          avgComments: competitor.avgComments,
+                          postingFreq: competitor.postingFreq,
+                        })}
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                        Compare
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         className="text-destructive"
-                        onClick={() => removeCompetitor(competitor.id)}
+                        onClick={() => setRemoveTarget({ id: competitor.id, username: competitor.username })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -430,7 +441,7 @@ const CompetitorTracker = () => {
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
+                <Target className="h-5 w-5" />
                 Competitor Alerts
               </CardTitle>
             </CardHeader>
@@ -460,6 +471,38 @@ const CompetitorTracker = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AddCompetitorDialog open={addOpen} onOpenChange={setAddOpen} onAdd={addCompetitor} />
+      <CompareCompetitorDialog
+        open={!!compareTarget}
+        onOpenChange={(o) => !o && setCompareTarget(null)}
+        you={yourStats}
+        competitor={compareTarget}
+      />
+      <AlertDialog open={!!removeTarget} onOpenChange={(o) => !o && setRemoveTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Stop tracking {removeTarget?.username}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes them from your tracker. You can add them again anytime.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (removeTarget) {
+                  removeCompetitor(removeTarget.id);
+                  setRemoveTarget(null);
+                }
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
