@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Bot, Plus, Trash2, Power } from "lucide-react";
+import { Bot, Plus, Trash2, Power, LayoutGrid, List } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
