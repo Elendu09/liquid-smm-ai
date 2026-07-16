@@ -662,24 +662,25 @@ export function AiCommandBar() {
               }
             }}
             onPaste={(e) => {
-              // Ensure pasted content always lands inside the textarea even if focus drifted
-              // (e.g. after opening/closing the slash menu portal).
-              if (document.activeElement !== textareaRef.current) {
-                const text = e.clipboardData.getData("text");
-                if (text) {
-                  e.preventDefault();
-                  const el = textareaRef.current;
-                  const start = el?.selectionStart ?? prompt.length;
-                  const end = el?.selectionEnd ?? prompt.length;
-                  const next = prompt.slice(0, start) + text + prompt.slice(end);
-                  setPrompt(next);
-                  requestAnimationFrame(() => {
-                    el?.focus();
-                    const pos = start + text.length;
-                    el?.setSelectionRange(pos, pos);
-                  });
-                }
-              }
+              // Always route paste into the textarea at the current cursor, replacing any
+              // active selection. This guarantees the pasted text lands where the user
+              // expects even if focus drifted (e.g. slash menu portal, toolbar click) and
+              // keeps the selection semantics identical to a native textarea paste so the
+              // user can still edit before sending.
+              const text = e.clipboardData.getData("text");
+              if (!text) return;
+              e.preventDefault();
+              const el = textareaRef.current;
+              const focused = document.activeElement === el;
+              const start = focused ? el?.selectionStart ?? prompt.length : prompt.length;
+              const end = focused ? el?.selectionEnd ?? prompt.length : prompt.length;
+              const next = prompt.slice(0, start) + text + prompt.slice(end);
+              setPrompt(next);
+              const caret = start + text.length;
+              requestAnimationFrame(() => {
+                el?.focus();
+                el?.setSelectionRange(caret, caret);
+              });
             }}
           >
             <SlashCommandMenu
