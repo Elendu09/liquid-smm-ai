@@ -90,9 +90,13 @@ export const CommentManager = () => {
   const [qrSettings, setQrSettings] = useState<QuickReplySettings>(() => loadJSON(QR_SETTINGS_KEY, DEFAULT_QR_SETTINGS));
   const [qrOpen, setQrOpen] = useState(false);
 
+  const [rateLimit, setRateLimit] = useState<RateLimitSettings>(() => loadJSON(RATE_LIMIT_KEY, DEFAULT_RATE_LIMIT));
+  const [rateOpen, setRateOpen] = useState(false);
+
   useEffect(() => { localStorage.setItem(MOD_RULES_KEY, JSON.stringify(modRules)); }, [modRules]);
   useEffect(() => { localStorage.setItem(MOD_STATE_KEY, JSON.stringify(modState)); }, [modState]);
   useEffect(() => { localStorage.setItem(QR_SETTINGS_KEY, JSON.stringify(qrSettings)); }, [qrSettings]);
+  useEffect(() => { localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(rateLimit)); }, [rateLimit]);
 
   const platforms = useMemo(() => Array.from(new Set(mockComments.map((c) => c.platform))), []);
 
