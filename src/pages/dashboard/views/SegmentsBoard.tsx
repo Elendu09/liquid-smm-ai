@@ -447,6 +447,38 @@ export default function SegmentsBoard() {
       </Sheet>
 
       <SegmentPreviewSheet segment={previewing} onClose={() => setPreviewing(null)} />
+
+      <RunAutomationDialog
+        open={!!runSegmentId}
+        onOpenChange={(o) => !o && setRunSegmentId(null)}
+        presetSegmentId={runSegmentId}
+      />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete segment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes <strong>{deleteTarget?.title}</strong>. You can't undo this.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteTarget) {
+                  remove(deleteTarget.id);
+                  toast.success("Segment deleted");
+                }
+                setDeleteTarget(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
