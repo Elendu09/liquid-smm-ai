@@ -839,7 +839,7 @@ export function AiCommandBar() {
               {ghostSuffix && (
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 px-3 pt-2.5 pb-11 sm:pb-12 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words"
+                  className="pointer-events-none absolute inset-0 pl-3 pr-24 pt-2.5 pb-11 sm:pb-12 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words"
                 >
                   <span className="invisible">{prompt}</span>
                   <span className="text-muted-foreground/50">{ghostSuffix}</span>
