@@ -311,9 +311,8 @@ export const linkBioThemes: LinkBioTheme[] = [
     radius: "xl",
     buttonStyle: "glass",
   },
-];
-
   // ── Phase 3 — Motion & Immersive ──
+
   {
     id: "liquid-mercury",
     name: "Liquid Mercury",
