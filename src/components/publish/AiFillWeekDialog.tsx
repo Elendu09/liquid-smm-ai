@@ -67,7 +67,7 @@ export function AiFillWeekDialog({
         const when = new Date(start);
         when.setDate(when.getDate() + i);
         add({
-          caption: c.body ?? c.hook ?? "",
+          caption: c.body ?? c.title ?? "",
           hashtags: c.hashtags,
           scheduledAt: when.toISOString(),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
