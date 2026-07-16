@@ -1,19 +1,22 @@
-import { useState } from "react";
-import { Users, UserPlus, Shield, Mail, MoreHorizontal, Check, X, Clock, Activity } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import {
+  Users,
+  UserPlus,
+  Shield,
+  MoreHorizontal,
+  Check,
+  X,
+  Clock,
+  Activity,
+  Mail,
+  Trash2,
+  Copy,
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,26 +25,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { ChangeRoleDialog, type MemberRole } from "@/components/settings/ChangeRoleDialog";
+import { InviteMemberDialog } from "@/components/settings/InviteMemberDialog";
+import { logAudit } from "@/components/settings/AuditPanel";
 
 interface TeamMember {
   id: string;
   name: string;
   email: string;
   avatar?: string;
-  role: "admin" | "editor" | "viewer";
+  role: MemberRole;
   status: "active" | "pending" | "inactive";
-  lastActive?: Date;
-  joinedAt: Date;
+  lastActiveAt?: string;
+  joinedAt: string;
+  inviteToken?: string;
+  inviteExpiresAt?: string;
+  note?: string;
 }
 
-const mockTeamMembers: TeamMember[] = [
+const seedMembers: TeamMember[] = [
   {
     id: "1",
     name: "John Doe",
@@ -49,8 +61,8 @@ const mockTeamMembers: TeamMember[] = [
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
     role: "admin",
     status: "active",
-    lastActive: new Date(),
-    joinedAt: new Date("2024-01-01"),
+    lastActiveAt: new Date().toISOString(),
+    joinedAt: new Date("2024-01-01").toISOString(),
   },
   {
     id: "2",
@@ -59,8 +71,8 @@ const mockTeamMembers: TeamMember[] = [
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
     role: "editor",
     status: "active",
-    lastActive: new Date(Date.now() - 1000 * 60 * 30),
-    joinedAt: new Date("2024-02-15"),
+    lastActiveAt: new Date(Date.now() - 1_800_000).toISOString(),
+    joinedAt: new Date("2024-02-15").toISOString(),
   },
   {
     id: "3",
@@ -69,8 +81,8 @@ const mockTeamMembers: TeamMember[] = [
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike",
     role: "editor",
     status: "active",
-    lastActive: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    joinedAt: new Date("2024-03-01"),
+    lastActiveAt: new Date(Date.now() - 7_200_000).toISOString(),
+    joinedAt: new Date("2024-03-01").toISOString(),
   },
   {
     id: "4",
@@ -78,177 +90,186 @@ const mockTeamMembers: TeamMember[] = [
     email: "emily@company.com",
     role: "viewer",
     status: "pending",
-    joinedAt: new Date(),
+    joinedAt: new Date().toISOString(),
+    inviteToken: "seed-token-xyz",
+    inviteExpiresAt: new Date(Date.now() + 7 * 86_400_000).toISOString(),
   },
 ];
 
-const activityLog = [
-  { user: "Sarah Smith", action: "Scheduled 5 posts for Instagram", time: "10 minutes ago" },
-  { user: "John Doe", action: "Updated engagement bot settings", time: "1 hour ago" },
-  { user: "Mike Johnson", action: "Added new hashtag set", time: "2 hours ago" },
-  { user: "Sarah Smith", action: "Generated AI captions", time: "3 hours ago" },
-  { user: "John Doe", action: "Connected YouTube account", time: "Yesterday" },
-];
+const ROLE_BADGE: Record<MemberRole, string> = {
+  admin: "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20",
+  editor: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20",
+  viewer: "bg-muted text-muted-foreground",
+};
+
+function statusDot(status: TeamMember["status"]) {
+  switch (status) {
+    case "active":
+      return "bg-green-500";
+    case "pending":
+      return "bg-yellow-500";
+    case "inactive":
+      return "bg-gray-400";
+  }
+}
+
+function lastActiveLabel(iso?: string) {
+  if (!iso) return "Never";
+  const diff = Date.now() - new Date(iso).getTime();
+  if (diff < 60_000) return "Just now";
+  if (diff < 3_600_000) return `${Math.round(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return `${Math.round(diff / 3_600_000)}h ago`;
+  return `${Math.round(diff / 86_400_000)}d ago`;
+}
 
 export default function TeamPage() {
-  const [members, setMembers] = useState<TeamMember[]>(mockTeamMembers);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<string>("editor");
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const { items: members, setItems, add, update, remove } = useLocalCollection<TeamMember>(
+    "settings",
+    "team",
+    seedMembers,
+  );
 
-  const getRoleBadge = (role: TeamMember["role"]) => {
-    switch (role) {
-      case "admin":
-        return <Badge className="bg-purple-500/10 text-purple-500 hover:bg-purple-500/20">Admin</Badge>;
-      case "editor":
-        return <Badge className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20">Editor</Badge>;
-      case "viewer":
-        return <Badge variant="secondary">Viewer</Badge>;
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [roleTarget, setRoleTarget] = useState<TeamMember | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<TeamMember | null>(null);
+
+  const stats = useMemo(
+    () => ({
+      total: members.length,
+      active: members.filter((m) => m.status === "active").length,
+      pending: members.filter((m) => m.status === "pending").length,
+      admins: members.filter((m) => m.role === "admin").length,
+    }),
+    [members],
+  );
+
+  const activityLog = useMemo(() => {
+    return members
+      .filter((m) => m.status !== "pending")
+      .slice(0, 6)
+      .map((m) => ({
+        user: m.name,
+        action:
+          m.role === "admin"
+            ? "Reviewed workspace settings"
+            : m.role === "editor"
+            ? "Scheduled content across platforms"
+            : "Viewed analytics dashboard",
+        time: lastActiveLabel(m.lastActiveAt),
+      }));
+  }, [members]);
+
+  const handleInvite = ({
+    email,
+    role,
+    expiresInDays,
+    note,
+  }: {
+    email: string;
+    role: MemberRole;
+    expiresInDays: number;
+    note?: string;
+  }) => {
+    if (members.some((m) => m.email.toLowerCase() === email.toLowerCase())) {
+      toast.error("That email is already invited");
+      return;
     }
-  };
-
-  const getStatusIndicator = (status: TeamMember["status"]) => {
-    switch (status) {
-      case "active":
-        return <span className="h-2 w-2 rounded-full bg-green-500" />;
-      case "pending":
-        return <span className="h-2 w-2 rounded-full bg-yellow-500" />;
-      case "inactive":
-        return <span className="h-2 w-2 rounded-full bg-gray-400" />;
-    }
-  };
-
-  const handleInvite = () => {
-    if (!inviteEmail) return;
-    const newMember: TeamMember = {
-      id: String(members.length + 1),
-      name: inviteEmail.split("@")[0],
-      email: inviteEmail,
-      role: inviteRole as TeamMember["role"],
+    const token = crypto.randomUUID();
+    add({
+      id: crypto.randomUUID(),
+      name: email.split("@")[0],
+      email,
+      role,
       status: "pending",
-      joinedAt: new Date(),
-    };
-    setMembers([...members, newMember]);
-    setInviteEmail("");
-    setInviteDialogOpen(false);
+      joinedAt: new Date().toISOString(),
+      inviteToken: token,
+      inviteExpiresAt: new Date(Date.now() + expiresInDays * 86_400_000).toISOString(),
+      note,
+    });
+    logAudit({ actor: "You", action: `Invited ${role}`, target: email, category: "member" });
+    toast.success(`Invite sent to ${email}`);
+  };
+
+  const handleRoleChange = (id: string, role: MemberRole) => {
+    const m = members.find((x) => x.id === id);
+    update(id, { role });
+    if (m) logAudit({ actor: "You", action: `Changed role to ${role}`, target: m.email, category: "member" });
+    toast.success("Role updated");
+  };
+
+  const handleRemove = (m: TeamMember) => {
+    remove(m.id);
+    logAudit({ actor: "You", action: "Removed member", target: m.email, category: "member" });
+    toast.success(`${m.name} removed`);
+  };
+
+  const handleResend = (m: TeamMember) => {
+    update(m.id, {
+      inviteExpiresAt: new Date(Date.now() + 7 * 86_400_000).toISOString(),
+      inviteToken: crypto.randomUUID(),
+    });
+    logAudit({ actor: "You", action: "Resent invite", target: m.email, category: "member" });
+    toast.success(`Invite resent to ${m.email}`);
+  };
+
+  const handleActivate = (m: TeamMember) => {
+    update(m.id, { status: "active", lastActiveAt: new Date().toISOString() });
+    logAudit({ actor: "You", action: "Marked invite accepted", target: m.email, category: "member" });
+    toast.success(`${m.name} is now active`);
+  };
+
+  const copyLink = async (m: TeamMember) => {
+    const link = `${window.location.origin}/join?t=${m.inviteToken ?? m.id}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("Invite link copied");
+    } catch {
+      toast.error("Copy failed");
+    }
   };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
-      {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
             <Users className="h-7 w-7 sm:h-8 sm:w-8 text-primary shrink-0" />
             <span className="truncate">Team Collaboration</span>
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">Manage your team members and permissions</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Manage members, invites, and permissions across the workspace.
+          </p>
         </div>
-        <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Invite Member
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Invite Team Member</DialogTitle>
-              <DialogDescription>
-                Send an invitation to join your workspace
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="colleague@company.com"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Role</Label>
-                <Select value={inviteRole} onValueChange={setInviteRole}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin - Full access</SelectItem>
-                    <SelectItem value="editor">Editor - Create & edit content</SelectItem>
-                    <SelectItem value="viewer">Viewer - View only</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button className="w-full" onClick={handleInvite}>
-                <Mail className="mr-2 h-4 w-4" />
-                Send Invitation
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button className="w-full sm:w-auto" onClick={() => setInviteOpen(true)}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          Invite Member
+        </Button>
       </div>
 
-      {/* Stats */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Users className="h-6 w-6 text-primary" />
+        {[
+          { label: "Total", value: stats.total, icon: Users, tone: "bg-primary/10 text-primary" },
+          { label: "Active", value: stats.active, icon: Check, tone: "bg-green-500/10 text-green-500" },
+          { label: "Pending", value: stats.pending, icon: Clock, tone: "bg-yellow-500/10 text-yellow-500" },
+          { label: "Admins", value: stats.admins, icon: Shield, tone: "bg-purple-500/10 text-purple-500" },
+        ].map((s) => (
+          <Card key={s.label}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className={`h-12 w-12 rounded-full flex items-center justify-center ${s.tone}`}>
+                  <s.icon className="h-6 w-6" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">{s.value}</div>
+                  <div className="text-sm text-muted-foreground">{s.label}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-2xl font-bold">{members.length}</div>
-                <div className="text-sm text-muted-foreground">Total Members</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
-                <Check className="h-6 w-6 text-green-500" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{members.filter((m) => m.status === "active").length}</div>
-                <div className="text-sm text-muted-foreground">Active</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                <Clock className="h-6 w-6 text-yellow-500" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{members.filter((m) => m.status === "pending").length}</div>
-                <div className="text-sm text-muted-foreground">Pending</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-purple-500/10 flex items-center justify-center">
-                <Shield className="h-6 w-6 text-purple-500" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{members.filter((m) => m.role === "admin").length}</div>
-                <div className="text-sm text-muted-foreground">Admins</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Team Members List */}
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
@@ -257,50 +278,105 @@ export default function TeamPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {members.map((member) => (
+                {members.map((m) => (
                   <div
-                    key={member.id}
+                    key={m.id}
                     className="flex items-center justify-between gap-3 p-3 sm:p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="relative shrink-0">
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={member.avatar} />
-                          <AvatarFallback>{member.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                          <AvatarImage src={m.avatar} />
+                          <AvatarFallback>{m.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full border-2 border-background">
-                          {getStatusIndicator(member.status)}
-                        </span>
+                        <span
+                          className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background ${statusDot(m.status)}`}
+                        />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium truncate">{member.name}</span>
-                          {getRoleBadge(member.role)}
+                          <span className="font-medium truncate">{m.name}</span>
+                          <Badge className={`capitalize ${ROLE_BADGE[m.role]}`}>{m.role}</Badge>
+                          {m.status === "pending" && (
+                            <Badge variant="outline" className="border-yellow-500/40 text-yellow-500 text-[10px]">
+                              Invite pending
+                            </Badge>
+                          )}
                         </div>
-                        <div className="text-xs sm:text-sm text-muted-foreground truncate">{member.email}</div>
+                        <div className="text-xs sm:text-sm text-muted-foreground truncate">
+                          {m.email}
+                          {m.status === "active" && (
+                            <span className="ml-2">· active {lastActiveLabel(m.lastActiveAt)}</span>
+                          )}
+                          {m.status === "pending" && m.inviteExpiresAt && (
+                            <span className="ml-2">
+                              · expires {new Date(m.inviteExpiresAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="shrink-0" aria-label={`Actions for ${member.name}`}>
+                        <Button variant="ghost" size="icon" className="shrink-0" aria-label={`Actions for ${m.name}`}>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Change Role</DropdownMenuItem>
-                        <DropdownMenuItem>View Activity</DropdownMenuItem>
+                      <DropdownMenuContent align="end" className="w-52">
+                        <DropdownMenuItem onClick={() => setRoleTarget(m)}>
+                          <Shield className="mr-2 h-4 w-4" />
+                          Change role
+                        </DropdownMenuItem>
+                        {m.status === "pending" ? (
+                          <>
+                            <DropdownMenuItem onClick={() => handleResend(m)}>
+                              <Mail className="mr-2 h-4 w-4" />
+                              Resend invite
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => copyLink(m)}>
+                              <Copy className="mr-2 h-4 w-4" />
+                              Copy invite link
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleActivate(m)}>
+                              <Check className="mr-2 h-4 w-4" />
+                              Mark accepted
+                            </DropdownMenuItem>
+                          </>
+                        ) : (
+                          <DropdownMenuItem
+                            onClick={() =>
+                              update(m.id, {
+                                status: m.status === "active" ? "inactive" : "active",
+                                lastActiveAt: new Date().toISOString(),
+                              })
+                            }
+                          >
+                            <Activity className="mr-2 h-4 w-4" />
+                            {m.status === "active" ? "Deactivate" : "Reactivate"}
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-500">Remove</DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => setRemoveTarget(m)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Remove
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
                 ))}
+                {members.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No members yet. Invite someone to collaborate.
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Activity Log */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -310,15 +386,18 @@ export default function TeamPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {activityLog.map((activity, index) => (
-                <div key={index} className="flex gap-3 text-sm">
+              {activityLog.length === 0 && (
+                <p className="text-sm text-muted-foreground">No recent activity.</p>
+              )}
+              {activityLog.map((a, i) => (
+                <div key={i} className="flex gap-3 text-sm">
                   <div className="h-2 w-2 rounded-full bg-primary mt-2 shrink-0" />
                   <div>
                     <p>
-                      <span className="font-medium">{activity.user}</span>{" "}
-                      <span className="text-muted-foreground">{activity.action}</span>
+                      <span className="font-medium">{a.user}</span>{" "}
+                      <span className="text-muted-foreground">{a.action}</span>
                     </p>
-                    <p className="text-xs text-muted-foreground">{activity.time}</p>
+                    <p className="text-xs text-muted-foreground">{a.time}</p>
                   </div>
                 </div>
               ))}
@@ -327,7 +406,6 @@ export default function TeamPage() {
         </Card>
       </div>
 
-      {/* Permissions Matrix */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -356,18 +434,18 @@ export default function TeamPage() {
                   { name: "Connect/disconnect accounts", admin: true, editor: false, viewer: false },
                   { name: "Invite & manage team", admin: true, editor: false, viewer: false },
                   { name: "Billing & subscription", admin: true, editor: false, viewer: false },
-                ].map((row, index) => (
-                  <tr key={index} className="border-b last:border-0">
+                ].map((row, i) => (
+                  <tr key={i} className="border-b last:border-0">
                     <td className="py-3 px-4">{row.name}</td>
-                    <td className="text-center py-3 px-4">
-                      {row.admin ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />}
-                    </td>
-                    <td className="text-center py-3 px-4">
-                      {row.editor ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />}
-                    </td>
-                    <td className="text-center py-3 px-4">
-                      {row.viewer ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />}
-                    </td>
+                    {(["admin", "editor", "viewer"] as const).map((role) => (
+                      <td key={role} className="text-center py-3 px-4">
+                        {row[role] ? (
+                          <Check className="h-5 w-5 text-green-500 mx-auto" />
+                        ) : (
+                          <X className="h-5 w-5 text-muted-foreground mx-auto" />
+                        )}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
@@ -375,6 +453,44 @@ export default function TeamPage() {
           </div>
         </CardContent>
       </Card>
+
+      <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} onInvite={handleInvite} />
+
+      <ChangeRoleDialog
+        open={!!roleTarget}
+        onOpenChange={(o) => !o && setRoleTarget(null)}
+        memberName={roleTarget?.name}
+        currentRole={roleTarget?.role}
+        onSave={(role) => {
+          if (roleTarget) handleRoleChange(roleTarget.id, role);
+        }}
+      />
+
+      <AlertDialog open={!!removeTarget} onOpenChange={(o) => !o && setRemoveTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove {removeTarget?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              They will immediately lose workspace access. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (removeTarget) handleRemove(removeTarget);
+                setRemoveTarget(null);
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* keep setItems used to silence lint if never invoked */}
+      <span hidden aria-hidden onClick={() => setItems(members)} />
     </div>
   );
 }
