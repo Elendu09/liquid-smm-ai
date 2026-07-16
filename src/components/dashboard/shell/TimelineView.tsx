@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { CheckCircle2, XCircle, Clock3, Bot, Send, FileText, Bell, type LucideIcon } from "lucide-react";
+import { CheckCircle2, XCircle, Clock3, Bot, Send, FileText, Bell, Trash2, type LucideIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export type TimelineCategory = "post" | "bot" | "delivery" | "report" | "notification";
@@ -67,9 +68,11 @@ function timeLabel(d: Date) {
 interface TimelineViewProps {
   events: TimelineEvent[];
   emptyLabel?: string;
+  onSelect?: (event: TimelineEvent) => void;
+  onDelete?: (event: TimelineEvent) => void;
 }
 
-export function TimelineView({ events, emptyLabel = "No activity yet." }: TimelineViewProps) {
+export function TimelineView({ events, emptyLabel = "No activity yet.", onSelect, onDelete }: TimelineViewProps) {
   const groups = useMemo(() => {
     const sorted = [...events].sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
@@ -92,10 +95,10 @@ export function TimelineView({ events, emptyLabel = "No activity yet." }: Timeli
   }
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+    <div className="rounded-xl border border-border/60 bg-card">
       {groups.map(([day, items]) => (
         <section key={day}>
-          <header className="sticky top-[6.5rem] lg:top-[3.5rem] z-10 px-4 py-2 bg-muted/60 backdrop-blur border-b border-border/60">
+          <header className="px-4 py-2 bg-muted/60 border-b border-border/60">
             <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{day}</h4>
           </header>
           <ol className="relative px-4 py-3">
@@ -103,8 +106,9 @@ export function TimelineView({ events, emptyLabel = "No activity yet." }: Timeli
             {items.map((ev) => {
               const CatIcon = CATEGORY_ICON[ev.category];
               const style = STATUS_STYLES[ev.status];
+              const interactive = Boolean(onSelect);
               return (
-                <li key={ev.id} className="relative pl-10 py-2.5 group">
+                <li key={ev.id} className="relative pl-10 py-1 group">
                   <span
                     aria-hidden
                     className={cn(
@@ -112,7 +116,25 @@ export function TimelineView({ events, emptyLabel = "No activity yet." }: Timeli
                       style.dot,
                     )}
                   />
-                  <div className="flex items-start gap-3">
+                  <div
+                    role={interactive ? "button" : undefined}
+                    tabIndex={interactive ? 0 : undefined}
+                    onClick={interactive ? () => onSelect?.(ev) : undefined}
+                    onKeyDown={
+                      interactive
+                        ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              onSelect?.(ev);
+                            }
+                          }
+                        : undefined
+                    }
+                    className={cn(
+                      "flex items-start gap-3 rounded-lg p-1.5 -m-1.5 transition-colors",
+                      interactive && "cursor-pointer hover:bg-muted/60 focus:bg-muted/60 focus:outline-none",
+                    )}
+                  >
                     <div
                       className={cn(
                         "shrink-0 w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center ring-1",
@@ -132,6 +154,20 @@ export function TimelineView({ events, emptyLabel = "No activity yet." }: Timeli
                         <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{ev.subtitle}</p>
                       )}
                     </div>
+                    {onDelete && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-60 group-hover:opacity-100"
+                        aria-label={`Delete ${ev.title}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(ev);
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </div>
                 </li>
               );

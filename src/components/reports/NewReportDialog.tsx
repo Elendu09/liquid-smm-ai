@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { FileBarChart, Calendar, TrendingUp, Users, BarChart3, Check, Mail, Eye } from "lucide-react";
+import { FileBarChart, Calendar, TrendingUp, Users, BarChart3, Check, Mail, Eye, Loader2, AlertCircle, RefreshCw, CheckCircle2, Clock } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -78,9 +79,11 @@ interface NewReportDialogProps {
   initialTemplateId?: string;
 }
 
+type GenStatus = "idle" | "queued" | "running" | "success" | "failed";
+
 export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewReportDialogProps) {
   const { accounts } = useAccounts();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [templateId, setTemplateId] = useState<string>(initialTemplateId ?? "");
   const [name, setName] = useState("");
   const [range, setRange] = useState("last7");
@@ -89,6 +92,10 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
   const [schedule, setSchedule] = useState(false);
   const [whitelabel, setWhitelabel] = useState(false);
   const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<GenStatus>("idle");
+  const [progress, setProgress] = useState(0);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   const template = TEMPLATES.find((t) => t.id === templateId);
 
@@ -102,6 +109,10 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
     setSchedule(false);
     setWhitelabel(false);
     setEmail("");
+    setStatus("idle");
+    setProgress(0);
+    setErrorMsg(null);
+    setAttempt(0);
   };
 
   const handleTemplatePick = (id: string) => {
@@ -115,8 +126,14 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
     setSections((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   };
 
-  const generate = () => {
+  const runGenerate = async (isRetry = false) => {
     if (!template) return;
+    setStep(3);
+    setErrorMsg(null);
+    setAttempt((a) => a + 1);
+    setStatus("queued");
+    setProgress(8);
+
     const periodLabel =
       range === "last7"
         ? "Last 7 days"
@@ -125,7 +142,18 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
         : range === "last90"
         ? "Last 90 days"
         : "Custom range";
+
+    await new Promise((r) => setTimeout(r, 350));
+    setStatus("running");
+    setProgress(35);
+    await new Promise((r) => setTimeout(r, 250));
+    setProgress(65);
+
     try {
+      // Simulated transient failure on very first attempt when connected accounts are missing.
+      if (!isRetry && accounts.length === 0 && attempt === 0) {
+        throw new Error("No connected accounts available for this range. Retry after reconnecting.");
+      }
       const data = buildReportData(accounts, sections, range);
       const reportName = name || `${template.name} · ${new Date().toLocaleDateString()}`;
       const sizeMb = 0.6 + sections.length * 0.4 + (format === "pdf" ? 1 : 0);
@@ -162,23 +190,26 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
         input: { template: template.name, range: periodLabel, sections, format },
         output: { name: reportName, followers: data.totalFollowers, reach: data.totalReach },
       });
-      toast({ title: "Report generated", description: `${template.name} ready with real analytics.` });
+      setProgress(100);
+      setStatus("success");
+      toast({ title: "Report generated", description: `${template.name} · ${periodLabel}` });
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       logRun({
         toolKey: "reports",
         action: `generate:${template.id}`,
         status: "failed",
-        error: err instanceof Error ? err.message : String(err),
+        error: msg,
       });
-      toast({
-        title: "Generation failed",
-        description: err instanceof Error ? err.message : "Unknown error",
-        variant: "destructive",
-      });
+      setErrorMsg(msg);
+      setStatus("failed");
+      toast({ title: "Generation failed", description: msg, variant: "destructive" });
     }
-    reset();
-    onOpenChange(false);
   };
+
+  const generate = () => runGenerate(false);
+  const retry = () => runGenerate(true);
+
 
   return (
     <Dialog
@@ -192,9 +223,14 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
         <DialogHeader>
           <DialogTitle>Create New Report</DialogTitle>
           <DialogDescription>
-            {step === 1 ? "Select a template to get started" : "Customize your report"}
+            {step === 1
+              ? "Select a template to get started"
+              : step === 2
+              ? "Customize your report"
+              : "Generating report"}
           </DialogDescription>
         </DialogHeader>
+
 
         {step === 1 && (
           <div className="grid gap-3 md:grid-cols-2 py-2">
@@ -324,24 +360,118 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
           </div>
         )}
 
+        {step === 3 && template && (
+          <div className="space-y-4 py-6">
+            <div className="rounded-lg border p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                {status === "queued" && <Clock className="h-6 w-6 text-muted-foreground animate-pulse" />}
+                {status === "running" && <Loader2 className="h-6 w-6 text-primary animate-spin" />}
+                {status === "success" && <CheckCircle2 className="h-6 w-6 text-emerald-500" />}
+                {status === "failed" && <AlertCircle className="h-6 w-6 text-destructive" />}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm capitalize">{status}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {status === "queued" && "Report queued for generation…"}
+                    {status === "running" && "Fetching analytics and building sections…"}
+                    {status === "success" && "Report saved to Recent Reports."}
+                    {status === "failed" && (errorMsg ?? "Generation failed.")}
+                  </p>
+                </div>
+                <Badge variant="outline" className="text-[10px]">
+                  Attempt {attempt}
+                </Badge>
+              </div>
+              <Progress value={progress} className="h-2" />
+              <ol className="grid grid-cols-4 gap-2 text-[11px]">
+                {(["queued", "running", "success"] as const).map((s, i) => {
+                  const active =
+                    (s === "queued" && ["queued", "running", "success"].includes(status)) ||
+                    (s === "running" && ["running", "success"].includes(status)) ||
+                    (s === "success" && status === "success");
+                  return (
+                    <li
+                      key={s}
+                      className={cn(
+                        "rounded border px-2 py-1 text-center capitalize",
+                        active ? "border-primary/40 bg-primary/5 text-primary" : "text-muted-foreground",
+                      )}
+                    >
+                      {i + 1}. {s === "success" ? "completed" : s}
+                    </li>
+                  );
+                })}
+                <li
+                  className={cn(
+                    "rounded border px-2 py-1 text-center",
+                    status === "failed"
+                      ? "border-destructive/40 bg-destructive/5 text-destructive"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  4. failed
+                </li>
+              </ol>
+            </div>
+          </div>
+        )}
+
         <DialogFooter className="gap-2">
           {step === 2 && (
             <Button variant="ghost" onClick={() => setStep(1)}>
               Back
             </Button>
           )}
-          {step === 1 ? (
+          {step === 1 && (
             <Button disabled={!templateId} onClick={() => setStep(2)}>
               Continue
             </Button>
-          ) : (
+          )}
+          {step === 2 && (
             <Button onClick={generate} disabled={sections.length === 0}>
               <FileBarChart className="mr-2 h-4 w-4" />
               Generate Report
             </Button>
+          )}
+          {step === 3 && (
+            <>
+              {status === "failed" && (
+                <Button variant="outline" onClick={retry}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Retry
+                </Button>
+              )}
+              {status === "success" && (
+                <Button
+                  onClick={() => {
+                    reset();
+                    onOpenChange(false);
+                  }}
+                >
+                  Done
+                </Button>
+              )}
+              {(status === "queued" || status === "running") && (
+                <Button disabled>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Working…
+                </Button>
+              )}
+              {status === "failed" && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    reset();
+                    onOpenChange(false);
+                  }}
+                >
+                  Close
+                </Button>
+              )}
+            </>
           )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+

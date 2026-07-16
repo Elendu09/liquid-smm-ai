@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,11 +9,21 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileText, FileSpreadsheet, FileType2, ArrowUp } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { FileText, FileSpreadsheet, FileType2, ArrowUp, RefreshCw } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import type { ReportData, ReportSectionData } from "@/lib/reportAnalytics";
+import { buildReportData, type ReportData, type ReportSectionData } from "@/lib/reportAnalytics";
+import { useAccounts } from "@/contexts/AccountContext";
+import { logRun } from "@/hooks/useRunHistory";
 
 export interface ReportPreviewData {
   id: string;
@@ -33,11 +43,20 @@ interface ReportPreviewDialogProps {
   report: ReportPreviewData | null;
 }
 
+const RANGE_OPTIONS = [
+  { value: "last7", label: "Last 7 days" },
+  { value: "last30", label: "Last 30 days" },
+  { value: "last90", label: "Last 90 days" },
+];
+
+const rangeLabel = (v: string) =>
+  RANGE_OPTIONS.find((r) => r.value === v)?.label ?? v;
+
 function safeName(n: string) {
   return n.replace(/[^\w-]+/g, "_");
 }
 
-function downloadPdf(report: ReportPreviewData) {
+function downloadPdf(report: ReportPreviewData, data: ReportData, periodLabel: string) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const width = doc.internal.pageSize.getWidth();
   let y = 48;
@@ -49,64 +68,62 @@ function downloadPdf(report: ReportPreviewData) {
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(120);
-  doc.text(`${report.template} · ${report.period}`, 40, y);
+  doc.text(`${report.template} · ${periodLabel}`, 40, y);
   y += 8;
   doc.setDrawColor(220);
   doc.line(40, y + 6, width - 40, y + 6);
   y += 24;
   doc.setTextColor(20);
 
-  if (report.data) {
-    doc.setFontSize(12);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Summary", 40, y);
+  y += 16;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  autoTable(doc, {
+    startY: y,
+    head: [["Metric", "Value"]],
+    body: [
+      ["Total followers", data.totalFollowers.toLocaleString()],
+      ["Total engagement", data.totalEngagement.toLocaleString()],
+      ["Total reach", data.totalReach.toLocaleString()],
+      ["Platforms", `${data.platformBreakdown.length}`],
+    ],
+    styles: { fontSize: 10 },
+    headStyles: { fillColor: [37, 99, 235] },
+    margin: { left: 40, right: 40 },
+  });
+  // @ts-expect-error - autoTable extends doc
+  y = (doc.lastAutoTable?.finalY ?? y) + 20;
+
+  data.sections.forEach((s: ReportSectionData) => {
+    if (y > 720) {
+      doc.addPage();
+      y = 48;
+    }
+    doc.setFontSize(13);
     doc.setFont("helvetica", "bold");
-    doc.text("Summary", 40, y);
-    y += 16;
-    doc.setFont("helvetica", "normal");
+    doc.text(s.section, 40, y);
+    y += 14;
     doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(90);
+    const lines = doc.splitTextToSize(s.summary, width - 80);
+    doc.text(lines, 40, y);
+    y += lines.length * 12 + 6;
+    doc.setTextColor(20);
     autoTable(doc, {
       startY: y,
-      head: [["Metric", "Value"]],
-      body: [
-        ["Total followers", report.data.totalFollowers.toLocaleString()],
-        ["Total engagement", report.data.totalEngagement.toLocaleString()],
-        ["Total reach", report.data.totalReach.toLocaleString()],
-        ["Platforms", `${report.data.platformBreakdown.length}`],
-      ],
+      head: [["Metric", "Value", "Change"]],
+      body: s.metrics.map((m) => [m.label, m.value, m.delta ?? "—"]),
       styles: { fontSize: 10 },
       headStyles: { fillColor: [37, 99, 235] },
       margin: { left: 40, right: 40 },
     });
     // @ts-expect-error - autoTable extends doc
     y = (doc.lastAutoTable?.finalY ?? y) + 20;
-
-    report.data.sections.forEach((s: ReportSectionData) => {
-      if (y > 720) {
-        doc.addPage();
-        y = 48;
-      }
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text(s.section, 40, y);
-      y += 14;
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(90);
-      const lines = doc.splitTextToSize(s.summary, width - 80);
-      doc.text(lines, 40, y);
-      y += lines.length * 12 + 6;
-      doc.setTextColor(20);
-      autoTable(doc, {
-        startY: y,
-        head: [["Metric", "Value", "Change"]],
-        body: s.metrics.map((m) => [m.label, m.value, m.delta ?? "—"]),
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [37, 99, 235] },
-        margin: { left: 40, right: 40 },
-      });
-      // @ts-expect-error - autoTable extends doc
-      y = (doc.lastAutoTable?.finalY ?? y) + 20;
-    });
-  }
+  });
 
   if (!report.whitelabel) {
     const pages = doc.getNumberOfPages();
@@ -115,19 +132,19 @@ function downloadPdf(report: ReportPreviewData) {
       doc.setFontSize(8);
       doc.setTextColor(150);
       doc.text(
-        `Generated by SMMSAAS · ${new Date(report.data?.generatedAt ?? Date.now()).toLocaleString()} · Page ${i}/${pages}`,
+        `Generated by SMMSAAS · ${new Date(data.generatedAt).toLocaleString()} · ${periodLabel} · Page ${i}/${pages}`,
         40,
         doc.internal.pageSize.getHeight() - 20,
       );
     }
   }
 
-  doc.save(`${safeName(report.name)}.pdf`);
+  doc.save(`${safeName(report.name)}_${data.period}.pdf`);
 }
 
-function downloadCsv(report: ReportPreviewData) {
+function downloadCsv(report: ReportPreviewData, data: ReportData) {
   const rows: string[] = [["Section", "Metric", "Value", "Change"].join(",")];
-  report.data?.sections.forEach((s) => {
+  data.sections.forEach((s) => {
     s.metrics.forEach((m) => {
       rows.push(
         [s.section, m.label, m.value, m.delta ?? ""].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","),
@@ -138,19 +155,19 @@ function downloadCsv(report: ReportPreviewData) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${safeName(report.name)}.csv`;
+  a.download = `${safeName(report.name)}_${data.period}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
-function downloadText(report: ReportPreviewData) {
+function downloadText(report: ReportPreviewData, data: ReportData, periodLabel: string) {
   const parts = [
     `Report: ${report.name}`,
     `Template: ${report.template}`,
-    `Period: ${report.period}`,
+    `Period: ${periodLabel}`,
     "",
   ];
-  report.data?.sections.forEach((s) => {
+  data.sections.forEach((s) => {
     parts.push(`## ${s.section}`);
     parts.push(s.summary);
     s.metrics.forEach((m) => parts.push(`- ${m.label}: ${m.value}${m.delta ? ` (${m.delta})` : ""}`));
@@ -160,13 +177,24 @@ function downloadText(report: ReportPreviewData) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${safeName(report.name)}.txt`;
+  a.download = `${safeName(report.name)}_${data.period}.txt`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
 export function ReportPreviewDialog({ open, onOpenChange, report }: ReportPreviewDialogProps) {
-  const data = report?.data;
+  const { accounts } = useAccounts();
+  const [range, setRange] = useState<string>(report?.data?.period ?? "last30");
+
+  useEffect(() => {
+    if (report) setRange(report.data?.period ?? "last30");
+  }, [report]);
+
+  const data = useMemo(() => {
+    if (!report) return null;
+    // Always recompute against selected range so preview + exports stay in sync.
+    return buildReportData(accounts, report.sections ?? [], range);
+  }, [report, accounts, range]);
 
   const kpis = useMemo(() => {
     if (!data) return [];
@@ -180,11 +208,21 @@ export function ReportPreviewDialog({ open, onOpenChange, report }: ReportPrevie
 
   if (!report) return null;
 
+  const periodLabel = rangeLabel(range);
+
   const download = (fmt: string) => {
-    if (fmt === "pdf") downloadPdf(report);
-    else if (fmt === "csv" || fmt === "excel") downloadCsv(report);
-    else downloadText(report);
-    toast({ title: "Download started", description: `${report.name} · ${fmt.toUpperCase()}` });
+    if (!data) return;
+    if (fmt === "pdf") downloadPdf(report, data, periodLabel);
+    else if (fmt === "csv" || fmt === "excel") downloadCsv(report, data);
+    else downloadText(report, data, periodLabel);
+    logRun({
+      toolKey: "reports",
+      action: `export:${fmt}`,
+      status: "success",
+      input: { report: report.name, period: periodLabel, template: report.template },
+      output: { followers: data.totalFollowers },
+    });
+    toast({ title: "Download started", description: `${report.name} · ${periodLabel} · ${fmt.toUpperCase()}` });
   };
 
   return (
@@ -196,11 +234,46 @@ export function ReportPreviewDialog({ open, onOpenChange, report }: ReportPrevie
             {report.name}
           </DialogTitle>
           <DialogDescription>
-            {report.template} · {report.period} · {report.size}
+            {report.template} · {periodLabel} · {report.size}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
+          <div className="flex flex-wrap items-end gap-3 rounded-lg border bg-muted/30 p-3">
+            <div className="space-y-1 flex-1 min-w-[180px]">
+              <Label className="text-xs">Date range</Label>
+              <Select value={range} onValueChange={setRange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RANGE_OPTIONS.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>
+                      {r.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setRange((r) => r);
+                logRun({
+                  toolKey: "reports",
+                  action: `recompute:${report.template}`,
+                  status: "success",
+                  input: { period: periodLabel, sections: report.sections },
+                });
+                toast({ title: "Preview refreshed", description: periodLabel });
+              }}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Recompute
+            </Button>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {kpis.map((k) => (
               <div key={k.label} className="rounded-lg border bg-muted/30 p-3">
@@ -249,6 +322,7 @@ export function ReportPreviewDialog({ open, onOpenChange, report }: ReportPrevie
               {report.format}
             </Badge>
             <Badge variant="secondary">{(report.sections ?? []).length} sections</Badge>
+            <Badge variant="secondary">{periodLabel}</Badge>
             {report.whitelabel && <Badge variant="secondary">White-label</Badge>}
           </div>
         </div>
