@@ -81,6 +81,7 @@ interface Props {
 
 export function SegmentPreviewSheet({ segment, onClose }: Props) {
   const navigate = useNavigate();
+  const { items: allSegments } = useLocalCollection<Segment>("audience", "segments");
 
   const preview = useMemo(() => {
     if (!segment) return null;
