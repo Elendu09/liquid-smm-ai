@@ -85,6 +85,9 @@ const defaultConfig: BioConfig = {
     bgType: "theme",
     alignment: "center",
     avatarSize: "md",
+    entrance: "fade",
+    hover: "scale",
+    stagger: 60,
   },
   links: [
     { id: "l1", title: "Online classes", url: "https://example.com/classes", enabled: true, highlight: true },
@@ -96,6 +99,7 @@ const defaultConfig: BioConfig = {
     { platform: "facebook", url: "https://facebook.com" },
     { platform: "linkedin", url: "https://linkedin.com" },
   ],
+  blocks: [],
 };
 
 function migrate(): BioConfig {
