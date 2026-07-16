@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { MessageCircle, Sparkles, Check, Trash2, Reply, CheckCheck, Filter, Search, Star, Zap, ShieldAlert, EyeOff, Flag, Ban, Settings, Eye } from "lucide-react";
+import { MessageCircle, Sparkles, Check, Trash2, Reply, CheckCheck, Filter, Search, Star, Zap, ShieldAlert, EyeOff, Flag, Ban, Settings, Eye, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +15,14 @@ import {
   renderQuickReply,
   type QuickReplySettings,
 } from "@/components/engage/QuickReplySettingsDialog";
+import {
+  RateLimitSettingsDialog,
+  DEFAULT_RATE_LIMIT,
+  RATE_LIMIT_KEY,
+  checkRateLimit,
+  recordAction,
+  type RateLimitSettings,
+} from "@/components/engage/RateLimitSettingsDialog";
 
 const MOD_RULES_KEY = "smmpilot:engage:moderation-rules";
 const MOD_STATE_KEY = "smmpilot:engage:moderation-state";
