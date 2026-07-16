@@ -125,6 +125,7 @@ export default function AIStudioPage() {
   const [selectedPlatform, setSelectedPlatform] = useState("instagram");
   const [rewriteStyle, setRewriteStyle] = useState("professional");
   const [copied, setCopied] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   // API hooks
   const { isLoading: captionLoading, generate: generateCaption } = useCaption();
