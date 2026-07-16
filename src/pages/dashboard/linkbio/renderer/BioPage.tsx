@@ -57,6 +57,16 @@ export function BioPage({ config, compact = false }: { config: BioConfig; compac
 
   const layout: ThemeLayout = theme.layout ?? "glass-list";
 
+  const entrance = o.entrance ?? "fade";
+  const entranceClass =
+    entrance === "fade"
+      ? "animate-fade-in"
+      : entrance === "scale"
+        ? "animate-scale-in"
+        : entrance === "slide"
+          ? "animate-slide-in-right"
+          : "";
+
   return (
     <div
       className={cn(
@@ -64,10 +74,82 @@ export function BioPage({ config, compact = false }: { config: BioConfig; compac
         useThemeBg && theme.bg,
         theme.textClass,
         shared.fontBody,
+        entranceClass,
       )}
       style={{ ...bgStyle, ...(o.textColor ? { color: o.textColor } : {}) }}
     >
+      <BlocksStrip config={config} accent={accent} />
       {renderLayout(layout, shared)}
+    </div>
+  );
+}
+
+/* =============== BLOCKS =============== */
+
+function BlocksStrip({ config, accent }: { config: BioConfig; accent: string }) {
+  const blocks = (config.blocks ?? []).filter((b) => b.enabled);
+  if (!blocks.length) return null;
+  return (
+    <div className="px-4 pt-4 space-y-3">
+      {blocks.map((b) => (
+        <BlockRenderer key={b.id} block={b} accent={accent} />
+      ))}
+    </div>
+  );
+}
+
+function BlockRenderer({ block, accent }: { block: import("../state/bioConfig").BioBlock; accent: string }) {
+  const align = block.align === "left" ? "text-left" : "text-center";
+  switch (block.type) {
+    case "header":
+      return <h2 className={cn("text-lg font-bold tracking-tight", align)}>{block.text}</h2>;
+    case "text":
+      return <p className={cn("text-xs opacity-80 leading-relaxed", align)}>{block.text}</p>;
+    case "quote":
+      return (
+        <blockquote className={cn("border-l-2 pl-3 italic text-sm opacity-90", align)} style={{ borderColor: accent }}>
+          "{block.text}"
+        </blockquote>
+      );
+    case "divider":
+      return <div className="h-px w-full" style={{ background: `${accent}55` }} />;
+    case "image":
+      return block.src ? <img src={block.src} alt="" loading="lazy" className="w-full rounded-xl object-cover max-h-64" /> : null;
+    case "video": {
+      const yt = block.src?.match(/(?:youtu\.be\/|v=)([\w-]{11})/)?.[1];
+      const src = yt ? `https://www.youtube.com/embed/${yt}` : block.src;
+      return src ? (
+        <div className="aspect-video rounded-xl overflow-hidden bg-black">
+          <iframe src={src} className="w-full h-full" allowFullScreen title="Video" />
+        </div>
+      ) : null;
+    }
+    case "embed":
+      return block.src ? (
+        <div className="rounded-xl overflow-hidden">
+          <iframe src={block.src} className="w-full h-40 border-0" title="Embed" />
+        </div>
+      ) : null;
+    case "countdown":
+      return <Countdown text={block.text ?? ""} target={block.target} accent={accent} />;
+    default:
+      return null;
+  }
+}
+
+function Countdown({ text, target, accent }: { text: string; target?: string; accent: string }) {
+  const remain = target ? Math.max(0, new Date(target).getTime() - Date.now()) : 0;
+  const d = Math.floor(remain / 864e5);
+  const h = Math.floor((remain % 864e5) / 36e5);
+  const m = Math.floor((remain % 36e5) / 6e4);
+  return (
+    <div className="rounded-xl p-3 border text-center" style={{ borderColor: `${accent}55`, background: `${accent}15` }}>
+      <p className="text-[10px] uppercase tracking-[0.3em] opacity-80">{text}</p>
+      <div className="mt-1 flex items-center justify-center gap-2 font-mono text-lg font-bold">
+        <span>{d}<span className="text-[9px] opacity-60 ml-0.5">d</span></span>
+        <span>{h}<span className="text-[9px] opacity-60 ml-0.5">h</span></span>
+        <span>{m}<span className="text-[9px] opacity-60 ml-0.5">m</span></span>
+      </div>
     </div>
   );
 }
