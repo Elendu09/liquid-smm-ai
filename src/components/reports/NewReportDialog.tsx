@@ -79,9 +79,11 @@ interface NewReportDialogProps {
   initialTemplateId?: string;
 }
 
+type GenStatus = "idle" | "queued" | "running" | "success" | "failed";
+
 export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewReportDialogProps) {
   const { accounts } = useAccounts();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [templateId, setTemplateId] = useState<string>(initialTemplateId ?? "");
   const [name, setName] = useState("");
   const [range, setRange] = useState("last7");
@@ -90,6 +92,10 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
   const [schedule, setSchedule] = useState(false);
   const [whitelabel, setWhitelabel] = useState(false);
   const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<GenStatus>("idle");
+  const [progress, setProgress] = useState(0);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   const template = TEMPLATES.find((t) => t.id === templateId);
 
@@ -103,6 +109,10 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
     setSchedule(false);
     setWhitelabel(false);
     setEmail("");
+    setStatus("idle");
+    setProgress(0);
+    setErrorMsg(null);
+    setAttempt(0);
   };
 
   const handleTemplatePick = (id: string) => {
@@ -116,8 +126,14 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
     setSections((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   };
 
-  const generate = () => {
+  const runGenerate = async (isRetry = false) => {
     if (!template) return;
+    setStep(3);
+    setErrorMsg(null);
+    setAttempt((a) => a + 1);
+    setStatus("queued");
+    setProgress(8);
+
     const periodLabel =
       range === "last7"
         ? "Last 7 days"
@@ -126,7 +142,18 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
         : range === "last90"
         ? "Last 90 days"
         : "Custom range";
+
+    await new Promise((r) => setTimeout(r, 350));
+    setStatus("running");
+    setProgress(35);
+    await new Promise((r) => setTimeout(r, 250));
+    setProgress(65);
+
     try {
+      // Simulated transient failure on very first attempt when connected accounts are missing.
+      if (!isRetry && accounts.length === 0 && attempt === 0) {
+        throw new Error("No connected accounts available for this range. Retry after reconnecting.");
+      }
       const data = buildReportData(accounts, sections, range);
       const reportName = name || `${template.name} · ${new Date().toLocaleDateString()}`;
       const sizeMb = 0.6 + sections.length * 0.4 + (format === "pdf" ? 1 : 0);
@@ -163,23 +190,26 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
         input: { template: template.name, range: periodLabel, sections, format },
         output: { name: reportName, followers: data.totalFollowers, reach: data.totalReach },
       });
-      toast({ title: "Report generated", description: `${template.name} ready with real analytics.` });
+      setProgress(100);
+      setStatus("success");
+      toast({ title: "Report generated", description: `${template.name} · ${periodLabel}` });
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       logRun({
         toolKey: "reports",
         action: `generate:${template.id}`,
         status: "failed",
-        error: err instanceof Error ? err.message : String(err),
+        error: msg,
       });
-      toast({
-        title: "Generation failed",
-        description: err instanceof Error ? err.message : "Unknown error",
-        variant: "destructive",
-      });
+      setErrorMsg(msg);
+      setStatus("failed");
+      toast({ title: "Generation failed", description: msg, variant: "destructive" });
     }
-    reset();
-    onOpenChange(false);
   };
+
+  const generate = () => runGenerate(false);
+  const retry = () => runGenerate(true);
+
 
   return (
     <Dialog
