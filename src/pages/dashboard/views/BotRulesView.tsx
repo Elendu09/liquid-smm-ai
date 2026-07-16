@@ -130,9 +130,14 @@ export default function BotRulesView() {
           />
         }
         actions={
-          <Button size="sm" onClick={() => { setEditing(null); setRuleDialogOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1" /> New rule
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setRunOpen(true)}>
+              <Zap className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Run automation</span>
+            </Button>
+            <Button size="sm" onClick={() => { setEditing(null); setRuleDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> New rule
+            </Button>
+          </div>
         }
       />
 
