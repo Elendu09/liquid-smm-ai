@@ -448,8 +448,9 @@ export default function SegmentsBoard() {
 
       <RunAutomationDialog
         open={!!runSegmentId}
-        onOpenChange={(o) => !o && setRunSegmentId(null)}
-        presetSegmentId={runSegmentId}
+        onOpenChange={(o) => { if (!o) { setRunSegmentId(null); setRunMulti(false); } }}
+        presetSegmentId={runMulti ? null : runSegmentId}
+        multi={runMulti}
       />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
