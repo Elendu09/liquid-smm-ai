@@ -78,8 +78,8 @@ export function useNotificationPreferences() {
       if (cancelled) return;
       if (p) {
         setPrefs({
-          channels: (p.channels as ChannelMap) ?? DEFAULT_PREFS.channels,
-          quietHours: (p.quiet_hours as QuietHours) ?? DEFAULT_PREFS.quietHours,
+          channels: (p.channels as unknown as ChannelMap) ?? DEFAULT_PREFS.channels,
+          quietHours: (p.quiet_hours as unknown as QuietHours) ?? DEFAULT_PREFS.quietHours,
           digestMode: (p.digest_mode as NotificationPreferences["digestMode"]) ?? "off",
           mutedPlatforms: p.muted_platforms ?? [],
           mutedAccounts: p.muted_accounts ?? [],
