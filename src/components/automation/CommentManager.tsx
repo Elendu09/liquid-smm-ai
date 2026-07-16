@@ -207,7 +207,11 @@ export const CommentManager = () => {
           <span className="text-sm font-medium">
             {selectedComments.length} comment{selectedComments.length > 1 ? "s" : ""} selected
           </span>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm" onClick={() => setBulkReplyOpen(true)}>
+              <Sparkles className="mr-1 h-4 w-4" />
+              AI Bulk Reply
+            </Button>
             <Button size="sm" variant="outline" onClick={bulkMarkReplied} className="border-brand-green text-brand-green hover:bg-brand-green/10">
               <CheckCheck className="mr-1 h-4 w-4" />
               Mark Replied
