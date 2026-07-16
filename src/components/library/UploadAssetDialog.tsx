@@ -82,10 +82,18 @@ export function UploadAssetDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <label className="block cursor-pointer">
-            <div className="border-2 border-dashed border-border/60 rounded-xl p-6 text-center hover:bg-muted/40 transition-colors">
+          <label
+            className="block cursor-pointer"
+            onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+            onDragLeave={() => setDrag(false)}
+            onDrop={onDrop}
+          >
+            <div className={cn(
+              "border-2 border-dashed rounded-xl p-6 text-center transition-colors",
+              drag ? "border-primary bg-primary/10" : "border-border/60 hover:bg-muted/40",
+            )}>
               <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-2" strokeWidth={1.5} />
-              <p className="text-sm font-medium">{file ? file.name : "Drop or choose a file"}</p>
+              <p className="text-sm font-medium">{file ? file.name : drag ? "Drop file to upload" : "Drop or choose a file"}</p>
               <p className="text-[11px] text-muted-foreground mt-1">Image, video, or document</p>
             </div>
             <input
