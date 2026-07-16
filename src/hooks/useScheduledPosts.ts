@@ -159,6 +159,19 @@ export function useScheduledPosts() {
   const removeSeries = (seriesId: string) => write(read().filter((p) => p.seriesId !== seriesId));
   const update = (id: string, patch: Partial<ScheduledPost>) =>
     write(read().map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  /** Toggle status="paused" on every queued/paused post. Sending/completed are untouched. */
+  const pauseAll = () =>
+    write(
+      read().map((p) =>
+        p.status === "queued" ? { ...p, status: "paused" as SendStatus } : p,
+      ),
+    );
+  const resumeAll = () =>
+    write(
+      read().map((p) =>
+        p.status === "paused" ? { ...p, status: "queued" as SendStatus } : p,
+      ),
+    );
 
-  return { posts, add, remove, removeSeries, update };
+  return { posts, add, remove, removeSeries, update, pauseAll, resumeAll };
 }
