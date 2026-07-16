@@ -64,6 +64,16 @@ export function ActivityFeedView() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | TimelineCategory>("all");
   const [newTitle, setNewTitle] = useState("");
+  const [advancedFilters, setAdvancedFilters] = useState<RunFilters>(DEFAULT_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [detailsFor, setDetailsFor] = useState<StatusItem | null>(null);
+
+  const activeAdvancedCount =
+    (advancedFilters.category !== "all" ? 1 : 0) +
+    (advancedFilters.status !== "all" ? 1 : 0) +
+    (advancedFilters.from ? 1 : 0) +
+    (advancedFilters.to ? 1 : 0);
 
   useEffect(() => {
     if (items.length === 0) setItems(runSeed);
