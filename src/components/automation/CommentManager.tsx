@@ -511,6 +511,12 @@ export const CommentManager = () => {
         value={qrSettings}
         onSave={(v) => { setQrSettings(v); toast.success("Quick reply settings saved"); }}
       />
+      <RateLimitSettingsDialog
+        open={rateOpen}
+        onOpenChange={setRateOpen}
+        value={rateLimit}
+        onSave={(v) => { setRateLimit(v); toast.success("Rate limits saved"); }}
+      />
     </div>
   );
 };
