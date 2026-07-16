@@ -51,6 +51,14 @@ function deriveStatus(p: ScheduledPost): Column {
 
 function StatusPill({ post }: { post: ScheduledPost }) {
   const s: SendStatus = post.status ?? "queued";
+  if (s === "paused") {
+    return (
+      <Badge variant="secondary" className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+        <Pause className="h-3 w-3" />
+        Paused
+      </Badge>
+    );
+  }
   if (s === "sending") {
     return (
       <Badge variant="secondary" className="gap-1 border-primary/30 bg-primary/10 text-primary">
