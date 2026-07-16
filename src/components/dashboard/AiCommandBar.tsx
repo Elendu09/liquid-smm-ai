@@ -120,9 +120,38 @@ export function AiCommandBar() {
     else window.sessionStorage.removeItem(DRAFT_KEY);
   }, [prompt]);
 
-  // Slash command menu state — opens when input starts with "/".
-  const slashOpen = prompt.startsWith("/") && !prompt.includes("\n");
+  // Slash command menu state — opens when input starts with "/" and no space typed yet.
+  const slashOpen = prompt.startsWith("/") && !prompt.includes(" ") && !prompt.includes("\n");
   const slashQuery = slashOpen ? prompt.slice(1) : "";
+
+  // Active command (after picking) — drives inline param hints.
+  const activeCmd = useMemo(() => matchActiveCommand(prompt), [prompt]);
+  const activeParam = useMemo(() => nextPlaceholder(prompt, activeCmd), [prompt, activeCmd]);
+
+  // Ghost autocomplete: if the current /query uniquely matches one command, show the rest as ghost text.
+  const ghostSuffix = useMemo(() => {
+    if (!slashOpen) return "";
+    const q = slashQuery.toLowerCase();
+    if (!q) return "";
+    const matches = SLASH_COMMANDS.filter(
+      (c) => c.label.slice(1).toLowerCase().startsWith(q),
+    );
+    if (matches.length !== 1) return "";
+    return matches[0].label.slice(1 + q.length);
+  }, [slashOpen, slashQuery]);
+
+  const selectPlaceholder = (name: string) => {
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      const token = `<${name}>`;
+      const idx = el.value.indexOf(token);
+      if (idx >= 0) {
+        el.focus();
+        el.setSelectionRange(idx, idx + token.length);
+      }
+    });
+  };
 
   // Typewriter placeholder cycling through SUGGESTIONS while input is empty & idle
   const [typed, setTyped] = useState("");
