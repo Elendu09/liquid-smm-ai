@@ -581,7 +581,7 @@ export function AiCommandBar() {
         className="pointer-events-none absolute -inset-[2px] rounded-[24px] bg-[conic-gradient(from_140deg_at_50%_50%,hsl(var(--brand-blue)/0.25),hsl(var(--brand-purple)/0.18),hsl(var(--brand-cyan)/0.22),hsl(var(--brand-blue)/0.25))] opacity-40 blur-[10px] transition-opacity duration-500 group-focus-within:opacity-80"
       />
 
-      <Card className="relative rounded-[22px] border border-border/70 dark:border-white/[0.08] bg-gradient-to-b from-card/95 to-card/70 dark:from-white/[0.04] dark:to-white/[0.02] backdrop-blur-2xl shadow-[0_8px_32px_-12px_hsl(var(--primary)/0.18)] dark:shadow-[0_8px_32px_-12px_hsl(220_60%_5%/0.6)] overflow-hidden">
+      <Card className="relative rounded-[22px] border border-border/70 dark:border-white/[0.08] bg-gradient-to-b from-card/95 to-card/70 dark:from-white/[0.04] dark:to-white/[0.02] backdrop-blur-2xl shadow-[0_8px_32px_-12px_hsl(var(--primary)/0.18)] dark:shadow-[0_8px_32px_-12px_hsl(220_60%_5%/0.6)]">
         {/* subtle inner highlight */}
         <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-white/20 to-transparent" />
 
