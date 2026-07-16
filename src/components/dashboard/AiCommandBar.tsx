@@ -622,6 +622,54 @@ export function AiCommandBar() {
             </div>
             <p className="text-[10.5px] text-muted-foreground mt-1 leading-none">You approve every write.</p>
           </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Command bar settings"
+                className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-primary/10"
+              >
+                <Settings2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72 p-3 space-y-3">
+              <div>
+                <p className="text-xs font-semibold mb-1.5">Enter key behavior</p>
+                <RadioGroup
+                  value={settings.enterBehavior}
+                  onValueChange={(v) => updateSettings({ enterBehavior: v as "send" | "newline" })}
+                  className="gap-1.5"
+                >
+                  <label className="flex items-start gap-2 rounded-md p-1.5 hover:bg-muted/40 cursor-pointer">
+                    <RadioGroupItem value="send" id="enter-send" className="mt-0.5" />
+                    <div className="flex-1">
+                      <Label htmlFor="enter-send" className="text-xs font-medium cursor-pointer">Enter sends</Label>
+                      <p className="text-[10.5px] text-muted-foreground leading-tight">Shift+Enter for new line</p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-2 rounded-md p-1.5 hover:bg-muted/40 cursor-pointer">
+                    <RadioGroupItem value="newline" id="enter-newline" className="mt-0.5" />
+                    <div className="flex-1">
+                      <Label htmlFor="enter-newline" className="text-xs font-medium cursor-pointer">Enter is new line</Label>
+                      <p className="text-[10.5px] text-muted-foreground leading-tight">Cmd/Ctrl+Enter to send</p>
+                    </div>
+                  </label>
+                </RadioGroup>
+              </div>
+              <div className="flex items-center justify-between border-t border-border/60 pt-2.5">
+                <div>
+                  <Label htmlFor="ghost-ac" className="text-xs font-medium">Ghost autocomplete</Label>
+                  <p className="text-[10.5px] text-muted-foreground leading-tight">Preview slash-command suffix</p>
+                </div>
+                <Switch
+                  id="ghost-ac"
+                  checked={settings.ghostAutocomplete}
+                  onCheckedChange={(v) => updateSettings({ ghostAutocomplete: v })}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="sm" className="h-7 px-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-primary/10">
