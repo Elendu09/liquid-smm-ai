@@ -15,8 +15,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/dashboard/shell";
-import { useMcpActivity, type McpActivityStatus } from "@/hooks/useMcpActivity";
+import { useMcpActivity, type McpActivityEntry, type McpActivityStatus } from "@/hooks/useMcpActivity";
 import { ApprovalPanel } from "@/components/dashboard/mcp/ApprovalPanel";
+import { McpCallDetailsDrawer } from "@/components/activity/McpCallDetailsDrawer";
 import { cn } from "@/lib/utils";
 
 const STATUS_META: Record<McpActivityStatus, { label: string; icon: typeof CheckCircle2; className: string }> = {
@@ -33,21 +34,24 @@ const FILTERS = [
 type FilterId = (typeof FILTERS)[number]["id"];
 
 export function McpActivityView() {
-  const { entries, clear, log } = useMcpActivity();
+  const { entries, clear, remove, log } = useMcpActivity();
   const [filter, setFilter] = useState<FilterId>("all");
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [detailsFor, setDetailsFor] = useState<McpActivityEntry | null>(null);
 
   const filtered = useMemo(
     () => (filter === "all" ? entries : entries.filter((e) => e.status === filter)),
     [entries, filter],
   );
 
-  const toggle = (id: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
+  const rerun = (e: McpActivityEntry) => {
+    log({
+      tool: e.tool,
+      status: "pending",
+      summary: `Re-run of ${e.tool}`,
+      resources: e.resources,
+      payload: e.payload,
     });
+    toast.success("Re-run queued");
   };
 
   const simulate = () => {
