@@ -165,6 +165,7 @@ export default function BotRulesView() {
         onSubmit={handleSubmit}
       />
       <TestRuleDialog open={testOpen} onOpenChange={setTestOpen} rule={testing} />
+      <RunAutomationDialog open={runOpen} onOpenChange={setRunOpen} />
     </div>
   );
 }
