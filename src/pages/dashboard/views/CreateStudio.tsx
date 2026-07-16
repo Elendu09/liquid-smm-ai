@@ -460,6 +460,32 @@ export default function CreateStudio() {
 
       <NewPostDialog open={newPostOpen} onOpenChange={setNewPostOpen} />
 
+      {previewing && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
+          onClick={() => setPreviewing(null)}
+        >
+          <div
+            className="w-full max-w-md flex flex-col gap-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Preview · {previewing.platform}</span>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="secondary" onClick={() => { setEditing(previewing); setPreviewing(null); }}>
+                  Edit
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setPreviewing(null)}>Close</Button>
+              </div>
+            </div>
+            <InstagramPreview
+              draft={previewing}
+              handle={accounts.find((a) => a.platformId === previewing.platform)?.username ?? "yourbrand"}
+            />
+          </div>
+        </div>
+      )}
+
       <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
