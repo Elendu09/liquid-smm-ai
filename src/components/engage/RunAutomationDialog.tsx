@@ -243,10 +243,15 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId, multi
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button
-            disabled={!segment || !rule || launching}
+            disabled={chosenSegments.length === 0 || !rule || launching}
             onClick={launch}
           >
-            <Zap className="h-3.5 w-3.5 mr-1" /> {launching ? "Launching…" : "Launch"}
+            <Zap className="h-3.5 w-3.5 mr-1" />
+            {launching
+              ? "Launching…"
+              : multi && chosenSegments.length > 1
+                ? `Launch × ${chosenSegments.length}`
+                : "Launch"}
           </Button>
         </DialogFooter>
       </DialogContent>
