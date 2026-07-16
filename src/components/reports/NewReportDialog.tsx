@@ -360,24 +360,118 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
           </div>
         )}
 
+        {step === 3 && template && (
+          <div className="space-y-4 py-6">
+            <div className="rounded-lg border p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                {status === "queued" && <Clock className="h-6 w-6 text-muted-foreground animate-pulse" />}
+                {status === "running" && <Loader2 className="h-6 w-6 text-primary animate-spin" />}
+                {status === "success" && <CheckCircle2 className="h-6 w-6 text-emerald-500" />}
+                {status === "failed" && <AlertCircle className="h-6 w-6 text-destructive" />}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm capitalize">{status}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {status === "queued" && "Report queued for generation…"}
+                    {status === "running" && "Fetching analytics and building sections…"}
+                    {status === "success" && "Report saved to Recent Reports."}
+                    {status === "failed" && (errorMsg ?? "Generation failed.")}
+                  </p>
+                </div>
+                <Badge variant="outline" className="text-[10px]">
+                  Attempt {attempt}
+                </Badge>
+              </div>
+              <Progress value={progress} className="h-2" />
+              <ol className="grid grid-cols-4 gap-2 text-[11px]">
+                {(["queued", "running", "success"] as const).map((s, i) => {
+                  const active =
+                    (s === "queued" && ["queued", "running", "success"].includes(status)) ||
+                    (s === "running" && ["running", "success"].includes(status)) ||
+                    (s === "success" && status === "success");
+                  return (
+                    <li
+                      key={s}
+                      className={cn(
+                        "rounded border px-2 py-1 text-center capitalize",
+                        active ? "border-primary/40 bg-primary/5 text-primary" : "text-muted-foreground",
+                      )}
+                    >
+                      {i + 1}. {s === "success" ? "completed" : s}
+                    </li>
+                  );
+                })}
+                <li
+                  className={cn(
+                    "rounded border px-2 py-1 text-center",
+                    status === "failed"
+                      ? "border-destructive/40 bg-destructive/5 text-destructive"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  4. failed
+                </li>
+              </ol>
+            </div>
+          </div>
+        )}
+
         <DialogFooter className="gap-2">
           {step === 2 && (
             <Button variant="ghost" onClick={() => setStep(1)}>
               Back
             </Button>
           )}
-          {step === 1 ? (
+          {step === 1 && (
             <Button disabled={!templateId} onClick={() => setStep(2)}>
               Continue
             </Button>
-          ) : (
+          )}
+          {step === 2 && (
             <Button onClick={generate} disabled={sections.length === 0}>
               <FileBarChart className="mr-2 h-4 w-4" />
               Generate Report
             </Button>
+          )}
+          {step === 3 && (
+            <>
+              {status === "failed" && (
+                <Button variant="outline" onClick={retry}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Retry
+                </Button>
+              )}
+              {status === "success" && (
+                <Button
+                  onClick={() => {
+                    reset();
+                    onOpenChange(false);
+                  }}
+                >
+                  Done
+                </Button>
+              )}
+              {(status === "queued" || status === "running") && (
+                <Button disabled>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Working…
+                </Button>
+              )}
+              {status === "failed" && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    reset();
+                    onOpenChange(false);
+                  }}
+                >
+                  Close
+                </Button>
+              )}
+            </>
           )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
