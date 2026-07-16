@@ -3,6 +3,17 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Target, Plus, Copy, Zap, Trash2, X, Eye } from "lucide-react";
 import { SegmentPreviewSheet } from "@/components/dashboard/segments/SegmentPreviewSheet";
+import { RunAutomationDialog } from "@/components/engage/RunAutomationDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   ToolbarBar,
   ViewToggle,
