@@ -857,20 +857,44 @@ export function AiCommandBar() {
         <div className="px-4 pt-2">
           <div
             ref={promptAnchorRef}
-            className="relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all cursor-text"
+            className={cn(
+              "relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all cursor-text",
+              dragOver && "border-primary bg-primary/[0.06] shadow-[0_0_0_3px_hsl(var(--primary)/0.15)]",
+            )}
+            onDragOver={(e) => {
+              if (Array.from(e.dataTransfer.items).some((i) => i.kind === "file")) {
+                e.preventDefault();
+                if (!dragOver) setDragOver(true);
+              }
+            }}
+            onDragLeave={(e) => {
+              if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+              setDragOver(false);
+            }}
+            onDrop={(e) => {
+              const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+              if (files.length) {
+                e.preventDefault();
+                setDragOver(false);
+                void attachments.add(files);
+              } else {
+                setDragOver(false);
+              }
+            }}
             onMouseDown={(e) => {
-              // Clicking padding/toolbar gap focuses the textarea so paste/typing lands there.
               if (e.target === e.currentTarget) {
                 e.preventDefault();
                 textareaRef.current?.focus();
               }
             }}
             onPaste={(e) => {
-              // Always route paste into the textarea at the current cursor, replacing any
-              // active selection. This guarantees the pasted text lands where the user
-              // expects even if focus drifted (e.g. slash menu portal, toolbar click) and
-              // keeps the selection semantics identical to a native textarea paste so the
-              // user can still edit before sending.
+              // Route image paste into attachments.
+              const imageFiles = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith("image/"));
+              if (imageFiles.length) {
+                e.preventDefault();
+                void attachments.add(imageFiles);
+                return;
+              }
               const text = e.clipboardData.getData("text");
               if (!text) return;
               e.preventDefault();
@@ -886,7 +910,49 @@ export function AiCommandBar() {
                 el?.setSelectionRange(caret, caret);
               });
             }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && attachments.items.length) {
+                attachments.clear();
+                toast("Attachments cleared");
+              }
+            }}
           >
+            {/* Attachments strip */}
+            {attachments.items.length > 0 && (
+              <div className="flex flex-wrap gap-2 px-2.5 pt-2.5">
+                {attachments.items.map((a) => (
+                  <div
+                    key={a.id}
+                    className="group/att relative h-14 w-14 rounded-lg overflow-hidden border border-border/60 bg-muted/40 shadow-sm"
+                    title={`${a.name} · ${(a.size / 1024).toFixed(0)} KB`}
+                  >
+                    <img src={a.dataUrl} alt={a.name} className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      aria-label={`Remove ${a.name}`}
+                      onClick={() => attachments.remove(a.id)}
+                      className="absolute top-0.5 right-0.5 h-4 w-4 rounded-full bg-black/70 text-white flex items-center justify-center opacity-0 group-hover/att:opacity-100 transition-opacity"
+                    >
+                      <X className="h-2.5 w-2.5" strokeWidth={2.5} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Hidden native file input for + menu / Cmd+U shortcut */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple
+              className="sr-only"
+              onChange={(e) => {
+                if (e.target.files) void attachments.add(e.target.files);
+                e.target.value = "";
+              }}
+            />
+
             <SlashCommandMenu
               open={slashOpen}
               query={slashQuery}
