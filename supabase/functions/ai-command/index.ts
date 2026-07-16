@@ -24,6 +24,14 @@ interface HistoryTurn {
   toolNames?: string[];
 }
 
+interface Attachment {
+  kind: "image";
+  dataUrl: string;
+  name?: string;
+  mime?: string;
+  size?: number;
+}
+
 interface Body {
   prompt: string;
   nowIso?: string;
@@ -35,6 +43,8 @@ interface Body {
     currentRoute?: string;
   };
   history?: HistoryTurn[];
+  attachments?: Attachment[];
+  mode?: "text" | "voice";
 }
 
 Deno.serve(async (req) => {
@@ -193,11 +203,42 @@ Deno.serve(async (req) => {
 
 ${historyBlock}`;
 
+  // Phase 4 — intent routing: bias the system prompt for images/voice.
+  const attachments = (body.attachments ?? []).filter(
+    (a) => a && a.kind === "image" && typeof a.dataUrl === "string" && a.dataUrl.startsWith("data:image/"),
+  );
+  const modeHints: string[] = [];
+  if (attachments.length) {
+    modeHints.push(
+      `The user attached ${attachments.length} image${attachments.length === 1 ? "" : "s"}. Look at the image(s) carefully and ground your reply and any tool calls in what you actually see (subject, style, mood, on-screen text, likely platform). Prefer vision-aware actions: draft a caption, generate hashtags, or schedule a post that references the image.`,
+    );
+  }
+  if (body.mode === "voice") {
+    modeHints.push(
+      "You are on a voice call. Reply in 1–2 short spoken-friendly sentences. No markdown, no lists, no emoji.",
+    );
+  }
+  const systemPrompt = [SYSTEM, contextBlock, ...modeHints].join("\n\n");
+
+  // Build messages: use multimodal user message when images are attached,
+  // otherwise fall back to the simple prompt path.
+  const userContent = attachments.length
+    ? [
+        { type: "text" as const, text: body.prompt },
+        ...attachments.map((a) => ({
+          type: "image" as const,
+          image: a.dataUrl,
+        })),
+      ]
+    : undefined;
+
   try {
     const result = streamText({
       model,
-      system: `${SYSTEM}\n\n${contextBlock}`,
-      prompt: body.prompt,
+      system: systemPrompt,
+      ...(userContent
+        ? { messages: [{ role: "user" as const, content: userContent }] }
+        : { prompt: body.prompt }),
       tools,
       stopWhen: stepCountIs(6),
     });

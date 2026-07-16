@@ -17,6 +17,10 @@ import {
   Settings2,
   RotateCcw,
   Copy,
+  Plus,
+  Image as ImageIcon,
+  Paperclip,
+  Phone,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -45,6 +49,8 @@ import { cn } from "@/lib/utils";
 import { InlineMarkdown } from "./InlineMarkdown";
 import { CaptionDraftIntent } from "./ai-intents/CaptionDraftIntent";
 import { ScheduledPostIntent } from "./ai-intents/ScheduledPostIntent";
+import { VoiceCallDialog } from "./VoiceCallDialog";
+import { useImageAttachments, type ImageAttachment } from "@/hooks/useImageAttachments";
 import {
   SlashCommandMenu,
   SLASH_COMMANDS,
@@ -121,6 +127,122 @@ export function AiCommandBar() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const promptAnchorRef = useRef<HTMLDivElement | null>(null);
   const refocusOnIdleRef = useRef(false);
+
+  // Phase 2/3 — image attachments + voice-call state.
+  const attachments = useImageAttachments();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const attachmentsRef = useRef(attachments.items);
+  useEffect(() => { attachmentsRef.current = attachments.items; }, [attachments.items]);
+
+  // Single-shot dictation (mic button): toggle-record → transcribe → fill textarea.
+  const [dictating, setDictating] = useState(false);
+  const dictationRef = useRef<{ recorder: MediaRecorder; stream: MediaStream; chunks: Blob[] } | null>(null);
+  const startDictation = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+      const recorder = new MediaRecorder(stream, { mimeType: mime });
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+      recorder.start();
+      dictationRef.current = { recorder, stream, chunks };
+      setDictating(true);
+      toast("Recording — tap the mic again to stop.");
+    } catch {
+      toast.error("Microphone blocked — enable it in your browser settings.");
+    }
+  };
+  const stopDictation = async () => {
+    const ref = dictationRef.current;
+    if (!ref) return;
+    setDictating(false);
+    await new Promise<void>((res) => {
+      ref.recorder.onstop = () => res();
+      ref.recorder.stop();
+    });
+    ref.stream.getTracks().forEach((t) => t.stop());
+    const blob = new Blob(ref.chunks, { type: ref.recorder.mimeType });
+    dictationRef.current = null;
+    if (blob.size < 2048) { toast.error("Recording was empty."); return; }
+    try {
+      const ext = ref.recorder.mimeType.includes("mp4") ? "mp4" : "webm";
+      const form = new FormData();
+      form.append("file", blob, `dictation.${ext}`);
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-transcribe`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        body: form,
+      });
+      if (!res.ok) throw new Error(`Transcribe ${res.status}`);
+      const data = await res.json();
+      const text = String(data.text ?? "").trim();
+      if (!text) { toast("No speech detected."); return; }
+      setPrompt((p) => (p ? `${p} ${text}` : text));
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Transcription failed");
+    }
+  };
+  const toggleDictation = () => (dictating ? void stopDictation() : void startDictation());
+
+  const openFilePicker = () => {
+    setAttachMenuOpen(false);
+    fileInputRef.current?.click();
+  };
+
+  // Voice-call callback — funnels transcript through submit(), returns the assistant text for TTS.
+  const handleVoiceTranscript = async (spoken: string): Promise<string> => {
+    return await new Promise<string>((resolve) => {
+      // Kick off submit; poll `latest` for the response, resolving when it completes.
+      let resolved = false;
+      const startedAt = Date.now();
+      void submit(spoken, { mode: "voice", keepAttachments: false });
+      const iv = setInterval(() => {
+        if (resolved) return;
+        const busyNow = abortRef.current !== null;
+        if (!busyNow && Date.now() - startedAt > 400) {
+          resolved = true;
+          clearInterval(iv);
+          resolve((latestRef.current?.text ?? "").trim() || "Done.");
+        }
+        if (Date.now() - startedAt > 25000) {
+          resolved = true;
+          clearInterval(iv);
+          resolve("Sorry — that took too long.");
+        }
+      }, 250);
+    });
+  };
+  const latestRef = useRef<AiCommandEntry | null>(null);
+  useEffect(() => { latestRef.current = latest; }, [latest]);
+
+  // Suggested actions when an image is attached.
+  const activePlatformLabel = activeAccount?.platformId ?? "the platform";
+  const imageSuggestions = attachments.items.length > 0 ? [
+    "Write a caption for this image",
+    "Generate 15 hashtags for this image",
+    `Repurpose this for ${activePlatformLabel}`,
+  ] : [];
+
+  // Global keyboard shortcuts: Cmd/Ctrl+U (upload), Cmd/Ctrl+Shift+V (voice call).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && !e.shiftKey && e.key.toLowerCase() === "u") {
+        e.preventDefault();
+        fileInputRef.current?.click();
+      } else if (mod && e.shiftKey && e.key.toLowerCase() === "v") {
+        e.preventDefault();
+        setVoiceOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // When Send is clicked we ask the textarea to re-focus as soon as busy flips off,
   // so the user can keep editing without hunting for the caret.
@@ -277,7 +399,7 @@ export function AiCommandBar() {
     setBusy(false);
   };
 
-  const submit = async (value?: string) => {
+  const submit = async (value?: string, opts?: { mode?: "text" | "voice"; keepAttachments?: boolean }) => {
     // Warn if there are still unfilled <placeholder> tokens from a slash template.
     const raw = (value ?? prompt).trim();
     if (/<[a-z_-]+>/i.test(raw)) {
@@ -287,7 +409,8 @@ export function AiCommandBar() {
       return;
     }
     const text = raw;
-    if (!text || busy) return;
+    const currentAttachments = attachmentsRef.current;
+    if ((!text && currentAttachments.length === 0) || busy) return;
     lastPromptRef.current = text;
     setBusy(true);
     setPrompt("");
@@ -299,7 +422,7 @@ export function AiCommandBar() {
     let workingEntry: AiCommandEntry = {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
-      prompt: text,
+      prompt: text || (currentAttachments.length ? `[${currentAttachments.length} image]` : ""),
       text: "",
       toolCalls: [],
       status: "success",
@@ -322,8 +445,12 @@ export function AiCommandBar() {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
-          prompt: text,
+          prompt: text || "Describe what you see and suggest what I can do with it.",
           nowIso: new Date().toISOString(),
+          mode: opts?.mode ?? "text",
+          attachments: currentAttachments.map((a) => ({
+            kind: "image" as const, dataUrl: a.dataUrl, name: a.name, mime: a.mime, size: a.size,
+          })),
           context: {
             connectedPlatformIds: [...new Set(accounts.map((a) => a.platformId))],
             activeAccountHandle: activeAccount?.username ?? null,
@@ -427,6 +554,7 @@ export function AiCommandBar() {
       });
       setLatest(committed);
       if (streamError) toast.error(streamError);
+      else if (!opts?.keepAttachments) attachments.clear();
     } catch (e) {
       if (ctrl.signal.aborted) {
         // Preserve whatever we streamed so far.
@@ -729,20 +857,44 @@ export function AiCommandBar() {
         <div className="px-4 pt-2">
           <div
             ref={promptAnchorRef}
-            className="relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all cursor-text"
+            className={cn(
+              "relative rounded-xl bg-background/60 dark:bg-white/[0.03] border border-border/70 dark:border-white/[0.06] focus-within:border-primary/50 focus-within:bg-background/80 dark:focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all cursor-text",
+              dragOver && "border-primary bg-primary/[0.06] shadow-[0_0_0_3px_hsl(var(--primary)/0.15)]",
+            )}
+            onDragOver={(e) => {
+              if (Array.from(e.dataTransfer.items).some((i) => i.kind === "file")) {
+                e.preventDefault();
+                if (!dragOver) setDragOver(true);
+              }
+            }}
+            onDragLeave={(e) => {
+              if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+              setDragOver(false);
+            }}
+            onDrop={(e) => {
+              const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+              if (files.length) {
+                e.preventDefault();
+                setDragOver(false);
+                void attachments.add(files);
+              } else {
+                setDragOver(false);
+              }
+            }}
             onMouseDown={(e) => {
-              // Clicking padding/toolbar gap focuses the textarea so paste/typing lands there.
               if (e.target === e.currentTarget) {
                 e.preventDefault();
                 textareaRef.current?.focus();
               }
             }}
             onPaste={(e) => {
-              // Always route paste into the textarea at the current cursor, replacing any
-              // active selection. This guarantees the pasted text lands where the user
-              // expects even if focus drifted (e.g. slash menu portal, toolbar click) and
-              // keeps the selection semantics identical to a native textarea paste so the
-              // user can still edit before sending.
+              // Route image paste into attachments.
+              const imageFiles = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith("image/"));
+              if (imageFiles.length) {
+                e.preventDefault();
+                void attachments.add(imageFiles);
+                return;
+              }
               const text = e.clipboardData.getData("text");
               if (!text) return;
               e.preventDefault();
@@ -758,7 +910,49 @@ export function AiCommandBar() {
                 el?.setSelectionRange(caret, caret);
               });
             }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && attachments.items.length) {
+                attachments.clear();
+                toast("Attachments cleared");
+              }
+            }}
           >
+            {/* Attachments strip */}
+            {attachments.items.length > 0 && (
+              <div className="flex flex-wrap gap-2 px-2.5 pt-2.5">
+                {attachments.items.map((a) => (
+                  <div
+                    key={a.id}
+                    className="group/att relative h-14 w-14 rounded-lg overflow-hidden border border-border/60 bg-muted/40 shadow-sm"
+                    title={`${a.name} · ${(a.size / 1024).toFixed(0)} KB`}
+                  >
+                    <img src={a.dataUrl} alt={a.name} className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      aria-label={`Remove ${a.name}`}
+                      onClick={() => attachments.remove(a.id)}
+                      className="absolute top-0.5 right-0.5 h-4 w-4 rounded-full bg-black/70 text-white flex items-center justify-center opacity-0 group-hover/att:opacity-100 transition-opacity"
+                    >
+                      <X className="h-2.5 w-2.5" strokeWidth={2.5} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Hidden native file input for + menu / Cmd+U shortcut */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple
+              className="sr-only"
+              onChange={(e) => {
+                if (e.target.files) void attachments.add(e.target.files);
+                e.target.value = "";
+              }}
+            />
+
             <SlashCommandMenu
               open={slashOpen}
               query={slashQuery}
@@ -772,7 +966,7 @@ export function AiCommandBar() {
                 ref={textareaRef}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder={typed ? `${typed}▏` : "Ask anything… type / for commands"}
+                placeholder={typed ? `${typed}▏` : "Ask, attach an image, or press the phone to call…"}
                 rows={3}
                 className="resize-none text-[13px] leading-snug min-h-[72px] sm:min-h-[84px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none pl-3 pr-24 pt-2.5 pb-11 sm:pb-12 placeholder:text-muted-foreground/60 relative z-[1]"
                 onKeyDown={(e) => {
@@ -872,31 +1066,83 @@ export function AiCommandBar() {
 
             {/* Floating toolbar */}
             <div className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-2 z-10">
-              <div className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground pl-1.5">
-                <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">/</kbd>
-                <span className="ml-0.5 mr-2">commands</span>
-                {settings.enterBehavior === "send" ? (
-                  <>
-                    <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">↵</kbd>
-                    <span className="ml-0.5 mr-2">send</span>
-                    <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⇧↵</kbd>
-                    <span className="ml-0.5">new line</span>
-                  </>
-                ) : (
-                  <>
-                    <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⌘↵</kbd>
-                    <span className="ml-0.5 mr-2">send</span>
-                    <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">↵</kbd>
-                    <span className="ml-0.5">new line</span>
-                  </>
-                )}
+              <div className="flex items-center gap-1 pl-0.5">
+                {/* + attach menu */}
+                <Popover open={attachMenuOpen} onOpenChange={setAttachMenuOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button" variant="ghost" size="icon"
+                      aria-label="Add attachment"
+                      className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                    >
+                      <Plus className="h-3.5 w-3.5" strokeWidth={2} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" side="top" className="w-48 p-1">
+                    <button
+                      type="button"
+                      onClick={openFilePicker}
+                      className="w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted/60 text-left"
+                    >
+                      <ImageIcon className="h-3.5 w-3.5 text-primary" />
+                      <div className="flex-1">
+                        <div className="font-medium">Attach image</div>
+                        <div className="text-[10px] text-muted-foreground">JPG · PNG · WEBP · GIF · ≤ 8 MB</div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setAttachMenuOpen(false); toast("File attachments coming soon."); }}
+                      className="w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted/60 text-left"
+                    >
+                      <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <div className="font-medium">Attach file</div>
+                        <div className="text-[10px] text-muted-foreground">PDF / docs — soon</div>
+                      </div>
+                    </button>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Mic (single-shot dictation) */}
+                <Button
+                  type="button" variant="ghost" size="icon"
+                  onClick={toggleDictation}
+                  aria-label={dictating ? "Stop dictation" : "Dictate into prompt"}
+                  title={dictating ? "Stop dictation" : "Dictate"}
+                  className={cn(
+                    "h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-primary/10",
+                    dictating && "bg-destructive/15 text-destructive hover:bg-destructive/20 hover:text-destructive animate-pulse",
+                  )}
+                >
+                  {/* Reuse the phone/mic set — Mic icon */}
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+                </Button>
+
+                {/* Phone (voice call) */}
+                <Button
+                  type="button" variant="ghost" size="icon"
+                  onClick={() => setVoiceOpen(true)}
+                  aria-label="Start voice call with AI"
+                  title="Voice call (⌘⇧V)"
+                  className="h-7 w-7 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10"
+                >
+                  <Phone className="h-3.5 w-3.5" strokeWidth={2} />
+                </Button>
+
+                {/* Slash / enter hints */}
+                <div className="hidden md:flex items-center gap-1 text-[10px] text-muted-foreground pl-2 ml-1 border-l border-border/50">
+                  <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">/</kbd>
+                  <span className="ml-0.5">commands</span>
+                </div>
               </div>
+
               {busy ? (
                 <Button
                   onClick={stop}
                   size="sm"
                   variant="outline"
-                  className="h-7 px-3 ml-auto rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10 cursor-pointer"
+                  className="h-7 px-3 rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10 cursor-pointer"
                 >
                   <Square className="h-3 w-3 fill-current" strokeWidth={2} />
                   <span className="ml-1 text-[11px] font-semibold">Stop</span>
@@ -911,9 +1157,9 @@ export function AiCommandBar() {
                     submit();
                   }}
                   onMouseDown={(e) => e.preventDefault()}
-                  disabled={!prompt.trim()}
+                  disabled={!prompt.trim() && attachments.items.length === 0}
                   size="sm"
-                  className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] active:scale-[0.97] disabled:opacity-40 disabled:shadow-none disabled:ring-0 disabled:cursor-not-allowed cursor-pointer transition-all"
+                  className="h-7 px-3 rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] active:scale-[0.97] disabled:opacity-40 disabled:shadow-none disabled:ring-0 disabled:cursor-not-allowed cursor-pointer transition-all"
                 >
                   <span className="text-[11px] font-semibold pointer-events-none">Send</span>
                   <Send className="h-3 w-3 ml-1 pointer-events-none" strokeWidth={2} />
@@ -922,6 +1168,32 @@ export function AiCommandBar() {
             </div>
           </div>
         </div>
+
+
+
+        {/* Image suggestion chips — visible only while images are attached. */}
+        {imageSuggestions.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 px-4 pt-2.5">
+            {imageSuggestions.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setPrompt(s)}
+                className="text-[10.5px] pl-1.5 pr-2 py-0.5 rounded-full border border-primary/40 bg-primary/10 hover:bg-primary/15 text-primary inline-flex items-center gap-1"
+              >
+                <Sparkles className="h-2.5 w-2.5" strokeWidth={1.75} />
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Voice call dialog */}
+        <VoiceCallDialog
+          open={voiceOpen}
+          onOpenChange={setVoiceOpen}
+          onTranscript={handleVoiceTranscript}
+        />
 
 
 
