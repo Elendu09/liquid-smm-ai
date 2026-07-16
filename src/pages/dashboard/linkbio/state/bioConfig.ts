@@ -108,7 +108,7 @@ function migrate(): BioConfig {
   if (raw) {
     try {
       const parsed = JSON.parse(raw) as BioConfig;
-      if (parsed && parsed.version === 1) return { ...defaultConfig, ...parsed, overrides: { ...defaultConfig.overrides, ...parsed.overrides } };
+      if (parsed && parsed.version === 1) return { ...defaultConfig, ...parsed, overrides: { ...defaultConfig.overrides, ...parsed.overrides }, blocks: parsed.blocks ?? [] };
     } catch {}
   }
   // Migrate from legacy keys
