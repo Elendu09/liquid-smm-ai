@@ -334,7 +334,7 @@ export default function ReportsPage() {
                     <Badge variant="outline" className="uppercase">
                       {report.format}
                     </Badge>
-                    <Button variant="outline" size="sm" onClick={() => setPreviewReport(report)}>
+                    <Button variant="outline" size="sm" onClick={() => openPreview(report)}>
                       <Eye className="mr-2 h-4 w-4" />
                       Preview
                     </Button>
@@ -345,7 +345,7 @@ export default function ReportsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setPreviewReport(report)}>
+                        <DropdownMenuItem onClick={() => openPreview(report)}>
                           <Download className="mr-2 h-4 w-4" />
                           Download
                         </DropdownMenuItem>
