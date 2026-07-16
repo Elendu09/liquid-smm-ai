@@ -480,17 +480,22 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
 
       {/* Footer nav */}
       <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3 flex items-center justify-between gap-2">
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-            Skip for now
-          </Button>
-          <div className="flex gap-2">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+              Skip tour
+            </Button>
+            {!canProceed && step < totalSteps - 1 && (
+              <span className="text-[11px] text-muted-foreground truncate">{stepHint(step)}</span>
+            )}
+          </div>
+          <div className="flex gap-2 justify-end">
             <Button variant="outline" size="sm" onClick={back} disabled={step === 0}>
               <ArrowLeft className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Back</span>
             </Button>
             {step < totalSteps - 1 ? (
-              <Button size="sm" onClick={goNext}>
+              <Button size="sm" onClick={goNext} disabled={!canProceed}>
                 Next <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
@@ -504,3 +509,4 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
     </div>
   );
 }
+
