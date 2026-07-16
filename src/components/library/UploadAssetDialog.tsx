@@ -42,9 +42,8 @@ export function UploadAssetDialog({
     setState("uploading");
     stateRef.current = "uploading";
     while (cursorRef.current < f.size) {
-      if (stateRef.current === "paused") return;
-      if (stateRef.current === "idle") return; // cancelled
-      // "Upload" one chunk — here we just slice + delay to simulate network
+      const s: UploadState = stateRef.current;
+      if (s === "paused" || s === "idle") return;
       f.slice(cursorRef.current, cursorRef.current + CHUNK_SIZE);
       await new Promise((r) => setTimeout(r, 120));
       if (stateRef.current !== "uploading") return;
