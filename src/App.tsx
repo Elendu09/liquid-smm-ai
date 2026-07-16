@@ -26,6 +26,7 @@ import EngageHub from "@/pages/dashboard/hubs/EngageHub";
 import AudienceHub from "@/pages/dashboard/hubs/AudienceHub";
 import AnalyticsHub from "@/pages/dashboard/hubs/AnalyticsHub";
 import LibraryHub from "@/pages/dashboard/hubs/LibraryHub";
+import LinkInBioHub from "@/pages/dashboard/hubs/LinkInBioHub";
 import ActivityHub from "@/pages/dashboard/hubs/ActivityHub";
 import SettingsHub from "@/pages/dashboard/hubs/SettingsHub";
 
@@ -48,7 +49,7 @@ const legacyRedirects: Record<string, string> = {
   "reports": "/dashboard/analytics/reports",
   "account-health": "/dashboard/analytics/health",
   "content-library": "/dashboard/library/assets",
-  "link-bio": "/dashboard/library/link-bio",
+  "link-bio": "/dashboard/link-in-bio",
   "presets": "/dashboard/library/presets",
   "history": "/dashboard/activity/runs",
   "notifications": "/dashboard/activity/notifications",
@@ -84,6 +85,7 @@ const App = () => (
                 <Route path="audience/*" element={<AudienceHub />} />
                 <Route path="analytics/*" element={<AnalyticsHub />} />
                 <Route path="library/*" element={<LibraryHub />} />
+                <Route path="link-in-bio/*" element={<LinkInBioHub />} />
                 <Route path="activity/*" element={<ActivityHub />} />
                 <Route path="settings/*" element={<SettingsHub />} />
 

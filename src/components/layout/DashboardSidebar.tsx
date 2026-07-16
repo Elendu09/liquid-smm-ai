@@ -36,6 +36,7 @@ import {
   Terminal,
   Bell,
   CornerDownLeft,
+  Palette,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -113,9 +114,20 @@ const navItems: NavItem[] = [
     href: "/dashboard/library",
     icon: FolderOpen,
     children: [
+      { label: "Captions", href: "/dashboard/library/captions", icon: Type },
       { label: "Assets", href: "/dashboard/library/assets", icon: ImageIcon },
-      { label: "Link in bio", href: "/dashboard/library/link-bio", icon: Link2 },
       { label: "Presets", href: "/dashboard/library/presets", icon: Bookmark },
+    ],
+  },
+  {
+    label: "Link in Bio",
+    href: "/dashboard/link-in-bio",
+    icon: Link2,
+    children: [
+      { label: "Pages", href: "/dashboard/link-in-bio/pages", icon: Link2 },
+      { label: "Themes", href: "/dashboard/link-in-bio/themes", icon: Palette },
+      { label: "Templates", href: "/dashboard/link-in-bio/templates", icon: Sparkles },
+      { label: "Analytics", href: "/dashboard/link-in-bio/analytics", icon: BarChart3 },
     ],
   },
   {
@@ -366,7 +378,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                 ? pathname === item.href
                 : pathname.startsWith(item.href) && item.href !== "/dashboard";
               const hasKids = !!item.children?.length;
-              const isOpen = !!openGroups[item.href];
+              const isOpen = isMobile ? !!openGroups[item.href] : true;
 
               const rowContent = (
                 <div
@@ -386,7 +398,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                     type="button"
                     onClick={() => {
                       navigate(item.href);
-                      if (hasKids && showLabels) {
+                      if (hasKids && showLabels && isMobile) {
                         setOpenGroups((p) => ({ ...p, [item.href]: true }));
                       }
                       onNavigate?.();
@@ -400,8 +412,8 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                     <item.icon className="w-4 h-4 flex-shrink-0" />
                     {showLabels && <span className="flex-1 truncate">{item.label}</span>}
                   </button>
-                  {/* Separate chevron toggle → doesn't navigate */}
-                  {showLabels && hasKids && (
+                  {/* Chevron toggle — mobile only */}
+                  {showLabels && hasKids && isMobile && (
                     <button
                       type="button"
                       onClick={(e) => {
@@ -443,7 +455,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                           onClick={onNavigate}
                           className={({ isActive }) =>
                             cn(
-                              "flex items-center gap-2 px-2 py-1.5 rounded-md text-[11.5px] font-medium min-h-[30px] transition-colors",
+                              "flex items-center gap-2 px-2 py-1.5 rounded-md text-[11.5px] font-medium min-h-[28px] transition-colors",
                               isActive
                                 ? "text-primary bg-primary/10 ring-1 ring-primary/20"
                                 : "text-muted-foreground/80 hover:text-foreground hover:bg-muted/50",
