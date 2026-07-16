@@ -102,6 +102,7 @@ export const CommentManager = () => {
   const [selectedComments, setSelectedComments] = useState<number[]>([]);
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyTarget, setReplyTarget] = useState<typeof mockComments[number] | null>(null);
+  const [bulkReplyOpen, setBulkReplyOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<CommentFilters>(DEFAULT_FILTERS);
 
