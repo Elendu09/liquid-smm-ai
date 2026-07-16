@@ -153,6 +153,38 @@ export default function CreateStudio() {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Draft | null>(null);
   const [scheduleAt, setScheduleAt] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<Draft | null>(null);
+  const [newPostOpen, setNewPostOpen] = useState(false);
+
+  const duplicateDraft = (d: Draft) => {
+    const copy: Draft = {
+      ...d,
+      id: crypto.randomUUID(),
+      title: `${d.title} (copy)`,
+      status: "draft",
+      scheduledAt: undefined,
+      createdAt: new Date().toISOString(),
+    };
+    add(copy);
+    toast.success("Duplicated");
+  };
+
+  const sendToQueue = (d: Draft) => {
+    if (!d.caption.trim()) {
+      toast.error("Draft has no caption");
+      return;
+    }
+    const when = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    addScheduled({
+      caption: d.caption,
+      mediaUrl: d.mediaUrl,
+      scheduledAt: when,
+      platformIds: [d.platform],
+    });
+    update(d.id, { status: "scheduled", scheduledAt: when });
+    toast.success("Sent to queue (in 1h)");
+  };
+
 
   useMemo(() => {
     if (drafts.length === 0) setItems(seed);
