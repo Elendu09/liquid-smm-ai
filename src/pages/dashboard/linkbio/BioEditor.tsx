@@ -33,6 +33,15 @@ import {
   Minus,
   Timer,
   Quote,
+  RotateCcw,
+  Circle,
+  Square,
+  Squircle,
+  AlignLeft,
+  AlignCenter,
+  AlignJustify,
+  Eye as EyeIcon,
+  EyeOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -40,11 +49,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import BioPreview from "./BioPreview";
 import { bioStore, useBioConfig, useSyncLegacyTheme } from "./state/bioConfig";
+import type { BioConfig, FontPairId } from "./state/bioConfig";
 import { linkBioThemes, THEME_STORAGE_KEY } from "@/pages/dashboard/views/linkbio/themePresets";
 import { linkBioTemplates, APPLIED_TEMPLATE_KEY } from "@/pages/dashboard/views/linkbio/templatePresets";
 
@@ -58,21 +69,6 @@ const railItems = [
   { id: "profile", label: "Profile", icon: User },
   { id: "socials", label: "Socials", icon: Share2 },
   { id: "seo", label: "SEO", icon: Globe },
-];
-
-const buttonStyles: Array<{ id: "solid" | "outline" | "pill" | "glass" | "brutal"; label: string }> = [
-  { id: "solid", label: "Solid" },
-  { id: "outline", label: "Outline" },
-  { id: "pill", label: "Pill" },
-  { id: "glass", label: "Glass" },
-  { id: "brutal", label: "Brutal" },
-];
-
-const radii: Array<{ id: "sm" | "md" | "xl" | "full"; label: string }> = [
-  { id: "sm", label: "Square" },
-  { id: "md", label: "Soft" },
-  { id: "xl", label: "Rounded" },
-  { id: "full", label: "Pill" },
 ];
 
 const socialOptions = ["instagram", "facebook", "linkedin", "youtube", "twitter", "github", "twitch"];
