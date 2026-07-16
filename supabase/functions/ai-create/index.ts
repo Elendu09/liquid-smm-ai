@@ -1,47 +1,43 @@
 // Typed AI content operations for the Create hub dialogs.
-// Uses Lovable AI Gateway via the AI SDK with `generateObject`, so each op
-// returns a strict schema-shaped result the UI can trust.
-import { generateObject } from "npm:ai@5.0.60";
+// Uses Lovable AI Gateway via the AI SDK with `generateObject`.
+// IMPORTANT: schemas here MUST stay constraint-free (no .min/.max/length/enum-of-runtime).
+// State limits in the prompt and clamp in code — schema bounds crash Gemini at request
+// time and cause post-hoc AI_NoObjectGeneratedError on any model.
+import { generateObject, NoObjectGeneratedError } from "npm:ai@5.0.60";
 import { z } from "npm:zod@3.25.76";
 import { createLovableAiGatewayProvider, corsHeaders } from "../_shared/ai-gateway.ts";
 
 const captionsSchema = z.object({
-  captions: z
-    .array(
-      z.object({
-        title: z.string().min(1).max(120),
-        body: z.string().min(1).max(1200),
-        hashtags: z.array(z.string()).max(15),
-      }),
-    )
-    .min(1)
-    .max(10),
+  captions: z.array(
+    z.object({
+      title: z.string(),
+      body: z.string(),
+      hashtags: z.array(z.string()),
+    }),
+  ),
 });
 
 const hashtagsSchema = z.object({
   topic: z.string(),
-  tags: z
-    .array(
-      z.object({
-        tag: z.string(),
-        volume: z.enum(["low", "medium", "high", "viral"]),
-        difficulty: z.enum(["easy", "medium", "hard"]),
-      }),
-    )
-    .min(5)
-    .max(30),
+  tags: z.array(
+    z.object({
+      tag: z.string(),
+      volume: z.string(), // "low" | "medium" | "high" | "viral" — validated in code
+      difficulty: z.string(), // "easy" | "medium" | "hard" — validated in code
+    }),
+  ),
 });
 
 const translateSchema = z.object({
-  translated: z.string().min(1),
+  translated: z.string(),
   language: z.string(),
 });
 
 const briefSchema = z.object({
-  caption: z.string().min(1),
-  hashtags: z.array(z.string()).min(3).max(15),
-  hooks: z.array(z.string()).min(3).max(6),
-  cta: z.string().min(1),
+  caption: z.string(),
+  hashtags: z.array(z.string()),
+  hooks: z.array(z.string()),
+  cta: z.string(),
 });
 
 interface Body {
@@ -54,6 +50,50 @@ interface Body {
   targetLanguage?: string;
   goal?: string;
   audience?: string;
+}
+
+const VOLUMES = ["low", "medium", "high", "viral"] as const;
+const DIFFS = ["easy", "medium", "hard"] as const;
+const pick = <T extends string>(v: string, allowed: readonly T[], fallback: T): T =>
+  (allowed as readonly string[]).includes(v) ? (v as T) : fallback;
+
+// Best-effort JSON recovery from `error.text` when schema validation fails.
+function tryParse(text: string | undefined): unknown | null {
+  if (!text) return null;
+  const cleaned = text
+    .replace(/```json\s*/gi, "")
+    .replace(/```\s*/g, "")
+    .trim();
+  const start = cleaned.search(/[\{\[]/);
+  const end = Math.max(cleaned.lastIndexOf("}"), cleaned.lastIndexOf("]"));
+  if (start === -1 || end === -1) return null;
+  try {
+    return JSON.parse(cleaned.slice(start, end + 1));
+  } catch {
+    try {
+      return JSON.parse(
+        cleaned.slice(start, end + 1).replace(/,\s*([}\]])/g, "$1"),
+      );
+    } catch {
+      return null;
+    }
+  }
+}
+
+async function runObject<T>(
+  fn: () => Promise<{ object: T }>,
+  fallback: (raw: unknown | null) => T,
+): Promise<T> {
+  try {
+    const { object } = await fn();
+    return object;
+  } catch (error) {
+    if (NoObjectGeneratedError.isInstance(error)) {
+      const raw = tryParse((error as { text?: string }).text);
+      return fallback(raw);
+    }
+    throw error;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -89,47 +129,107 @@ Deno.serve(async (req) => {
     let result: unknown;
 
     if (body.op === "captions") {
-      const { object } = await generateObject({
-        model,
-        schema: captionsSchema,
-        prompt: `Generate ${body.count ?? 3} distinct social media caption variants for the topic: "${body.topic ?? ""}".
+      const count = Math.min(Math.max(body.count ?? 3, 1), 10);
+      const raw = await runObject(
+        () =>
+          generateObject({
+            model,
+            schema: captionsSchema,
+            prompt: `Generate exactly ${count} distinct social media caption variants for the topic: "${body.topic ?? ""}".
 Tone: ${body.tone ?? "engaging"}.
 Platform: ${body.platform ?? "instagram"}.
-Each variant must have a short title, a body under 800 chars, and 5-10 relevant hashtags (no # prefix in the string).`,
-      });
-      result = object;
+Each variant must have:
+- a short "title" (max 120 chars)
+- a "body" under 800 chars
+- 5-10 relevant "hashtags" as strings WITHOUT the # prefix
+Return an object with a "captions" array.`,
+          }),
+        (fb) => (fb as typeof captionsSchema._type) ?? { captions: [] },
+      );
+      const captions = (raw.captions ?? []).slice(0, count).map((c) => ({
+        title: String(c.title ?? "").slice(0, 120),
+        body: String(c.body ?? "").slice(0, 1200),
+        hashtags: (c.hashtags ?? []).slice(0, 15).map(String),
+      }));
+      result = { captions };
     } else if (body.op === "hashtags") {
-      const { object } = await generateObject({
-        model,
-        schema: hashtagsSchema,
-        prompt: `Research 15 hashtags for the topic "${body.topic ?? ""}" on ${body.platform ?? "instagram"}.
-Mix broad + niche. For each: estimate 'volume' (low/medium/high/viral) and 'difficulty' (easy/medium/hard).
-Do NOT include the # prefix.`,
-      });
-      result = object;
+      const raw = await runObject(
+        () =>
+          generateObject({
+            model,
+            schema: hashtagsSchema,
+            prompt: `Research 15 hashtags for the topic "${body.topic ?? ""}" on ${body.platform ?? "instagram"}.
+Mix broad + niche. For each tag include:
+- "tag" (no # prefix)
+- "volume": one of "low", "medium", "high", "viral"
+- "difficulty": one of "easy", "medium", "hard"
+Return an object with "topic" and a "tags" array of 5 to 30 items.`,
+          }),
+        (fb) =>
+          (fb as typeof hashtagsSchema._type) ?? {
+            topic: body.topic ?? "",
+            tags: [],
+          },
+      );
+      const tags = (raw.tags ?? []).slice(0, 30).map((t) => ({
+        tag: String(t.tag ?? "").replace(/^#/, ""),
+        volume: pick(String(t.volume ?? ""), VOLUMES, "medium"),
+        difficulty: pick(String(t.difficulty ?? ""), DIFFS, "medium"),
+      }));
+      result = { topic: raw.topic ?? body.topic ?? "", tags };
     } else if (body.op === "translate") {
-      const { object } = await generateObject({
-        model,
-        schema: translateSchema,
-        prompt: `Translate the following caption to ${body.targetLanguage ?? "Spanish"}. Preserve emojis and hashtags. Return the translated text and the target language name.
+      const raw = await runObject(
+        () =>
+          generateObject({
+            model,
+            schema: translateSchema,
+            prompt: `Translate the following caption to ${body.targetLanguage ?? "Spanish"}. Preserve emojis and hashtags. Return the translated text and the target language name.
 ---
 ${body.text ?? ""}`,
-      });
-      result = object;
+          }),
+        (fb) =>
+          (fb as typeof translateSchema._type) ?? {
+            translated: body.text ?? "",
+            language: body.targetLanguage ?? "",
+          },
+      );
+      result = {
+        translated: String(raw.translated ?? ""),
+        language: String(raw.language ?? body.targetLanguage ?? ""),
+      };
     } else if (body.op === "brief") {
-      const { object } = await generateObject({
-        model,
-        schema: briefSchema,
-        prompt: `You are producing a full post kit for a social media manager.
+      const raw = await runObject(
+        () =>
+          generateObject({
+            model,
+            schema: briefSchema,
+            prompt: `You are producing a full post kit for a social media manager.
 Goal: ${body.goal ?? "grow followers"}
 Audience: ${body.audience ?? "general"}
 Platform: ${body.platform ?? "instagram"}
 Topic: ${body.topic ?? ""}
 Tone: ${body.tone ?? "engaging"}
 
-Return: caption (<=800 chars), 8-12 hashtags (no #), 4 hook variants (openers), one CTA.`,
-      });
-      result = object;
+Return an object with:
+- "caption" (<=800 chars)
+- "hashtags": 8-12 strings (no #)
+- "hooks": 4 opener strings
+- "cta": one call-to-action string`,
+          }),
+        (fb) =>
+          (fb as typeof briefSchema._type) ?? {
+            caption: "",
+            hashtags: [],
+            hooks: [],
+            cta: "",
+          },
+      );
+      result = {
+        caption: String(raw.caption ?? "").slice(0, 1200),
+        hashtags: (raw.hashtags ?? []).slice(0, 15).map(String),
+        hooks: (raw.hooks ?? []).slice(0, 6).map(String),
+        cta: String(raw.cta ?? ""),
+      };
     } else {
       return new Response(JSON.stringify({ error: "Unknown op" }), {
         status: 400,
