@@ -1066,31 +1066,83 @@ export function AiCommandBar() {
 
             {/* Floating toolbar */}
             <div className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-2 z-10">
-              <div className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground pl-1.5">
-                <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">/</kbd>
-                <span className="ml-0.5 mr-2">commands</span>
-                {settings.enterBehavior === "send" ? (
-                  <>
-                    <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">↵</kbd>
-                    <span className="ml-0.5 mr-2">send</span>
-                    <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⇧↵</kbd>
-                    <span className="ml-0.5">new line</span>
-                  </>
-                ) : (
-                  <>
-                    <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">⌘↵</kbd>
-                    <span className="ml-0.5 mr-2">send</span>
-                    <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">↵</kbd>
-                    <span className="ml-0.5">new line</span>
-                  </>
-                )}
+              <div className="flex items-center gap-1 pl-0.5">
+                {/* + attach menu */}
+                <Popover open={attachMenuOpen} onOpenChange={setAttachMenuOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button" variant="ghost" size="icon"
+                      aria-label="Add attachment"
+                      className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                    >
+                      <Plus className="h-3.5 w-3.5" strokeWidth={2} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" side="top" className="w-48 p-1">
+                    <button
+                      type="button"
+                      onClick={openFilePicker}
+                      className="w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted/60 text-left"
+                    >
+                      <ImageIcon className="h-3.5 w-3.5 text-primary" />
+                      <div className="flex-1">
+                        <div className="font-medium">Attach image</div>
+                        <div className="text-[10px] text-muted-foreground">JPG · PNG · WEBP · GIF · ≤ 8 MB</div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setAttachMenuOpen(false); toast("File attachments coming soon."); }}
+                      className="w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted/60 text-left"
+                    >
+                      <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <div className="font-medium">Attach file</div>
+                        <div className="text-[10px] text-muted-foreground">PDF / docs — soon</div>
+                      </div>
+                    </button>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Mic (single-shot dictation) */}
+                <Button
+                  type="button" variant="ghost" size="icon"
+                  onClick={toggleDictation}
+                  aria-label={dictating ? "Stop dictation" : "Dictate into prompt"}
+                  title={dictating ? "Stop dictation" : "Dictate"}
+                  className={cn(
+                    "h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-primary/10",
+                    dictating && "bg-destructive/15 text-destructive hover:bg-destructive/20 hover:text-destructive animate-pulse",
+                  )}
+                >
+                  {/* Reuse the phone/mic set — Mic icon */}
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+                </Button>
+
+                {/* Phone (voice call) */}
+                <Button
+                  type="button" variant="ghost" size="icon"
+                  onClick={() => setVoiceOpen(true)}
+                  aria-label="Start voice call with AI"
+                  title="Voice call (⌘⇧V)"
+                  className="h-7 w-7 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10"
+                >
+                  <Phone className="h-3.5 w-3.5" strokeWidth={2} />
+                </Button>
+
+                {/* Slash / enter hints */}
+                <div className="hidden md:flex items-center gap-1 text-[10px] text-muted-foreground pl-2 ml-1 border-l border-border/50">
+                  <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">/</kbd>
+                  <span className="ml-0.5">commands</span>
+                </div>
               </div>
+
               {busy ? (
                 <Button
                   onClick={stop}
                   size="sm"
                   variant="outline"
-                  className="h-7 px-3 ml-auto rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10 cursor-pointer"
+                  className="h-7 px-3 rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10 cursor-pointer"
                 >
                   <Square className="h-3 w-3 fill-current" strokeWidth={2} />
                   <span className="ml-1 text-[11px] font-semibold">Stop</span>
@@ -1105,15 +1157,41 @@ export function AiCommandBar() {
                     submit();
                   }}
                   onMouseDown={(e) => e.preventDefault()}
-                  disabled={!prompt.trim()}
+                  disabled={!prompt.trim() && attachments.items.length === 0}
                   size="sm"
-                  className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] active:scale-[0.97] disabled:opacity-40 disabled:shadow-none disabled:ring-0 disabled:cursor-not-allowed cursor-pointer transition-all"
+                  className="h-7 px-3 rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] active:scale-[0.97] disabled:opacity-40 disabled:shadow-none disabled:ring-0 disabled:cursor-not-allowed cursor-pointer transition-all"
                 >
                   <span className="text-[11px] font-semibold pointer-events-none">Send</span>
                   <Send className="h-3 w-3 ml-1 pointer-events-none" strokeWidth={2} />
                 </Button>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Image suggestion chips — visible only while images are attached. */}
+        {imageSuggestions.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 px-4 pt-2.5">
+            {imageSuggestions.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setPrompt(s)}
+                className="text-[10.5px] pl-1.5 pr-2 py-0.5 rounded-full border border-primary/40 bg-primary/10 hover:bg-primary/15 text-primary inline-flex items-center gap-1"
+              >
+                <Sparkles className="h-2.5 w-2.5" strokeWidth={1.75} />
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Voice call dialog */}
+        <VoiceCallDialog
+          open={voiceOpen}
+          onOpenChange={setVoiceOpen}
+          onTranscript={handleVoiceTranscript}
+        />
           </div>
         </div>
 
