@@ -12,9 +12,12 @@ import {
   Leaf,
   Star,
 } from "lucide-react";
+import { createContext, useContext } from "react";
 import { cn } from "@/lib/utils";
 import { BioConfig, resolveTheme } from "../state/bioConfig";
 import type { LinkBioTheme, ThemeLayout } from "@/pages/dashboard/views/linkbio/themePresets";
+
+const BioCtx = createContext<{ avatarScale: number }>({ avatarScale: 1 });
 
 const socialIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   instagram: Instagram,
@@ -44,6 +47,9 @@ export function BioPage({ config, compact = false }: { config: BioConfig; compac
         : {};
   const useThemeBg = !o.bgType || o.bgType === "theme";
 
+  // Avatar size scale (sm/md/lg -> 0.8 / 1 / 1.2)
+  const avatarScale = o.avatarSize === "sm" ? 0.8 : o.avatarSize === "lg" ? 1.2 : 1;
+
   const shared = {
     theme,
     config,
@@ -53,6 +59,7 @@ export function BioPage({ config, compact = false }: { config: BioConfig; compac
     fontBody: fontClass(o.fontBody ?? undefined),
     fontHeading: fontClass(o.fontHeading ?? undefined),
     textOverride: o.textColor,
+    avatarScale,
   };
 
   const layout: ThemeLayout = theme.layout ?? "glass-list";
@@ -67,19 +74,49 @@ export function BioPage({ config, compact = false }: { config: BioConfig; compac
           ? "animate-slide-in-right"
           : "";
 
+  const hover = o.hover ?? "scale";
+  const stagger = o.stagger ?? 60;
+
+  // CSS variables + scoped style block drive design/motion overrides across every layout.
+  const rootId = `bio-${theme.id}`;
+  const rootStyle = {
+    ...bgStyle,
+    ...(o.textColor ? { color: o.textColor } : {}),
+    ["--bio-accent" as string]: accent,
+    ["--bio-btn-bg" as string]: o.buttonBg ?? "",
+    ["--bio-btn-text" as string]: o.buttonText ?? "",
+    ["--bio-stagger" as string]: `${stagger}ms`,
+  } as React.CSSProperties;
+
   return (
     <div
+      id={rootId}
       className={cn(
-        "w-full h-full overflow-y-auto relative",
+        "bio-root w-full h-full overflow-y-auto relative",
         useThemeBg && theme.bg,
         theme.textClass,
         shared.fontBody,
         entranceClass,
       )}
-      style={{ ...bgStyle, ...(o.textColor ? { color: o.textColor } : {}) }}
+      style={rootStyle}
     >
-      <BlocksStrip config={config} accent={accent} />
-      {renderLayout(layout, shared)}
+      <style>{`
+        #${rootId} a { transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
+        ${hover === "scale" ? `#${rootId} a:hover { transform: scale(1.03); }` : ""}
+        ${hover === "lift" ? `#${rootId} a:hover { transform: translateY(-3px); box-shadow: 0 10px 24px -12px rgba(0,0,0,.35); }` : ""}
+        ${hover === "glow" ? `#${rootId} a:hover { box-shadow: 0 0 0 2px ${accent}55, 0 0 24px ${accent}66; }` : ""}
+        ${o.buttonBg ? `#${rootId} a[data-bio-btn] { background: ${o.buttonBg} !important; border-color: ${o.buttonBg} !important; }` : ""}
+        ${o.buttonText ? `#${rootId} a[data-bio-btn] { color: ${o.buttonText} !important; }` : ""}
+        #${rootId} [data-bio-list] > * { animation: bio-in .35s ease-out both; }
+        ${Array.from({ length: 24 })
+          .map((_, i) => `#${rootId} [data-bio-list] > *:nth-child(${i + 1}) { animation-delay: calc(var(--bio-stagger) * ${i}); }`)
+          .join("\n")}
+        @keyframes bio-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+      `}</style>
+      <BioCtx.Provider value={{ avatarScale }}>
+        <BlocksStrip config={config} accent={accent} />
+        {renderLayout(layout, shared)}
+      </BioCtx.Provider>
     </div>
   );
 }
@@ -163,6 +200,7 @@ type Shared = {
   fontBody: string;
   fontHeading: string;
   textOverride?: string;
+  avatarScale: number;
 };
 
 function renderLayout(layout: ThemeLayout, s: Shared) {
@@ -189,12 +227,14 @@ function renderLayout(layout: ThemeLayout, s: Shared) {
 
 /* Small shared bits */
 function Avatar({ config, accent, size = 72 }: { config: BioConfig; accent: string; size?: number }) {
+  const { avatarScale } = useContext(BioCtx);
+  const s = Math.round(size * avatarScale);
   return (
     <div
       className="rounded-full border-2 border-white/30 shadow-lg shrink-0 bg-cover bg-center"
       style={{
-        width: size,
-        height: size,
+        width: s,
+        height: s,
         background: config.avatarUrl ? `center/cover url(${config.avatarUrl})` : accent,
       }}
       aria-hidden
@@ -224,12 +264,12 @@ function Socials({ config, className }: { config: BioConfig; className?: string 
 function GlassList({ config, accent, links, compact, fontHeading }: Shared) {
   return (
     <div className="min-h-full flex flex-col items-center text-center px-5 py-6 gap-3">
-      <Avatar config={config} accent={accent} size={compact ? 60 : 84} />
+      <Avatar config={config} accent={accent} size={compact?60:84} />
       <p className={cn("font-bold", fontHeading, compact ? "text-sm" : "text-lg")}>{config.handle}</p>
       <p className="text-xs opacity-80">{config.headline}</p>
       <div className="w-full space-y-2 mt-2">
         {links.map((l) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium rounded-xl bg-white/15 backdrop-blur-md border border-white/25 hover:bg-white/25 transition">
             {l.title}
           </a>
@@ -252,7 +292,7 @@ function RowDivider({ config, accent, links, fontHeading }: Shared) {
       </div>
       <div className="mt-2 border-t border-white/10">
         {links.map((l) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="flex items-center justify-between py-3 border-b border-white/10 text-sm hover:pl-1 transition-all">
             <span className="truncate">{l.title}</span>
             <ArrowUpRight className="w-4 h-4 opacity-60" />
@@ -328,7 +368,7 @@ function Brutal({ config, accent, links, fontHeading }: Shared) {
       <Avatar config={config} accent={accent} size={64} />
       <div className="space-y-3 mt-4">
         {links.map((l) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="block bg-white border-2 border-black px-3 py-2.5 font-bold uppercase text-sm shadow-[4px_4px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
             → {l.title}
           </a>
@@ -349,7 +389,7 @@ function CardStack({ config, accent, links, fontHeading }: Shared) {
         </div>
       </div>
       {links.map((l, i) => (
-        <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+        <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
            className="block rounded-2xl overflow-hidden shadow-lg group border border-black/5">
           <div className="h-24 relative"
                style={{ background: `linear-gradient(135deg, ${accent}, ${i % 2 ? "#0f172a" : "#334155"})` }}>
@@ -386,7 +426,7 @@ function Bento({ config, accent, links, fontHeading }: Shared) {
       )}
       <div className="grid grid-cols-2 gap-3">
         {rest.map((l, i) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className={cn("rounded-2xl p-3 h-24 flex flex-col justify-end shadow-md bg-white border border-slate-200",
                i % 3 === 0 && "bg-slate-900 text-white border-transparent")}>
             <span className="text-[10px] opacity-60 uppercase tracking-wide">Link</span>
@@ -409,7 +449,7 @@ function Reels({ config, accent, links, fontHeading }: Shared) {
       {/* Story circles */}
       <div className="mt-4 flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
         {links.slice(0, 6).map((l, i) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener" className="flex flex-col items-center gap-1 shrink-0">
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener" className="flex flex-col items-center gap-1 shrink-0">
             <div className="w-14 h-14 rounded-full p-[2px]"
                  style={{ background: `conic-gradient(from 0deg, ${accent}, #f472b6, #fb923c, ${accent})` }}>
               <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[10px] font-bold text-neutral-800">
@@ -422,7 +462,7 @@ function Reels({ config, accent, links, fontHeading }: Shared) {
       </div>
       <div className="mt-4 space-y-2">
         {links.map((l) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="block w-full text-center px-4 py-2.5 rounded-full bg-white border border-rose-200 text-sm font-medium text-neutral-800 hover:bg-rose-50">
             {l.title}
           </a>
@@ -444,7 +484,7 @@ function Chrome({ config, accent, links, fontHeading }: Shared) {
       <p className="text-[11px] opacity-80">{config.headline}</p>
       <div className="w-full space-y-2 mt-2">
         {links.map((l) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="block w-full px-4 py-3 rounded-full text-sm font-semibold text-slate-900 border-2 border-white"
              style={{ background: "linear-gradient(180deg,#ffffff 0%,#e5e7eb 50%,#cbd5e1 51%,#f8fafc 100%)", boxShadow: "0 4px 0 #94a3b8, 0 6px 20px rgba(0,0,0,0.2)" }}>
             {l.title}
@@ -470,7 +510,7 @@ function Vaporwave({ config, links, fontHeading }: Shared) {
         <p className="text-[11px] uppercase tracking-[0.3em] opacity-90">{config.headline}</p>
         <div className="w-full space-y-2 mt-3">
           {links.map((l) => (
-            <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+            <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
                className="block w-full px-4 py-2.5 rounded-md bg-white/10 border-2 border-fuchsia-300/70 backdrop-blur-sm text-sm font-bold uppercase tracking-wider hover:bg-white/20">
               ▸ {l.title}
             </a>
@@ -492,7 +532,7 @@ function Polaroid({ config, accent, links, fontHeading }: Shared) {
         {links.map((l, i) => {
           const rot = ((i % 5) - 2) * 2.5;
           return (
-            <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+            <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
                className="block bg-white p-2 pb-4 shadow-[0_6px_16px_rgba(0,0,0,0.15)] mx-auto max-w-[220px] hover:rotate-0 transition-transform"
                style={{ transform: `rotate(${rot}deg)` }}>
               <div className="h-24" style={{ background: `linear-gradient(135deg, ${accent}, #94a3b8)` }} />
@@ -521,7 +561,7 @@ function Luxe({ config, accent, links, fontHeading }: Shared) {
       <p className="text-[10px] tracking-[0.3em] uppercase opacity-70 mt-2">{config.headline}</p>
       <div className="w-full mt-6 space-y-0">
         {links.map((l, idx) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className={cn("flex items-center justify-between py-3 text-sm tracking-wide", idx > 0 && "border-t")}
              style={{ borderColor: `${accent}44` }}>
             <span className="font-serif italic">{l.title}</span>
@@ -546,7 +586,7 @@ function Tiles({ config, accent, links, fontHeading }: Shared) {
       </div>
       <div className="grid grid-cols-2 gap-3 mt-4">
         {links.map((l, i) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="rounded-2xl h-24 p-3 flex flex-col justify-between shadow-md text-slate-900 font-semibold text-xs hover:-translate-y-0.5 transition"
              style={{ background: palette[i % palette.length] }}>
             <span className="text-[9px] uppercase tracking-widest opacity-70">0{(i % 6) + 1}</span>
@@ -571,7 +611,7 @@ function CRT({ config, accent, links, fontHeading }: Shared) {
         </div>
         <div className="mt-4 space-y-2">
           {links.map((l, i) => (
-            <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+            <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
                className="block px-3 py-2 border-2 uppercase text-xs font-bold hover:bg-amber-500/10"
                style={{ borderColor: accent, boxShadow: `3px 3px 0 ${accent}` }}>
               CH.{String(i + 1).padStart(2, "0")} — {l.title}
@@ -598,7 +638,7 @@ function Botanical({ config, accent, links, fontHeading }: Shared) {
       </div>
       <div className="mt-5 space-y-2.5">
         {links.map((l) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className="flex items-center gap-2 px-4 py-2.5 rounded-md border bg-white/40 backdrop-blur-sm text-sm font-serif hover:bg-white/70"
              style={{ borderColor: `${accent}55` }}>
             <Leaf className="w-3.5 h-3.5 shrink-0" style={{ color: accent }} />
@@ -623,7 +663,7 @@ function Widgets({ config, accent, links, fontHeading }: Shared) {
       </div>
       <div className="grid grid-cols-2 gap-3 mt-4">
         {links.map((l, i) => (
-          <a key={l.id} href={l.url} target="_blank" rel="noreferrer noopener"
+          <a key={l.id} href={l.url} data-bio-btn target="_blank" rel="noreferrer noopener"
              className={cn("rounded-2xl p-3 backdrop-blur-md border border-white/15 bg-white/5 hover:bg-white/10",
                i === 0 && "col-span-2 h-24")}>
             <div className="flex items-center justify-between">
