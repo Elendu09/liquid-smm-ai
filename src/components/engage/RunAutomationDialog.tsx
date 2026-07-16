@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,8 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   /** Preselect a saved segment (e.g. from Segments board Zap button). */
   presetSegmentId?: string | null;
+  /** When true, allow selecting multiple audiences to run automation across. */
+  multi?: boolean;
 }
 
 const TONES: { id: Tone; label: string; blurb: string }[] = [
@@ -42,7 +45,7 @@ const TONES: { id: Tone; label: string; blurb: string }[] = [
   { id: "witty", label: "Witty", blurb: "Playful, cheeky one-liners" },
 ];
 
-export function RunAutomationDialog({ open, onOpenChange, presetSegmentId }: Props) {
+export function RunAutomationDialog({ open, onOpenChange, presetSegmentId, multi = false }: Props) {
   const navigate = useNavigate();
   const { items: segments } = useLocalCollection<Segment>("audience", "segments");
   const { items: rules } = useLocalCollection<BotRule>("engage", "bot-rules");
@@ -50,6 +53,7 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId }: Pro
   const enabledRules = useMemo(() => rules.filter((r) => r.enabled), [rules]);
 
   const [segmentId, setSegmentId] = useState<string>("");
+  const [segmentIds, setSegmentIds] = useState<string[]>([]);
   const [ruleId, setRuleId] = useState<string>("");
   const [tone, setTone] = useState<Tone>("friendly");
   const [launching, setLaunching] = useState(false);
@@ -57,6 +61,7 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId }: Pro
   useEffect(() => {
     if (!open) return;
     setSegmentId(presetSegmentId || segments[0]?.id || "");
+    setSegmentIds(presetSegmentId ? [presetSegmentId] : segments.slice(0, 1).map((s) => s.id));
     setRuleId(enabledRules[0]?.id || rules[0]?.id || "");
     setTone("friendly");
     setLaunching(false);
@@ -64,16 +69,28 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId }: Pro
 
   const segment = segments.find((s) => s.id === segmentId) || null;
   const rule = rules.find((r) => r.id === ruleId) || null;
+  const chosenSegments = multi ? segments.filter((s) => segmentIds.includes(s.id)) : segment ? [segment] : [];
+
+  const toggleSegment = (id: string) => {
+    setSegmentIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
 
   const launch = () => {
-    if (!segment || !rule) return;
+    if (chosenSegments.length === 0 || !rule) return;
     setLaunching(true);
     setTimeout(() => {
-      toast.success(`Automation queued: ${rule.name} → ${segment.title}`, {
-        description: `Tone: ${tone}. Redirecting to bot rules…`,
-      });
+      if (multi && chosenSegments.length > 1) {
+        toast.success(`Automation queued across ${chosenSegments.length} audiences`, {
+          description: `${rule.name} · tone: ${tone}`,
+        });
+      } else {
+        toast.success(`Automation queued: ${rule.name} → ${chosenSegments[0].title}`, {
+          description: `Tone: ${tone}. Redirecting to bot rules…`,
+        });
+      }
       onOpenChange(false);
-      navigate(`/dashboard/engage/bot?segmentId=${encodeURIComponent(segment.id)}&ruleId=${encodeURIComponent(rule.id)}&tone=${tone}`);
+      const first = chosenSegments[0];
+      navigate(`/dashboard/engage/bot?segmentId=${encodeURIComponent(first.id)}&ruleId=${encodeURIComponent(rule.id)}&tone=${tone}`);
     }, 500);
   };
 
