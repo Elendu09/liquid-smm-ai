@@ -35,11 +35,12 @@ import {
   Bookmark,
   Terminal,
   Bell,
+  CornerDownLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, KeyboardEvent } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -129,6 +130,16 @@ const navItems: NavItem[] = [
   },
 ];
 
+type CommandResult = {
+  id: string;
+  label: string;
+  hint?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href?: string;
+  action?: () => void;
+  group: "Pages" | "Sections" | "Commands";
+};
+
 interface SidebarContentProps {
   collapsed: boolean;
   setCollapsed: (v: boolean) => void;
@@ -141,6 +152,8 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const [activeIdx, setActiveIdx] = useState(0);
+  const searchRef = useRef<HTMLInputElement>(null);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     for (const it of navItems) {
@@ -163,31 +176,89 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
     });
   }, [pathname]);
 
-  const q = query.trim().toLowerCase();
-  const filtered = useMemo(() => {
-    if (!q) return navItems;
-    return navItems
-      .map((it) => {
-        const parentMatch = it.label.toLowerCase().includes(q);
-        const kids = it.children?.filter((c) => c.label.toLowerCase().includes(q)) ?? [];
-        if (parentMatch) return it;
-        if (kids.length) return { ...it, children: kids };
-        return null;
-      })
-      .filter(Boolean) as NavItem[];
-  }, [q]);
+  // Global ⌘K / Ctrl+K to focus search
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const openOnboarding = () => {
     window.dispatchEvent(new CustomEvent("smmpilot:open-onboarding"));
     onNavigate?.();
   };
 
+  const q = query.trim().toLowerCase();
+
+  // Flat command results for search palette
+  const commands: CommandResult[] = useMemo(() => {
+    const cmds: CommandResult[] = [
+      { id: "cmd-onboarding", label: "Start onboarding tour", icon: HelpCircle, group: "Commands", action: openOnboarding, hint: "Guide" },
+      { id: "cmd-settings", label: "Open Settings", icon: Cog, group: "Commands", href: "/dashboard/settings", hint: "Preferences" },
+      { id: "cmd-notifications", label: "Open Notifications", icon: Bell, group: "Commands", href: "/dashboard/activity/notifications" },
+      { id: "cmd-signout", label: "Sign out", icon: LogOut, group: "Commands", action: () => navigate("/login") },
+    ];
+    const pages: CommandResult[] = [];
+    for (const it of navItems) {
+      pages.push({ id: `p-${it.href}`, label: it.label, icon: it.icon, href: it.href, group: "Pages", hint: it.href });
+      if (it.children) {
+        for (const c of it.children) {
+          pages.push({
+            id: `s-${c.href}`,
+            label: c.label,
+            icon: c.icon,
+            href: c.href,
+            group: "Sections",
+            hint: `${it.label} › ${c.label}`,
+          });
+        }
+      }
+    }
+    return [...pages, ...cmds];
+  }, [navigate]);
+
+  const results = useMemo(() => {
+    if (!q) return [] as CommandResult[];
+    return commands
+      .filter((c) => c.label.toLowerCase().includes(q) || (c.hint ?? "").toLowerCase().includes(q))
+      .slice(0, 12);
+  }, [q, commands]);
+
+  useEffect(() => setActiveIdx(0), [q]);
+
+  const runResult = (r: CommandResult) => {
+    if (r.href) navigate(r.href);
+    r.action?.();
+    setQuery("");
+    onNavigate?.();
+  };
+
+  const onSearchKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (!results.length) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setActiveIdx((i) => (i + 1) % results.length); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIdx((i) => (i - 1 + results.length) % results.length); }
+    else if (e.key === "Enter") { e.preventDefault(); runResult(results[activeIdx]); }
+    else if (e.key === "Escape") { setQuery(""); }
+  };
+
+  const grouped = useMemo(() => {
+    const g: Record<string, CommandResult[]> = { Pages: [], Sections: [], Commands: [] };
+    results.forEach((r) => g[r.group].push(r));
+    return g;
+  }, [results]);
+
   return (
     <TooltipProvider delayDuration={200}>
       {/* Brand */}
-      <div className="h-16 flex items-center justify-between px-3 border-b border-border/60 flex-shrink-0">
-        <Link to="/" className="flex items-center gap-2 min-w-0" onClick={onNavigate}>
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20">
+      <div className="h-16 flex items-center justify-between px-3 border-b border-border/50 flex-shrink-0">
+        <Link to="/" className="flex items-center gap-2.5 min-w-0" onClick={onNavigate}>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary via-primary to-primary/60 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/30 ring-1 ring-primary/20">
             <Zap className="w-4 h-4 text-primary-foreground" />
           </div>
           {showLabels && (
@@ -195,7 +266,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
               <span className="text-[13px] font-black tracking-tight text-foreground truncate">
                 HOME OF SMM
               </span>
-              <span className="text-[9px] font-semibold tracking-[0.14em] text-primary/80 uppercase">
+              <span className="text-[9px] font-semibold tracking-[0.16em] text-primary/80 uppercase">
                 Panel Manager
               </span>
             </div>
@@ -205,7 +276,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 rounded-full border border-border/60 bg-card/60"
+            className="h-7 w-7 rounded-full border border-border/60 bg-card/60 hover:bg-muted"
             onClick={() => setCollapsed(!collapsed)}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
@@ -216,14 +287,16 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
 
       {/* Search */}
       {showLabels && (
-        <div className="px-3 pt-3">
+        <div className="px-3 pt-3 pb-1">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             <Input
+              ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search…"
-              className="h-8 pl-8 pr-10 text-xs bg-muted/40 border-border/60 rounded-lg"
+              onKeyDown={onSearchKey}
+              placeholder="Search pages, sections…"
+              className="h-9 pl-8 pr-12 text-xs bg-muted/40 border-border/50 rounded-lg focus-visible:ring-1 focus-visible:ring-primary/40"
               aria-label="Search navigation"
             />
             <kbd className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 h-5 items-center gap-0.5 px-1.5 rounded border border-border/60 bg-background/70 text-[9px] font-medium text-muted-foreground">
@@ -233,141 +306,225 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
         </div>
       )}
 
-      {/* Nav */}
-      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto scrollbar-none" aria-label="Primary">
-        {showLabels && (
-          <div className="px-2 pb-1 text-[10px] font-bold tracking-[0.16em] text-muted-foreground/70 uppercase">
-            Main
-          </div>
-        )}
-        {filtered.map((item) => {
-          const active = item.exact ? pathname === item.href : pathname.startsWith(item.href) && item.href !== "/dashboard";
-          const hasKids = !!item.children?.length;
-          const isOpen = !!openGroups[item.href] || !!q;
-
-          const rowBtn = (
-            <button
-              type="button"
-              onClick={() => {
-                navigate(item.href);
-                if (hasKids && showLabels) {
-                  setOpenGroups((p) => ({ ...p, [item.href]: !p[item.href] }));
-                }
-                onNavigate?.();
-              }}
-              className={cn(
-                "group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12.5px] font-medium min-h-[36px] transition-colors",
-                (item.exact ? pathname === item.href : pathname.startsWith(item.href) && item.href !== "/dashboard") || pathname === item.href
-                  ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
-                !showLabels && "justify-center px-0",
-              )}
-              title={!showLabels ? item.label : undefined}
-            >
-              <item.icon className="w-4 h-4 flex-shrink-0" />
-              {showLabels && (
-                <>
-                  <span className="flex-1 text-left truncate">{item.label}</span>
-                  {hasKids && (
-                    <ChevronDown
-                      className={cn(
-                        "w-3.5 h-3.5 transition-transform opacity-70",
-                        isOpen && "rotate-180",
-                      )}
-                    />
-                  )}
-                </>
-              )}
-            </button>
-          );
-
-          return (
-            <div key={item.href}>
-              {!showLabels ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>{rowBtn}</TooltipTrigger>
-                  <TooltipContent side="right" className="text-xs">{item.label}</TooltipContent>
-                </Tooltip>
-              ) : (
-                rowBtn
-              )}
-
-              {showLabels && hasKids && isOpen && (
-                <div className="mt-0.5 mb-1 ml-3 pl-3 border-l border-border/60 space-y-0.5">
-                  {item.children!.map((sub) => (
-                    <NavLink
-                      key={sub.href}
-                      to={sub.href}
-                      onClick={onNavigate}
-                      className={({ isActive }) =>
-                        cn(
-                          "flex items-center gap-2 px-2 py-1.5 rounded-md text-[11.5px] font-medium min-h-[30px] transition-colors",
-                          isActive
-                            ? "text-primary bg-primary/10"
-                            : "text-muted-foreground/80 hover:text-foreground hover:bg-muted/50",
-                        )
-                      }
-                    >
-                      <sub.icon className="w-3.5 h-3.5 flex-shrink-0 opacity-80" />
-                      <span className="truncate">{sub.label}</span>
-                    </NavLink>
-                  ))}
+      {/* Nav / Search results */}
+      <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto scrollbar-none" aria-label="Primary">
+        {showLabels && q ? (
+          <div className="space-y-3 pt-1">
+            {(["Pages", "Sections", "Commands"] as const).map((g) =>
+              grouped[g].length ? (
+                <div key={g}>
+                  <div className="px-2 pb-1 text-[9.5px] font-bold tracking-[0.18em] text-muted-foreground/70 uppercase">
+                    {g}
+                  </div>
+                  <div className="space-y-0.5">
+                    {grouped[g].map((r) => {
+                      const flatIdx = results.indexOf(r);
+                      const isActive = flatIdx === activeIdx;
+                      return (
+                        <button
+                          key={r.id}
+                          type="button"
+                          onMouseEnter={() => setActiveIdx(flatIdx)}
+                          onClick={() => runResult(r)}
+                          className={cn(
+                            "group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12px] font-medium min-h-[34px] transition-colors",
+                            isActive
+                              ? "bg-primary/15 text-foreground ring-1 ring-primary/30"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                          )}
+                        >
+                          <r.icon className="w-4 h-4 flex-shrink-0 opacity-80" />
+                          <span className="flex-1 text-left truncate">{r.label}</span>
+                          {r.hint && (
+                            <span className="text-[10px] text-muted-foreground/70 truncate max-w-[110px]">
+                              {r.hint}
+                            </span>
+                          )}
+                          {isActive && <CornerDownLeft className="w-3 h-3 opacity-70" />}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
-
-        {showLabels && filtered.length === 0 && (
-          <div className="px-2 py-6 text-center text-[11px] text-muted-foreground">
-            No matches for "{query}"
+              ) : null,
+            )}
+            {!results.length && (
+              <div className="px-2 py-8 text-center text-[11px] text-muted-foreground">
+                No matches for "{query}"
+              </div>
+            )}
           </div>
+        ) : (
+          <>
+            {showLabels && (
+              <div className="px-2 pt-1 pb-1 text-[9.5px] font-bold tracking-[0.18em] text-muted-foreground/70 uppercase">
+                Main
+              </div>
+            )}
+            {navItems.map((item) => {
+              const active = item.exact
+                ? pathname === item.href
+                : pathname.startsWith(item.href) && item.href !== "/dashboard";
+              const hasKids = !!item.children?.length;
+              const isOpen = !!openGroups[item.href];
+
+              const rowContent = (
+                <div
+                  className={cn(
+                    "group relative flex items-center gap-2.5 rounded-lg text-[12.5px] font-medium min-h-[36px] transition-all",
+                    active
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                    !showLabels && "justify-center",
+                  )}
+                >
+                  {active && showLabels && (
+                    <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-primary-foreground/70" />
+                  )}
+                  {/* Main click target → navigate */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate(item.href);
+                      if (hasKids && showLabels) {
+                        setOpenGroups((p) => ({ ...p, [item.href]: true }));
+                      }
+                      onNavigate?.();
+                    }}
+                    className={cn(
+                      "flex items-center gap-2.5 flex-1 min-w-0 px-2.5 py-2 text-left",
+                      !showLabels && "justify-center px-0",
+                    )}
+                    title={!showLabels ? item.label : undefined}
+                  >
+                    <item.icon className="w-4 h-4 flex-shrink-0" />
+                    {showLabels && <span className="flex-1 truncate">{item.label}</span>}
+                  </button>
+                  {/* Separate chevron toggle → doesn't navigate */}
+                  {showLabels && hasKids && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenGroups((p) => ({ ...p, [item.href]: !p[item.href] }));
+                      }}
+                      className={cn(
+                        "h-full px-2 flex items-center rounded-r-lg opacity-70 hover:opacity-100 hover:bg-black/10",
+                        active && "hover:bg-white/15",
+                      )}
+                      aria-label={isOpen ? `Collapse ${item.label}` : `Expand ${item.label}`}
+                      aria-expanded={isOpen}
+                    >
+                      <ChevronDown
+                        className={cn("w-3.5 h-3.5 transition-transform", isOpen && "rotate-180")}
+                      />
+                    </button>
+                  )}
+                </div>
+              );
+
+              return (
+                <div key={item.href}>
+                  {!showLabels ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>{rowContent}</TooltipTrigger>
+                      <TooltipContent side="right" className="text-xs">{item.label}</TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    rowContent
+                  )}
+
+                  {showLabels && hasKids && isOpen && (
+                    <div className="mt-0.5 mb-1 ml-4 pl-3 border-l border-border/50 space-y-0.5">
+                      {item.children!.map((sub) => (
+                        <NavLink
+                          key={sub.href}
+                          to={sub.href}
+                          onClick={onNavigate}
+                          className={({ isActive }) =>
+                            cn(
+                              "flex items-center gap-2 px-2 py-1.5 rounded-md text-[11.5px] font-medium min-h-[30px] transition-colors",
+                              isActive
+                                ? "text-primary bg-primary/10 ring-1 ring-primary/20"
+                                : "text-muted-foreground/80 hover:text-foreground hover:bg-muted/50",
+                            )
+                          }
+                        >
+                          <sub.icon className="w-3.5 h-3.5 flex-shrink-0 opacity-80" />
+                          <span className="truncate">{sub.label}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {showLabels && (
+              <>
+                <div className="px-2 pt-4 pb-1 text-[9.5px] font-bold tracking-[0.18em] text-muted-foreground/70 uppercase">
+                  Workspace
+                </div>
+                <NavLink
+                  to="/dashboard/settings"
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12.5px] font-medium min-h-[36px] transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                    )
+                  }
+                >
+                  <Cog className="w-4 h-4 flex-shrink-0" />
+                  <span>Settings</span>
+                </NavLink>
+              </>
+            )}
+            {!showLabels && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <NavLink
+                    to="/dashboard/settings"
+                    onClick={onNavigate}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center justify-center px-0 py-2 rounded-lg min-h-[36px] transition-colors",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                      )
+                    }
+                  >
+                    <Cog className="w-4 h-4" />
+                  </NavLink>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="text-xs">Settings</TooltipContent>
+              </Tooltip>
+            )}
+          </>
         )}
       </nav>
 
-      {/* Settings row */}
-      <div className="px-2 pt-2 border-t border-border/60 flex-shrink-0">
-        <NavLink
-          to="/dashboard/settings"
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12.5px] font-medium min-h-[36px] transition-colors",
-              isActive
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
-              !showLabels && "justify-center px-0",
-            )
-          }
-          title={!showLabels ? "Settings" : undefined}
-        >
-          <Cog className="w-4 h-4 flex-shrink-0" />
-          {showLabels && <span>Settings</span>}
-        </NavLink>
-      </div>
-
-      {/* Bottom action bar: notifications / theme / onboarding / logout */}
-      <div className="mt-2 p-2 border-t border-border/60 flex-shrink-0 bg-muted/20">
+      {/* Bottom action bar */}
+      <div className="p-2 border-t border-border/50 flex-shrink-0 bg-gradient-to-b from-transparent to-muted/20">
         <div
           className={cn(
-            "flex items-center gap-1",
-            showLabels ? "justify-between" : "flex-col justify-center gap-1.5",
+            "flex items-center gap-1 rounded-xl bg-muted/30 backdrop-blur-sm p-1 ring-1 ring-border/40",
+            showLabels ? "justify-between" : "flex-col justify-center gap-1",
           )}
         >
           <Tooltip>
             <TooltipTrigger asChild>
-              <div>
-                <NotificationBell collapsed />
-              </div>
+              <div><NotificationBell collapsed /></div>
             </TooltipTrigger>
             <TooltipContent side="top" className="text-xs">Notifications</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <div>
-                <ThemeToggle />
-              </div>
+              <div><ThemeToggle /></div>
             </TooltipTrigger>
             <TooltipContent side="top" className="text-xs">Toggle theme</TooltipContent>
           </Tooltip>
@@ -377,7 +534,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9"
+                className="h-9 w-9 rounded-lg"
                 onClick={openOnboarding}
                 aria-label="Onboarding tour"
               >
@@ -392,7 +549,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                className="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                 onClick={() => {
                   onNavigate?.();
                   navigate("/login");
@@ -448,7 +605,7 @@ export function DashboardSidebar() {
 
       <aside
         className={cn(
-          "hidden lg:flex h-dvh sticky top-0 flex-col border-r border-border bg-card transition-all duration-300",
+          "hidden lg:flex h-dvh sticky top-0 flex-col border-r border-border/60 bg-gradient-to-b from-card via-card to-card/95 transition-all duration-300",
           collapsed ? "w-16" : "w-64",
         )}
       >
