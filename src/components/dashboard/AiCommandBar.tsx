@@ -144,7 +144,7 @@ export function AiCommandBar() {
 
   // Ghost autocomplete: if the current /query uniquely matches one command, show the rest as ghost text.
   const ghostSuffix = useMemo(() => {
-    if (!slashOpen) return "";
+    if (!slashOpen || !settings.ghostAutocomplete) return "";
     const q = slashQuery.toLowerCase();
     if (!q) return "";
     const matches = SLASH_COMMANDS.filter(
@@ -152,7 +152,14 @@ export function AiCommandBar() {
     );
     if (matches.length !== 1) return "";
     return matches[0].label.slice(1 + q.length);
-  }, [slashOpen, slashQuery]);
+  }, [slashOpen, slashQuery, settings.ghostAutocomplete]);
+
+  // Map "<name>" -> "label: hint" for tooltips on highlighted tokens.
+  const paramTooltip = useMemo(() => {
+    const map = new Map<string, string>();
+    activeCmd?.params?.forEach((p) => map.set(p.name, `${p.label}: ${p.hint}`));
+    return map;
+  }, [activeCmd]);
 
   const selectPlaceholder = (name: string) => {
     requestAnimationFrame(() => {
