@@ -99,9 +99,27 @@ const getPlatformColor = (platform: string) => {
 export const CommentManager = () => {
   const [comments, setComments] = useState(mockComments);
   const [selectedComments, setSelectedComments] = useState<number[]>([]);
-  const [activeReply, setActiveReply] = useState<number | null>(null);
-  const [replyText, setReplyText] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replyTarget, setReplyTarget] = useState<typeof mockComments[number] | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filters, setFilters] = useState<CommentFilters>(DEFAULT_FILTERS);
+
+  const platforms = useMemo(() => Array.from(new Set(mockComments.map((c) => c.platform))), []);
+
+  const filteredComments = useMemo(() => {
+    return comments.filter((c) => {
+      if (filters.platform !== "all" && c.platform !== filters.platform) return false;
+      if (filters.sentiment !== "all" && c.sentiment !== filters.sentiment) return false;
+      if (filters.status === "pending" && c.replied) return false;
+      if (filters.status === "replied" && !c.replied) return false;
+      return true;
+    });
+  }, [comments, filters]);
+
+  const activeFilterCount =
+    (filters.platform !== "all" ? 1 : 0) +
+    (filters.sentiment !== "all" ? 1 : 0) +
+    (filters.status !== "all" ? 1 : 0);
 
   const toggleSelect = (id: number) => {
     setSelectedComments((prev) =>
@@ -110,29 +128,21 @@ export const CommentManager = () => {
   };
 
   const selectAll = () => {
-    if (selectedComments.length === comments.length) {
+    if (selectedComments.length === filteredComments.length) {
       setSelectedComments([]);
     } else {
-      setSelectedComments(comments.map((c) => c.id));
+      setSelectedComments(filteredComments.map((c) => c.id));
     }
   };
 
-  const generateAIReply = (commentId: number) => {
-    setIsGenerating(true);
-    setActiveReply(commentId);
-    setTimeout(() => {
-      const randomReply = aiReplySuggestions[Math.floor(Math.random() * aiReplySuggestions.length)];
-      setReplyText(randomReply);
-      setIsGenerating(false);
-    }, 1000);
+  const openReply = (c: typeof mockComments[number]) => {
+    setReplyTarget(c);
+    setReplyOpen(true);
   };
 
-  const sendReply = (commentId: number) => {
-    setComments((prev) =>
-      prev.map((c) => (c.id === commentId ? { ...c, replied: true } : c))
-    );
-    setActiveReply(null);
-    setReplyText("");
+  const sendReply = (commentId: number, text: string) => {
+    setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, replied: true } : c)));
+    toast.success(`Reply sent (${text.length} chars)`);
   };
 
   const bulkMarkReplied = () => {
@@ -140,14 +150,17 @@ export const CommentManager = () => {
       prev.map((c) => (selectedComments.includes(c.id) ? { ...c, replied: true } : c))
     );
     setSelectedComments([]);
+    toast.success("Marked as replied");
   };
 
   const bulkDelete = () => {
     setComments((prev) => prev.filter((c) => !selectedComments.includes(c.id)));
     setSelectedComments([]);
+    toast.success("Deleted");
   };
 
   const unrepliedCount = comments.filter((c) => !c.replied).length;
+
 
   return (
     <div className="glass-card p-6 md:p-8">
