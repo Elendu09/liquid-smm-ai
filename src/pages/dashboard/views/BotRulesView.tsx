@@ -38,6 +38,7 @@ export default function BotRulesView() {
   const [editing, setEditing] = useState<BotRule | null>(null);
   const [testOpen, setTestOpen] = useState(false);
   const [testing, setTesting] = useState<BotRule | null>(null);
+  const [runOpen, setRunOpen] = useState(false);
 
   useEffect(() => { if (items.length === 0) setItems(seed); }, [items.length, setItems]);
 
