@@ -82,7 +82,40 @@ export function AiCommandBar() {
   const { items: history, log, update, updateTool, clear } = useAiCommandHistory();
   const abortRef = useRef<AbortController | null>(null);
 
+  // Typewriter placeholder cycling through SUGGESTIONS while input is empty & idle
+  const [typed, setTyped] = useState("");
+  useEffect(() => {
+    if (prompt || busy) return;
+    let sIdx = 0;
+    let cIdx = 0;
+    let deleting = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const full = SUGGESTIONS[sIdx];
+      if (!deleting) {
+        cIdx++;
+        setTyped(full.slice(0, cIdx));
+        if (cIdx === full.length) {
+          deleting = true;
+          timer = setTimeout(tick, 1600);
+          return;
+        }
+      } else {
+        cIdx--;
+        setTyped(full.slice(0, cIdx));
+        if (cIdx === 0) {
+          deleting = false;
+          sIdx = (sIdx + 1) % SUGGESTIONS.length;
+        }
+      }
+      timer = setTimeout(tick, deleting ? 22 : 42);
+    };
+    timer = setTimeout(tick, 400);
+    return () => clearTimeout(timer);
+  }, [prompt, busy]);
+
   useEffect(() => () => abortRef.current?.abort(), []);
+
 
   const submit = async (value?: string) => {
     const text = (value ?? prompt).trim();
