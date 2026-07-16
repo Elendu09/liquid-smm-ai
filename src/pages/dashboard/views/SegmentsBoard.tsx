@@ -181,9 +181,6 @@ export default function SegmentsBoard() {
     toast.success("Segment duplicated");
   };
 
-  const useInAutomation = (s: Segment) => {
-    navigate(`/dashboard/engage/bot?segmentId=${encodeURIComponent(s.id)}`);
-  };
 
   const card = (s: Segment, dense = false) => {
     const size = estimatedSize(s);
