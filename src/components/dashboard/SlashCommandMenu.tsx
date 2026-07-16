@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FileText,
   CalendarClock,
@@ -176,43 +176,81 @@ export function SlashCommandMenu({ query, open, onPick, onClose }: Props) {
     );
   }, [query]);
 
-  const activeRef = useRef(0);
+  const [active, setActive] = useState(0);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
+  // Reset active on query / open changes, clamped to filtered length.
   useEffect(() => {
-    activeRef.current = 0;
-  }, [query, open]);
+    setActive((cur) => {
+      if (!filtered.length) return 0;
+      return Math.min(cur, filtered.length - 1);
+    });
+  }, [filtered.length, open]);
+
+  useEffect(() => {
+    setActive(0);
+  }, [query]);
+
+  // Keep the active row visible within the scroll container.
+  useEffect(() => {
+    if (!open) return;
+    const el = itemRefs.current[active];
+    if (el && typeof el.scrollIntoView === "function") {
+      el.scrollIntoView({ block: "nearest" });
+    }
+  }, [active, open, filtered.length]);
+
+  const pick = useCallback(
+    (i: number) => {
+      const cmd = filtered[i];
+      if (cmd) onPick(cmd);
+    },
+    [filtered, onPick],
+  );
 
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
+        e.stopPropagation();
         onClose();
-      } else if (e.key === "ArrowDown") {
+        return;
+      }
+      if (e.key === "ArrowDown") {
         e.preventDefault();
-        activeRef.current = Math.min(filtered.length - 1, activeRef.current + 1);
-        forceRepaint();
-      } else if (e.key === "ArrowUp") {
+        e.stopPropagation();
+        setActive((a) => (filtered.length ? (a + 1) % filtered.length : 0));
+        return;
+      }
+      if (e.key === "ArrowUp") {
         e.preventDefault();
-        activeRef.current = Math.max(0, activeRef.current - 1);
-        forceRepaint();
-      } else if (e.key === "Enter" || e.key === "Tab" || (e.key === "ArrowRight" && filtered.length === 1)) {
-        if (filtered[activeRef.current]) {
+        e.stopPropagation();
+        setActive((a) => (filtered.length ? (a - 1 + filtered.length) % filtered.length : 0));
+        return;
+      }
+      if (e.key === "Home") {
+        e.preventDefault();
+        setActive(0);
+        return;
+      }
+      if (e.key === "End") {
+        e.preventDefault();
+        setActive(Math.max(0, filtered.length - 1));
+        return;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        if (filtered.length) {
           e.preventDefault();
-          onPick(filtered[activeRef.current]);
+          e.stopPropagation();
+          pick(active);
         }
       }
     };
-    const forceRepaint = () => {
-      const el = document.getElementById("slash-menu");
-      if (!el) return;
-      el.querySelectorAll<HTMLButtonElement>("[data-slash-item]").forEach((b, i) => {
-        b.dataset.active = String(i === activeRef.current);
-      });
-    };
     window.addEventListener("keydown", handler, true);
-    forceRepaint();
     return () => window.removeEventListener("keydown", handler, true);
-  }, [open, filtered, onPick, onClose]);
+  }, [open, filtered, active, pick, onClose]);
 
   if (!open || filtered.length === 0) return null;
 
@@ -221,6 +259,7 @@ export function SlashCommandMenu({ query, open, onPick, onClose }: Props) {
       id="slash-menu"
       role="listbox"
       aria-label="Slash commands"
+      aria-activedescendant={filtered[active] ? `slash-item-${filtered[active].id}` : undefined}
       className="absolute bottom-full left-2 right-2 mb-2 rounded-xl border border-border/70 bg-popover/95 backdrop-blur-xl shadow-lg overflow-hidden z-30 animate-in fade-in-0 slide-in-from-bottom-1 duration-150"
     >
       <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60 flex items-center justify-between">
@@ -229,25 +268,34 @@ export function SlashCommandMenu({ query, open, onPick, onClose }: Props) {
           Slash commands
         </span>
         <span className="normal-case tracking-normal text-muted-foreground/70 hidden sm:inline">
-          ↑↓ nav · <kbd className="font-mono">Tab</kbd>/<kbd className="font-mono">↵</kbd> pick
+          ↑↓ nav · <kbd className="font-mono">Tab</kbd>/<kbd className="font-mono">↵</kbd> pick · <kbd className="font-mono">Esc</kbd> close
         </span>
       </div>
-      <div className="max-h-64 overflow-y-auto py-1">
+      <div
+        ref={listRef}
+        className="max-h-[min(60vh,18rem)] overflow-y-auto overscroll-contain py-1"
+      >
         {filtered.map((c, i) => {
           const Icon = c.icon;
+          const isActive = i === active;
           return (
             <button
               key={c.id}
+              id={`slash-item-${c.id}`}
               type="button"
-              data-slash-item
-              data-active={i === 0}
+              role="option"
+              aria-selected={isActive}
+              ref={(el) => {
+                itemRefs.current[i] = el;
+              }}
+              onMouseEnter={() => setActive(i)}
               onMouseDown={(e) => {
                 e.preventDefault();
-                onPick(c);
+                pick(i);
               }}
               className={cn(
                 "w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors",
-                "hover:bg-primary/10 data-[active=true]:bg-primary/15",
+                isActive ? "bg-primary/15" : "hover:bg-primary/10",
               )}
             >
               <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -265,7 +313,7 @@ export function SlashCommandMenu({ query, open, onPick, onClose }: Props) {
                     </span>
                   ))}
                 </div>
-                <div className="text-[10.5px] text-muted-foreground leading-tight mt-0.5">{c.hint}</div>
+                <div className="text-[10.5px] text-muted-foreground leading-tight mt-0.5 truncate">{c.hint}</div>
               </div>
               {c.submit && (
                 <span className="text-[9px] uppercase tracking-wider text-primary/80 font-semibold">
