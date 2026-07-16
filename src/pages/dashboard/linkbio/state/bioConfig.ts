@@ -17,6 +17,29 @@ export type Radius = "sm" | "md" | "xl" | "full";
 export type Alignment = "center" | "left";
 export type BgType = "theme" | "solid" | "gradient" | "mesh";
 
+export type BioBlockType =
+  | "header"
+  | "text"
+  | "image"
+  | "video"
+  | "embed"
+  | "divider"
+  | "countdown"
+  | "quote";
+
+export interface BioBlock {
+  id: string;
+  type: BioBlockType;
+  enabled: boolean;
+  text?: string; // header/text/quote/countdown label
+  src?: string; // image url / video url / embed url
+  target?: string; // ISO date for countdown
+  align?: "left" | "center";
+}
+
+export type EntranceAnimation = "none" | "fade" | "slide" | "scale";
+export type HoverAnimation = "none" | "scale" | "lift" | "glow";
+
 export interface BioConfig {
   version: 1;
   handle: string;
@@ -40,9 +63,13 @@ export interface BioConfig {
     buttonStyle?: ButtonStyle;
     alignment?: Alignment;
     avatarSize?: "sm" | "md" | "lg";
+    entrance?: EntranceAnimation;
+    hover?: HoverAnimation;
+    stagger?: number; // ms between items
   };
   links: BioLink[];
   socials: BioSocial[];
+  blocks: BioBlock[];
 }
 
 export const CONFIG_KEY = "smmpilot:linkbio:config";
