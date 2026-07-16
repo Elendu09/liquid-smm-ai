@@ -135,9 +135,9 @@ export function buildReportData(
       metrics: [
         { label: "18-24", value: pct(28) },
         { label: "25-34", value: pct(41) },
-        { label: "35-44", value: pct: 19 as never as string, } as ReportMetric,
+        { label: "35-44", value: pct(19) },
         { label: "Mobile", value: pct(87) },
-      ].map((m) => ({ ...m, value: typeof m.value === "string" ? m.value : `${m.value}%` })),
+      ],
     }),
     "Content Performance": () => ({
       section: "Content Performance",
