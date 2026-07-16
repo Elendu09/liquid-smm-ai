@@ -12,10 +12,24 @@ export type BioLink = {
 
 export type BioSocial = { platform: string; url: string };
 
-export type ButtonStyle = "solid" | "outline" | "pill" | "glass" | "brutal";
+export type ButtonStyle = "solid" | "outline" | "pill" | "glass" | "brutal" | "shadow";
 export type Radius = "sm" | "md" | "xl" | "full";
-export type Alignment = "center" | "left";
-export type BgType = "theme" | "solid" | "gradient" | "mesh";
+export type Alignment = "center" | "left" | "justified";
+export type BgType = "theme" | "solid" | "gradient" | "mesh" | "image";
+export type ShadowDepth = "none" | "soft" | "medium" | "hard";
+export type FontPairId =
+  | "inter-inter"
+  | "playfair-inter"
+  | "space-dm"
+  | "syne-jakarta"
+  | "instrument-work"
+  | "cormorant-karla"
+  | "jetbrains-work"
+  | "bebas-barlow";
+export type FontScale = "s" | "m" | "l" | "xl";
+export type SectionSpacing = "tight" | "cozy" | "roomy" | "airy";
+export type AvatarShape = "circle" | "squircle" | "square";
+export type MaxWidth = "narrow" | "regular" | "wide";
 
 export type BioBlockType =
   | "header"
@@ -31,9 +45,9 @@ export interface BioBlock {
   id: string;
   type: BioBlockType;
   enabled: boolean;
-  text?: string; // header/text/quote/countdown label
-  src?: string; // image url / video url / embed url
-  target?: string; // ISO date for countdown
+  text?: string;
+  src?: string;
+  target?: string;
   align?: "left" | "center";
 }
 
@@ -49,23 +63,46 @@ export interface BioConfig {
   slug: string;
   themeId: string;
   overrides: {
+    // Background
     bgType?: BgType;
     bgSolid?: string;
     bgGradientFrom?: string;
     bgGradientTo?: string;
+    bgMeshStops?: [string, string, string, string];
+    bgImage?: string;
+    bgBlur?: number;
+    bgNoise?: boolean;
+    // Colors
     accent?: string;
     textColor?: string;
     buttonBg?: string;
     buttonText?: string;
+    // Typography
     fontHeading?: "sans" | "serif" | "mono";
     fontBody?: "sans" | "serif" | "mono";
+    fontPair?: FontPairId;
+    fontScale?: FontScale;
+    // Buttons
     radius?: Radius;
+    radiusPx?: number;
     buttonStyle?: ButtonStyle;
+    shadowDepth?: ShadowDepth;
+    // Layout
     alignment?: Alignment;
     avatarSize?: "sm" | "md" | "lg";
+    avatarSizePx?: number;
+    avatarShape?: AvatarShape;
+    avatarBorder?: number;
+    sectionSpacing?: SectionSpacing;
+    maxWidth?: MaxWidth;
+    // Visibility
+    showSocials?: boolean;
+    showProfile?: boolean;
+    footerText?: string;
+    // Motion
     entrance?: EntranceAnimation;
     hover?: HoverAnimation;
-    stagger?: number; // ms between items
+    stagger?: number;
   };
   links: BioLink[];
   socials: BioSocial[];
@@ -178,6 +215,14 @@ export const bioStore = {
   update: (fn: (c: BioConfig) => BioConfig) => commit(fn(state)),
   patchOverrides: (patch: Partial<BioConfig["overrides"]>) =>
     commit({ ...state, overrides: { ...state.overrides, ...patch } }),
+  resetOverrides: () =>
+    commit({ ...state, overrides: { ...defaultConfig.overrides } }),
+  applyDesignPreset: (patch: { themeId?: string; overrides: Partial<BioConfig["overrides"]> }) =>
+    commit({
+      ...state,
+      themeId: patch.themeId ?? state.themeId,
+      overrides: { ...defaultConfig.overrides, ...patch.overrides },
+    }),
   addLink: () => {
     const id = `l${Date.now()}`;
     commit({ ...state, links: [...state.links, { id, title: "New link", url: "https://", enabled: true }] });

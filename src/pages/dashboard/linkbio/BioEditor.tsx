@@ -33,6 +33,15 @@ import {
   Minus,
   Timer,
   Quote,
+  RotateCcw,
+  Circle,
+  Square,
+  Squircle,
+  AlignLeft,
+  AlignCenter,
+  AlignJustify,
+  Eye as EyeIcon,
+  EyeOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -40,11 +49,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import BioPreview from "./BioPreview";
 import { bioStore, useBioConfig, useSyncLegacyTheme } from "./state/bioConfig";
+import type { BioConfig, FontPairId } from "./state/bioConfig";
 import { linkBioThemes, THEME_STORAGE_KEY } from "@/pages/dashboard/views/linkbio/themePresets";
 import { linkBioTemplates, APPLIED_TEMPLATE_KEY } from "@/pages/dashboard/views/linkbio/templatePresets";
 
@@ -58,21 +69,6 @@ const railItems = [
   { id: "profile", label: "Profile", icon: User },
   { id: "socials", label: "Socials", icon: Share2 },
   { id: "seo", label: "SEO", icon: Globe },
-];
-
-const buttonStyles: Array<{ id: "solid" | "outline" | "pill" | "glass" | "brutal"; label: string }> = [
-  { id: "solid", label: "Solid" },
-  { id: "outline", label: "Outline" },
-  { id: "pill", label: "Pill" },
-  { id: "glass", label: "Glass" },
-  { id: "brutal", label: "Brutal" },
-];
-
-const radii: Array<{ id: "sm" | "md" | "xl" | "full"; label: string }> = [
-  { id: "sm", label: "Square" },
-  { id: "md", label: "Soft" },
-  { id: "xl", label: "Rounded" },
-  { id: "full", label: "Pill" },
 ];
 
 const socialOptions = ["instagram", "facebook", "linkedin", "youtube", "twitter", "github", "twitch"];
@@ -197,95 +193,270 @@ export default function BioEditor() {
 
 /* ------------------------------ Panels ------------------------------ */
 
+/* ------------------------------ Design Presets ------------------------------ */
+
+type DesignPreset = {
+  id: string;
+  name: string;
+  tagline: string;
+  themeId: string;
+  overrides: Partial<BioConfig["overrides"]>;
+  swatch: { bg: string; accent: string; text: string; radius: number };
+};
+
+const designPresets: DesignPreset[] = [
+  {
+    id: "sleek-glass",
+    name: "Sleek Glass",
+    tagline: "Frosted, airy, aurora",
+    themeId: "aurora-glass",
+    swatch: { bg: "linear-gradient(135deg,#4ade80,#a78bfa,#22d3ee)", accent: "#a78bfa", text: "#ffffff", radius: 22 },
+    overrides: { accent: "#a78bfa", textColor: "#ffffff", buttonStyle: "glass", radius: "xl", radiusPx: 22, fontPair: "space-dm", shadowDepth: "soft", alignment: "center", hover: "glow" },
+  },
+  {
+    id: "minimal-mono",
+    name: "Minimal Mono",
+    tagline: "Ultra clean B&W",
+    themeId: "midnight-minimal",
+    swatch: { bg: "#0a0a0a", accent: "#e5e5e5", text: "#f5f5f5", radius: 4 },
+    overrides: { bgType: "solid", bgSolid: "#0a0a0a", accent: "#e5e5e5", textColor: "#f5f5f5", buttonStyle: "outline", radius: "sm", radiusPx: 4, fontPair: "inter-inter", shadowDepth: "none", alignment: "left", hover: "scale" },
+  },
+  {
+    id: "editorial-serif",
+    name: "Editorial Serif",
+    tagline: "Print magazine, cream paper",
+    themeId: "editorial-magazine",
+    swatch: { bg: "#f5f0e6", accent: "#111", text: "#111", radius: 2 },
+    overrides: { bgType: "solid", bgSolid: "#f5f0e6", accent: "#111111", textColor: "#111111", buttonStyle: "outline", radius: "sm", radiusPx: 2, fontPair: "playfair-inter", shadowDepth: "none", alignment: "center" },
+  },
+  {
+    id: "neon-arcade",
+    name: "Neon Arcade",
+    tagline: "Vaporwave, glow, pixels",
+    themeId: "vaporwave-sun",
+    swatch: { bg: "linear-gradient(180deg,#c026d3,#7c3aed,#06b6d4)", accent: "#f0abfc", text: "#ffffff", radius: 8 },
+    overrides: { accent: "#f0abfc", textColor: "#ffffff", buttonStyle: "glass", radius: "md", radiusPx: 8, fontPair: "jetbrains-work", shadowDepth: "medium", hover: "glow", bgNoise: true },
+  },
+  {
+    id: "kraft-paper",
+    name: "Kraft Paper",
+    tagline: "Botanical, tactile",
+    themeId: "kraft-botanical",
+    swatch: { bg: "#f2ede0", accent: "#4d7c0f", text: "#052e16", radius: 10 },
+    overrides: { bgType: "solid", bgSolid: "#f2ede0", accent: "#4d7c0f", textColor: "#052e16", buttonStyle: "outline", radius: "md", radiusPx: 10, fontPair: "cormorant-karla", shadowDepth: "soft", bgNoise: true },
+  },
+  {
+    id: "luxe-noir",
+    name: "Luxe Noir",
+    tagline: "Black + gilded gold",
+    themeId: "luxe-gold-noir",
+    swatch: { bg: "#0a0a0a", accent: "#d4af37", text: "#f8f2d9", radius: 2 },
+    overrides: { bgType: "solid", bgSolid: "#0a0a0a", accent: "#d4af37", textColor: "#f8f2d9", buttonStyle: "outline", radius: "sm", radiusPx: 2, fontPair: "cormorant-karla", shadowDepth: "none", alignment: "center" },
+  },
+  {
+    id: "pastel-bento",
+    name: "Pastel Bento",
+    tagline: "Playful tiles, candy",
+    themeId: "pastel-tiles",
+    swatch: { bg: "linear-gradient(135deg,#fecaca,#bfdbfe,#fde68a)", accent: "#f472b6", text: "#0f172a", radius: 20 },
+    overrides: { bgType: "mesh", bgMeshStops: ["#fecaca", "#bfdbfe", "#fde68a", "#c7d2fe"], accent: "#f472b6", textColor: "#0f172a", buttonStyle: "solid", radius: "xl", radiusPx: 20, fontPair: "syne-jakarta", shadowDepth: "soft", hover: "lift" },
+  },
+  {
+    id: "vapor-chrome",
+    name: "Vapor Chrome",
+    tagline: "Y2K iridescent chrome",
+    themeId: "chrome-y2k",
+    swatch: { bg: "linear-gradient(135deg,#fbcfe8,#a5f3fc,#c7d2fe,#fde68a)", accent: "#a78bfa", text: "#0f172a", radius: 999 },
+    overrides: { accent: "#a78bfa", textColor: "#0f172a", buttonStyle: "glass", radius: "full", radiusPx: 999, fontPair: "space-dm", shadowDepth: "hard", hover: "scale" },
+  },
+];
+
+const paletteSwatches = [
+  "#6366f1", "#a78bfa", "#ec4899", "#f472b6",
+  "#f97316", "#f59e0b", "#eab308", "#84cc16",
+  "#22c55e", "#14b8a6", "#06b6d4", "#3b82f6",
+];
+
+const buttonStyleOptions: Array<{ id: "solid" | "outline" | "pill" | "glass" | "brutal" | "shadow"; label: string }> = [
+  { id: "solid", label: "Solid" },
+  { id: "outline", label: "Outline" },
+  { id: "pill", label: "Pill" },
+  { id: "glass", label: "Glass" },
+  { id: "brutal", label: "Brutal" },
+  { id: "shadow", label: "Shadow" },
+];
+
+const shadowDepths: Array<{ id: "none" | "soft" | "medium" | "hard"; label: string }> = [
+  { id: "none", label: "None" },
+  { id: "soft", label: "Soft" },
+  { id: "medium", label: "Med" },
+  { id: "hard", label: "Hard" },
+];
+
+const fontPairs: Array<{ id: FontPairId; name: string; sample: string; headingFont: string; bodyFont: string }> = [
+  { id: "inter-inter", name: "Inter · Inter", sample: "Aa", headingFont: "Inter, sans-serif", bodyFont: "Inter, sans-serif" },
+  { id: "playfair-inter", name: "Playfair · Inter", sample: "Aa", headingFont: `"Playfair Display", serif`, bodyFont: "Inter, sans-serif" },
+  { id: "space-dm", name: "Space · DM Sans", sample: "Aa", headingFont: `"Space Grotesk", sans-serif`, bodyFont: `"DM Sans", sans-serif` },
+  { id: "syne-jakarta", name: "Syne · Jakarta", sample: "Aa", headingFont: `Syne, sans-serif`, bodyFont: `"Plus Jakarta Sans", sans-serif` },
+  { id: "instrument-work", name: "Instrument · Work", sample: "Aa", headingFont: `"Instrument Serif", serif`, bodyFont: `"Work Sans", sans-serif` },
+  { id: "cormorant-karla", name: "Cormorant · Karla", sample: "Aa", headingFont: `"Cormorant Garamond", serif`, bodyFont: `Karla, sans-serif` },
+  { id: "jetbrains-work", name: "JetBrains · Work", sample: "Aa", headingFont: `"JetBrains Mono", monospace`, bodyFont: `"Work Sans", sans-serif` },
+  { id: "bebas-barlow", name: "Bebas · Barlow", sample: "Aa", headingFont: `"Bebas Neue", sans-serif`, bodyFont: `Barlow, sans-serif` },
+];
+
+const fontScales: Array<{ id: "s" | "m" | "l" | "xl"; label: string }> = [
+  { id: "s", label: "S" }, { id: "m", label: "M" }, { id: "l", label: "L" }, { id: "xl", label: "XL" },
+];
+
+const spacings: Array<{ id: "tight" | "cozy" | "roomy" | "airy"; label: string }> = [
+  { id: "tight", label: "Tight" }, { id: "cozy", label: "Cozy" }, { id: "roomy", label: "Roomy" }, { id: "airy", label: "Airy" },
+];
+
+const maxWidths: Array<{ id: "narrow" | "regular" | "wide"; label: string }> = [
+  { id: "narrow", label: "Narrow" }, { id: "regular", label: "Regular" }, { id: "wide", label: "Wide" },
+];
+
+/* Contrast helper (WCAG) */
+function relLum(hex: string): number {
+  const h = hex.replace("#", "");
+  if (h.length !== 6) return 0;
+  const rgb = [0, 2, 4].map((i) => {
+    const v = parseInt(h.slice(i, i + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+}
+function contrastRatio(a: string, b: string): number {
+  const l1 = relLum(a); const l2 = relLum(b);
+  const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/* ------------------------------ Design Panel ------------------------------ */
+
 function DesignPanel() {
   const cfg = useBioConfig();
   const o = cfg.overrides;
+  const accent = o.accent ?? "#6366f1";
+  const text = o.textColor ?? "#ffffff";
+  const bgSample = o.bgType === "solid" && o.bgSolid ? o.bgSolid : "#0f172a";
+  const ratio = contrastRatio(text, bgSample);
+  const contrastLabel = ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : "Fail";
+  const contrastTone = ratio >= 4.5 ? "text-emerald-500 border-emerald-500/40 bg-emerald-500/10" : "text-rose-500 border-rose-500/40 bg-rose-500/10";
+
   return (
     <Accordion type="multiple" defaultValue={["presets", "colors", "type", "buttons", "bg", "layout"]} className="space-y-2 max-w-2xl">
+      {/* -------- Presets -------- */}
       <AccordionItem value="presets" className="border rounded-lg px-4 bg-card/50">
         <AccordionTrigger className="text-sm font-semibold">
           <span className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary" /> Design Presets</span>
         </AccordionTrigger>
         <AccordionContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {linkBioTemplates.slice(0, 6).map((tpl) => (
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[11px] text-muted-foreground">One-click recipes — writes all style overrides.</p>
+            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[11px]" onClick={() => { bioStore.resetOverrides(); toast.success("Overrides reset"); }}>
+              <RotateCcw className="w-3 h-3" /> Reset
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {designPresets.map((p) => (
               <button
-                key={tpl.id}
+                key={p.id}
                 onClick={() => {
-                  bioStore.update((c) => ({
-                    ...c,
-                    themeId: tpl.themeId,
-                    handle: tpl.handle,
-                    headline: tpl.headline,
-                    links: tpl.links.map((l, i) => ({ id: `l${Date.now()}${i}`, title: l.title, url: l.url, highlight: l.highlight, enabled: true })),
-                  }));
-                  localStorage.setItem(APPLIED_TEMPLATE_KEY, tpl.id);
-                  toast.success(`Preset "${tpl.name}" applied`);
+                  bioStore.applyDesignPreset({ themeId: p.themeId, overrides: p.overrides });
+                  toast.success(`Preset "${p.name}" applied`);
                 }}
-                className="text-left p-2.5 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-muted/50 transition-all"
+                className="group text-left rounded-lg border border-border/50 hover:border-primary/60 hover:shadow-md transition-all overflow-hidden bg-card"
               >
-                <div className="text-xs font-semibold truncate">{tpl.name}</div>
-                <div className="text-[10px] text-muted-foreground truncate">{tpl.category}</div>
+                <div className="h-16 relative flex items-center justify-center" style={{ background: p.swatch.bg }}>
+                  <div
+                    className="px-2.5 py-1 text-[10px] font-semibold shadow-sm"
+                    style={{ background: p.swatch.accent, color: p.swatch.text, borderRadius: p.swatch.radius }}
+                  >
+                    Sample
+                  </div>
+                </div>
+                <div className="p-2">
+                  <div className="text-[11px] font-semibold truncate">{p.name}</div>
+                  <div className="text-[9px] text-muted-foreground truncate">{p.tagline}</div>
+                </div>
               </button>
             ))}
           </div>
         </AccordionContent>
       </AccordionItem>
 
+      {/* -------- Colors -------- */}
       <AccordionItem value="colors" className="border rounded-lg px-4 bg-card/50">
         <AccordionTrigger className="text-sm font-semibold">
           <span className="flex items-center gap-2"><Palette className="w-4 h-4 text-primary" /> Colors</span>
         </AccordionTrigger>
         <AccordionContent className="space-y-3">
-          <ColorField label="Accent" value={o.accent ?? "#6366f1"} onChange={(v) => bioStore.patchOverrides({ accent: v })} />
-          <ColorField label="Text" value={o.textColor ?? "#ffffff"} onChange={(v) => bioStore.patchOverrides({ textColor: v })} />
-          <ColorField label="Button background" value={o.buttonBg ?? ""} placeholder="Theme default" onChange={(v) => bioStore.patchOverrides({ buttonBg: v || undefined })} />
-          <ColorField label="Button text" value={o.buttonText ?? ""} placeholder="Theme default" onChange={(v) => bioStore.patchOverrides({ buttonText: v || undefined })} />
+          <div>
+            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Palette</Label>
+            <div className="mt-1.5 grid grid-cols-12 gap-1">
+              {paletteSwatches.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => bioStore.patchOverrides({ accent: c })}
+                  className={cn("h-6 rounded border transition-transform hover:scale-110", accent === c ? "border-foreground ring-1 ring-primary" : "border-border/40")}
+                  style={{ background: c }}
+                  aria-label={`Set accent ${c}`}
+                />
+              ))}
+            </div>
+          </div>
+          <ColorField label="Accent" value={o.accent ?? "#6366f1"} onChange={(v) => bioStore.patchOverrides({ accent: v })} onClear={() => bioStore.patchOverrides({ accent: undefined })} />
+          <ColorField label="Text" value={o.textColor ?? "#ffffff"} onChange={(v) => bioStore.patchOverrides({ textColor: v })} onClear={() => bioStore.patchOverrides({ textColor: undefined })} />
+          <ColorField label="Button background" value={o.buttonBg ?? ""} placeholder="Theme default" onChange={(v) => bioStore.patchOverrides({ buttonBg: v || undefined })} onClear={() => bioStore.patchOverrides({ buttonBg: undefined })} />
+          <ColorField label="Button text" value={o.buttonText ?? ""} placeholder="Theme default" onChange={(v) => bioStore.patchOverrides({ buttonText: v || undefined })} onClear={() => bioStore.patchOverrides({ buttonText: undefined })} />
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-muted-foreground">Text on background:</span>
+            <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded border", contrastTone)}>{contrastLabel} · {ratio.toFixed(2)}</span>
+          </div>
         </AccordionContent>
       </AccordionItem>
 
+      {/* -------- Typography -------- */}
       <AccordionItem value="type" className="border rounded-lg px-4 bg-card/50">
         <AccordionTrigger className="text-sm font-semibold">
           <span className="flex items-center gap-2"><Type className="w-4 h-4 text-primary" /> Typography</span>
         </AccordionTrigger>
         <AccordionContent className="space-y-3">
-          <FontChooser label="Heading" value={o.fontHeading ?? "sans"} onChange={(v) => bioStore.patchOverrides({ fontHeading: v })} />
-          <FontChooser label="Body" value={o.fontBody ?? "sans"} onChange={(v) => bioStore.patchOverrides({ fontBody: v })} />
-        </AccordionContent>
-      </AccordionItem>
-
-      <AccordionItem value="buttons" className="border rounded-lg px-4 bg-card/50">
-        <AccordionTrigger className="text-sm font-semibold">
-          <span className="flex items-center gap-2"><Sliders className="w-4 h-4 text-primary" /> Button style</span>
-        </AccordionTrigger>
-        <AccordionContent className="space-y-3">
-          <div className="grid grid-cols-5 gap-1.5">
-            {buttonStyles.map((b) => (
-              <button
-                key={b.id}
-                onClick={() => bioStore.patchOverrides({ buttonStyle: b.id })}
-                className={cn(
-                  "px-2 py-1.5 rounded-md text-[11px] font-medium border transition-colors",
-                  (o.buttonStyle ?? "") === b.id ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
-                )}
-              >
-                {b.label}
-              </button>
-            ))}
+          <div>
+            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Font pair</Label>
+            <div className="mt-1.5 grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              {fontPairs.map((f) => {
+                const active = o.fontPair === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => bioStore.patchOverrides({ fontPair: f.id })}
+                    className={cn(
+                      "rounded-lg border p-2 text-center transition-colors",
+                      active ? "border-primary bg-primary/10" : "border-border/60 hover:bg-muted",
+                    )}
+                  >
+                    <div className="text-2xl leading-none" style={{ fontFamily: f.headingFont }}>{f.sample}</div>
+                    <div className="text-[9px] mt-1 truncate" style={{ fontFamily: f.bodyFont }}>{f.name}</div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <div>
-            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Corner radius</Label>
+            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Font size scale</Label>
             <div className="grid grid-cols-4 gap-1.5 mt-1.5">
-              {radii.map((r) => (
+              {fontScales.map((s) => (
                 <button
-                  key={r.id}
-                  onClick={() => bioStore.patchOverrides({ radius: r.id })}
+                  key={s.id}
+                  onClick={() => bioStore.patchOverrides({ fontScale: s.id })}
                   className={cn(
                     "px-2 py-1.5 rounded-md text-[11px] font-medium border transition-colors",
-                    (o.radius ?? "") === r.id ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
+                    (o.fontScale ?? "m") === s.id ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
                   )}
                 >
-                  {r.label}
+                  {s.label}
                 </button>
               ))}
             </div>
@@ -293,13 +464,64 @@ function DesignPanel() {
         </AccordionContent>
       </AccordionItem>
 
+      {/* -------- Buttons -------- */}
+      <AccordionItem value="buttons" className="border rounded-lg px-4 bg-card/50">
+        <AccordionTrigger className="text-sm font-semibold">
+          <span className="flex items-center gap-2"><Sliders className="w-4 h-4 text-primary" /> Buttons</span>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-3">
+          <div>
+            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Style</Label>
+            <div className="grid grid-cols-3 gap-1.5 mt-1.5">
+              {buttonStyleOptions.map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => bioStore.patchOverrides({ buttonStyle: b.id })}
+                  className={cn(
+                    "rounded-md border p-1.5 transition-colors",
+                    (o.buttonStyle ?? "") === b.id ? "border-primary bg-primary/10" : "border-border/60 hover:bg-muted",
+                  )}
+                >
+                  <LiveButtonPreview variant={b.id} accent={accent} label={b.label} radius={o.radiusPx ?? 12} />
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Corner radius</Label>
+              <span className="text-[10px] text-muted-foreground font-mono">{o.radiusPx ?? 12}px</span>
+            </div>
+            <Slider className="mt-2" min={0} max={32} step={1} value={[o.radiusPx ?? 12]} onValueChange={([v]) => bioStore.patchOverrides({ radiusPx: v })} />
+          </div>
+          <div>
+            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Shadow depth</Label>
+            <div className="grid grid-cols-4 gap-1.5 mt-1.5">
+              {shadowDepths.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => bioStore.patchOverrides({ shadowDepth: s.id })}
+                  className={cn(
+                    "px-2 py-1.5 rounded-md text-[11px] font-medium border transition-colors",
+                    (o.shadowDepth ?? "none") === s.id ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
+                  )}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+
+      {/* -------- Background -------- */}
       <AccordionItem value="bg" className="border rounded-lg px-4 bg-card/50">
         <AccordionTrigger className="text-sm font-semibold">
           <span className="flex items-center gap-2"><ImageIcon className="w-4 h-4 text-primary" /> Background</span>
         </AccordionTrigger>
         <AccordionContent className="space-y-3">
-          <div className="grid grid-cols-3 gap-1.5">
-            {(["theme", "solid", "gradient"] as const).map((t) => (
+          <div className="grid grid-cols-5 gap-1.5">
+            {(["theme", "solid", "gradient", "mesh", "image"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => bioStore.patchOverrides({ bgType: t })}
@@ -321,9 +543,46 @@ function DesignPanel() {
               <ColorField label="To" value={o.bgGradientTo ?? "#0f172a"} onChange={(v) => bioStore.patchOverrides({ bgGradientTo: v })} />
             </div>
           )}
+          {o.bgType === "mesh" && (
+            <div className="grid grid-cols-4 gap-2">
+              {[0, 1, 2, 3].map((i) => {
+                const stops = o.bgMeshStops ?? ["#a78bfa", "#22d3ee", "#f472b6", "#fde047"];
+                return (
+                  <ColorField
+                    key={i}
+                    label={`Stop ${i + 1}`}
+                    value={stops[i]}
+                    onChange={(v) => {
+                      const next = [...stops] as [string, string, string, string];
+                      next[i] = v;
+                      bioStore.patchOverrides({ bgMeshStops: next });
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
+          {o.bgType === "image" && (
+            <div>
+              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Image URL</Label>
+              <Input value={o.bgImage ?? ""} placeholder="https://…" onChange={(e) => bioStore.patchOverrides({ bgImage: e.target.value })} className="h-9 mt-1 text-xs" />
+            </div>
+          )}
+          <div>
+            <div className="flex items-center justify-between">
+              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Blur</Label>
+              <span className="text-[10px] text-muted-foreground font-mono">{o.bgBlur ?? 0}px</span>
+            </div>
+            <Slider className="mt-2" min={0} max={40} step={1} value={[o.bgBlur ?? 0]} onValueChange={([v]) => bioStore.patchOverrides({ bgBlur: v })} />
+          </div>
+          <label className="flex items-center justify-between text-xs">
+            <span>Noise / grain overlay</span>
+            <Switch checked={!!o.bgNoise} onCheckedChange={(v) => bioStore.patchOverrides({ bgNoise: v })} />
+          </label>
         </AccordionContent>
       </AccordionItem>
 
+      {/* -------- Spacing & Layout -------- */}
       <AccordionItem value="layout" className="border rounded-lg px-4 bg-card/50">
         <AccordionTrigger className="text-sm font-semibold">
           <span className="flex items-center gap-2"><Sliders className="w-4 h-4 text-primary" /> Spacing & layout</span>
@@ -331,42 +590,135 @@ function DesignPanel() {
         <AccordionContent className="space-y-3">
           <div>
             <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Alignment</Label>
-            <div className="grid grid-cols-2 gap-1.5 mt-1.5">
-              {(["center", "left"] as const).map((a) => (
+            <div className="grid grid-cols-3 gap-1.5 mt-1.5">
+              {([
+                { id: "center" as const, Icon: AlignCenter },
+                { id: "left" as const, Icon: AlignLeft },
+                { id: "justified" as const, Icon: AlignJustify },
+              ]).map(({ id, Icon }) => (
                 <button
-                  key={a}
-                  onClick={() => bioStore.patchOverrides({ alignment: a })}
+                  key={id}
+                  onClick={() => bioStore.patchOverrides({ alignment: id })}
                   className={cn(
-                    "px-2 py-1.5 rounded-md text-[11px] font-medium border capitalize transition-colors",
-                    (o.alignment ?? "center") === a ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
+                    "flex flex-col items-center gap-1 py-2 rounded-md border text-[10px] capitalize transition-colors",
+                    (o.alignment ?? "center") === id ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
                   )}
                 >
-                  {a}
+                  <Icon className="w-4 h-4" />
+                  {id}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Avatar size</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Avatar size</Label>
+              <span className="text-[10px] text-muted-foreground font-mono">{o.avatarSizePx ?? 84}px</span>
+            </div>
+            <Slider className="mt-2" min={48} max={140} step={2} value={[o.avatarSizePx ?? 84]} onValueChange={([v]) => bioStore.patchOverrides({ avatarSizePx: v })} />
+          </div>
+          <div>
+            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Avatar shape</Label>
             <div className="grid grid-cols-3 gap-1.5 mt-1.5">
-              {(["sm", "md", "lg"] as const).map((s) => (
+              {([
+                { id: "circle" as const, Icon: Circle },
+                { id: "squircle" as const, Icon: Squircle },
+                { id: "square" as const, Icon: Square },
+              ]).map(({ id, Icon }) => (
                 <button
-                  key={s}
-                  onClick={() => bioStore.patchOverrides({ avatarSize: s })}
+                  key={id}
+                  onClick={() => bioStore.patchOverrides({ avatarShape: id })}
                   className={cn(
-                    "px-2 py-1.5 rounded-md text-[11px] font-medium border uppercase transition-colors",
-                    (o.avatarSize ?? "md") === s ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
+                    "flex flex-col items-center gap-1 py-2 rounded-md border text-[10px] capitalize transition-colors",
+                    (o.avatarShape ?? "circle") === id ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
                   )}
                 >
-                  {s}
+                  <Icon className="w-4 h-4" />
+                  {id}
                 </button>
               ))}
             </div>
+          </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Avatar border</Label>
+              <span className="text-[10px] text-muted-foreground font-mono">{o.avatarBorder ?? 2}px</span>
+            </div>
+            <Slider className="mt-2" min={0} max={8} step={1} value={[o.avatarBorder ?? 2]} onValueChange={([v]) => bioStore.patchOverrides({ avatarBorder: v })} />
+          </div>
+          <div>
+            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Section spacing</Label>
+            <div className="grid grid-cols-4 gap-1.5 mt-1.5">
+              {spacings.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => bioStore.patchOverrides({ sectionSpacing: s.id })}
+                  className={cn(
+                    "px-2 py-1.5 rounded-md text-[11px] font-medium border transition-colors",
+                    (o.sectionSpacing ?? "cozy") === s.id ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
+                  )}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Max width</Label>
+            <div className="grid grid-cols-3 gap-1.5 mt-1.5">
+              {maxWidths.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => bioStore.patchOverrides({ maxWidth: m.id })}
+                  className={cn(
+                    "px-2 py-1.5 rounded-md text-[11px] font-medium border transition-colors",
+                    (o.maxWidth ?? "regular") === m.id ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
+                  )}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="pt-2 border-t border-border/50 space-y-2">
+            <label className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5"><EyeIcon className="w-3.5 h-3.5" /> Show socials</span>
+              <Switch checked={o.showSocials !== false} onCheckedChange={(v) => bioStore.patchOverrides({ showSocials: v })} />
+            </label>
+            <label className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5"><EyeOff className="w-3.5 h-3.5" /> Powered-by footer</span>
+              <Switch checked={!!o.footerText} onCheckedChange={(v) => bioStore.patchOverrides({ footerText: v ? "Powered by SMM SaaS" : undefined })} />
+            </label>
+            {o.footerText !== undefined && (
+              <Input value={o.footerText} onChange={(e) => bioStore.patchOverrides({ footerText: e.target.value })} className="h-8 text-xs" placeholder="Footer text" />
+            )}
           </div>
         </AccordionContent>
       </AccordionItem>
     </Accordion>
   );
+}
+
+/* Live preview chip for a button variant */
+function LiveButtonPreview({ variant, accent, label, radius }: { variant: string; accent: string; label: string; radius: number }) {
+  const base = "px-2 py-1 text-[10px] font-semibold w-full text-center";
+  const style: React.CSSProperties = { borderRadius: radius };
+  switch (variant) {
+    case "solid":
+      return <div className={base} style={{ ...style, background: accent, color: "#fff" }}>{label}</div>;
+    case "outline":
+      return <div className={base} style={{ ...style, border: `1.5px solid ${accent}`, color: accent }}>{label}</div>;
+    case "pill":
+      return <div className={base} style={{ borderRadius: 999, background: accent, color: "#fff" }}>{label}</div>;
+    case "glass":
+      return <div className={base} style={{ ...style, background: `${accent}33`, border: `1px solid ${accent}66`, color: accent, backdropFilter: "blur(6px)" }}>{label}</div>;
+    case "brutal":
+      return <div className={base} style={{ ...style, background: "#fff", color: "#000", border: "2px solid #000", boxShadow: "3px 3px 0 #000" }}>{label}</div>;
+    case "shadow":
+      return <div className={base} style={{ ...style, background: accent, color: "#fff", boxShadow: `0 6px 14px -4px ${accent}99` }}>{label}</div>;
+    default:
+      return <div className={base}>{label}</div>;
+  }
 }
 
 function ThemesPanel() {
@@ -739,15 +1091,22 @@ function ColorField({
   value,
   onChange,
   placeholder,
+  onClear,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  onClear?: () => void;
 }) {
   return (
     <div>
-      <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label>
+      <div className="flex items-center justify-between">
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label>
+        {onClear && value && (
+          <button onClick={onClear} className="text-[10px] text-muted-foreground hover:text-foreground">clear</button>
+        )}
+      </div>
       <div className="flex items-center gap-2 mt-1">
         <input
           type="color"
