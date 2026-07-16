@@ -30,13 +30,14 @@ export interface SlashCommand {
   icon: LucideIcon;
   /** Text inserted into the prompt when the command is chosen. */
   insert: string;
-  /** If true, submits immediately instead of just inserting. */
+  /** If true, submits immediately instead of just inserting. Reserve for pure page-navigation intents. */
   submit?: boolean;
   /** Optional client-side side-effect (e.g. clear history). */
   action?: "clear-history";
   /** Structured parameters this command expects. */
   params?: SlashParam[];
 }
+
 
 export const SLASH_COMMANDS: SlashCommand[] = [
   {
