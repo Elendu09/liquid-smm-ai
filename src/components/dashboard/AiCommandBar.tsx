@@ -120,6 +120,16 @@ export function AiCommandBar() {
   const abortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const promptAnchorRef = useRef<HTMLDivElement | null>(null);
+  const refocusOnIdleRef = useRef(false);
+
+  // When Send is clicked we ask the textarea to re-focus as soon as busy flips off,
+  // so the user can keep editing without hunting for the caret.
+  useEffect(() => {
+    if (!busy && refocusOnIdleRef.current) {
+      refocusOnIdleRef.current = false;
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    }
+  }, [busy]);
 
 
   const { settings, update: updateSettings } = useAiCommandSettings();
@@ -764,7 +774,7 @@ export function AiCommandBar() {
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder={typed ? `${typed}▏` : "Ask anything… type / for commands"}
                 rows={3}
-                className="resize-none text-[13px] leading-snug min-h-[72px] sm:min-h-[84px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-3 pt-2.5 pb-11 sm:pb-12 placeholder:text-muted-foreground/60 relative z-[1]"
+                className="resize-none text-[13px] leading-snug min-h-[72px] sm:min-h-[84px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none pl-3 pr-24 pt-2.5 pb-11 sm:pb-12 placeholder:text-muted-foreground/60 relative z-[1]"
                 onKeyDown={(e) => {
                   // SlashCommandMenu owns Enter / arrows while it's visible.
                   if (slashOpen && (e.key === "Enter" || e.key === "Tab" || e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Escape")) {
@@ -809,7 +819,7 @@ export function AiCommandBar() {
               {/<[a-z_-]+>/i.test(prompt) && (
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 px-3 pt-2.5 pb-11 sm:pb-12 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words z-0"
+                  className="pointer-events-none absolute inset-0 pl-3 pr-24 pt-2.5 pb-11 sm:pb-12 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words z-0"
                 >
                   {prompt.split(/(<[a-z_-]+>)/i).map((part, i) => {
                     const m = /^<([a-z_-]+)>$/i.exec(part);
@@ -839,7 +849,7 @@ export function AiCommandBar() {
               {ghostSuffix && (
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 px-3 pt-2.5 pb-11 sm:pb-12 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words"
+                  className="pointer-events-none absolute inset-0 pl-3 pr-24 pt-2.5 pb-11 sm:pb-12 text-[13px] leading-snug font-normal whitespace-pre-wrap break-words"
                 >
                   <span className="invisible">{prompt}</span>
                   <span className="text-muted-foreground/50">{ghostSuffix}</span>
@@ -861,7 +871,7 @@ export function AiCommandBar() {
             )}
 
             {/* Floating toolbar */}
-            <div className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-2">
+            <div className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-2 z-10">
               <div className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground pl-1.5">
                 <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">/</kbd>
                 <span className="ml-0.5 mr-2">commands</span>
@@ -897,6 +907,7 @@ export function AiCommandBar() {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    refocusOnIdleRef.current = true;
                     submit();
                   }}
                   onMouseDown={(e) => e.preventDefault()}
