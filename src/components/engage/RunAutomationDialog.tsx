@@ -277,6 +277,14 @@ export function RunAutomationDialog({ open, onOpenChange, presetSegmentId, multi
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <BulkAutomationProgressDialog
+        open={progressOpen}
+        onOpenChange={setProgressOpen}
+        targets={progressTargets}
+        rateLimit={loadRateLimit()}
+        ruleName={rule?.name ?? "Automation"}
+      />
     </Dialog>
   );
 }
