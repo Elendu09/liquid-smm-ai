@@ -137,6 +137,113 @@ export function AiCommandBar() {
   const attachmentsRef = useRef(attachments.items);
   useEffect(() => { attachmentsRef.current = attachments.items; }, [attachments.items]);
 
+  // Single-shot dictation (mic button): toggle-record → transcribe → fill textarea.
+  const [dictating, setDictating] = useState(false);
+  const dictationRef = useRef<{ recorder: MediaRecorder; stream: MediaStream; chunks: Blob[] } | null>(null);
+  const startDictation = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+      const recorder = new MediaRecorder(stream, { mimeType: mime });
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+      recorder.start();
+      dictationRef.current = { recorder, stream, chunks };
+      setDictating(true);
+      toast("Recording — tap the mic again to stop.");
+    } catch {
+      toast.error("Microphone blocked — enable it in your browser settings.");
+    }
+  };
+  const stopDictation = async () => {
+    const ref = dictationRef.current;
+    if (!ref) return;
+    setDictating(false);
+    await new Promise<void>((res) => {
+      ref.recorder.onstop = () => res();
+      ref.recorder.stop();
+    });
+    ref.stream.getTracks().forEach((t) => t.stop());
+    const blob = new Blob(ref.chunks, { type: ref.recorder.mimeType });
+    dictationRef.current = null;
+    if (blob.size < 2048) { toast.error("Recording was empty."); return; }
+    try {
+      const ext = ref.recorder.mimeType.includes("mp4") ? "mp4" : "webm";
+      const form = new FormData();
+      form.append("file", blob, `dictation.${ext}`);
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-transcribe`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        body: form,
+      });
+      if (!res.ok) throw new Error(`Transcribe ${res.status}`);
+      const data = await res.json();
+      const text = String(data.text ?? "").trim();
+      if (!text) { toast("No speech detected."); return; }
+      setPrompt((p) => (p ? `${p} ${text}` : text));
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Transcription failed");
+    }
+  };
+  const toggleDictation = () => (dictating ? void stopDictation() : void startDictation());
+
+  const openFilePicker = () => {
+    setAttachMenuOpen(false);
+    fileInputRef.current?.click();
+  };
+
+  // Voice-call callback — funnels transcript through submit(), returns the assistant text for TTS.
+  const handleVoiceTranscript = async (spoken: string): Promise<string> => {
+    return await new Promise<string>((resolve) => {
+      // Kick off submit; poll `latest` for the response, resolving when it completes.
+      let resolved = false;
+      const startedAt = Date.now();
+      void submit(spoken, { mode: "voice", keepAttachments: false });
+      const iv = setInterval(() => {
+        if (resolved) return;
+        const busyNow = abortRef.current !== null;
+        if (!busyNow && Date.now() - startedAt > 400) {
+          resolved = true;
+          clearInterval(iv);
+          resolve((latestRef.current?.text ?? "").trim() || "Done.");
+        }
+        if (Date.now() - startedAt > 25000) {
+          resolved = true;
+          clearInterval(iv);
+          resolve("Sorry — that took too long.");
+        }
+      }, 250);
+    });
+  };
+  const latestRef = useRef<AiCommandEntry | null>(null);
+  useEffect(() => { latestRef.current = latest; }, [latest]);
+
+  // Suggested actions when an image is attached.
+  const activePlatformLabel = activeAccount?.platformId ?? "the platform";
+  const imageSuggestions = attachments.items.length > 0 ? [
+    "Write a caption for this image",
+    "Generate 15 hashtags for this image",
+    `Repurpose this for ${activePlatformLabel}`,
+  ] : [];
+
+  // Global keyboard shortcuts: Cmd/Ctrl+U (upload), Cmd/Ctrl+Shift+V (voice call).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && !e.shiftKey && e.key.toLowerCase() === "u") {
+        e.preventDefault();
+        fileInputRef.current?.click();
+      } else if (mod && e.shiftKey && e.key.toLowerCase() === "v") {
+        e.preventDefault();
+        setVoiceOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // When Send is clicked we ask the textarea to re-focus as soon as busy flips off,
   // so the user can keep editing without hunting for the caret.
   useEffect(() => {
