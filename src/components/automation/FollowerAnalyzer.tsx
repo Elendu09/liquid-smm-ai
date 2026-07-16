@@ -109,13 +109,17 @@ export const FollowerAnalyzer = () => {
           </div>
           <div>
             <h3 className="text-xl font-bold">Follower Analyzer</h3>
-            <p className="text-sm text-muted-foreground">Analyze follower quality and engagement</p>
+            <p className="text-sm text-muted-foreground">{stats.account} · quality, growth & engagement</p>
           </div>
         </div>
-        <Button onClick={exportReport} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Download className="mr-2 h-4 w-4" />
-          Full Report
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" onClick={() => setAnalyzeOpen(true)}>
+            <Sparkles className="mr-2 h-4 w-4" /> Analyze account
+          </Button>
+          <Button onClick={() => setExportOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Download className="mr-2 h-4 w-4" /> Export
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
