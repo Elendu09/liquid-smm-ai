@@ -112,6 +112,8 @@ export function AiCommandBar() {
   const { items: history, clear } = useAiCommandHistory();
   const abortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const promptAnchorRef = useRef<HTMLDivElement | null>(null);
+
 
   // Persist prompt drafts so a reload doesn't lose in-progress work.
   useEffect(() => {
