@@ -207,6 +207,38 @@ export const bioStore = {
     next.splice(to, 0, item);
     commit({ ...state, links: next });
   },
+  addBlock: (type: BioBlockType) => {
+    const id = `b${Date.now()}`;
+    const defaults: Record<BioBlockType, Partial<BioBlock>> = {
+      header: { text: "New Section" },
+      text: { text: "Add a short description here." },
+      image: { src: "https://images.unsplash.com/photo-1520975916090-3105956dac38?w=600" },
+      video: { src: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      embed: { src: "https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC" },
+      divider: {},
+      countdown: { text: "Launch in", target: new Date(Date.now() + 7 * 864e5).toISOString() },
+      quote: { text: "Design is intelligence made visible." },
+    };
+    const block: BioBlock = { id, type, enabled: true, align: "center", ...defaults[type] };
+    commit({ ...state, blocks: [...(state.blocks ?? []), block] });
+  },
+  updateBlock: (id: string, patch: Partial<BioBlock>) => {
+    commit({ ...state, blocks: (state.blocks ?? []).map((b) => (b.id === id ? { ...b, ...patch } : b)) });
+  },
+  removeBlock: (id: string) => {
+    commit({ ...state, blocks: (state.blocks ?? []).filter((b) => b.id !== id) });
+  },
+  moveBlock: (id: string, dir: -1 | 1) => {
+    const list = state.blocks ?? [];
+    const idx = list.findIndex((b) => b.id === id);
+    if (idx < 0) return;
+    const to = idx + dir;
+    if (to < 0 || to >= list.length) return;
+    const next = [...list];
+    const [item] = next.splice(idx, 1);
+    next.splice(to, 0, item);
+    commit({ ...state, blocks: next });
+  },
   subscribe: (l: () => void) => {
     listeners.add(l);
     return () => listeners.delete(l);
