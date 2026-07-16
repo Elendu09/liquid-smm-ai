@@ -278,8 +278,7 @@ export function AiCommandBar() {
     }
     const text = raw;
     if (!text || busy) return;
-    setBusy(true);
-    setPrompt("");
+    lastPromptRef.current = text;
     setBusy(true);
     setPrompt("");
     abortRef.current?.abort();
