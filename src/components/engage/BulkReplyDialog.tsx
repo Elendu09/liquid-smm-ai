@@ -61,7 +61,7 @@ export function BulkReplyDialog({ open, onOpenChange, comments, onSend }: Props)
   const send = () => {
     const payload = comments.map((c) => ({
       id: c.id,
-      text: template.split("{{user}}", c.user),
+      text: template.split("{{user}}").join(c.user),
     }));
     onSend(payload);
     onOpenChange(false);
