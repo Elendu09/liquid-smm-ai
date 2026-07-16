@@ -27,6 +27,7 @@ import { logMcpCall } from "@/hooks/useMcpActivity";
 import { useAccounts } from "@/contexts/AccountContext";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { cn } from "@/lib/utils";
+import { InlineMarkdown } from "./InlineMarkdown";
 
 const SUGGESTIONS = [
   "Draft 3 caption ideas about a new product launch",
@@ -446,7 +447,7 @@ export function AiCommandBar() {
               Response
             </div>
             {latest.text && (
-              <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">{latest.text}</p>
+              <InlineMarkdown text={latest.text} className="text-sm text-foreground/90 space-y-1" />
             )}
             {latest.error && <p className="text-sm text-destructive">{latest.error}</p>}
             {latest.toolCalls.length > 0 && (

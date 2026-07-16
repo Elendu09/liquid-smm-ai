@@ -109,21 +109,21 @@ export default function Dashboard() {
         description="Everything you scheduled, ran, and grew — at a glance."
         breadcrumbs={[{ label: "Dashboard" }]}
         actions={
-          <>
-            <Button variant="ghost" size="sm" onClick={openTour}>
-              <Sparkles className="mr-2 h-4 w-4" /> Take the tour
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/dashboard/activity/runs">
-                <Clock className="mr-2 h-4 w-4" /> Activity
-              </Link>
-            </Button>
-            <Button asChild size="sm">
+          <div className="grid grid-cols-3 gap-2 w-full md:w-auto md:flex md:items-center">
+            <Button asChild size="sm" className="w-full md:w-auto">
               <Link to="/dashboard/create">
                 <Zap className="mr-2 h-4 w-4" /> Quick action
               </Link>
             </Button>
-          </>
+            <Button variant="ghost" size="sm" onClick={openTour} className="w-full md:w-auto">
+              <Sparkles className="mr-2 h-4 w-4" /> Take the tour
+            </Button>
+            <Button asChild variant="outline" size="sm" className="w-full md:w-auto">
+              <Link to="/dashboard/activity/runs">
+                <Clock className="mr-2 h-4 w-4" /> Activity
+              </Link>
+            </Button>
+          </div>
         }
       />
 
