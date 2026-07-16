@@ -178,6 +178,8 @@ export default function BioEditor() {
             {rail === "design" && <DesignPanel />}
             {rail === "theme" && <ThemesPanel />}
             {rail === "content" && <LinksPanel />}
+            {rail === "blocks" && <BlocksPanel />}
+            {rail === "motion" && <MotionPanel />}
             {rail === "profile" && <ProfilePanel />}
             {rail === "socials" && <SocialsPanel />}
             {rail === "seo" && <SeoPanel />}
