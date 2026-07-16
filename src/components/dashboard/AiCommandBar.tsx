@@ -88,15 +88,32 @@ function shortSummary(intent: ToolIntent) {
 }
 
 export function AiCommandBar() {
-  const [prompt, setPrompt] = useState("");
+  // Restore any in-progress draft (feature memory item from the plan).
+  const [prompt, setPrompt] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.sessionStorage.getItem(DRAFT_KEY) ?? "";
+  });
   const [busy, setBusy] = useState(false);
   const [latest, setLatest] = useState<AiCommandEntry | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { accounts, activeAccount } = useAccounts();
   const { state: onboarding } = useOnboarding();
-  const { items: history, log, update, updateTool, clear } = useAiCommandHistory();
+  const { items: history, clear } = useAiCommandHistory();
   const abortRef = useRef<AbortController | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Persist prompt drafts so a reload doesn't lose in-progress work.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (prompt) window.sessionStorage.setItem(DRAFT_KEY, prompt);
+    else window.sessionStorage.removeItem(DRAFT_KEY);
+  }, [prompt]);
+
+  // Slash command menu state — opens when input starts with "/".
+  const slashOpen = prompt.startsWith("/") && !prompt.includes("\n");
+  const slashQuery = slashOpen ? prompt.slice(1) : "";
 
   // Typewriter placeholder cycling through SUGGESTIONS while input is empty & idle
   const [typed, setTyped] = useState("");
@@ -132,6 +149,46 @@ export function AiCommandBar() {
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  // Recent conversation memory sent server-side to resolve back-references.
+  const conversationMemory = useMemo(
+    () =>
+      history.slice(0, HISTORY_TURNS).reverse().map((h) => ({
+        prompt: h.prompt,
+        text: h.text,
+        toolNames: h.toolCalls.map((c) => c.name),
+      })),
+    [history],
+  );
+
+  const onSlashPick = (cmd: SlashCommand) => {
+    if (cmd.action === "clear-history") {
+      clear();
+      setPrompt("");
+      setLatest(null);
+      toast.success("Conversation memory cleared");
+      return;
+    }
+    if (cmd.submit) {
+      setPrompt("");
+      submit(cmd.insert);
+      return;
+    }
+    setPrompt(cmd.insert);
+    // Focus & place caret at end
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (el) {
+        el.focus();
+        el.setSelectionRange(cmd.insert.length, cmd.insert.length);
+      }
+    });
+  };
+
+  const stop = () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setBusy(false);
+  };
 
   const submit = async (value?: string) => {
     const text = (value ?? prompt).trim();
@@ -142,6 +199,22 @@ export function AiCommandBar() {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
+    // Optimistic in-memory entry; commit to persistent history when the stream finishes.
+    let workingEntry: AiCommandEntry = {
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      prompt: text,
+      text: "",
+      toolCalls: [],
+      status: "success",
+    };
+    setLatest(workingEntry);
+
+    const patch = (mutate: (e: AiCommandEntry) => AiCommandEntry) => {
+      workingEntry = mutate(workingEntry);
+      setLatest({ ...workingEntry });
+    };
+
     try {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-command`;
       const res = await fetch(url, {
@@ -149,6 +222,7 @@ export function AiCommandBar() {
         signal: ctrl.signal,
         headers: {
           "Content-Type": "application/json",
+          Accept: "text/event-stream",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
@@ -159,12 +233,14 @@ export function AiCommandBar() {
             activeAccountHandle: activeAccount?.username ?? null,
             tone: onboarding.profile.tone || undefined,
             niches: onboarding.profile.niches,
+            currentRoute: location.pathname,
           },
+          history: conversationMemory,
         }),
       });
 
-      if (!res.ok) {
-        const errBody = await res.text();
+      if (!res.ok || !res.body) {
+        const errBody = await res.text().catch(() => "");
         const msg =
           res.status === 429
             ? "Rate limit hit — try again in a moment."
@@ -172,39 +248,113 @@ export function AiCommandBar() {
               ? "AI credits exhausted. Add credits in Settings → Plans & credits."
               : `AI command failed (${res.status}). ${errBody.slice(0, 140)}`;
         toast.error(msg);
-        const entry = log({ prompt: text, text: "", toolCalls: [], status: "error", error: msg });
+        const entry = logAiCommand({ prompt: text, text: "", toolCalls: [], status: "error", error: msg });
         setLatest(entry);
         return;
       }
 
-      const data = (await res.json()) as { text: string; toolCalls: AiCommandToolCall[] };
-      const entry = log({
-        prompt: text,
-        text: data.text ?? "",
-        toolCalls: data.toolCalls ?? [],
-        status: "success",
-      });
-      setLatest(entry);
+      // SSE parsing loop
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let streamError: string | null = null;
 
-      // Auto-execute read-only tools (navigate, hashtag list) immediately.
-      for (const call of entry.toolCalls) {
-        const intent = call.result as ToolIntent | null;
-        if (!intent) continue;
-        if (intent.kind === "navigate" && intent.payload?.route) {
-          navigate(String(intent.payload.route));
-          updateTool(entry.id, call.id, { approved: true });
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const chunks = buffer.split("\n\n");
+        buffer = chunks.pop() ?? "";
+        for (const raw of chunks) {
+          const line = raw.replace(/^data:\s*/, "").trim();
+          if (!line) continue;
+          let evt: Record<string, unknown>;
+          try {
+            evt = JSON.parse(line);
+          } catch {
+            continue;
+          }
+          switch (evt.type) {
+            case "text-delta":
+              patch((e) => ({ ...e, text: e.text + (evt.text as string) }));
+              break;
+            case "tool-call":
+              patch((e) => ({
+                ...e,
+                toolCalls: e.toolCalls.some((c) => c.id === evt.id)
+                  ? e.toolCalls
+                  : [
+                      ...e.toolCalls,
+                      { id: String(evt.id), name: String(evt.name), args: evt.args ?? null, result: null },
+                    ],
+              }));
+              break;
+            case "tool-result":
+              patch((e) => ({
+                ...e,
+                toolCalls: e.toolCalls.map((c) =>
+                  c.id === evt.id ? { ...c, result: evt.result ?? null } : c,
+                ),
+              }));
+              // Auto-execute read-only navigate intents as soon as the tool result arrives.
+              {
+                const intent = evt.result as ToolIntent | null;
+                if (intent?.kind === "navigate" && intent.payload?.route) {
+                  navigate(String(intent.payload.route));
+                  patch((e) => ({
+                    ...e,
+                    toolCalls: e.toolCalls.map((c) =>
+                      c.id === evt.id ? { ...c, approved: true } : c,
+                    ),
+                  }));
+                }
+              }
+              break;
+            case "error":
+              streamError = String(evt.error ?? "stream error");
+              break;
+            case "done":
+              // handled after loop
+              break;
+          }
         }
       }
+
+      // Commit final entry to persistent history and swap `latest` to the stored one so
+      // approvals/rejections mutate storage instead of the ephemeral working copy.
+      const committed = logAiCommand({
+        prompt: workingEntry.prompt,
+        text: workingEntry.text,
+        toolCalls: workingEntry.toolCalls,
+        status: streamError ? "error" : "success",
+        error: streamError ?? undefined,
+      });
+      setLatest(committed);
+      if (streamError) toast.error(streamError);
     } catch (e) {
-      if (ctrl.signal.aborted) return;
+      if (ctrl.signal.aborted) {
+        // Preserve whatever we streamed so far.
+        const committed = logAiCommand({
+          prompt: workingEntry.prompt,
+          text: workingEntry.text,
+          toolCalls: workingEntry.toolCalls,
+          status: "success",
+        });
+        setLatest(committed);
+        toast("Stopped", { description: "Response was cancelled." });
+        return;
+      }
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`AI command failed: ${msg}`);
-      const entry = log({ prompt: text, text: "", toolCalls: [], status: "error", error: msg });
+      const entry = logAiCommand({ prompt: text, text: "", toolCalls: [], status: "error", error: msg });
       setLatest(entry);
     } finally {
       setBusy(false);
+      abortRef.current = null;
     }
   };
+
+
 
   const approve = (entry: AiCommandEntry, call: AiCommandToolCall) => {
     const intent = call.result as ToolIntent | null;
