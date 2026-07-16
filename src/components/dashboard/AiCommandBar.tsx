@@ -247,8 +247,18 @@ export function AiCommandBar() {
   };
 
   const submit = async (value?: string) => {
-    const text = (value ?? prompt).trim();
+    // Warn if there are still unfilled <placeholder> tokens from a slash template.
+    const raw = (value ?? prompt).trim();
+    if (/<[a-z_-]+>/i.test(raw)) {
+      toast.error("Fill in the highlighted placeholder before sending.");
+      const m = raw.match(/<([a-z_-]+)>/i);
+      if (m) selectPlaceholder(m[1]);
+      return;
+    }
+    const text = raw;
     if (!text || busy) return;
+    setBusy(true);
+    setPrompt("");
     setBusy(true);
     setPrompt("");
     abortRef.current?.abort();
