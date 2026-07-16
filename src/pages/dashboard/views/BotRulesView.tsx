@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Bot, Plus, Trash2, Power, LayoutGrid, List, PlayCircle, Pencil, Copy } from "lucide-react";
+import { Bot, Plus, Trash2, Power, LayoutGrid, List, PlayCircle, Pencil, Copy, Zap } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -13,6 +13,7 @@ import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { cn } from "@/lib/utils";
 import { NewRuleDialog, type RuleDraft } from "@/components/engage/NewRuleDialog";
 import { TestRuleDialog } from "@/components/engage/TestRuleDialog";
+import { RunAutomationDialog } from "@/components/engage/RunAutomationDialog";
 
 interface BotRule {
   id: string;
