@@ -898,6 +898,7 @@ export function AiCommandBar() {
                     e.preventDefault();
                     e.stopPropagation();
                     submit();
+                    requestAnimationFrame(() => textareaRef.current?.focus());
                   }}
                   onMouseDown={(e) => e.preventDefault()}
                   disabled={!prompt.trim()}
