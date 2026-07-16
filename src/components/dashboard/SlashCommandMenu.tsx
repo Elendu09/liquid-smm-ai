@@ -227,7 +227,7 @@ export function SlashCommandMenu({ query, open, onPick, onClose }: Props) {
       <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/60 flex items-center justify-between">
         <span className="flex items-center gap-1.5">
           <Sparkles className="h-3 w-3 text-primary" />
-          Built by Lovable · {filtered.length}
+          Commands · {filtered.length}
         </span>
         <span className="normal-case tracking-normal text-muted-foreground/70 hidden sm:inline">
           <kbd className="font-mono">↵</kbd>
