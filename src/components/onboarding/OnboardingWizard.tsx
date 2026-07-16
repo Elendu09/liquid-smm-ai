@@ -117,12 +117,41 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
     commit({ [key]: nextArr } as Partial<OnboardingProfile>);
   };
 
-  const goNext = () => setStep((s) => Math.min(s + 1, totalSteps - 1));
+  const stepValid = (i: number, d = draft): boolean => {
+    switch (i) {
+      case 0: return d.name.trim().length > 0 && !!d.role;
+      case 1: return d.connectedPlatformIds.length > 0;
+      case 2: return d.niches.length > 0;
+      case 3: return d.goals.length > 0;
+      case 4: return !!d.tone;
+      case 5: return d.postsPerWeek >= 1 && d.preferredTimes.length > 0;
+      case 6: return !!d.autonomy;
+      case 7: return true;
+      default: return true;
+    }
+  };
+  const stepHint = (i: number): string => {
+    switch (i) {
+      case 0: return "Enter your name and pick a role to continue.";
+      case 1: return "Select at least one platform (or skip the tour).";
+      case 2: return "Pick at least one niche.";
+      case 3: return "Choose at least one goal.";
+      case 4: return "Pick a brand tone.";
+      case 5: return "Choose at least one preferred posting time.";
+      case 6: return "Pick an autonomy level.";
+      default: return "";
+    }
+  };
+
+  const canProceed = stepValid(step);
+  const goNext = () => { if (canProceed) setStep((s) => Math.min(s + 1, totalSteps - 1)); };
   const back = () => setStep((s) => Math.max(s - 1, 0));
   const finish = () => {
     complete();
     onOpenChange(false);
   };
+
+
 
   if (!open) return null;
 
@@ -451,17 +480,22 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
 
       {/* Footer nav */}
       <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3 flex items-center justify-between gap-2">
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-            Skip for now
-          </Button>
-          <div className="flex gap-2">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+              Skip tour
+            </Button>
+            {!canProceed && step < totalSteps - 1 && (
+              <span className="text-[11px] text-muted-foreground truncate">{stepHint(step)}</span>
+            )}
+          </div>
+          <div className="flex gap-2 justify-end">
             <Button variant="outline" size="sm" onClick={back} disabled={step === 0}>
               <ArrowLeft className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Back</span>
             </Button>
             {step < totalSteps - 1 ? (
-              <Button size="sm" onClick={goNext}>
+              <Button size="sm" onClick={goNext} disabled={!canProceed}>
                 Next <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
@@ -475,3 +509,4 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
     </div>
   );
 }
+
