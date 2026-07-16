@@ -276,7 +276,13 @@ export default function CreateStudio() {
   const handle = accounts.find((a) => a.platformId === editing?.platform)?.username ?? "yourbrand";
 
   const card = (d: Draft, dense = false) => (
-    <div className={cn(dense ? "p-3" : "p-3")}>
+    <div
+      className={cn(dense ? "p-3" : "p-3", "cursor-pointer group")}
+      onClick={() => setPreviewing(d)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter") setPreviewing(d); }}
+    >
       <div className="flex items-start gap-2">
         <PlatformIcon platform={d.platform} size="xs" />
         <div className="flex-1 min-w-0">
@@ -291,7 +297,7 @@ export default function CreateStudio() {
           {new Date(d.scheduledAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
         </p>
       )}
-      <div className="flex justify-end gap-1 mt-2">
+      <div className="flex justify-end gap-1 mt-2" onClick={(e) => e.stopPropagation()}>
         <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditing(d)}>
           Open
         </Button>
