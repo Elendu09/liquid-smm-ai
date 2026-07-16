@@ -338,6 +338,11 @@ export const HashtagResearchTool = ({ defaultPlatformId }: HashtagResearchToolPr
                           className="rounded border-border"
                         />
                         <span className="font-medium text-primary">{hashtag.tag}</span>
+                        {hashtag.isAI && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20 gap-1">
+                            <Sparkles className="h-2.5 w-2.5" />AI
+                          </Badge>
+                        )}
                       </div>
                     </td>
                     <td className="p-3 text-sm text-muted-foreground">{hashtag.posts}</td>
