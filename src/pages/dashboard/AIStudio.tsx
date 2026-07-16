@@ -266,6 +266,60 @@ Format as a numbered list.`;
     toast({ title: "Script downloaded" });
   };
 
+  const handleDownloadSrt = () => {
+    if (!outputText.trim()) return;
+    // Break the script into speakable segments: split on sentence boundaries then
+    // regroup so each subtitle line is ~80 chars / ~14 words.
+    const clean = outputText
+      .replace(/^#+\s.*$/gm, "") // strip markdown headings
+      .replace(/\*\*/g, "")
+      .replace(/[*_`]/g, "")
+      .replace(/\r/g, "")
+      .trim();
+    const sentences = clean
+      .split(/(?<=[.!?])\s+|\n+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const cues: string[] = [];
+    let buf = "";
+    for (const s of sentences) {
+      if ((buf + " " + s).trim().length > 90 && buf) {
+        cues.push(buf.trim());
+        buf = s;
+      } else {
+        buf = (buf ? buf + " " : "") + s;
+      }
+    }
+    if (buf.trim()) cues.push(buf.trim());
+
+    const fmt = (totalMs: number) => {
+      const ms = totalMs % 1000;
+      const totalSec = Math.floor(totalMs / 1000);
+      const s = totalSec % 60;
+      const m = Math.floor(totalSec / 60) % 60;
+      const h = Math.floor(totalSec / 3600);
+      const pad = (n: number, l = 2) => String(n).padStart(l, "0");
+      return `${pad(h)}:${pad(m)}:${pad(s)},${pad(ms, 3)}`;
+    };
+
+    // Roughly 2.7 words/sec speaking pace; min 1.6s, max 6s per cue.
+    let cursor = 0;
+    const lines = cues.map((cue, i) => {
+      const words = cue.split(/\s+/).length;
+      const dur = Math.min(6000, Math.max(1600, Math.round((words / 2.7) * 1000)));
+      const start = cursor;
+      const end = cursor + dur;
+      cursor = end + 120; // small gap
+      return `${i + 1}\n${fmt(start)} --> ${fmt(end)}\n${cue}\n`;
+    });
+
+    const srt = lines.join("\n");
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadFile(`captions-${stamp}.srt`, srt, "application/x-subrip");
+    toast({ title: `Downloaded ${cues.length} caption cues` });
+  };
+
   const handleDownloadImage = async () => {
     if (!generatedImage) return;
     try {
@@ -448,10 +502,16 @@ Format as a numbered list.`;
                       </Button>
                     )}
                     {selectedTool === "script" && outputText && (
-                      <Button variant="outline" size="sm" onClick={handleDownloadScript}>
-                        <FileDown className="mr-2 h-3 w-3" />
-                        Download Script
-                      </Button>
+                      <>
+                        <Button variant="outline" size="sm" onClick={handleDownloadScript}>
+                          <FileDown className="mr-2 h-3 w-3" />
+                          Script
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={handleDownloadSrt}>
+                          <FileDown className="mr-2 h-3 w-3" />
+                          .srt Captions
+                        </Button>
+                      </>
                     )}
                     <Button variant="outline" size="sm" onClick={handleCopy}>
                       {copied ? (
