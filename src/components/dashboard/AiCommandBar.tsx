@@ -381,7 +381,7 @@ export function AiCommandBar() {
       });
       toast.success(`${labelFor(intent.kind)} applied — will show on next open.`);
     }
-    updateTool(entry.id, call.id, { approved: true });
+    updateToolCall(entry.id, call.id, { approved: true });
     if (latest?.id === entry.id) {
       setLatest({
         ...entry,
@@ -391,7 +391,7 @@ export function AiCommandBar() {
   };
 
   const reject = (entry: AiCommandEntry, call: AiCommandToolCall) => {
-    updateTool(entry.id, call.id, { rejected: true });
+    updateToolCall(entry.id, call.id, { rejected: true });
     if (latest?.id === entry.id) {
       setLatest({
         ...entry,
@@ -414,7 +414,7 @@ export function AiCommandBar() {
           approved={call.approved}
           rejected={call.rejected}
           onApprove={() => {
-            updateTool(entry.id, call.id, { approved: true });
+            updateToolCall(entry.id, call.id, { approved: true });
             if (latest?.id === entry.id) {
               setLatest({
                 ...entry,
@@ -438,7 +438,7 @@ export function AiCommandBar() {
           approved={call.approved}
           rejected={call.rejected}
           onApprove={() => {
-            updateTool(entry.id, call.id, { approved: true });
+            updateToolCall(entry.id, call.id, { approved: true });
             if (latest?.id === entry.id) {
               setLatest({
                 ...entry,
