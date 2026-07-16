@@ -24,7 +24,9 @@ import {
   EmptyState,
 } from "@/components/dashboard/shell";
 import { OnboardingChecklistCard } from "@/components/dashboard/OnboardingChecklistCard";
+import { AiCommandBar } from "@/components/dashboard/AiCommandBar";
 import { useOnboarding } from "@/hooks/useOnboarding";
+
 
 import { useAccounts } from "@/contexts/AccountContext";
 import { useRunHistory } from "@/hooks/useRunHistory";
@@ -125,7 +127,10 @@ export default function Dashboard() {
         }
       />
 
+      <AiCommandBar />
+
       {!onboarding.completed && <OnboardingChecklistCard onReopen={openTour} />}
+
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
