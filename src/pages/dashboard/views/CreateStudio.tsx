@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Send, Save, Trash2, Plus, Image as ImageIcon, Heart, MessageCircle, Share2 } from "lucide-react";
+import { Send, Save, Trash2, Plus, Image as ImageIcon, Heart, MessageCircle, Share2, Copy, CalendarPlus, Sparkles } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -13,13 +13,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { useMcpInbox } from "@/hooks/useMcpInbox";
 import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useAccounts } from "@/contexts/AccountContext";
+import { NewPostDialog } from "@/components/create/NewPostDialog";
 import { cn } from "@/lib/utils";
+
 
 type DraftStatus = "draft" | "review" | "scheduled";
 
