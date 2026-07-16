@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   AlertCircle,
   RotateCw,
+  Pause,
+  PauseCircle,
 } from "lucide-react";
 import { format, parseISO, isBefore } from "date-fns";
 import { useMcpInbox } from "@/hooks/useMcpInbox";
@@ -26,16 +28,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useScheduledPosts, type ScheduledPost, type SendStatus } from "@/hooks/useScheduledPosts";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
-import { SmartPostScheduler } from "@/components/automation/SmartPostScheduler";
-import { PlatformGate } from "@/components/shared/PlatformGate";
-import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+import { ScheduleDialog } from "@/components/publish/ScheduleDialog";
+import { RescheduleDialog } from "@/components/publish/RescheduleDialog";
+import { PauseAllDialog } from "@/components/publish/PauseAllDialog";
 
 type Column = "queued" | "sending" | "completed" | "failed";
 
