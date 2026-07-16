@@ -334,11 +334,18 @@ export default function CreateStudio() {
         searchPlaceholder="Search drafts…"
         viewToggle={<ViewToggle value={view} onChange={setView} />}
         actions={
-          <Button size="sm" onClick={startNew}>
-            <Plus className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">New draft</span>
-          </Button>
+          <div className="flex gap-1.5">
+            <Button size="sm" variant="outline" onClick={() => setNewPostOpen(true)}>
+              <Sparkles className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">AI post</span>
+            </Button>
+            <Button size="sm" onClick={startNew}>
+              <Plus className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">New draft</span>
+            </Button>
+          </div>
         }
+
       />
 
       {view === "kanban" ? (
