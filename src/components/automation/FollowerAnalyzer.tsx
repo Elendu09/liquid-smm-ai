@@ -298,9 +298,9 @@ export const FollowerAnalyzer = () => {
             {ghosts.map((follower) => (
               <div
                 key={follower.id}
-                className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border"
+                className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border hover:border-primary/50 transition"
               >
-                <div className="flex items-center gap-3">
+                <button type="button" onClick={() => openGhost(follower)} className="flex items-center gap-3 flex-1 text-left">
                   <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground font-bold text-sm">
                     {follower.avatar}
                   </div>
@@ -308,7 +308,7 @@ export const FollowerAnalyzer = () => {
                     <p className="font-medium text-muted-foreground">{follower.username}</p>
                     <p className="text-sm text-muted-foreground">Last active: {follower.lastActive}</p>
                   </div>
-                </div>
+                </button>
                 <Button
                   size="sm"
                   variant="outline"
