@@ -36,7 +36,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import BioPreview from "./BioPreview";
 import { bioStore, useBioConfig, useSyncLegacyTheme } from "./state/bioConfig";
-import { linkBioThemes, phaseMeta, themesByPhase, THEME_STORAGE_KEY, type ThemePhase } from "@/pages/dashboard/views/linkbio/themePresets";
+import { linkBioThemes, THEME_STORAGE_KEY } from "@/pages/dashboard/views/linkbio/themePresets";
 import { linkBioTemplates, APPLIED_TEMPLATE_KEY } from "@/pages/dashboard/views/linkbio/templatePresets";
 
 
@@ -356,31 +356,14 @@ function DesignPanel() {
 
 function ThemesPanel() {
   const cfg = useBioConfig();
-  const [phase, setPhase] = useState<ThemePhase>(1);
-  const themes = themesByPhase(phase);
-  const meta = phaseMeta[phase];
   return (
     <div className="space-y-4 max-w-3xl">
-      <div className="flex items-center gap-1 p-1 rounded-lg border border-border/50 bg-card/50 w-fit">
-        {([1, 2, 3, 4] as ThemePhase[]).map((p) => (
-          <button
-            key={p}
-            onClick={() => setPhase(p)}
-            className={cn(
-              "px-3 py-1.5 rounded-md text-[11px] font-semibold transition-colors",
-              phase === p ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            Phase {p}
-          </button>
-        ))}
-      </div>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Sparkles className="w-3.5 h-3.5 text-primary" />
-        {meta.title} — {meta.blurb} · {themes.length} themes ({linkBioThemes.length} total)
+        {linkBioThemes.length} professional themes — each one renders a completely different layout.
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {themes.map((t) => {
+        {linkBioThemes.map((t) => {
           const active = t.id === cfg.themeId;
           return (
             <button
@@ -391,15 +374,21 @@ function ThemesPanel() {
                 toast.success(`Theme "${t.name}" applied`);
               }}
               className={cn(
-                "text-left rounded-xl overflow-hidden border transition-all",
+                "text-left rounded-xl overflow-hidden border transition-all group",
                 active ? "border-primary ring-2 ring-primary/30" : "border-border/50 hover:border-border",
               )}
             >
-              <div className={cn("h-32 flex items-center justify-center", t.bg)}>
-                <div className="w-10 h-10 rounded-full shadow-lg" style={{ background: t.accent }} />
+              <div className={cn("h-36 relative overflow-hidden", t.bg)}>
+                <ThemeMiniPreview theme={t} />
+                <span className="absolute top-1.5 right-1.5 text-[9px] uppercase tracking-widest bg-black/40 text-white px-1.5 py-0.5 rounded backdrop-blur-sm">
+                  {t.layout.replace(/-/g, " ")}
+                </span>
               </div>
               <div className="p-2.5">
-                <div className="text-xs font-semibold truncate">{t.name}</div>
+                <div className="text-xs font-semibold truncate flex items-center gap-1.5">
+                  {t.name}
+                  {active && <span className="text-[9px] text-primary">● active</span>}
+                </div>
                 <div className="text-[10px] text-muted-foreground truncate">{t.tagline}</div>
               </div>
             </button>
@@ -408,6 +397,179 @@ function ThemesPanel() {
       </div>
     </div>
   );
+}
+
+/** Distinct mini-preview per theme layout so the picker itself hints at each design. */
+function ThemeMiniPreview({ theme }: { theme: (typeof linkBioThemes)[number] }) {
+  const dot = theme.accent;
+  const bar = (w: string, extra = "") => (
+    <div className={cn("h-1.5 rounded-full", extra)} style={{ width: w, background: `${dot}` }} />
+  );
+  const ghost = (w: string) => <div className="h-1.5 rounded-full bg-white/40" style={{ width: w }} />;
+  const box = (extra = "") => <div className={cn("h-4 rounded bg-white/25 border border-white/30", extra)} />;
+
+  switch (theme.layout) {
+    case "magazine":
+      return (
+        <div className="absolute inset-0 p-3 text-neutral-900 font-serif">
+          <div className="text-[7px] tracking-[0.3em] text-center opacity-70">ISSUE №26</div>
+          <div className="text-center italic text-lg leading-none mt-1">Vogue</div>
+          <div className="mt-2 border-t border-black/60" />
+          <div className="mt-2 space-y-1">
+            <div className="h-1 bg-black/60 w-full" />
+            <div className="h-1 bg-black/40 w-4/5" />
+            <div className="h-1 bg-black/40 w-3/5" />
+          </div>
+        </div>
+      );
+    case "terminal":
+      return (
+        <div className="absolute inset-0 p-2 font-mono text-[8px] text-green-300">
+          <div>&gt; whoami</div>
+          <div>@creator</div>
+          <div className="mt-1">&gt; ls ./links</div>
+          <div>[01] shop.link</div>
+          <div>[02] classes.link</div>
+          <div>&gt; <span className="inline-block w-1 h-2 bg-green-400 animate-pulse align-middle" /></div>
+        </div>
+      );
+    case "brutal":
+      return (
+        <div className="absolute inset-0 p-2.5 space-y-1.5">
+          <div className="bg-white border-2 border-black shadow-[3px_3px_0_0_#000] px-2 py-1 text-[9px] font-black uppercase">Handle</div>
+          <div className="bg-white border-2 border-black shadow-[3px_3px_0_0_#000] px-2 py-1 text-[8px] font-bold uppercase">→ Link one</div>
+          <div className="bg-white border-2 border-black shadow-[3px_3px_0_0_#000] px-2 py-1 text-[8px] font-bold uppercase">→ Link two</div>
+        </div>
+      );
+    case "card-stack":
+      return (
+        <div className="absolute inset-0 p-2 space-y-1.5">
+          <div className="h-10 rounded-md" style={{ background: `linear-gradient(135deg, ${dot}, #334155)` }} />
+          <div className="h-10 rounded-md" style={{ background: `linear-gradient(135deg, #0f172a, ${dot})` }} />
+        </div>
+      );
+    case "bento":
+      return (
+        <div className="absolute inset-0 p-2 grid grid-cols-2 gap-1.5">
+          <div className="col-span-2 rounded-md" style={{ background: `linear-gradient(135deg, ${dot}, #0ea5e9)` }} />
+          <div className="rounded-md bg-white shadow-sm" />
+          <div className="rounded-md bg-slate-900" />
+        </div>
+      );
+    case "reels":
+      return (
+        <div className="absolute inset-0 p-2">
+          <div className="flex gap-1.5 mb-2">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="w-6 h-6 rounded-full p-[1.5px]" style={{ background: `conic-gradient(from 0deg, ${dot}, #f472b6, ${dot})` }}>
+                <div className="w-full h-full rounded-full bg-white" />
+              </div>
+            ))}
+          </div>
+          <div className="space-y-1">
+            <div className="h-3 rounded-full bg-white border border-rose-200" />
+            <div className="h-3 rounded-full bg-white border border-rose-200" />
+          </div>
+        </div>
+      );
+    case "chrome":
+      return (
+        <div className="absolute inset-0 p-2.5 space-y-1.5">
+          <div className="h-3 rounded-full border-2 border-white" style={{ background: "linear-gradient(180deg,#fff,#cbd5e1)" }} />
+          <div className="h-3 rounded-full border-2 border-white" style={{ background: "linear-gradient(180deg,#fff,#cbd5e1)" }} />
+          <div className="h-3 rounded-full border-2 border-white" style={{ background: "linear-gradient(180deg,#fff,#cbd5e1)" }} />
+        </div>
+      );
+    case "vaporwave":
+      return (
+        <div className="absolute inset-0">
+          <div className="absolute inset-x-4 top-3 h-10 rounded-full blur-md opacity-80" style={{ background: "radial-gradient(circle,#fde047,#f97316 60%,transparent)" }} />
+          <div className="absolute inset-x-0 bottom-0 h-14" style={{ backgroundImage: "linear-gradient(#f0abfc44 1px,transparent 1px),linear-gradient(90deg,#f0abfc44 1px,transparent 1px)", backgroundSize: "10px 10px", transform: "perspective(80px) rotateX(55deg)", transformOrigin: "top" }} />
+        </div>
+      );
+    case "polaroid":
+      return (
+        <div className="absolute inset-0 p-2 flex flex-wrap gap-2 items-center justify-center">
+          {[-8, 5, -3].map((r, i) => (
+            <div key={i} className="bg-white p-1 pb-2 shadow-md" style={{ transform: `rotate(${r}deg)` }}>
+              <div className="w-10 h-8" style={{ background: `linear-gradient(135deg, ${dot}, #94a3b8)` }} />
+            </div>
+          ))}
+        </div>
+      );
+    case "luxe":
+      return (
+        <div className="absolute inset-0 p-3 text-center">
+          <div className="text-[9px] tracking-[0.3em] font-serif uppercase" style={{ color: dot }}>Maison</div>
+          <div className="my-1.5 h-px mx-auto w-16" style={{ background: dot }} />
+          <div className="space-y-1.5 mt-2">
+            <div className="h-1 mx-4" style={{ background: `${dot}66` }} />
+            <div className="h-1 mx-4" style={{ background: `${dot}66` }} />
+            <div className="h-1 mx-4" style={{ background: `${dot}66` }} />
+          </div>
+        </div>
+      );
+    case "tiles":
+      return (
+        <div className="absolute inset-0 p-2 grid grid-cols-2 gap-1.5">
+          {["#fca5a5", "#fcd34d", "#86efac", "#93c5fd"].map((c, i) => (
+            <div key={i} className="rounded-lg" style={{ background: c }} />
+          ))}
+        </div>
+      );
+    case "crt":
+      return (
+        <div className="absolute inset-0 p-2">
+          <div className="absolute inset-0 pointer-events-none opacity-40" style={{ backgroundImage: "repeating-linear-gradient(0deg,rgba(0,0,0,0.4) 0 1px,transparent 1px 3px)" }} />
+          <div className="relative border-2 rounded p-1.5 font-mono text-[8px] uppercase" style={{ borderColor: dot, color: dot, boxShadow: `2px 2px 0 ${dot}` }}>
+            ▮ signal ok<br />ch.01 — main
+          </div>
+        </div>
+      );
+    case "botanical":
+      return (
+        <div className="absolute inset-0 p-3 text-center font-serif">
+          <div className="text-[9px] italic" style={{ color: dot }}>botanica</div>
+          <div className="flex items-center justify-center gap-1 my-1">
+            <span className="h-px w-6" style={{ background: dot }} />
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: dot }} />
+            <span className="h-px w-6" style={{ background: dot }} />
+          </div>
+          <div className="space-y-1">
+            <div className="h-2 rounded bg-white/50" />
+            <div className="h-2 rounded bg-white/50" />
+          </div>
+        </div>
+      );
+    case "widgets":
+      return (
+        <div className="absolute inset-0 p-2 grid grid-cols-2 gap-1.5">
+          <div className="col-span-2 rounded-lg bg-white/10 border border-white/20 backdrop-blur-sm" />
+          <div className="rounded-lg bg-white/10 border border-white/20 backdrop-blur-sm" />
+          <div className="rounded-lg bg-white/10 border border-white/20 backdrop-blur-sm" />
+        </div>
+      );
+    case "row-divider":
+      return (
+        <div className="absolute inset-0 p-3 flex flex-col justify-center gap-1.5">
+          {ghost("70%")}
+          <div className="h-px bg-white/20 my-1" />
+          {ghost("55%")}
+          <div className="h-px bg-white/20 my-1" />
+          {ghost("65%")}
+        </div>
+      );
+    case "glass-list":
+    default:
+      return (
+        <div className="absolute inset-0 p-3 flex flex-col items-center justify-center gap-1.5">
+          <div className="w-8 h-8 rounded-full shadow-lg" style={{ background: dot }} />
+          {box("w-4/5")}
+          {box("w-4/5")}
+          {box("w-4/5")}
+        </div>
+      );
+  }
 }
 
 
