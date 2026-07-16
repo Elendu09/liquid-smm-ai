@@ -195,6 +195,7 @@ type Shared = {
   fontBody: string;
   fontHeading: string;
   textOverride?: string;
+  avatarScale: number;
 };
 
 function renderLayout(layout: ThemeLayout, s: Shared) {
