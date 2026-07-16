@@ -13,6 +13,9 @@ import {
   Zap,
   Smile,
   Megaphone,
+  Wand2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,13 +67,75 @@ const QUICK_TWEAKS: Array<{
   { id: "cta", label: "+ CTA", icon: Megaphone, hint: "Add a clear call-to-action line at the end" },
 ];
 
+interface Variant {
+  title: string;
+  body: string;
+  hashtags: string[];
+}
+
 export function CaptionDraftIntent({ payload, approved, rejected, onApprove, onReject }: Props) {
   const navigate = useNavigate();
-  const [title, setTitle] = useState(payload.title ?? "");
-  const [body, setBody] = useState(payload.body ?? "");
-  const [hashtags, setHashtags] = useState<string[]>(payload.hashtags ?? []);
+  // The initial payload becomes variant 0. Additional variants are appended
+  // when the user asks for more options.
+  const initialVariant: Variant = {
+    title: payload.title ?? "",
+    body: payload.body ?? "",
+    hashtags: payload.hashtags ?? [],
+  };
+  const [variants, setVariants] = useState<Variant[]>([initialVariant]);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const active = variants[activeIdx] ?? initialVariant;
+
+  const [title, setTitle] = useState(initialVariant.title);
+  const [body, setBody] = useState(initialVariant.body);
+  const [hashtags, setHashtags] = useState<string[]>(initialVariant.hashtags);
   const [tweaking, setTweaking] = useState<string | null>(null);
+  const [generatingMore, setGeneratingMore] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const switchToVariant = (idx: number) => {
+    const v = variants[idx];
+    if (!v) return;
+    setActiveIdx(idx);
+    setTitle(v.title);
+    setBody(v.body);
+    setHashtags(v.hashtags);
+  };
+
+  const generateMoreVariants = async () => {
+    if (generatingMore) return;
+    setGeneratingMore(true);
+    const seed = variants[0]?.body || body;
+    const res = await aiCreate.captions({
+      topic: `Write 3 alternative versions of this caption — each with a distinct angle (bold hook, storytelling, question-led). Keep the same intent, don't invent facts.\n\nOriginal:\n${seed}`,
+      count: 3,
+    });
+    setGeneratingMore(false);
+    const fresh = (res?.captions ?? []).map((c) => ({
+      title: c.title || "Variant",
+      body: c.body || "",
+      hashtags: c.hashtags ?? [],
+    }));
+    if (fresh.length === 0) return;
+    setVariants((prev) => [...prev, ...fresh]);
+    // Auto-jump to the first newly-added variant.
+    const nextIdx = variants.length;
+    setActiveIdx(nextIdx);
+    const v = fresh[0];
+    setTitle(v.title);
+    setBody(v.body);
+    setHashtags(v.hashtags);
+    toast.success(`Generated ${fresh.length} variants`);
+  };
+
+  const useThisVariant = () => {
+    // Commit the currently displayed values back into the active variant slot,
+    // so the "carousel" reflects the user's edits before saving.
+    setVariants((prev) =>
+      prev.map((v, i) => (i === activeIdx ? { title, body, hashtags } : v)),
+    );
+    toast(`Using variant ${activeIdx + 1} of ${variants.length}`);
+  };
 
   const applyTweak = async (tweak: (typeof QUICK_TWEAKS)[number]) => {
     if (tweaking) return;
@@ -86,6 +151,8 @@ export function CaptionDraftIntent({ payload, approved, rejected, onApprove, onR
     if (next.hashtags?.length) setHashtags(next.hashtags);
     toast.success(`Applied "${tweak.label}"`);
   };
+  // Silence "declared but not read" on `active` — kept for future readonly views.
+  void active;
 
   const doSaveToLibrary = () => {
     const caption: Caption = {
@@ -211,6 +278,65 @@ export function CaptionDraftIntent({ payload, approved, rejected, onApprove, onR
 
       {!rejected && (
         <>
+          {/* Variant carousel — only surfaces once >1 exists */}
+          {variants.length > 1 && (
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/[0.04] px-2 py-1.5">
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0"
+                  disabled={done || activeIdx === 0}
+                  onClick={() => switchToVariant(activeIdx - 1)}
+                  aria-label="Previous variant"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                <div className="flex items-center gap-0.5">
+                  {variants.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      disabled={done}
+                      onClick={() => switchToVariant(i)}
+                      aria-label={`Variant ${i + 1}`}
+                      className={cn(
+                        "h-1.5 rounded-full transition-all",
+                        i === activeIdx ? "w-4 bg-primary" : "w-1.5 bg-primary/30 hover:bg-primary/60",
+                      )}
+                    />
+                  ))}
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0"
+                  disabled={done || activeIdx >= variants.length - 1}
+                  onClick={() => switchToVariant(activeIdx + 1)}
+                  aria-label="Next variant"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground font-medium">
+                  Variant {activeIdx + 1}/{variants.length}
+                </span>
+                {!done && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-6 px-2 text-[10px] gap-1"
+                    onClick={useThisVariant}
+                  >
+                    <Check className="h-3 w-3" />
+                    Use this one
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -239,20 +365,20 @@ export function CaptionDraftIntent({ payload, approved, rejected, onApprove, onR
             <div className="flex flex-wrap gap-1.5">
               {QUICK_TWEAKS.map((t) => {
                 const Icon = t.icon;
-                const active = tweaking === t.id;
+                const isActive = tweaking === t.id;
                 return (
                   <button
                     key={t.id}
                     type="button"
                     onClick={() => applyTweak(t)}
-                    disabled={!!tweaking}
+                    disabled={!!tweaking || generatingMore}
                     className={cn(
                       "inline-flex items-center gap-1 text-[10.5px] px-2 py-1 rounded-full border transition-all",
                       "border-border/60 bg-background/60 hover:border-primary/50 hover:bg-primary/10",
                       "disabled:opacity-40",
                     )}
                   >
-                    {active ? (
+                    {isActive ? (
                       <Loader2 className="h-2.5 w-2.5 animate-spin" />
                     ) : (
                       <Icon className="h-2.5 w-2.5 text-primary/80" />
@@ -261,6 +387,23 @@ export function CaptionDraftIntent({ payload, approved, rejected, onApprove, onR
                   </button>
                 );
               })}
+              <button
+                type="button"
+                onClick={generateMoreVariants}
+                disabled={generatingMore || !!tweaking}
+                className={cn(
+                  "inline-flex items-center gap-1 text-[10.5px] px-2 py-1 rounded-full border transition-all",
+                  "border-primary/40 bg-primary/[0.08] text-primary hover:bg-primary/15",
+                  "disabled:opacity-40",
+                )}
+              >
+                {generatingMore ? (
+                  <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                ) : (
+                  <Wand2 className="h-2.5 w-2.5" />
+                )}
+                More variants
+              </button>
             </div>
           )}
 

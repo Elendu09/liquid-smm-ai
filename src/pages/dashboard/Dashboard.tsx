@@ -110,15 +110,32 @@ export default function Dashboard() {
         breadcrumbs={[{ label: "Dashboard" }]}
         actions={
           <div className="grid grid-cols-3 gap-2 w-full md:w-auto md:flex md:items-center">
-            <Button asChild size="sm" className="w-full md:w-auto">
+            {/* Primary — filled with inner highlight for a lifted glass feel */}
+            <Button
+              asChild
+              size="sm"
+              className="w-full md:w-auto relative overflow-hidden ring-1 ring-inset ring-primary-foreground/20 shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.55)] hover:shadow-[0_8px_20px_-6px_hsl(var(--primary)/0.7)] transition-shadow before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/40 before:to-transparent"
+            >
               <Link to="/dashboard/create">
                 <Zap className="mr-2 h-4 w-4" /> Quick action
               </Link>
             </Button>
-            <Button variant="ghost" size="sm" onClick={openTour} className="w-full md:w-auto">
+            {/* Ghost + subtle glass stroke */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={openTour}
+              className="w-full md:w-auto relative rounded-md border border-border/50 bg-background/40 backdrop-blur-sm hover:bg-background/70 hover:border-primary/40 ring-1 ring-inset ring-white/5 dark:ring-white/[0.04] transition-colors"
+            >
               <Sparkles className="mr-2 h-4 w-4" /> Take the tour
             </Button>
-            <Button asChild variant="outline" size="sm" className="w-full md:w-auto">
+            {/* Outline + glass gradient border */}
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="w-full md:w-auto relative bg-background/50 backdrop-blur-sm ring-1 ring-inset ring-white/5 dark:ring-white/[0.04] hover:bg-background/80 hover:border-primary/40 transition-colors"
+            >
               <Link to="/dashboard/activity/runs">
                 <Clock className="mr-2 h-4 w-4" /> Activity
               </Link>
