@@ -717,7 +717,7 @@ export function AiCommandBar() {
             )}
 
             {/* Floating toolbar */}
-            <div className="absolute inset-x-1.5 bottom-1.5 z-[3] flex items-center justify-between gap-2 pointer-events-none [&>*]:pointer-events-auto">
+            <div className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-2">
               <div className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground pl-1.5">
                 <kbd className="px-1.5 py-0.5 rounded-md bg-muted/70 dark:bg-white/[0.06] border border-border/60 dark:border-white/[0.08] font-mono text-[9.5px] leading-none">/</kbd>
                 <span className="ml-0.5 mr-2">commands</span>
