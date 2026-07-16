@@ -155,6 +155,7 @@ export default function CreateStudio() {
   const [scheduleAt, setScheduleAt] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<Draft | null>(null);
   const [newPostOpen, setNewPostOpen] = useState(false);
+  const [previewing, setPreviewing] = useState<Draft | null>(null);
 
   const duplicateDraft = (d: Draft) => {
     const copy: Draft = {
@@ -275,7 +276,13 @@ export default function CreateStudio() {
   const handle = accounts.find((a) => a.platformId === editing?.platform)?.username ?? "yourbrand";
 
   const card = (d: Draft, dense = false) => (
-    <div className={cn(dense ? "p-3" : "p-3")}>
+    <div
+      className={cn(dense ? "p-3" : "p-3", "cursor-pointer group")}
+      onClick={() => setPreviewing(d)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter") setPreviewing(d); }}
+    >
       <div className="flex items-start gap-2">
         <PlatformIcon platform={d.platform} size="xs" />
         <div className="flex-1 min-w-0">
@@ -290,7 +297,7 @@ export default function CreateStudio() {
           {new Date(d.scheduledAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
         </p>
       )}
-      <div className="flex justify-end gap-1 mt-2">
+      <div className="flex justify-end gap-1 mt-2" onClick={(e) => e.stopPropagation()}>
         <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditing(d)}>
           Open
         </Button>
@@ -452,6 +459,32 @@ export default function CreateStudio() {
       )}
 
       <NewPostDialog open={newPostOpen} onOpenChange={setNewPostOpen} />
+
+      {previewing && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
+          onClick={() => setPreviewing(null)}
+        >
+          <div
+            className="w-full max-w-md flex flex-col gap-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Preview · {previewing.platform}</span>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="secondary" onClick={() => { setEditing(previewing); setPreviewing(null); }}>
+                  Edit
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setPreviewing(null)}>Close</Button>
+              </div>
+            </div>
+            <InstagramPreview
+              draft={previewing}
+              handle={accounts.find((a) => a.platformId === previewing.platform)?.username ?? "yourbrand"}
+            />
+          </div>
+        </div>
+      )}
 
       <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
         <AlertDialogContent>
