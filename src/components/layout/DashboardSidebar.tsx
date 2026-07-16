@@ -264,7 +264,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
           {showLabels && (
             <div className="flex flex-col leading-tight min-w-0">
               <span className="text-[13px] font-black tracking-tight text-foreground truncate">
-                HOME OF SMM
+                SMMSAAS
               </span>
               <span className="text-[9px] font-semibold tracking-[0.16em] text-primary/80 uppercase">
                 Panel Manager
