@@ -416,8 +416,8 @@ export function AiCommandBar() {
           </div>
         </div>
 
-        {/* Suggestion chips */}
-        <div className="px-4 py-2.5 flex flex-wrap gap-1.5">
+        {/* Suggestion chips — hidden on mobile (autotyped in placeholder), shown ≥sm */}
+        <div className="hidden sm:flex px-4 py-2.5 flex-wrap gap-1.5">
           {SUGGESTIONS.map((s) => (
             <button
               key={s}
@@ -431,6 +431,9 @@ export function AiCommandBar() {
             </button>
           ))}
         </div>
+        {/* Mobile spacing filler */}
+        <div className="sm:hidden h-2.5" />
+
 
 
         {/* Latest response */}
