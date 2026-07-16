@@ -90,12 +90,13 @@ const CompetitorTracker = () => {
     }
   ]);
 
-  const yourStats = {
+  const yourStats: CompareStats = {
+    username: "You",
     followers: 145000,
     engagement: 5.4,
     avgLikes: 9800,
     avgComments: 234,
-    postingFreq: "1x daily"
+    postingFreq: "1x daily",
   };
 
   const addCompetitor = (v: NewCompetitorInput) => {
