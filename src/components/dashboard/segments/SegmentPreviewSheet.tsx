@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Sparkles, Zap, X } from "lucide-react";
+import { Users, Sparkles, Zap, X, TrendingUp, GitMerge } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -11,7 +11,9 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { useLocalCollection } from "@/hooks/useLocalCollection";
 import type { Segment } from "@/pages/dashboard/views/SegmentsBoard";
 
 /** Deterministic hash → seeded PRNG so sample rows are stable per segment. */
