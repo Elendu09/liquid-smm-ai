@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Clock, Plus, Trash2, GitCommitVertical, LayoutGrid, List } from "lucide-react";
+import { Clock, Plus, Trash2, GitCommitVertical, LayoutGrid, List, Filter } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -14,9 +14,17 @@ import {
 } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { cn } from "@/lib/utils";
+import { RunDetailsDrawer } from "@/components/activity/RunDetailsDrawer";
+import {
+  RunFiltersDialog,
+  DEFAULT_FILTERS,
+  type RunFilters,
+} from "@/components/activity/RunFiltersDialog";
+import { BulkClearDialog } from "@/components/activity/BulkClearDialog";
 
 const runSeed: StatusItem[] = [
   { id: "r1", title: "Auto-reply to @jordan.creates", subtitle: "Engagement bot · Instagram", status: "success", meta: "2m ago", createdAt: new Date(Date.now() - 2 * 60_000).toISOString() },
