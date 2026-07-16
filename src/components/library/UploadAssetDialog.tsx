@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, useCallback, DragEvent } from "react";
 import { toast } from "sonner";
 import { Upload, Link as LinkIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -7,15 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { pushLocalCollection } from "@/hooks/useLocalCollection";
+import { cn } from "@/lib/utils";
 
 const TYPES = ["image", "video", "doc"] as const;
 
 export function UploadAssetDialog({
   open,
   onOpenChange,
+  initialFile,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  initialFile?: File | null;
 }) {
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
