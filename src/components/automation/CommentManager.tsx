@@ -155,6 +155,13 @@ export const CommentManager = () => {
     toast.success("Marked as replied");
   };
 
+  const bulkSendReplies = (payload: { id: number; text: string }[]) => {
+    const ids = new Set(payload.map((p) => p.id));
+    setComments((prev) => prev.map((c) => (ids.has(c.id) ? { ...c, replied: true } : c)));
+    setSelectedComments([]);
+    toast.success(`Sent ${payload.length} repl${payload.length === 1 ? "y" : "ies"}`);
+  };
+
   const bulkDelete = () => {
     setComments((prev) => prev.filter((c) => !selectedComments.includes(c.id)));
     setSelectedComments([]);
