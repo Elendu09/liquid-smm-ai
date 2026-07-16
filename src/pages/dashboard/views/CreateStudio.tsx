@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Send, Save, Trash2, Plus, Image as ImageIcon, Heart, MessageCircle, Share2 } from "lucide-react";
+import { Send, Save, Trash2, Plus, Image as ImageIcon, Heart, MessageCircle, Share2, Copy, CalendarPlus, Sparkles } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -13,13 +13,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { useMcpInbox } from "@/hooks/useMcpInbox";
 import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useAccounts } from "@/contexts/AccountContext";
+import { NewPostDialog } from "@/components/create/NewPostDialog";
 import { cn } from "@/lib/utils";
+
 
 type DraftStatus = "draft" | "review" | "scheduled";
 
@@ -141,6 +153,38 @@ export default function CreateStudio() {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Draft | null>(null);
   const [scheduleAt, setScheduleAt] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<Draft | null>(null);
+  const [newPostOpen, setNewPostOpen] = useState(false);
+
+  const duplicateDraft = (d: Draft) => {
+    const copy: Draft = {
+      ...d,
+      id: crypto.randomUUID(),
+      title: `${d.title} (copy)`,
+      status: "draft",
+      scheduledAt: undefined,
+      createdAt: new Date().toISOString(),
+    };
+    add(copy);
+    toast.success("Duplicated");
+  };
+
+  const sendToQueue = (d: Draft) => {
+    if (!d.caption.trim()) {
+      toast.error("Draft has no caption");
+      return;
+    }
+    const when = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    addScheduled({
+      caption: d.caption,
+      mediaUrl: d.mediaUrl,
+      scheduledAt: when,
+      platformIds: [d.platform],
+    });
+    update(d.id, { status: "scheduled", scheduledAt: when });
+    toast.success("Sent to queue (in 1h)");
+  };
+
 
   useMemo(() => {
     if (drafts.length === 0) setItems(seed);
@@ -251,12 +295,34 @@ export default function CreateStudio() {
           Open
         </Button>
         <Button
-          variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
-          aria-label="Delete draft" onClick={() => { remove(d.id); toast.success("Draft deleted"); }}
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          aria-label="Duplicate draft"
+          onClick={() => duplicateDraft(d)}
+        >
+          <Copy className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-primary hover:text-primary"
+          aria-label="Send to queue"
+          onClick={() => sendToQueue(d)}
+        >
+          <CalendarPlus className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-destructive hover:text-destructive"
+          aria-label="Delete draft"
+          onClick={() => setConfirmDelete(d)}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
+
     </div>
   );
 
@@ -268,11 +334,18 @@ export default function CreateStudio() {
         searchPlaceholder="Search drafts…"
         viewToggle={<ViewToggle value={view} onChange={setView} />}
         actions={
-          <Button size="sm" onClick={startNew}>
-            <Plus className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">New draft</span>
-          </Button>
+          <div className="flex gap-1.5">
+            <Button size="sm" variant="outline" onClick={() => setNewPostOpen(true)}>
+              <Sparkles className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">AI post</span>
+            </Button>
+            <Button size="sm" onClick={startNew}>
+              <Plus className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">New draft</span>
+            </Button>
+          </div>
         }
+
       />
 
       {view === "kanban" ? (
@@ -377,6 +450,34 @@ export default function CreateStudio() {
           </div>
         </div>
       )}
+
+      <NewPostDialog open={newPostOpen} onOpenChange={setNewPostOpen} />
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              &ldquo;{confirmDelete?.title}&rdquo; will be permanently removed. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmDelete) {
+                  remove(confirmDelete.id);
+                  toast.success("Draft deleted");
+                }
+                setConfirmDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 }
