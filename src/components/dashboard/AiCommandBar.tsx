@@ -374,9 +374,10 @@ export function AiCommandBar() {
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Ask anything… draft a caption, schedule a post, find hashtags"
+              placeholder={typed ? `${typed}▏` : "Ask anything…"}
               rows={2}
-              className="resize-none text-[13px] leading-snug min-h-[58px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-3 pt-2.5 pb-10 placeholder:text-muted-foreground/60"
+              className="resize-none text-[13px] leading-snug min-h-[48px] sm:min-h-[58px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-3 pt-2.5 pb-9 sm:pb-10 placeholder:text-muted-foreground/60"
+
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   e.preventDefault();
