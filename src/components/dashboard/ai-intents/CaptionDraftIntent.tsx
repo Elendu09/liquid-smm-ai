@@ -13,6 +13,9 @@ import {
   Zap,
   Smile,
   Megaphone,
+  Wand2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,13 +67,75 @@ const QUICK_TWEAKS: Array<{
   { id: "cta", label: "+ CTA", icon: Megaphone, hint: "Add a clear call-to-action line at the end" },
 ];
 
+interface Variant {
+  title: string;
+  body: string;
+  hashtags: string[];
+}
+
 export function CaptionDraftIntent({ payload, approved, rejected, onApprove, onReject }: Props) {
   const navigate = useNavigate();
-  const [title, setTitle] = useState(payload.title ?? "");
-  const [body, setBody] = useState(payload.body ?? "");
-  const [hashtags, setHashtags] = useState<string[]>(payload.hashtags ?? []);
+  // The initial payload becomes variant 0. Additional variants are appended
+  // when the user asks for more options.
+  const initialVariant: Variant = {
+    title: payload.title ?? "",
+    body: payload.body ?? "",
+    hashtags: payload.hashtags ?? [],
+  };
+  const [variants, setVariants] = useState<Variant[]>([initialVariant]);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const active = variants[activeIdx] ?? initialVariant;
+
+  const [title, setTitle] = useState(initialVariant.title);
+  const [body, setBody] = useState(initialVariant.body);
+  const [hashtags, setHashtags] = useState<string[]>(initialVariant.hashtags);
   const [tweaking, setTweaking] = useState<string | null>(null);
+  const [generatingMore, setGeneratingMore] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const switchToVariant = (idx: number) => {
+    const v = variants[idx];
+    if (!v) return;
+    setActiveIdx(idx);
+    setTitle(v.title);
+    setBody(v.body);
+    setHashtags(v.hashtags);
+  };
+
+  const generateMoreVariants = async () => {
+    if (generatingMore) return;
+    setGeneratingMore(true);
+    const seed = variants[0]?.body || body;
+    const res = await aiCreate.captions({
+      topic: `Write 3 alternative versions of this caption — each with a distinct angle (bold hook, storytelling, question-led). Keep the same intent, don't invent facts.\n\nOriginal:\n${seed}`,
+      count: 3,
+    });
+    setGeneratingMore(false);
+    const fresh = (res?.captions ?? []).map((c) => ({
+      title: c.title || "Variant",
+      body: c.body || "",
+      hashtags: c.hashtags ?? [],
+    }));
+    if (fresh.length === 0) return;
+    setVariants((prev) => [...prev, ...fresh]);
+    // Auto-jump to the first newly-added variant.
+    const nextIdx = variants.length;
+    setActiveIdx(nextIdx);
+    const v = fresh[0];
+    setTitle(v.title);
+    setBody(v.body);
+    setHashtags(v.hashtags);
+    toast.success(`Generated ${fresh.length} variants`);
+  };
+
+  const useThisVariant = () => {
+    // Commit the currently displayed values back into the active variant slot,
+    // so the "carousel" reflects the user's edits before saving.
+    setVariants((prev) =>
+      prev.map((v, i) => (i === activeIdx ? { title, body, hashtags } : v)),
+    );
+    toast(`Using variant ${activeIdx + 1} of ${variants.length}`);
+  };
 
   const applyTweak = async (tweak: (typeof QUICK_TWEAKS)[number]) => {
     if (tweaking) return;
@@ -86,6 +151,8 @@ export function CaptionDraftIntent({ payload, approved, rejected, onApprove, onR
     if (next.hashtags?.length) setHashtags(next.hashtags);
     toast.success(`Applied "${tweak.label}"`);
   };
+  // Silence "declared but not read" on `active` — kept for future readonly views.
+  void active;
 
   const doSaveToLibrary = () => {
     const caption: Caption = {
