@@ -36,7 +36,9 @@ import { AddCompetitorDialog, type NewCompetitorInput } from "@/components/audie
 import { CompareCompetitorDialog, type CompareStats } from "@/components/audience/CompareCompetitorDialog";
 
 const CompetitorTracker = () => {
-  const [newCompetitor, setNewCompetitor] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+  const [compareTarget, setCompareTarget] = useState<CompareStats | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<{ id: number; username: string } | null>(null);
   const [competitors, setCompetitors] = useState([
     {
       id: 1,
