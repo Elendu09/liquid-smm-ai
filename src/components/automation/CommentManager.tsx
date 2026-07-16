@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { MessageCircle, Sparkles, Check, Trash2, Reply, CheckCheck, Filter } from "lucide-react";
+import { MessageCircle, Sparkles, Check, Trash2, Reply, CheckCheck, Filter, Search, Star, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ReplyDialog } from "@/components/engage/ReplyDialog";
 import { BulkReplyDialog } from "@/components/engage/BulkReplyDialog";
@@ -100,23 +101,33 @@ const getPlatformColor = (platform: string) => {
 export const CommentManager = () => {
   const [comments, setComments] = useState(mockComments);
   const [selectedComments, setSelectedComments] = useState<number[]>([]);
+  const [priority, setPriority] = useState<number[]>([]);
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyTarget, setReplyTarget] = useState<typeof mockComments[number] | null>(null);
   const [bulkReplyOpen, setBulkReplyOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<CommentFilters>(DEFAULT_FILTERS);
+  const [keyword, setKeyword] = useState("");
 
   const platforms = useMemo(() => Array.from(new Set(mockComments.map((c) => c.platform))), []);
 
   const filteredComments = useMemo(() => {
-    return comments.filter((c) => {
+    const kw = keyword.trim().toLowerCase();
+    const list = comments.filter((c) => {
       if (filters.platform !== "all" && c.platform !== filters.platform) return false;
       if (filters.sentiment !== "all" && c.sentiment !== filters.sentiment) return false;
       if (filters.status === "pending" && c.replied) return false;
       if (filters.status === "replied" && !c.replied) return false;
+      if (kw && !(c.content.toLowerCase().includes(kw) || c.user.toLowerCase().includes(kw))) return false;
       return true;
     });
-  }, [comments, filters]);
+    // Priority pinned first
+    return [...list].sort((a, b) => {
+      const ap = priority.includes(a.id) ? 1 : 0;
+      const bp = priority.includes(b.id) ? 1 : 0;
+      return bp - ap;
+    });
+  }, [comments, filters, keyword, priority]);
 
   const activeFilterCount =
     (filters.platform !== "all" ? 1 : 0) +
@@ -168,7 +179,18 @@ export const CommentManager = () => {
     toast.success("Deleted");
   };
 
+  const togglePriority = (id: number) => {
+    setPriority((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const quickAiReply = (c: typeof mockComments[number]) => {
+    const draft = `Hey ${c.user}! 🙌 Thanks so much — DM us and we'll help you out!`;
+    sendReply(c.id, draft);
+  };
+
   const unrepliedCount = comments.filter((c) => !c.replied).length;
+  const priorityCount = priority.length;
+
 
 
   return (
@@ -224,13 +246,31 @@ export const CommentManager = () => {
         </div>
       )}
 
-      {/* Select All */}
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
-        <Checkbox
-          checked={selectedComments.length === filteredComments.length && filteredComments.length > 0}
-          onCheckedChange={selectAll}
-        />
-        <span className="text-sm text-muted-foreground">Select all</span>
+      {/* Search + Select All */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4 pb-3 border-b border-border">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          <Input
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="Search text or @handle…"
+            className="h-9 pl-8"
+            aria-label="Search comments"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="cm-select-all"
+            checked={selectedComments.length === filteredComments.length && filteredComments.length > 0}
+            onCheckedChange={selectAll}
+          />
+          <label htmlFor="cm-select-all" className="text-sm text-muted-foreground cursor-pointer">Select all</label>
+          {priorityCount > 0 && (
+            <Badge variant="secondary" className="bg-brand-orange/10 text-brand-orange">
+              <Star className="h-3 w-3 mr-1 fill-current" /> {priorityCount} pinned
+            </Badge>
+          )}
+        </div>
       </div>
 
 
@@ -263,6 +303,11 @@ export const CommentManager = () => {
                   <Badge className={`text-xs border ${getSentimentColor(comment.sentiment)}`}>
                     {comment.sentiment}
                   </Badge>
+                  {priority.includes(comment.id) && (
+                    <Badge variant="secondary" className="text-xs bg-brand-orange/10 text-brand-orange border-brand-orange/30">
+                      <Star className="h-3 w-3 mr-1 fill-current" /> Priority
+                    </Badge>
+                  )}
                   {comment.replied && (
                     <Badge variant="secondary" className="text-xs bg-brand-green/10 text-brand-green border-brand-green/30">
                       <Check className="mr-1 h-3 w-3" /> Replied
@@ -270,11 +315,32 @@ export const CommentManager = () => {
                   )}
                 </div>
                 <p className="text-sm text-foreground mb-2">{comment.content}</p>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
                   <span className="text-xs text-muted-foreground">{comment.time}</span>
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs hover:text-brand-orange"
+                    onClick={() => togglePriority(comment.id)}
+                    aria-label={priority.includes(comment.id) ? "Unpin" : "Pin as priority"}
+                  >
+                    <Star className={`mr-1 h-3 w-3 ${priority.includes(comment.id) ? "fill-brand-orange text-brand-orange" : ""}`} />
+                    {priority.includes(comment.id) ? "Pinned" : "Pin"}
+                  </Button>
 
                   {!comment.replied && (
                     <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs hover:text-primary"
+                        onClick={() => quickAiReply(comment)}
+                        aria-label="Quick AI reply"
+                      >
+                        <Zap className="mr-1 h-3 w-3" />
+                        Quick AI
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"

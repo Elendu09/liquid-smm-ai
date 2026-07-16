@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Bot, Plus, Trash2, Power, LayoutGrid, List, PlayCircle, Pencil, Copy } from "lucide-react";
+import { Bot, Plus, Trash2, Power, LayoutGrid, List, PlayCircle, Pencil, Copy, Zap } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -13,6 +13,7 @@ import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { cn } from "@/lib/utils";
 import { NewRuleDialog, type RuleDraft } from "@/components/engage/NewRuleDialog";
 import { TestRuleDialog } from "@/components/engage/TestRuleDialog";
+import { RunAutomationDialog } from "@/components/engage/RunAutomationDialog";
 
 interface BotRule {
   id: string;
@@ -37,6 +38,7 @@ export default function BotRulesView() {
   const [editing, setEditing] = useState<BotRule | null>(null);
   const [testOpen, setTestOpen] = useState(false);
   const [testing, setTesting] = useState<BotRule | null>(null);
+  const [runOpen, setRunOpen] = useState(false);
 
   useEffect(() => { if (items.length === 0) setItems(seed); }, [items.length, setItems]);
 
@@ -128,9 +130,14 @@ export default function BotRulesView() {
           />
         }
         actions={
-          <Button size="sm" onClick={() => { setEditing(null); setRuleDialogOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1" /> New rule
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setRunOpen(true)}>
+              <Zap className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Run automation</span>
+            </Button>
+            <Button size="sm" onClick={() => { setEditing(null); setRuleDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> New rule
+            </Button>
+          </div>
         }
       />
 
@@ -158,6 +165,7 @@ export default function BotRulesView() {
         onSubmit={handleSubmit}
       />
       <TestRuleDialog open={testOpen} onOpenChange={setTestOpen} rule={testing} />
+      <RunAutomationDialog open={runOpen} onOpenChange={setRunOpen} />
     </div>
   );
 }

@@ -1,8 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+
 import { Target, Plus, Copy, Zap, Trash2, X, Eye } from "lucide-react";
 import { SegmentPreviewSheet } from "@/components/dashboard/segments/SegmentPreviewSheet";
+import { RunAutomationDialog } from "@/components/engage/RunAutomationDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   ToolbarBar,
   ViewToggle,
@@ -39,11 +50,25 @@ const ENGAGEMENT_BUCKETS = [
 
 const PLATFORM_OPTIONS = ["instagram", "tiktok", "youtube", "twitter", "facebook", "linkedin"];
 
+const NICHE_OPTIONS = [
+  "Fitness & wellness",
+  "SaaS & tech",
+  "Fashion & beauty",
+  "Food & drink",
+  "Travel",
+  "Finance",
+  "Education",
+  "Gaming",
+  "Music",
+  "Art & design",
+] as const;
+
 export interface Segment {
   id: string;
   title: string;
   description: string;
   status: SegmentStatus;
+  niche?: string;
   platforms: string[];
   followerBucket: (typeof FOLLOWER_BUCKETS)[number]["id"];
   engagementBucket: (typeof ENGAGEMENT_BUCKETS)[number]["id"];
@@ -63,6 +88,7 @@ const seed: Segment[] = [
     title: "Micro fitness creators",
     description: "US-based creators, 1–10k, high engagement, wellness niche",
     status: "active",
+    niche: "Fitness & wellness",
     platforms: ["instagram", "tiktok"],
     followerBucket: "10k",
     engagementBucket: "high",
@@ -74,6 +100,7 @@ const seed: Segment[] = [
     title: "SaaS founders",
     description: "LinkedIn + X, mid-tier, product & startup keywords",
     status: "testing",
+    niche: "SaaS & tech",
     platforms: ["linkedin", "twitter"],
     followerBucket: "100k",
     engagementBucket: "mid",
@@ -109,12 +136,14 @@ function estimatedSize(s: Segment): string {
 }
 
 export default function SegmentsBoard() {
-  const navigate = useNavigate();
+  
   const [view, setView] = useViewMode("audience-segments", "kanban");
   const { items, setItems, add, update, remove } = useLocalCollection<Segment>("audience", "segments");
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Segment | null>(null);
   const [previewing, setPreviewing] = useState<Segment | null>(null);
+  const [runSegmentId, setRunSegmentId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Segment | null>(null);
 
   useEffect(() => {
     if (items.length === 0) setItems(seed);
@@ -152,9 +181,6 @@ export default function SegmentsBoard() {
     toast.success("Segment duplicated");
   };
 
-  const useInAutomation = (s: Segment) => {
-    navigate(`/dashboard/engage/bot?segmentId=${encodeURIComponent(s.id)}`);
-  };
 
   const card = (s: Segment, dense = false) => {
     const size = estimatedSize(s);
@@ -178,6 +204,11 @@ export default function SegmentsBoard() {
               {s.platforms.slice(0, 4).map((p) => (
                 <PlatformIcon key={p} platform={p} size="xs" showBackground />
               ))}
+              {s.niche && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary">
+                  {s.niche}
+                </Badge>
+              )}
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
                 {fb}
               </Badge>
@@ -199,7 +230,7 @@ export default function SegmentsBoard() {
           <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Duplicate segment" onClick={() => duplicate(s)}>
             <Copy className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Use in automation" onClick={() => setPreviewing(s)}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Run automation with this segment" onClick={() => setRunSegmentId(s.id)}>
             <Zap className="h-3.5 w-3.5" />
           </Button>
           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditing(s)}>
@@ -210,10 +241,7 @@ export default function SegmentsBoard() {
             size="icon"
             className="h-7 w-7 text-destructive hover:text-destructive"
             aria-label="Delete segment"
-            onClick={() => {
-              remove(s.id);
-              toast.success("Deleted");
-            }}
+            onClick={() => setDeleteTarget(s)}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
@@ -230,10 +258,16 @@ export default function SegmentsBoard() {
         searchPlaceholder="Search segments…"
         viewToggle={<ViewToggle value={view} onChange={setView} />}
         actions={
-          <Button size="sm" onClick={startNew} aria-label="New segment">
-            <Plus className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">New segment</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setRunSegmentId(items[0]?.id || null)} aria-label="Run automation one-click">
+              <Zap className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Run automation</span>
+            </Button>
+            <Button size="sm" onClick={startNew} aria-label="New segment">
+              <Plus className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">New segment</span>
+            </Button>
+          </div>
         }
       />
 
@@ -277,6 +311,27 @@ export default function SegmentsBoard() {
                     rows={3}
                     aria-label="Segment description"
                   />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Niche</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {NICHE_OPTIONS.map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setEditing({ ...editing, niche: editing.niche === n ? undefined : n })}
+                        aria-pressed={editing.niche === n}
+                        className={cn(
+                          "px-2.5 h-8 rounded-md border text-xs",
+                          editing.niche === n
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border/60 text-muted-foreground hover:bg-muted",
+                        )}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Platforms</label>
@@ -389,6 +444,38 @@ export default function SegmentsBoard() {
       </Sheet>
 
       <SegmentPreviewSheet segment={previewing} onClose={() => setPreviewing(null)} />
+
+      <RunAutomationDialog
+        open={!!runSegmentId}
+        onOpenChange={(o) => !o && setRunSegmentId(null)}
+        presetSegmentId={runSegmentId}
+      />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete segment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes <strong>{deleteTarget?.title}</strong>. You can't undo this.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteTarget) {
+                  remove(deleteTarget.id);
+                  toast.success("Segment deleted");
+                }
+                setDeleteTarget(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
