@@ -17,6 +17,10 @@ import {
   Settings2,
   RotateCcw,
   Copy,
+  Plus,
+  Image as ImageIcon,
+  Paperclip,
+  Phone,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -45,6 +49,8 @@ import { cn } from "@/lib/utils";
 import { InlineMarkdown } from "./InlineMarkdown";
 import { CaptionDraftIntent } from "./ai-intents/CaptionDraftIntent";
 import { ScheduledPostIntent } from "./ai-intents/ScheduledPostIntent";
+import { VoiceCallDialog } from "./VoiceCallDialog";
+import { useImageAttachments, type ImageAttachment } from "@/hooks/useImageAttachments";
 import {
   SlashCommandMenu,
   SLASH_COMMANDS,
