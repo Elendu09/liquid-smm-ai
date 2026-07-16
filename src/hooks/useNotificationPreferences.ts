@@ -132,7 +132,7 @@ export function useNotificationPreferences() {
           user_id: userId,
           rule_key: rule.ruleKey,
           type: rule.type,
-          params: rule.params,
+          params: rule.params as never,
           enabled: rule.enabled,
           updated_at: new Date().toISOString(),
         },
