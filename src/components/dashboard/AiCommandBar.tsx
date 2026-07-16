@@ -399,20 +399,21 @@ export function AiCommandBar() {
                 onClick={() => submit()}
                 disabled={busy || !prompt.trim()}
                 size="sm"
-                className="h-7 px-3 ml-auto rounded-lg bg-gradient-to-br from-primary to-brand-purple text-primary-foreground shadow-md shadow-primary/25 hover:shadow-primary/40 hover:brightness-110 disabled:opacity-40 disabled:shadow-none transition-all"
+                className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] disabled:opacity-40 disabled:shadow-none disabled:ring-0 transition-all"
               >
                 {busy ? (
                   <>
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" strokeWidth={2} />
                     <span className="ml-1 text-[11px] font-medium">Thinking</span>
                   </>
                 ) : (
                   <>
                     <span className="text-[11px] font-semibold">Send</span>
-                    <Send className="h-3 w-3 ml-1" />
+                    <Send className="h-3 w-3 ml-1" strokeWidth={2} />
                   </>
                 )}
               </Button>
+
             </div>
           </div>
         </div>
