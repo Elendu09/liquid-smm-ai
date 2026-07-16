@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Mic, MicOff, PhoneOff, Volume2, VolumeX, Send, Loader2, AlertCircle, Sparkles, X,
+  Mic, MicOff, PhoneOff, Volume2, VolumeX, Send, Loader2, AlertCircle, Sparkles,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -77,27 +77,17 @@ export function VoiceCallDialog({ open, onOpenChange, onTranscript }: Props) {
       >
         <DialogTitle className="sr-only">Voice call with AI assistant</DialogTitle>
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-2 border-b border-border/40">
-          <div className="flex items-center gap-2.5">
-            <span className={cn("h-2 w-2 rounded-full animate-pulse", statusPulse)} />
-            <div>
-              <p className="text-sm font-semibold tracking-tight leading-tight">
-                {STATUS_LABEL[call.status] ?? call.status}
-              </p>
-              <p className="text-[11px] text-muted-foreground leading-tight">
-                {STATUS_HINT[call.status] ?? ""}
-              </p>
-            </div>
+        {/* Header — the DialogContent close button (rounded circle) sits top-right */}
+        <div className="flex items-center gap-2.5 px-5 pt-5 pb-2 pr-14 border-b border-border/40">
+          <span className={cn("h-2 w-2 rounded-full animate-pulse", statusPulse)} />
+          <div>
+            <p className="text-sm font-semibold tracking-tight leading-tight">
+              {STATUS_LABEL[call.status] ?? call.status}
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-tight">
+              {STATUS_HINT[call.status] ?? ""}
+            </p>
           </div>
-          <Button
-            variant="ghost" size="icon"
-            onClick={end}
-            aria-label="Close voice call"
-            className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </div>
 
         {/* Orb + waveform */}
@@ -108,13 +98,12 @@ export function VoiceCallDialog({ open, onOpenChange, onTranscript }: Props) {
             className="relative h-32 w-32 flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
             aria-label={call.status === "speaking" ? "Interrupt assistant" : "AI voice orb"}
           >
-            {/* soft outer glow */}
+            {/* soft outer glow — primary only */}
             <div
               aria-hidden
               className={cn(
-                "absolute inset-0 rounded-full blur-2xl transition-all duration-300",
-                "bg-gradient-to-br from-primary/50 via-brand-purple/40 to-brand-cyan/40",
-                activeGlow && "opacity-100",
+                "absolute inset-0 rounded-full blur-3xl transition-all duration-300 bg-primary/25",
+                activeGlow && "bg-primary/40",
               )}
               style={{ transform: `scale(${glowScale})` }}
             />
@@ -126,17 +115,19 @@ export function VoiceCallDialog({ open, onOpenChange, onTranscript }: Props) {
                 call.status === "listening" && "animate-ping",
               )}
             />
-            {/* core */}
+            {/* glassmorphic core */}
             <div
-              className="relative h-24 w-24 rounded-full bg-gradient-to-br from-primary via-brand-purple to-brand-cyan flex items-center justify-center shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.65)] ring-1 ring-inset ring-white/25 transition-transform duration-100"
+              className="relative h-24 w-24 rounded-full flex items-center justify-center border border-primary/30 bg-primary/15 backdrop-blur-xl shadow-[inset_0_1px_0_hsl(var(--primary-foreground)/0.15),0_12px_40px_-12px_hsl(var(--primary)/0.55)] transition-transform duration-100"
               style={{ transform: `scale(${orbScale})` }}
             >
+              {/* inner highlight */}
+              <span aria-hidden className="absolute inset-1 rounded-full bg-gradient-to-b from-primary-foreground/20 via-transparent to-transparent pointer-events-none" />
               {call.status === "processing" ? (
-                <Loader2 className="h-8 w-8 text-primary-foreground animate-spin" />
+                <Loader2 className="relative h-8 w-8 text-primary animate-spin" />
               ) : call.status === "error" ? (
-                <AlertCircle className="h-8 w-8 text-primary-foreground" />
+                <AlertCircle className="relative h-8 w-8 text-destructive" />
               ) : (
-                <Sparkles className="h-8 w-8 text-primary-foreground" strokeWidth={1.75} />
+                <Sparkles className="relative h-8 w-8 text-primary" strokeWidth={1.75} />
               )}
             </div>
           </button>
@@ -151,7 +142,7 @@ export function VoiceCallDialog({ open, onOpenChange, onTranscript }: Props) {
                   key={i}
                   className={cn(
                     "w-[3px] rounded-full transition-[height,background] duration-75",
-                    active ? "bg-gradient-to-t from-primary to-brand-cyan" : "bg-muted-foreground/30",
+                    active ? "bg-primary" : "bg-muted-foreground/30",
                   )}
                   style={{ height: `${h}px` }}
                 />
