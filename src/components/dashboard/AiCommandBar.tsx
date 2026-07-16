@@ -212,13 +212,31 @@ export function AiCommandBar() {
       return;
     }
     setPrompt(cmd.insert);
-    // Focus & place caret at end
-    requestAnimationFrame(() => {
-      const el = textareaRef.current;
-      if (el) {
-        el.focus();
-        el.setSelectionRange(cmd.insert.length, cmd.insert.length);
-      }
+    // Select the first placeholder token (e.g. <topic>) so the user can just start typing over it.
+    if (cmd.params?.length) {
+      selectPlaceholder(cmd.params[0].name);
+    } else {
+      requestAnimationFrame(() => {
+        const el = textareaRef.current;
+        if (el) {
+          el.focus();
+          el.setSelectionRange(cmd.insert.length, cmd.insert.length);
+        }
+      });
+    }
+  };
+
+  const onParamPick = (param: SlashParam, value: string) => {
+    setPrompt((p) => {
+      const next = fillPlaceholder(p, param.name, value);
+      // After state commits, jump to the next placeholder if one exists.
+      requestAnimationFrame(() => {
+        const cmd = matchActiveCommand(next);
+        const nextP = nextPlaceholder(next, cmd);
+        if (nextP) selectPlaceholder(nextP.name);
+        else textareaRef.current?.focus();
+      });
+      return next;
     });
   };
 
