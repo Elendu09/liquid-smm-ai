@@ -23,8 +23,12 @@ const tabs: HubTab[] = [
 
 function SettingsLayout() {
   return (
-    <div>
-      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+    <div className="relative">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-primary/[0.07] via-accent/[0.04] to-transparent"
+      />
+      <div className="relative px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
         <PageHeader
           title="Settings"
           description="Profile, notifications, connected platforms, billing, security, team, and audit log."
