@@ -155,6 +155,7 @@ export default function CreateStudio() {
   const [scheduleAt, setScheduleAt] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<Draft | null>(null);
   const [newPostOpen, setNewPostOpen] = useState(false);
+  const [previewing, setPreviewing] = useState<Draft | null>(null);
 
   const duplicateDraft = (d: Draft) => {
     const copy: Draft = {
