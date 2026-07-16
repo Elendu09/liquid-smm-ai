@@ -39,11 +39,25 @@ const ENGAGEMENT_BUCKETS = [
 
 const PLATFORM_OPTIONS = ["instagram", "tiktok", "youtube", "twitter", "facebook", "linkedin"];
 
+const NICHE_OPTIONS = [
+  "Fitness & wellness",
+  "SaaS & tech",
+  "Fashion & beauty",
+  "Food & drink",
+  "Travel",
+  "Finance",
+  "Education",
+  "Gaming",
+  "Music",
+  "Art & design",
+] as const;
+
 export interface Segment {
   id: string;
   title: string;
   description: string;
   status: SegmentStatus;
+  niche?: string;
   platforms: string[];
   followerBucket: (typeof FOLLOWER_BUCKETS)[number]["id"];
   engagementBucket: (typeof ENGAGEMENT_BUCKETS)[number]["id"];
