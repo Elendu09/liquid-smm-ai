@@ -113,9 +113,20 @@ const navItems: NavItem[] = [
     href: "/dashboard/library",
     icon: FolderOpen,
     children: [
+      { label: "Captions", href: "/dashboard/library/captions", icon: Type },
       { label: "Assets", href: "/dashboard/library/assets", icon: ImageIcon },
-      { label: "Link in bio", href: "/dashboard/library/link-bio", icon: Link2 },
       { label: "Presets", href: "/dashboard/library/presets", icon: Bookmark },
+    ],
+  },
+  {
+    label: "Link in Bio",
+    href: "/dashboard/link-in-bio",
+    icon: Link2,
+    children: [
+      { label: "Pages", href: "/dashboard/link-in-bio/pages", icon: Link2 },
+      { label: "Themes", href: "/dashboard/link-in-bio/themes", icon: Palette },
+      { label: "Templates", href: "/dashboard/link-in-bio/templates", icon: Sparkles },
+      { label: "Analytics", href: "/dashboard/link-in-bio/analytics", icon: BarChart3 },
     ],
   },
   {
