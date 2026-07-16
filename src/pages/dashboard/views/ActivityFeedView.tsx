@@ -200,7 +200,14 @@ export function ActivityFeedView() {
       />
 
       {view === "timeline" ? (
-        <TimelineView events={filtered} />
+        <TimelineView
+          events={filtered}
+          onSelect={(ev) => toast.message(ev.title, { description: ev.subtitle })}
+          onDelete={(ev) => {
+            remove(ev.id);
+            toast.success("Deleted");
+          }}
+        />
       ) : view === "kanban" ? (
         <KanbanBoard
           columns={columns as any}
