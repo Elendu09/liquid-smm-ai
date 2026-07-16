@@ -1169,8 +1169,7 @@ export function AiCommandBar() {
           </div>
         </div>
 
-          </div>
-        </div>
+
 
         {/* Image suggestion chips — visible only while images are attached. */}
         {imageSuggestions.length > 0 && (
