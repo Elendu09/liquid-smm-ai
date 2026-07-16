@@ -229,45 +229,62 @@ export default function TeamPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-            <Users className="h-7 w-7 sm:h-8 sm:w-8 text-primary shrink-0" />
-            <span className="truncate">Team Collaboration</span>
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Manage members, invites, and permissions across the workspace.
-          </p>
-        </div>
-        <Button className="w-full sm:w-auto" onClick={() => setInviteOpen(true)}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Invite Member
-        </Button>
-      </div>
-
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        {[
-          { label: "Total", value: stats.total, icon: Users, tone: "bg-primary/10 text-primary" },
-          { label: "Active", value: stats.active, icon: Check, tone: "bg-green-500/10 text-green-500" },
-          { label: "Pending", value: stats.pending, icon: Clock, tone: "bg-yellow-500/10 text-yellow-500" },
-          { label: "Admins", value: stats.admins, icon: Shield, tone: "bg-purple-500/10 text-purple-500" },
-        ].map((s) => (
-          <Card key={s.label}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
-                <div className={`h-12 w-12 rounded-full flex items-center justify-center ${s.tone}`}>
-                  <s.icon className="h-6 w-6" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{s.value}</div>
-                  <div className="text-sm text-muted-foreground">{s.label}</div>
-                </div>
+    <div className="relative">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-primary/[0.09] via-accent/[0.05] to-transparent"
+      />
+      <div className="relative p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+        <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-primary/[0.04] p-5 sm:p-7 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="min-w-0 flex items-start gap-4">
+              <div className="hidden sm:flex h-14 w-14 shrink-0 rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/60 items-center justify-center shadow-lg shadow-primary/25 ring-1 ring-primary/20">
+                <Users className="h-7 w-7 text-primary-foreground" />
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-[10px] uppercase tracking-widest border-primary/40 text-primary">
+                    Workspace
+                  </Badge>
+                  <Badge variant="secondary" className="text-[10px]">{stats.total} seats</Badge>
+                </div>
+                <h1 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
+                  Team Collaboration
+                </h1>
+                <p className="text-muted-foreground mt-1 text-sm max-w-xl">
+                  Invite teammates, tune permissions, and keep a real-time pulse on who's shipping what across your workspace.
+                </p>
+              </div>
+            </div>
+            <Button size="lg" className="w-full sm:w-auto shadow-lg shadow-primary/20" onClick={() => setInviteOpen(true)}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Invite Member
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
+          {[
+            { label: "Total", value: stats.total, icon: Users, tone: "from-primary/15 to-primary/5 text-primary" },
+            { label: "Active", value: stats.active, icon: Check, tone: "from-green-500/15 to-green-500/5 text-green-500" },
+            { label: "Pending", value: stats.pending, icon: Clock, tone: "from-yellow-500/15 to-yellow-500/5 text-yellow-500" },
+            { label: "Admins", value: stats.admins, icon: Shield, tone: "from-purple-500/15 to-purple-500/5 text-purple-500" },
+          ].map((s) => (
+            <Card key={s.label} className="overflow-hidden border-border/60 hover:border-primary/40 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${s.tone} flex items-center justify-center ring-1 ring-border/40`}>
+                    <s.icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-2xl font-bold leading-none">{s.value}</div>
+                    <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">{s.label}</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
