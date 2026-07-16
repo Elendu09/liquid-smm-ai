@@ -110,7 +110,7 @@ export function BulkReplyDialog({ open, onOpenChange, comments, onSend }: Props)
         {template && comments[0] && (
           <div className="rounded-lg border border-border/60 bg-muted/40 p-3 text-xs">
             <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">Preview for {comments[0].user}</p>
-            {template.split("{{user}}", comments[0].user)}
+            {template.split("{{user}}").join(comments[0].user)}
           </div>
         )}
 
