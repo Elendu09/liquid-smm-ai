@@ -428,7 +428,7 @@ export function AiCommandBar() {
               disabled={busy}
               className="group/chip text-[10.5px] pl-1.5 pr-2 py-0.5 rounded-full border border-border/60 dark:border-white/[0.06] bg-background/60 dark:bg-white/[0.03] hover:border-primary/50 hover:bg-primary/[0.06] hover:text-foreground transition-all text-muted-foreground disabled:opacity-40 inline-flex items-center gap-1"
             >
-              <Sparkles className="h-2.5 w-2.5 text-primary/70 group-hover/chip:text-primary transition-colors" />
+              <Sparkles className="h-2.5 w-2.5 text-primary/70 group-hover/chip:text-primary transition-colors" strokeWidth={1.75} />
               {s}
             </button>
           ))}
