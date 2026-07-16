@@ -742,9 +742,9 @@ export function AiCommandBar() {
                     /^<[a-z_-]+>$/i.test(part) ? (
                       <span
                         key={i}
-                        className="rounded-[3px] bg-primary/20 ring-1 ring-primary/40 text-primary font-mono"
+                        className="rounded-[3px] bg-primary/20 ring-1 ring-primary/40"
                       >
-                        {part}
+                        <span className="invisible">{part}</span>
                       </span>
                     ) : (
                       <span key={i} className="invisible">{part}</span>
