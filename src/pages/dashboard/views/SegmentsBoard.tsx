@@ -316,6 +316,27 @@ export default function SegmentsBoard() {
                   />
                 </div>
                 <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Niche</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {NICHE_OPTIONS.map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setEditing({ ...editing, niche: editing.niche === n ? undefined : n })}
+                        aria-pressed={editing.niche === n}
+                        className={cn(
+                          "px-2.5 h-8 rounded-md border text-xs",
+                          editing.niche === n
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border/60 text-muted-foreground hover:bg-muted",
+                        )}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Platforms</label>
                   <div className="flex flex-wrap gap-1.5">
                     {PLATFORM_OPTIONS.map((p) => {
