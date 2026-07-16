@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { MessageCircle, Sparkles, Check, Trash2, Reply, CheckCheck, Filter } from "lucide-react";
+import { MessageCircle, Sparkles, Check, Trash2, Reply, CheckCheck, Filter, Search, Star, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ReplyDialog } from "@/components/engage/ReplyDialog";
 import { BulkReplyDialog } from "@/components/engage/BulkReplyDialog";
