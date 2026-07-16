@@ -4,10 +4,12 @@ import { DashboardSidebar } from "./DashboardSidebar";
 import { MobileHubNav } from "@/components/dashboard/shell/MobileHubNav";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useSendSimulator } from "@/hooks/useSendSimulator";
 
 export function DashboardLayout() {
   const { state } = useOnboarding();
   const [tourOpen, setTourOpen] = useState(false);
+  useSendSimulator();
 
   useEffect(() => {
     if (!state.completed) {
