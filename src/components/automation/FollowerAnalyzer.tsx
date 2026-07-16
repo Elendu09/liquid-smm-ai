@@ -329,9 +329,11 @@ export const FollowerAnalyzer = () => {
         {activeTab === "unfollowers" && (
           <div className="space-y-3">
             {recentUnfollowers.map((follower) => (
-              <div
+              <button
                 key={follower.id}
-                className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border"
+                type="button"
+                onClick={() => openUnfollower(follower)}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border hover:border-primary/50 transition text-left"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground font-bold text-sm">
@@ -350,11 +352,19 @@ export const FollowerAnalyzer = () => {
                     </Badge>
                   )}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
       </div>
+
+      <AnalyzeAccountDialog open={analyzeOpen} onOpenChange={setAnalyzeOpen} onApply={applyAnalysis} />
+      <ExportDialog open={exportOpen} onOpenChange={setExportOpen} filename={`followers-${stats.account.replace(/^@/, "")}`} rows={exportRows} />
+      <FollowerDetailsDrawer
+        follower={detail}
+        onClose={() => setDetail(null)}
+        onRemove={(id) => setGhosts((prev) => prev.filter((g) => g.id !== id))}
+      />
     </div>
   );
 };
