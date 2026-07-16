@@ -395,18 +395,34 @@ function ThemesPanel() {
 
 function LinksPanel() {
   const cfg = useBioConfig();
+  const [dragId, setDragId] = useState<string | null>(null);
   return (
     <div className="space-y-3 max-w-2xl">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">Reorder, toggle visibility, feature a link as highlighted.</p>
+        <p className="text-xs text-muted-foreground">Drag to reorder, toggle visibility, or feature a link.</p>
         <Button size="sm" className="h-8 gap-1.5" onClick={() => bioStore.addLink()}>
           <Plus className="w-3.5 h-3.5" /> Add link
         </Button>
       </div>
       <div className="space-y-2">
         {cfg.links.map((l, i) => (
-          <div key={l.id} className="p-3 rounded-lg border border-border/50 bg-card/50 space-y-2">
+          <div
+            key={l.id}
+            draggable
+            onDragStart={() => setDragId(l.id)}
+            onDragEnd={() => setDragId(null)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => {
+              if (dragId && dragId !== l.id) bioStore.reorderLinks(dragId, l.id);
+              setDragId(null);
+            }}
+            className={cn(
+              "p-3 rounded-lg border bg-card/50 space-y-2 transition-all",
+              dragId === l.id ? "border-primary/70 opacity-60" : "border-border/50",
+            )}
+          >
             <div className="flex items-center gap-2">
+              <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab shrink-0" />
               <Input
                 value={l.title}
                 onChange={(e) => bioStore.updateLink(l.id, { title: e.target.value })}
@@ -418,10 +434,10 @@ function LinksPanel() {
             <Input
               value={l.url}
               onChange={(e) => bioStore.updateLink(l.id, { url: e.target.value })}
-              className="h-8 text-xs"
+              className="h-8 text-xs ml-6"
               placeholder="https://"
             />
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between ml-6">
               <button
                 onClick={() => bioStore.updateLink(l.id, { highlight: !l.highlight })}
                 className={cn(
