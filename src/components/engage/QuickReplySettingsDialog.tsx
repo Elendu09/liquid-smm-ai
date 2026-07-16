@@ -142,10 +142,10 @@ export function renderQuickReply(
   ctx: { user: string; platform: string; sentiment: string },
 ): string {
   let out = s.template
-    .replaceAll("{{user}}", ctx.user)
-    .replaceAll("{{platform}}", ctx.platform)
-    .replaceAll("{{handle}}", s.handle || "")
-    .replaceAll("{{sentiment}}", ctx.sentiment);
+    .replace(/\{\{user\}\}/g, ctx.user)
+    .replace(/\{\{platform\}\}/g, ctx.platform)
+    .replace(/\{\{handle\}\}/g, s.handle || "")
+    .replace(/\{\{sentiment\}\}/g, ctx.sentiment);
 
   if (!s.includeEmoji) {
     // strip most emoji ranges
