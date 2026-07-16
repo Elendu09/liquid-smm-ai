@@ -36,23 +36,67 @@ const socialIcons: Record<string, React.ComponentType<{ className?: string }>> =
 const fontClass = (f?: string) =>
   f === "serif" ? "font-serif" : f === "mono" ? "font-mono" : "font-sans";
 
+const FONT_PAIRS: Record<string, { heading: string; body: string }> = {
+  "inter-inter": { heading: `Inter, system-ui, sans-serif`, body: `Inter, system-ui, sans-serif` },
+  "playfair-inter": { heading: `"Playfair Display", Georgia, serif`, body: `Inter, system-ui, sans-serif` },
+  "space-dm": { heading: `"Space Grotesk", system-ui, sans-serif`, body: `"DM Sans", system-ui, sans-serif` },
+  "syne-jakarta": { heading: `Syne, system-ui, sans-serif`, body: `"Plus Jakarta Sans", system-ui, sans-serif` },
+  "instrument-work": { heading: `"Instrument Serif", Georgia, serif`, body: `"Work Sans", system-ui, sans-serif` },
+  "cormorant-karla": { heading: `"Cormorant Garamond", Georgia, serif`, body: `Karla, system-ui, sans-serif` },
+  "jetbrains-work": { heading: `"JetBrains Mono", ui-monospace, monospace`, body: `"Work Sans", system-ui, sans-serif` },
+  "bebas-barlow": { heading: `"Bebas Neue", Impact, sans-serif`, body: `Barlow, system-ui, sans-serif` },
+};
+
+const RADIUS_MAP = { sm: 6, md: 12, xl: 20, full: 9999 };
+const FONT_SCALE_MAP = { s: 0.9, m: 1, l: 1.08, xl: 1.18 };
+const SPACING_MAP = { tight: 12, cozy: 20, roomy: 32, airy: 44 };
+const MAXW_MAP = { narrow: 360, regular: 520, wide: 720 };
+const SHADOW_MAP: Record<string, string> = {
+  none: "none",
+  soft: "0 4px 12px -4px rgba(0,0,0,.2)",
+  medium: "0 10px 24px -8px rgba(0,0,0,.35)",
+  hard: "0 14px 0 -4px rgba(0,0,0,.9), 0 20px 40px -12px rgba(0,0,0,.4)",
+};
+
 export function BioPage({ config, compact = false }: { config: BioConfig; compact?: boolean }) {
   const theme = resolveTheme(config) as LinkBioTheme;
   const o = config.overrides;
   const enabledLinks = config.links.filter((l) => l.enabled);
   const accent = o.accent ?? theme.accent;
 
-  // Background override wins over theme bg
-  const bgStyle: React.CSSProperties =
-    o.bgType === "solid" && o.bgSolid
-      ? { background: o.bgSolid }
-      : o.bgType === "gradient" && o.bgGradientFrom
-        ? { background: `linear-gradient(160deg, ${o.bgGradientFrom}, ${o.bgGradientTo ?? o.bgGradientFrom})` }
-        : {};
+  // Background resolution
   const useThemeBg = !o.bgType || o.bgType === "theme";
+  let bgLayerStyle: React.CSSProperties = {};
+  if (o.bgType === "solid" && o.bgSolid) bgLayerStyle = { background: o.bgSolid };
+  else if (o.bgType === "gradient" && o.bgGradientFrom)
+    bgLayerStyle = { background: `linear-gradient(160deg, ${o.bgGradientFrom}, ${o.bgGradientTo ?? o.bgGradientFrom})` };
+  else if (o.bgType === "mesh") {
+    const s = o.bgMeshStops ?? ["#a78bfa", "#22d3ee", "#f472b6", "#fde047"];
+    bgLayerStyle = {
+      background: `radial-gradient(at 20% 20%, ${s[0]} 0px, transparent 50%), radial-gradient(at 80% 10%, ${s[1]} 0px, transparent 50%), radial-gradient(at 20% 90%, ${s[2]} 0px, transparent 50%), radial-gradient(at 90% 80%, ${s[3]} 0px, transparent 50%), ${s[0]}`,
+    };
+  } else if (o.bgType === "image" && o.bgImage)
+    bgLayerStyle = { background: `center/cover url(${o.bgImage})` };
+  if (o.bgBlur) bgLayerStyle.filter = `blur(${o.bgBlur}px)`;
 
-  // Avatar size scale (sm/md/lg -> 0.8 / 1 / 1.2)
-  const avatarScale = o.avatarSize === "sm" ? 0.8 : o.avatarSize === "lg" ? 1.2 : 1;
+  // Avatar
+  const avatarScaleLegacy = o.avatarSize === "sm" ? 0.8 : o.avatarSize === "lg" ? 1.2 : 1;
+  const avatarShape = o.avatarShape ?? "circle";
+  const avatarBorder = o.avatarBorder ?? 2;
+
+  // Typography
+  const pair = o.fontPair ? FONT_PAIRS[o.fontPair] : undefined;
+  const fontScaleKey = o.fontScale ?? "m";
+  const fontScale = FONT_SCALE_MAP[fontScaleKey];
+
+  // Radius + shadow + spacing + maxw
+  const radiusPx = o.radiusPx ?? RADIUS_MAP[o.radius ?? theme.radius];
+  const shadowCss = SHADOW_MAP[o.shadowDepth ?? "none"];
+  const gapPx = SPACING_MAP[o.sectionSpacing ?? "cozy"];
+  const maxwPx = MAXW_MAP[o.maxWidth ?? "regular"];
+
+  // Visibility
+  const showSocials = o.showSocials !== false;
 
   const shared = {
     theme,
@@ -63,33 +107,38 @@ export function BioPage({ config, compact = false }: { config: BioConfig; compac
     fontBody: fontClass(o.fontBody ?? undefined),
     fontHeading: fontClass(o.fontHeading ?? undefined),
     textOverride: o.textColor,
-    avatarScale,
+    avatarScale: avatarScaleLegacy,
   };
 
   const layout: ThemeLayout = theme.layout ?? "glass-list";
 
   const entrance = o.entrance ?? "fade";
   const entranceClass =
-    entrance === "fade"
-      ? "animate-fade-in"
-      : entrance === "scale"
-        ? "animate-scale-in"
-        : entrance === "slide"
-          ? "animate-slide-in-right"
+    entrance === "fade" ? "animate-fade-in"
+      : entrance === "scale" ? "animate-scale-in"
+        : entrance === "slide" ? "animate-slide-in-right"
           : "";
 
   const hover = o.hover ?? "scale";
   const stagger = o.stagger ?? 60;
 
-  // CSS variables + scoped style block drive design/motion overrides across every layout.
   const rootId = `bio-${theme.id}`;
   const rootStyle = {
-    ...bgStyle,
     ...(o.textColor ? { color: o.textColor } : {}),
     ["--bio-accent" as string]: accent,
     ["--bio-btn-bg" as string]: o.buttonBg ?? "",
     ["--bio-btn-text" as string]: o.buttonText ?? "",
     ["--bio-stagger" as string]: `${stagger}ms`,
+    ["--bio-radius" as string]: `${radiusPx}px`,
+    ["--bio-shadow" as string]: shadowCss,
+    ["--bio-gap" as string]: `${gapPx}px`,
+    ["--bio-pad" as string]: `${Math.round(gapPx * 0.9)}px`,
+    ["--bio-maxw" as string]: `${maxwPx}px`,
+    ["--bio-font-scale" as string]: String(fontScale),
+    ["--bio-font-heading" as string]: pair?.heading ?? "inherit",
+    ["--bio-font-body" as string]: pair?.body ?? "inherit",
+    fontSize: `${16 * fontScale}px`,
+    ...(pair ? { fontFamily: pair.body } : {}),
   } as React.CSSProperties;
 
   return (
@@ -97,29 +146,57 @@ export function BioPage({ config, compact = false }: { config: BioConfig; compac
       id={rootId}
       className={cn(
         "bio-root w-full h-full overflow-y-auto relative",
-        useThemeBg && theme.bg,
         theme.textClass,
         shared.fontBody,
         entranceClass,
       )}
       style={rootStyle}
     >
+      {/* Background layer */}
+      <div
+        className={cn("absolute inset-0 pointer-events-none", useThemeBg && theme.bg)}
+        style={{ ...bgLayerStyle, zIndex: 0 }}
+        aria-hidden
+      />
+      {o.bgNoise && (
+        <div
+          className="absolute inset-0 pointer-events-none opacity-40 mix-blend-overlay"
+          style={{
+            zIndex: 1,
+            backgroundImage:
+              "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+          }}
+          aria-hidden
+        />
+      )}
       <style>{`
+        #${rootId} { padding-top: var(--bio-pad); padding-bottom: var(--bio-pad); }
+        #${rootId} [data-bio-inner] { max-width: var(--bio-maxw); margin: 0 auto; position: relative; z-index: 2; }
+        #${rootId} h1, #${rootId} h2, #${rootId} h3 { font-family: var(--bio-font-heading); }
+        #${rootId} a[data-bio-btn] { border-radius: var(--bio-radius); box-shadow: var(--bio-shadow); }
         #${rootId} a { transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
         ${hover === "scale" ? `#${rootId} a:hover { transform: scale(1.03); }` : ""}
         ${hover === "lift" ? `#${rootId} a:hover { transform: translateY(-3px); box-shadow: 0 10px 24px -12px rgba(0,0,0,.35); }` : ""}
         ${hover === "glow" ? `#${rootId} a:hover { box-shadow: 0 0 0 2px ${accent}55, 0 0 24px ${accent}66; }` : ""}
         ${o.buttonBg ? `#${rootId} a[data-bio-btn] { background: ${o.buttonBg} !important; border-color: ${o.buttonBg} !important; }` : ""}
         ${o.buttonText ? `#${rootId} a[data-bio-btn] { color: ${o.buttonText} !important; }` : ""}
+        ${!showSocials ? `#${rootId} [data-bio-socials] { display: none !important; }` : ""}
+        ${o.alignment === "left" ? `#${rootId} [data-bio-inner] { text-align: left; }` : ""}
+        ${o.alignment === "justified" ? `#${rootId} [data-bio-inner] { text-align: justify; }` : ""}
         #${rootId} [data-bio-list] > * { animation: bio-in .35s ease-out both; }
         ${Array.from({ length: 24 })
           .map((_, i) => `#${rootId} [data-bio-list] > *:nth-child(${i + 1}) { animation-delay: calc(var(--bio-stagger) * ${i}); }`)
           .join("\n")}
         @keyframes bio-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
       `}</style>
-      <BioCtx.Provider value={{ avatarScale }}>
-        <BlocksStrip config={config} accent={accent} />
-        {renderLayout(layout, shared)}
+      <BioCtx.Provider value={{ avatarScale: avatarScaleLegacy, avatarShape, avatarBorder }}>
+        <div data-bio-inner>
+          <BlocksStrip config={config} accent={accent} />
+          {renderLayout(layout, shared)}
+          {o.footerText && (
+            <p className="text-[10px] opacity-60 text-center mt-4 px-4 pb-3">{o.footerText}</p>
+          )}
+        </div>
       </BioCtx.Provider>
     </div>
   );
