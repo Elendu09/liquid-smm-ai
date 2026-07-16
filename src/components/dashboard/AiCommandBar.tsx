@@ -767,7 +767,7 @@ export function AiCommandBar() {
                   onClick={stop}
                   size="sm"
                   variant="outline"
-                  className="h-7 px-3 ml-auto rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10"
+                  className="h-7 px-3 ml-auto rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10 cursor-pointer"
                 >
                   <Square className="h-3 w-3 fill-current" strokeWidth={2} />
                   <span className="ml-1 text-[11px] font-semibold">Stop</span>
@@ -777,7 +777,7 @@ export function AiCommandBar() {
                   onClick={() => submit()}
                   disabled={!prompt.trim()}
                   size="sm"
-                  className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] disabled:opacity-40 disabled:shadow-none disabled:ring-0 transition-all"
+                  className="h-7 px-3 ml-auto rounded-lg bg-primary text-primary-foreground shadow-[0_4px_14px_-2px_hsl(var(--primary)/0.45)] ring-1 ring-inset ring-primary-foreground/15 hover:bg-primary/90 hover:shadow-[0_6px_18px_-2px_hsl(var(--primary)/0.6)] disabled:opacity-40 disabled:shadow-none disabled:ring-0 disabled:cursor-not-allowed enabled:cursor-pointer transition-all"
                 >
                   <span className="text-[11px] font-semibold">Send</span>
                   <Send className="h-3 w-3 ml-1" strokeWidth={2} />
