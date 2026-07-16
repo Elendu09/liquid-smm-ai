@@ -21,7 +21,7 @@ import {
 import { Search, Shield, Download, Trash2, AlertCircle, CheckCircle2, Clock3 } from "lucide-react";
 import { toast } from "sonner";
 import { useRunHistory, type RunRecord } from "@/hooks/useRunHistory";
-import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { useLocalCollection, pushLocalCollection } from "@/hooks/useLocalCollection";
 import { cn } from "@/lib/utils";
 
 export interface AuditEntry {
