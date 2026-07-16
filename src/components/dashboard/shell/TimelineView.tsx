@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { CheckCircle2, XCircle, Clock3, Bot, Send, FileText, Bell, type LucideIcon } from "lucide-react";
+import { CheckCircle2, XCircle, Clock3, Bot, Send, FileText, Bell, Trash2, type LucideIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export type TimelineCategory = "post" | "bot" | "delivery" | "report" | "notification";
