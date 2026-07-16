@@ -42,11 +42,12 @@ export function UploadAssetDialog({
     setState("uploading");
     stateRef.current = "uploading";
     while (cursorRef.current < f.size) {
-      const s = stateRef.current as UploadState;
+      const s: string = stateRef.current;
       if (s === "paused" || s === "idle") return;
       f.slice(cursorRef.current, cursorRef.current + CHUNK_SIZE);
       await new Promise((r) => setTimeout(r, 120));
-      if (stateRef.current !== "uploading") return;
+      const s2: string = stateRef.current;
+      if (s2 !== "uploading") return;
       cursorRef.current = Math.min(f.size, cursorRef.current + CHUNK_SIZE);
       setUploaded(cursorRef.current);
     }
