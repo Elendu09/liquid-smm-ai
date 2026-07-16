@@ -433,11 +433,26 @@ Format as a numbered list.`;
                     Generated Content
                     <Badge variant="secondary" className="text-xs">AI</Badge>
                   </CardTitle>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" onClick={handleGenerate}>
                       <RefreshCw className="mr-2 h-3 w-3" />
                       Regenerate
                     </Button>
+                    {outputText && (
+                      <Button variant="outline" size="sm" onClick={handleSpeak}>
+                        {isSpeaking ? (
+                          <><Square className="mr-2 h-3 w-3 text-destructive" />Stop</>
+                        ) : (
+                          <><Volume2 className="mr-2 h-3 w-3" />Voiceover</>
+                        )}
+                      </Button>
+                    )}
+                    {selectedTool === "script" && outputText && (
+                      <Button variant="outline" size="sm" onClick={handleDownloadScript}>
+                        <FileDown className="mr-2 h-3 w-3" />
+                        Download Script
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm" onClick={handleCopy}>
                       {copied ? (
                         <Check className="mr-2 h-3 w-3 text-brand-green" />
@@ -461,7 +476,7 @@ Format as a numbered list.`;
                       size="sm"
                       variant="secondary"
                       className="absolute bottom-2 right-2"
-                      onClick={() => window.open(generatedImage, '_blank')}
+                      onClick={handleDownloadImage}
                     >
                       <Download className="h-3 w-3 mr-1" />
                       Download
