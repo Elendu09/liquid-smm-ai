@@ -3,18 +3,19 @@ import { LayoutDashboard, Sparkles, Calendar, Bot, BarChart3 } from "lucide-reac
 import { cn } from "@/lib/utils";
 
 const left = [
-  { label: "Home", href: "/dashboard", icon: LayoutDashboard, exact: true },
-  { label: "Create", href: "/dashboard/create", icon: Sparkles },
+  { label: "Home", href: "/dashboard", icon: LayoutDashboard, exact: true, tour: "mobile-nav-home" },
+  { label: "Create", href: "/dashboard/create", icon: Sparkles, tour: "mobile-nav-create" },
 ];
 const right = [
-  { label: "Engage", href: "/dashboard/engage", icon: Bot },
-  { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+  { label: "Engage", href: "/dashboard/engage", icon: Bot, tour: "mobile-nav-engage" },
+  { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3, tour: "mobile-nav-analytics" },
 ];
 
 export function MobileHubNav() {
   return (
     <nav
       aria-label="Hub navigation"
+      data-tour="mobile-nav"
       className="lg:hidden fixed bottom-0 inset-x-0 z-40 h-16 bg-card/95 backdrop-blur-md border-t border-border"
     >
       <div className="relative h-full max-w-screen-sm mx-auto grid grid-cols-5 items-center px-2">
@@ -23,6 +24,7 @@ export function MobileHubNav() {
             key={i.href}
             to={i.href}
             end={i.exact}
+            data-tour={i.tour}
             className={({ isActive }) =>
               cn(
                 "flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium min-h-[48px] transition-colors",
@@ -39,6 +41,7 @@ export function MobileHubNav() {
         <div className="flex items-start justify-center">
           <NavLink
             to="/dashboard/publish"
+            data-tour="mobile-nav-publish"
             className={({ isActive }) =>
               cn(
                 "-mt-8 w-14 h-14 rounded-full flex flex-col items-center justify-center shadow-lg ring-4 ring-background transition-transform active:scale-95",
@@ -57,6 +60,7 @@ export function MobileHubNav() {
           <NavLink
             key={i.href}
             to={i.href}
+            data-tour={i.tour}
             className={({ isActive }) =>
               cn(
                 "flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium min-h-[48px] transition-colors",
