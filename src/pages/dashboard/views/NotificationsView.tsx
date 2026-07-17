@@ -178,6 +178,9 @@ export function NotificationsView() {
           >
             <CheckCheck className="h-4 w-4 mr-1.5" /> Mark all read
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setExtrasOpen(true)}>
+            <Webhook className="h-4 w-4 mr-1.5" /> Webhooks
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
             <Settings className="h-4 w-4 mr-1.5" /> Settings
           </Button>
