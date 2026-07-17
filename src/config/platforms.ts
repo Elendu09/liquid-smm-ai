@@ -321,8 +321,16 @@ export const platformGroups = {
 
 export const allPlatformIds = platforms.map((p) => p.id);
 
-// Primary platforms for focused features (5 main platforms)
-export const primaryPlatformIds = ["facebook", "instagram", "twitter", "whatsapp", "youtube"];
+// Primary platforms for focused features (7 main named platforms)
+export const primaryPlatformIds = [
+  "instagram",
+  "facebook",
+  "tiktok",
+  "twitter",
+  "linkedin",
+  "youtube",
+  "google-business",
+];
 
 export const getPrimaryPlatforms = (): Platform[] => {
   return platforms.filter((p) => primaryPlatformIds.includes(p.id));
