@@ -117,6 +117,7 @@ export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useState(false);
+  const { prefs } = useNotificationPreferences();
 
   useEffect(() => {
     let cancelled = false;
