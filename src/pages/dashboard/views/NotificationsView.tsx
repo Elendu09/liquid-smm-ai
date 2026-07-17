@@ -381,6 +381,7 @@ export function NotificationsView() {
       )}
 
       <NotificationSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <NotificationExtrasDialog open={extrasOpen} onOpenChange={setExtrasOpen} />
     </div>
   );
 }
