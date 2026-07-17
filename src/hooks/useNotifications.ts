@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
 
 export type NotificationType = "engagement" | "system" | "milestone" | "alert" | "reminder";
 export type NotificationSeverity = "info" | "success" | "warning" | "critical";
@@ -115,6 +117,7 @@ export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useState(false);
+  const { prefs } = useNotificationPreferences();
 
   useEffect(() => {
     let cancelled = false;
@@ -164,7 +167,24 @@ export function useNotifications() {
           setDemoMode(false);
           setNotifications((prev) => {
             if (payload.eventType === "INSERT") {
-              return [fromRow(payload.new), ...prev].slice(0, 200);
+              const n = fromRow(payload.new);
+              // Toast on new (respect user pref)
+              const ch = prefs.channels?.[n.type];
+              if (ch?.toast !== false) {
+                const fn =
+                  n.severity === "critical" || n.severity === "warning"
+                    ? toast.error
+                    : n.severity === "success"
+                    ? toast.success
+                    : toast;
+                fn(n.title, {
+                  description: n.message,
+                  action: n.actionUrl
+                    ? { label: "View", onClick: () => (window.location.href = n.actionUrl!) }
+                    : undefined,
+                });
+              }
+              return [n, ...prev].slice(0, 200);
             }
             if (payload.eventType === "UPDATE") {
               return prev.map((n) => (n.id === (payload.new as { id: string }).id ? fromRow(payload.new) : n));
@@ -181,7 +201,7 @@ export function useNotifications() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, prefs]);
 
   const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
