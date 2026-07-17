@@ -106,9 +106,16 @@ export function OnboardingTour() {
       } catch {
         // ignore
       }
-      await new Promise((r) => setTimeout(r, 250));
       const pad = mode === "mobile" ? PAD_MOBILE : PAD_DESKTOP;
-      setRect(getRect(el, pad));
+      // Re-measure a few times to handle route transitions & animated targets
+      for (const delay of [180, 380, 700]) {
+        await new Promise((r) => setTimeout(r, delay));
+        const fresh = document.querySelector<HTMLElement>(selector);
+        if (fresh) {
+          const r = fresh.getBoundingClientRect();
+          if (r.width > 4 && r.height > 4) setRect(getRect(fresh, pad));
+        }
+      }
     } else {
       setRect(null);
     }
