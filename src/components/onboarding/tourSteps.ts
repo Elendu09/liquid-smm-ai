@@ -90,8 +90,9 @@ export const tourSteps: TourStep[] = [
   {
     id: "notifications",
     title: "Stay in the loop",
-    body: "Real-time alerts for milestones, account health, and AI activity.",
+    body: "Real-time alerts for milestones, account health, and AI activity. On mobile, open the menu to find Notifications.",
     target: '[data-tour="notifications"]',
+    mobileTarget: '[data-tour="mobile-menu"]',
     icon: Bell,
   },
   {
