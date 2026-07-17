@@ -5,6 +5,7 @@ import { MobileHubNav } from "@/components/dashboard/shell/MobileHubNav";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { HelpWidget } from "@/components/support/HelpWidget";
+import { PresetHandler } from "@/components/support/PresetHandler";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useSendSimulator } from "@/hooks/useSendSimulator";
 
@@ -37,6 +38,7 @@ export function DashboardLayout() {
       <OnboardingWizard open={tourOpen} onOpenChange={setTourOpen} />
       <OnboardingTour />
       <HelpWidget />
+      <PresetHandler />
     </div>
   );
 }
