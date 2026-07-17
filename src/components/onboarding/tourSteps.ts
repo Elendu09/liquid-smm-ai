@@ -39,6 +39,7 @@ export const tourSteps: TourStep[] = [
     title: "Welcome to SMMSAAS",
     body: "A quick tour of where everything lives — you can skip anytime with Esc.",
     target: '[data-tour="brand"]',
+    centered: true,
     icon: Sparkles,
     hint: "Use ← → arrows to navigate",
   },
