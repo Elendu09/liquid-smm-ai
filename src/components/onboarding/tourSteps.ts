@@ -7,7 +7,6 @@ import {
   Bot,
   BarChart3,
   Bell,
-  Smartphone,
   LifeBuoy,
 } from "lucide-react";
 
@@ -23,6 +22,10 @@ export interface TourStep {
   route?: string;
   desktopOnly?: boolean;
   mobileOnly?: boolean;
+  /** Force center-of-screen placement (ignores target rect for tooltip position) */
+  centered?: boolean;
+  /** Preferred placement of the tooltip relative to the target */
+  preferPlacement?: "top" | "bottom" | "left" | "right";
   /** Illustration icon in tooltip header */
   icon?: LucideIcon;
   /** Optional short tip / keyboard hint */
@@ -35,6 +38,7 @@ export const tourSteps: TourStep[] = [
     title: "Welcome to SMMSAAS",
     body: "A quick tour of where everything lives — you can skip anytime with Esc.",
     target: '[data-tour="brand"]',
+    centered: true,
     icon: Sparkles,
     hint: "Use ← → arrows to navigate",
   },
@@ -91,19 +95,11 @@ export const tourSteps: TourStep[] = [
     icon: Bell,
   },
   {
-    id: "mobile-nav",
-    title: "Bottom navigation",
-    body: "Jump between hubs from this bar. The center button opens Publish.",
-    target: '[data-tour="mobile-nav"]',
-    mobileOnly: true,
-    icon: Smartphone,
-    hint: "Swipe left/right on this card to move steps",
-  },
-  {
     id: "help",
     title: "Help is one tap away",
     body: "Open the Help widget anytime for tour, shortcuts, or to contact us.",
     target: '[data-tour="help-widget"]',
+    preferPlacement: "top",
     icon: LifeBuoy,
   },
 ];

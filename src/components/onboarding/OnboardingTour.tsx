@@ -198,12 +198,23 @@ export function OnboardingTour() {
 
   const isMobileMode = mode === "mobile";
   const tooltipW = mode === "desktop" ? TOOLTIP_W_DESKTOP : TOOLTIP_W_TABLET;
+  const forceCentered = !!step.centered;
 
   let tooltipStyle: React.CSSProperties = {};
   let placement: Placement = "center";
   let arrowStyle: React.CSSProperties | null = null;
 
-  if (isMobileMode) {
+  if (forceCentered) {
+    tooltipStyle = {
+      position: "fixed",
+      left: "50%",
+      top: "50%",
+      transform: "translate(-50%, -50%)",
+      width: isMobileMode ? Math.min(vw - 16, tooltipW) : tooltipW,
+      maxWidth: "calc(100vw - 16px)",
+    };
+    placement = "center";
+  } else if (isMobileMode && !step.preferPlacement) {
     tooltipStyle = {
       position: "fixed",
       left: 8,
@@ -218,7 +229,19 @@ export function OnboardingTour() {
     const spaceLeft = rect.left;
     let top: number;
     let left: number;
-    if (spaceBelow > TOOLTIP_H_EST) {
+    const wantTop =
+      step.preferPlacement === "top" && spaceAbove > TOOLTIP_H_EST * 0.6;
+    const wantBottom =
+      step.preferPlacement === "bottom" && spaceBelow > TOOLTIP_H_EST * 0.6;
+    if (wantTop) {
+      top = Math.max(8, rect.top - GAP - TOOLTIP_H_EST);
+      left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left + rect.width / 2 - tooltipW / 2));
+      placement = "top";
+    } else if (wantBottom) {
+      top = rect.top + rect.height + GAP;
+      left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left + rect.width / 2 - tooltipW / 2));
+      placement = "bottom";
+    } else if (spaceBelow > TOOLTIP_H_EST) {
       top = rect.top + rect.height + GAP;
       left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left + rect.width / 2 - tooltipW / 2));
       placement = "bottom";
@@ -235,12 +258,16 @@ export function OnboardingTour() {
       left = rect.left - tooltipW - GAP;
       placement = "left";
     } else {
-      top = Math.max(8, Math.min(bottomLimit - TOOLTIP_H_EST, rect.top + rect.height + GAP));
+      top = Math.max(8, Math.min(bottomLimit - TOOLTIP_H_EST, rect.top - GAP - TOOLTIP_H_EST));
       left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left));
-      placement = "bottom";
+      placement = "top";
     }
     top = Math.min(top, bottomLimit - TOOLTIP_H_EST);
-    tooltipStyle = { position: "fixed", top, left, width: tooltipW };
+    const effectiveW = isMobileMode ? Math.min(vw - 16, tooltipW) : tooltipW;
+    if (isMobileMode) {
+      left = Math.max(8, Math.min(vw - effectiveW - 8, left));
+    }
+    tooltipStyle = { position: "fixed", top, left, width: effectiveW };
 
     // Arrow relative to tooltip
     const targetCx = rect.left + rect.width / 2;
@@ -259,14 +286,14 @@ export function OnboardingTour() {
       arrowStyle = {
         ...arrowBase,
         top: -arrowSize,
-        left: Math.max(12, Math.min(tooltipW - 28, targetCx - left - arrowSize)),
+        left: Math.max(12, Math.min(effectiveW - 28, targetCx - left - arrowSize)),
         borderWidth: "1px 0 0 1px",
       };
     } else if (placement === "top") {
       arrowStyle = {
         ...arrowBase,
         bottom: -arrowSize,
-        left: Math.max(12, Math.min(tooltipW - 28, targetCx - left - arrowSize)),
+        left: Math.max(12, Math.min(effectiveW - 28, targetCx - left - arrowSize)),
         borderWidth: "0 1px 1px 0",
       };
     } else if (placement === "right") {
@@ -290,7 +317,7 @@ export function OnboardingTour() {
       left: "50%",
       top: "50%",
       transform: "translate(-50%, -50%)",
-      width: tooltipW,
+      width: isMobileMode ? Math.min(vw - 16, tooltipW) : tooltipW,
     };
   }
 
