@@ -160,6 +160,10 @@ export function NotificationsView() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={runAiSummary} disabled={aiLoading}>
+            <Sparkle className="h-4 w-4 mr-1.5" />
+            {aiLoading ? "Summarizing…" : "AI summary"}
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -176,6 +180,15 @@ export function NotificationsView() {
           </Button>
         </div>
       </div>
+
+      {aiSummary && (
+        <div className="rounded-xl border border-primary/30 bg-primary/[0.04] p-3 text-sm">
+          <div className="flex items-center gap-2 text-primary mb-1.5 text-xs font-medium">
+            <Sparkle className="h-3.5 w-3.5" /> AI summary
+          </div>
+          <div className="whitespace-pre-wrap text-foreground/90">{aiSummary}</div>
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-2">
