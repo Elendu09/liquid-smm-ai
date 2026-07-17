@@ -566,7 +566,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                 variant="ghost"
                 size="icon"
                 className="h-9 w-9 rounded-lg"
-                onClick={openOnboarding}
+                onClick={openOnboardingTour}
                 aria-label="Onboarding tour"
               >
                 <HelpCircle className="h-4 w-4" />
