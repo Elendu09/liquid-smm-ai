@@ -103,7 +103,6 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
   }, [open, onOpenChange]);
 
   const totalSteps = STEP_META.length;
-  const progress = ((step + 1) / totalSteps) * 100;
 
   const commit = (patch: Partial<OnboardingProfile>) => {
     const nextDraft = { ...draft, ...patch };
