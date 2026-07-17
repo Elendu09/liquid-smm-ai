@@ -426,8 +426,8 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
       </header>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 lg:py-10 grid lg:grid-cols-[240px_1fr] gap-8">
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-5 sm:py-6 lg:py-10 grid lg:grid-cols-[240px_1fr] gap-6 sm:gap-8">
           {/* Stepper — desktop */}
           <nav className="hidden lg:block" aria-label="Onboarding steps">
             <ol className="relative space-y-1 sticky top-6">
@@ -478,63 +478,17 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
             </ol>
           </nav>
 
-          {/* Stepper — mobile/tablet */}
-          <div className="lg:hidden -mx-1 px-1">
-            <div className="flex items-center gap-1 mb-2" aria-hidden>
-              {STEP_META.map((_, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "h-1 flex-1 rounded-full transition-all duration-300",
-                    i < step && "bg-primary",
-                    i === step && "bg-primary animate-pulse",
-                    i > step && "bg-muted",
-                  )}
-                />
-              ))}
-            </div>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-              {STEP_META.map((s, i) => {
-                const done = i < step;
-                const active = i === step;
-                return (
-                  <button
-                    key={s.title}
-                    type="button"
-                    onClick={() => setStep(i)}
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium whitespace-nowrap transition-all",
-                      active && "border-primary bg-primary/10 text-primary ring-2 ring-primary/20",
-                      done && !active && "border-primary/40 bg-primary/5 text-primary/80",
-                      !done && !active && "border-border text-muted-foreground",
-                    )}
-                  >
-                    <span className={cn(
-                      "flex h-4 w-4 items-center justify-center rounded-full text-[10px]",
-                      done && "bg-primary text-primary-foreground",
-                      active && "bg-primary/20 text-primary",
-                      !done && !active && "bg-muted",
-                    )}>
-                      {done ? <Check className="h-2.5 w-2.5" /> : i + 1}
-                    </span>
-                    {s.short}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           {/* Content */}
           <section className="min-w-0">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <Icon className="h-5 w-5 text-primary" />
               </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">{current.title}</h1>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-semibold tracking-tight truncate">{current.title}</h1>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mb-6 sm:mb-8">
+            <p className="text-sm text-muted-foreground mb-5 sm:mb-8">
               {step === 0 && "Let's tailor the app to how you work. Takes about a minute."}
               {step === 1 && "Pick the platforms you'll use — connect the details later."}
               {step === 2 && "Helps AI tailor captions, hashtags, and ideas to your audience."}
@@ -547,20 +501,25 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
             <div className="max-w-2xl">{bodies[step]}</div>
           </section>
         </div>
+        {/* Bottom spacer so content isn't hidden behind sticky footer on mobile */}
+        <div className="h-4 sm:h-6" aria-hidden />
       </div>
 
       {/* Footer nav */}
-      <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-              Skip tour
+      <footer
+        className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="mx-auto max-w-5xl px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="flex-shrink-0">
+              Skip
             </Button>
             {!canProceed && step < totalSteps - 1 && (
-              <span className="text-[11px] text-muted-foreground truncate">{stepHint(step)}</span>
+              <span className="hidden sm:inline text-[11px] text-muted-foreground truncate">{stepHint(step)}</span>
             )}
           </div>
-          <div className="flex gap-2 justify-end">
+          <div className="flex gap-2 justify-end flex-shrink-0">
             <Button variant="outline" size="sm" onClick={back} disabled={step === 0}>
               <ArrowLeft className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Back</span>
@@ -576,6 +535,12 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
             )}
           </div>
         </div>
+        {/* Inline hint on mobile when blocked */}
+        {!canProceed && step < totalSteps - 1 && (
+          <div className="sm:hidden px-3 pb-2 -mt-1">
+            <span className="text-[11px] text-muted-foreground">{stepHint(step)}</span>
+          </div>
+        )}
       </footer>
     </div>
   );
