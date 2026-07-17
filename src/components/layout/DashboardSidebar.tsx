@@ -612,7 +612,7 @@ export function DashboardSidebar() {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-card/95 backdrop-blur-md border-b border-border flex items-center justify-between px-4">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Open navigation">
+            <Button variant="ghost" size="icon" data-tour="mobile-menu" className="h-9 w-9" aria-label="Open navigation">
               <Menu className="w-5 h-5" />
             </Button>
           </SheetTrigger>
