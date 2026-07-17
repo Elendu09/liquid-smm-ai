@@ -101,6 +101,48 @@ export async function emitNotification(admin: any, p: EmitParams) {
     .single();
 
   if (error) return { skipped: true, reason: error.message };
+
+  // Analytics: delivered event
+  try {
+    await admin.from("notification_events").insert({
+      user_id: p.userId,
+      notification_id: data?.id,
+      event: "delivered",
+      notif_type: p.type,
+      notif_severity: severity,
+      rule_key: p.groupKey?.split(":")[0] ?? null,
+    });
+  } catch (_) { /* ignore */ }
+
+  // Fan-out to user webhooks (fire-and-forget)
+  try {
+    const url = Deno.env.get("SUPABASE_URL");
+    if (url) {
+      fetch(`${url}/functions/v1/notif-fire-webhooks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({
+          userId: p.userId,
+          notification: {
+            id: data?.id,
+            type: p.type,
+            severity,
+            title: p.title,
+            message: p.message,
+            platformId: p.platformId,
+            accountId: p.accountId,
+            postId: p.postId,
+            actionUrl: p.actionUrl,
+            metric: p.metric,
+          },
+        }),
+      }).catch(() => {});
+    }
+  } catch (_) { /* ignore */ }
+
   return { skipped: false, id: data?.id };
 }
 
