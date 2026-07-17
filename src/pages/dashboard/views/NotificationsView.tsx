@@ -80,6 +80,44 @@ export function NotificationsView() {
     return bySearch;
   }, [notifications, filter, search, prefs]);
 
+  // Group by groupKey — ungrouped items get unique keys so they stay as singletons.
+  const grouped = useMemo(() => {
+    const map = new Map<string, Notification[]>();
+    for (const n of visible) {
+      const key = n.groupKey ?? `__solo:${n.id}`;
+      const arr = map.get(key) ?? [];
+      arr.push(n);
+      map.set(key, arr);
+    }
+    return Array.from(map.entries()).map(([key, items]) => ({
+      key,
+      items,
+      lead: items[0],
+      isGroup: !key.startsWith("__solo:") && items.length > 1,
+    }));
+  }, [visible]);
+
+  const toggleGroup = (key: string) =>
+    setExpandedGroups((prev) => {
+      const n = new Set(prev);
+      n.has(key) ? n.delete(key) : n.add(key);
+      return n;
+    });
+
+  const runAiSummary = async () => {
+    setAiLoading(true);
+    setAiSummary(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("notif-ai-summary");
+      if (error) throw error;
+      setAiSummary((data as { summary?: string })?.summary ?? "No summary available.");
+    } catch {
+      toast.error("Couldn't generate summary");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const toggle = (id: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
