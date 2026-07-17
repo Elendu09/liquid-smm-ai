@@ -274,6 +274,23 @@ export const platforms: Platform[] = [
     contentTypes: ["text", "image", "video", "link"],
     scheduling: { minIntervalMinutes: 15, optimalTimesEnabled: true },
   },
+  {
+    id: "google-business",
+    name: "Google Business",
+    shortName: "GB",
+    color: "hsl(217 89% 51%)",
+    gradient: "from-blue-500 via-red-500 to-yellow-500",
+    bgGradient: "bg-gradient-to-br from-blue-500 via-red-500 to-yellow-500",
+    features: ["posts", "offers", "events", "updates", "reviews"],
+    limits: {
+      captionLength: 1500,
+      hashtagsMax: 0,
+      imageAspectRatios: ["4:3", "1:1"],
+    },
+    analytics: ["views", "clicks", "calls", "direction_requests", "reviews"],
+    contentTypes: ["update", "offer", "event", "product"],
+    scheduling: { minIntervalMinutes: 60, optimalTimesEnabled: true },
+  },
 ];
 
 export const getPlatformById = (id: string): Platform | undefined => {
@@ -299,6 +316,7 @@ export const platformGroups = {
   visual: ["instagram", "tiktok", "youtube", "pinterest", "snapchat"],
   social: ["facebook", "twitter", "linkedin", "threads", "bluesky", "reddit"],
   messaging: ["telegram", "discord", "whatsapp"],
+  business: ["google-business"],
 };
 
 export const allPlatformIds = platforms.map((p) => p.id);

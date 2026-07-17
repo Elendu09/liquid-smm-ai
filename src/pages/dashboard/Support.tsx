@@ -111,6 +111,13 @@ export default function Support() {
             <p className="text-sm text-muted-foreground mt-1">
               Search our knowledge base or reach out directly.
             </p>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <Badge variant="secondary" className="gap-1.5 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                <Circle className="w-2 h-2 fill-current" /> 24/7 email support
+              </Badge>
+              <Badge variant="secondary">Avg. first reply &lt; 1 hour</Badge>
+              <Badge variant="secondary">Human replies, always</Badge>
+            </div>
           </div>
           <div className="max-w-xl mx-auto relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
