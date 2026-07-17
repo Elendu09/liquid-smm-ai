@@ -96,19 +96,11 @@ export const tourSteps: TourStep[] = [
     icon: Bell,
   },
   {
-    id: "mobile-nav",
-    title: "Bottom navigation",
-    body: "Jump between hubs from this bar. The center button opens Publish.",
-    target: '[data-tour="mobile-nav"]',
-    mobileOnly: true,
-    icon: Smartphone,
-    hint: "Swipe left/right on this card to move steps",
-  },
-  {
     id: "help",
     title: "Help is one tap away",
     body: "Open the Help widget anytime for tour, shortcuts, or to contact us.",
     target: '[data-tour="help-widget"]',
+    preferPlacement: "top",
     icon: LifeBuoy,
   },
 ];
