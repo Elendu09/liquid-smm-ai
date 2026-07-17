@@ -33,11 +33,15 @@ async function waitForEl(selector: string, timeout = 1500): Promise<HTMLElement 
 
 function getRect(el: HTMLElement, pad: number): Rect {
   const r = el.getBoundingClientRect();
+  // If the element sits inside the mobile bottom nav, expand the top so the
+  // floating "Publish" button (which visually pokes above the nav) is included.
+  const inBottomNav = !!el.closest('nav[aria-label="Hub navigation"]');
+  const topPad = inBottomNav ? pad + 28 : pad;
   return {
-    top: Math.max(0, r.top - pad),
+    top: Math.max(0, r.top - topPad),
     left: Math.max(0, r.left - pad),
     width: r.width + pad * 2,
-    height: r.height + pad * 2,
+    height: r.height + topPad + pad,
   };
 }
 
@@ -102,9 +106,16 @@ export function OnboardingTour() {
       } catch {
         // ignore
       }
-      await new Promise((r) => setTimeout(r, 250));
       const pad = mode === "mobile" ? PAD_MOBILE : PAD_DESKTOP;
-      setRect(getRect(el, pad));
+      // Re-measure a few times to handle route transitions & animated targets
+      for (const delay of [180, 380, 700]) {
+        await new Promise((r) => setTimeout(r, delay));
+        const fresh = document.querySelector<HTMLElement>(selector);
+        if (fresh) {
+          const r = fresh.getBoundingClientRect();
+          if (r.width > 4 && r.height > 4) setRect(getRect(fresh, pad));
+        }
+      }
     } else {
       setRect(null);
     }
