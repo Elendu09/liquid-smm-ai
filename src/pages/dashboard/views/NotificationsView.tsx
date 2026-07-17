@@ -256,92 +256,121 @@ export function NotificationsView() {
         />
       ) : (
         <ul className="space-y-2">
-          {visible.map((n) => {
-            const meta = TYPE_META[n.type];
-            const Icon = meta.icon;
-            const isSelected = selected.has(n.id);
+          {grouped.map(({ key, items, lead, isGroup }) => {
+            const expanded = expandedGroups.has(key);
+            const shown = isGroup && !expanded ? [lead] : items;
             return (
-              <li
-                key={n.id}
-                className={cn(
-                  "group relative rounded-xl border transition-all overflow-hidden",
-                  !n.read
-                    ? "bg-primary/[0.03] border-primary/30"
-                    : "bg-card/60 border-border/60 hover:bg-muted/40",
-                )}
-              >
-                <div className="flex items-start gap-3 p-3">
-                  <Checkbox
-                    className="mt-1.5"
-                    checked={isSelected}
-                    onCheckedChange={() => toggle(n.id)}
-                    aria-label={`Select ${n.title}`}
-                  />
-                  <div
-                    className={cn(
-                      "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
-                      meta.className,
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-medium truncate">{n.title}</p>
-                      {!n.read && (
-                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+              <li key={key} className="space-y-1">
+                {shown.map((n, idx) => {
+                  const meta = TYPE_META[n.type];
+                  const Icon = meta.icon;
+                  const isSelected = selected.has(n.id);
+                  const showGroupChip = isGroup && idx === 0 && !expanded;
+                  return (
+                    <div
+                      key={n.id}
+                      className={cn(
+                        "group relative rounded-xl border transition-all overflow-hidden",
+                        !n.read
+                          ? "bg-primary/[0.03] border-primary/30"
+                          : "bg-card/60 border-border/60 hover:bg-muted/40",
+                        isGroup && expanded && idx > 0 && "ml-6",
                       )}
-                      <Badge variant="outline" className="text-[10px] h-4 px-1.5">
-                        {meta.label}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                      {n.message}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-[11px] text-muted-foreground">
-                        {formatDistanceToNow(n.timestamp, { addSuffix: true })}
-                      </span>
-                      {n.actionUrl && (
-                        <Button
-                          asChild
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 px-2 text-[11px]"
-                        >
-                          <Link to={n.actionUrl} onClick={() => markAsRead(n.id)}>
-                            View <ExternalLink className="h-3 w-3 ml-1" />
-                          </Link>
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {!n.read && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        aria-label="Mark as read"
-                        onClick={() => markAsRead(n.id)}
-                      >
-                        <Check className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
-                      aria-label="Delete"
-                      onClick={() => {
-                        deleteNotification(n.id);
-                        toast.success("Notification removed");
-                      }}
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
+                      <div className="flex items-start gap-3 p-3">
+                        <Checkbox
+                          className="mt-1.5"
+                          checked={isSelected}
+                          onCheckedChange={() => toggle(n.id)}
+                          aria-label={`Select ${n.title}`}
+                        />
+                        <div
+                          className={cn(
+                            "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
+                            meta.className,
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-medium truncate">{n.title}</p>
+                            {!n.read && (
+                              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                            )}
+                            <Badge variant="outline" className="text-[10px] h-4 px-1.5">
+                              {meta.label}
+                            </Badge>
+                            {showGroupChip && (
+                              <button
+                                type="button"
+                                onClick={() => toggleGroup(key)}
+                                className="inline-flex items-center gap-1 text-[10px] h-4 px-1.5 rounded-full border border-primary/40 text-primary hover:bg-primary/10"
+                              >
+                                +{items.length - 1} more
+                                <ChevronDown className="h-3 w-3" />
+                              </button>
+                            )}
+                            {isGroup && expanded && idx === 0 && (
+                              <button
+                                type="button"
+                                onClick={() => toggleGroup(key)}
+                                className="inline-flex items-center gap-1 text-[10px] h-4 px-1.5 rounded-full border border-border/60 text-muted-foreground hover:bg-muted"
+                              >
+                                Collapse
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                            {n.message}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-[11px] text-muted-foreground">
+                              {formatDistanceToNow(n.timestamp, { addSuffix: true })}
+                            </span>
+                            {n.actionUrl && (
+                              <Button
+                                asChild
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 px-2 text-[11px]"
+                              >
+                                <Link to={n.actionUrl} onClick={() => markAsRead(n.id)}>
+                                  View <ExternalLink className="h-3 w-3 ml-1" />
+                                </Link>
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {!n.read && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7"
+                              aria-label="Mark as read"
+                              onClick={() => markAsRead(n.id)}
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            aria-label="Delete"
+                            onClick={() => {
+                              deleteNotification(n.id);
+                              toast.success("Notification removed");
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </li>
             );
           })}
