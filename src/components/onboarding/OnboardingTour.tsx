@@ -33,11 +33,15 @@ async function waitForEl(selector: string, timeout = 1500): Promise<HTMLElement 
 
 function getRect(el: HTMLElement, pad: number): Rect {
   const r = el.getBoundingClientRect();
+  // If the element sits inside the mobile bottom nav, expand the top so the
+  // floating "Publish" button (which visually pokes above the nav) is included.
+  const inBottomNav = !!el.closest('nav[aria-label="Hub navigation"]');
+  const topPad = inBottomNav ? pad + 28 : pad;
   return {
-    top: Math.max(0, r.top - pad),
+    top: Math.max(0, r.top - topPad),
     left: Math.max(0, r.left - pad),
     width: r.width + pad * 2,
-    height: r.height + pad * 2,
+    height: r.height + topPad + pad,
   };
 }
 
