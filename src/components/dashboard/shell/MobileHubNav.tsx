@@ -44,7 +44,7 @@ export function MobileHubNav() {
             data-tour="mobile-nav-publish"
             className={({ isActive }) =>
               cn(
-                "-mt-8 w-14 h-14 rounded-full flex flex-col items-center justify-center shadow-lg ring-4 ring-background transition-transform active:scale-95",
+                "-mt-8 w-14 h-14 rounded-full flex flex-col items-center justify-center gap-0 shadow-lg ring-4 ring-background transition-transform active:scale-95",
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "bg-primary text-primary-foreground hover:bg-primary/90",
@@ -52,7 +52,8 @@ export function MobileHubNav() {
             }
             aria-label="Publish"
           >
-            <Calendar className="w-6 h-6" />
+            <Calendar className="w-5 h-5" />
+            <span className="text-[9px] font-semibold leading-none mt-0.5">Publish</span>
           </NavLink>
         </div>
 
