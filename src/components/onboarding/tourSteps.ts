@@ -23,6 +23,10 @@ export interface TourStep {
   route?: string;
   desktopOnly?: boolean;
   mobileOnly?: boolean;
+  /** Force center-of-screen placement (ignores target rect for tooltip position) */
+  centered?: boolean;
+  /** Preferred placement of the tooltip relative to the target */
+  preferPlacement?: "top" | "bottom" | "left" | "right";
   /** Illustration icon in tooltip header */
   icon?: LucideIcon;
   /** Optional short tip / keyboard hint */
