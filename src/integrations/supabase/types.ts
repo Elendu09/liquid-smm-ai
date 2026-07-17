@@ -41,8 +41,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          meta: Json | null
+          notif_severity: string | null
+          notif_type: string | null
+          notification_id: string | null
+          rule_key: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          meta?: Json | null
+          notif_severity?: string | null
+          notif_type?: string | null
+          notification_id?: string | null
+          rule_key?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          meta?: Json | null
+          notif_severity?: string | null
+          notif_type?: string | null
+          notification_id?: string | null
+          rule_key?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
+          auto_tune_enabled: boolean
           channels: Json
           created_at: string
           digest_mode: string
@@ -53,6 +90,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_tune_enabled?: boolean
           channels?: Json
           created_at?: string
           digest_mode?: string
@@ -63,6 +101,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_tune_enabled?: boolean
           channels?: Json
           created_at?: string
           digest_mode?: string
@@ -103,6 +142,51 @@ export type Database = {
           rule_key?: string
           type?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_webhooks: {
+        Row: {
+          active: boolean
+          created_at: string
+          event_types: string[]
+          failure_count: number
+          id: string
+          label: string | null
+          last_fired_at: string | null
+          last_status: number | null
+          secret: string | null
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          event_types?: string[]
+          failure_count?: number
+          id?: string
+          label?: string | null
+          last_fired_at?: string | null
+          last_status?: number | null
+          secret?: string | null
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          event_types?: string[]
+          failure_count?: number
+          id?: string
+          label?: string | null
+          last_fired_at?: string | null
+          last_status?: number | null
+          secret?: string | null
+          updated_at?: string
+          url?: string
           user_id?: string
         }
         Relationships: []

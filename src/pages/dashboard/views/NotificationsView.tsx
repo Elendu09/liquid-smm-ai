@@ -30,6 +30,8 @@ import {
   NotificationSettingsDialog,
   useNotificationPrefs,
 } from "@/components/activity/NotificationSettingsDialog";
+import { NotificationExtrasDialog } from "@/components/activity/NotificationExtrasDialog";
+import { Webhook } from "lucide-react";
 
 const TYPE_META: Record<
   Notification["type"],
@@ -63,6 +65,7 @@ export function NotificationsView() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [extrasOpen, setExtrasOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -174,6 +177,9 @@ export function NotificationsView() {
             disabled={unreadCount === 0}
           >
             <CheckCheck className="h-4 w-4 mr-1.5" /> Mark all read
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setExtrasOpen(true)}>
+            <Webhook className="h-4 w-4 mr-1.5" /> Webhooks
           </Button>
           <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
             <Settings className="h-4 w-4 mr-1.5" /> Settings
@@ -378,6 +384,7 @@ export function NotificationsView() {
       )}
 
       <NotificationSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <NotificationExtrasDialog open={extrasOpen} onOpenChange={setExtrasOpen} />
     </div>
   );
 }

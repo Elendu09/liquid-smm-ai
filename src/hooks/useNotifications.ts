@@ -205,13 +205,29 @@ export function useNotifications() {
 
   const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
+  const trackEvent = useCallback(
+    async (id: string, event: "read" | "clicked" | "dismissed" | "snoozed", type?: NotificationType, severity?: NotificationSeverity) => {
+      if (demoMode || !userId || id.startsWith("demo-")) return;
+      await supabase.from("notification_events").insert({
+        user_id: userId,
+        notification_id: id,
+        event,
+        notif_type: type,
+        notif_severity: severity,
+      });
+    },
+    [demoMode, userId],
+  );
+
   const markAsRead = useCallback(
     async (id: string) => {
+      const n = notifications.find((x) => x.id === id);
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
       if (demoMode || !userId || id.startsWith("demo-")) return;
       await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", id);
+      trackEvent(id, "read", n?.type, n?.severity);
     },
-    [demoMode, userId],
+    [demoMode, userId, notifications, trackEvent],
   );
 
   const markAllAsRead = useCallback(async () => {
@@ -226,11 +242,13 @@ export function useNotifications() {
 
   const deleteNotification = useCallback(
     async (id: string) => {
+      const n = notifications.find((x) => x.id === id);
       setNotifications((prev) => prev.filter((n) => n.id !== id));
       if (demoMode || !userId || id.startsWith("demo-")) return;
+      trackEvent(id, "dismissed", n?.type, n?.severity);
       await supabase.from("notifications").delete().eq("id", id);
     },
-    [demoMode, userId],
+    [demoMode, userId, notifications, trackEvent],
   );
 
   const snooze = useCallback(
