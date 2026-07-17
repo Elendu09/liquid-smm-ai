@@ -97,6 +97,11 @@ export function OnboardingTour() {
     if (step.route && !pathname.startsWith(step.route)) {
       navigate(step.route);
     }
+    if (step.centered) {
+      setRect(null);
+      setLoading(false);
+      return;
+    }
     const selector = mode !== "desktop" && step.mobileTarget ? step.mobileTarget : step.target;
     const el = await waitForEl(selector);
     if (el) {
@@ -106,7 +111,6 @@ export function OnboardingTour() {
         // ignore
       }
       const pad = mode === "mobile" ? PAD_MOBILE : PAD_DESKTOP;
-      // Re-measure a few times to handle route transitions & animated targets
       for (const delay of [180, 380, 700]) {
         await new Promise((r) => setTimeout(r, delay));
         const fresh = document.querySelector<HTMLElement>(selector);

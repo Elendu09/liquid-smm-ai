@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Progress } from "@/components/ui/progress";
+
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { platforms } from "@/config/platforms";
@@ -103,7 +103,6 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
   }, [open, onOpenChange]);
 
   const totalSteps = STEP_META.length;
-  const progress = ((step + 1) / totalSteps) * 100;
 
   const commit = (patch: Partial<OnboardingProfile>) => {
     const nextDraft = { ...draft, ...patch };
@@ -375,9 +374,39 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
           <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold truncate">Set up SMMSAAS</div>
-            <div className="text-xs text-muted-foreground">
+          <div className="min-w-0 flex-1 flex flex-col items-center">
+            {/* Dot / pill progress */}
+            <div
+              className="flex items-center gap-1.5"
+              role="progressbar"
+              aria-valuemin={1}
+              aria-valuemax={totalSteps}
+              aria-valuenow={step + 1}
+              aria-label={`Step ${step + 1} of ${totalSteps}`}
+            >
+              {STEP_META.map((s, i) => {
+                const done = i < step;
+                const active = i === step;
+                return (
+                  <button
+                    key={s.title}
+                    type="button"
+                    onClick={() => setStep(i)}
+                    aria-label={`Go to step ${i + 1}: ${s.title}`}
+                    aria-current={active ? "step" : undefined}
+                    className={cn(
+                      "h-1.5 rounded-full transition-all duration-300 ease-out",
+                      active
+                        ? "w-7 bg-primary"
+                        : done
+                          ? "w-1.5 bg-primary/70 hover:bg-primary"
+                          : "w-1.5 bg-muted-foreground/25 hover:bg-muted-foreground/40",
+                    )}
+                  />
+                );
+              })}
+            </div>
+            <div className="mt-1.5 text-[11px] text-muted-foreground truncate">
               Step {step + 1} of {totalSteps} · {current.title}
             </div>
           </div>
@@ -385,7 +414,6 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <Progress value={progress} className="h-1 rounded-none" />
       </header>
 
       {/* Body */}
