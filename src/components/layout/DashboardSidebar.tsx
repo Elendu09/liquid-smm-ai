@@ -266,7 +266,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
     <TooltipProvider delayDuration={200}>
       {/* Brand */}
       <div className="h-16 flex items-center justify-between px-3 border-b border-border/50 flex-shrink-0">
-        <Link to="/" className="flex items-center gap-2.5 min-w-0" onClick={onNavigate}>
+        <Link to="/" data-tour="brand" className="flex items-center gap-2.5 min-w-0" onClick={onNavigate}>
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary via-primary to-primary/60 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/30 ring-1 ring-primary/20">
             <Zap className="w-4 h-4 text-primary-foreground" />
           </div>
@@ -379,6 +379,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
 
               const rowContent = (
                 <div
+                  data-tour={`nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
                   className={cn(
                     "group relative flex items-center gap-2.5 rounded-lg text-[12.5px] font-medium min-h-[36px] transition-all",
                     active
@@ -488,6 +489,22 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                 >
                   <Cog className="w-4 h-4 flex-shrink-0" />
                   <span>Settings</span>
+                </NavLink>
+                <NavLink
+                  to="/dashboard/support"
+                  data-tour="support"
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12.5px] font-medium min-h-[36px] transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                    )
+                  }
+                >
+                  <HelpCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>Help & Support</span>
                 </NavLink>
               </>
             )}

@@ -50,6 +50,8 @@ export function NotificationBell({ collapsed }: NotificationBellProps) {
         <Button
           variant="ghost"
           size={collapsed ? "icon" : "default"}
+          data-tour="notifications"
+          aria-label="Notifications"
           className={cn(
             "relative",
             collapsed ? "h-10 w-10" : "w-full justify-start gap-3"

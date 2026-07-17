@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { MobileHubNav } from "@/components/dashboard/shell/MobileHubNav";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useSendSimulator } from "@/hooks/useSendSimulator";
 
@@ -33,6 +34,7 @@ export function DashboardLayout() {
       </main>
       <MobileHubNav />
       <OnboardingWizard open={tourOpen} onOpenChange={setTourOpen} />
+      <OnboardingTour />
     </div>
   );
 }
