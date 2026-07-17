@@ -9,11 +9,14 @@ import { useViewportMode } from "@/hooks/useViewportMode";
 import { useTourState, TOUR_OPEN_EVENT } from "@/hooks/useOnboardingTour";
 
 interface Rect { top: number; left: number; width: number; height: number }
+type Placement = "top" | "bottom" | "left" | "right" | "center";
 
 const PAD_DESKTOP = 8;
 const PAD_MOBILE = 12;
-const TOOLTIP_W_DESKTOP = 360;
-const TOOLTIP_W_TABLET = 320;
+const TOOLTIP_W_DESKTOP = 380;
+const TOOLTIP_W_TABLET = 340;
+const TOOLTIP_H_EST = 240;
+const GAP = 14;
 
 async function waitForEl(selector: string, timeout = 1500): Promise<HTMLElement | null> {
   const start = performance.now();
@@ -50,7 +53,6 @@ export function OnboardingTour() {
   const [loading, setLoading] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  // Filter steps by mode
   const steps = tourSteps.filter((s) => {
     if (s.desktopOnly && mode !== "desktop") return false;
     if (s.mobileOnly && mode === "desktop") return false;
@@ -59,7 +61,6 @@ export function OnboardingTour() {
   const step: TourStep | undefined = steps[stepIndex];
   const total = steps.length;
 
-  // External trigger to open
   useEffect(() => {
     const handler = () => {
       setStepIndex(0);
@@ -69,7 +70,6 @@ export function OnboardingTour() {
     return () => window.removeEventListener(TOUR_OPEN_EVENT, handler);
   }, []);
 
-  // Auto-open once after wizard completes
   useEffect(() => {
     if (state.completed || state.dismissed) return;
     const onboardingRaw = window.localStorage.getItem("smmpilot:onboarding");
@@ -88,7 +88,6 @@ export function OnboardingTour() {
     }
   }, [state.completed, state.dismissed]);
 
-  // Resolve current target
   const resolveTarget = useCallback(async () => {
     if (!step) return;
     setLoading(true);
@@ -117,7 +116,6 @@ export function OnboardingTour() {
     resolveTarget();
   }, [open, stepIndex, mode, resolveTarget, step]);
 
-  // Track target rect on scroll/resize
   useEffect(() => {
     if (!open || !step) return;
     const selector = mode !== "desktop" && step.mobileTarget ? step.mobileTarget : step.target;
@@ -129,9 +127,7 @@ export function OnboardingTour() {
     };
     window.addEventListener("scroll", update, true);
     window.addEventListener("resize", update);
-    const ro = "ResizeObserver" in window
-      ? new ResizeObserver(update)
-      : null;
+    const ro = "ResizeObserver" in window ? new ResizeObserver(update) : null;
     const el = document.querySelector<HTMLElement>(selector);
     if (el && ro) ro.observe(el);
     return () => {
@@ -157,7 +153,6 @@ export function OnboardingTour() {
   }, [stepIndex, total, finish]);
   const back = useCallback(() => setStepIndex((i) => Math.max(0, i - 1)), []);
 
-  // Keyboard
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -169,7 +164,6 @@ export function OnboardingTour() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, close, next, back]);
 
-  // Swipe (mobile)
   useEffect(() => {
     if (!open || mode !== "mobile") return;
     const el = tooltipRef.current;
@@ -202,10 +196,12 @@ export function OnboardingTour() {
   const vh = typeof window !== "undefined" ? window.innerHeight : 800;
   const bottomLimit = vh - (hasBottomNav ? safeBottomPx : 0) - 8;
 
-  // Tooltip position
-  let tooltipStyle: React.CSSProperties = {};
   const isMobileMode = mode === "mobile";
   const tooltipW = mode === "desktop" ? TOOLTIP_W_DESKTOP : TOOLTIP_W_TABLET;
+
+  let tooltipStyle: React.CSSProperties = {};
+  let placement: Placement = "center";
+  let arrowStyle: React.CSSProperties | null = null;
 
   if (isMobileMode) {
     tooltipStyle = {
@@ -214,31 +210,81 @@ export function OnboardingTour() {
       right: 8,
       bottom: (hasBottomNav ? safeBottomPx : 0) + 8,
     };
+    placement = "bottom";
   } else if (rect) {
-    // Try below, then above, then right
     const spaceBelow = bottomLimit - (rect.top + rect.height);
     const spaceAbove = rect.top;
     const spaceRight = vw - (rect.left + rect.width);
+    const spaceLeft = rect.left;
     let top: number;
     let left: number;
-    if (spaceBelow > 180) {
-      top = rect.top + rect.height + 12;
-      left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left));
-    } else if (spaceAbove > 180) {
-      top = Math.max(8, rect.top - 12 - 200);
-      left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left));
-    } else if (spaceRight > tooltipW + 20) {
-      top = Math.max(8, Math.min(bottomLimit - 220, rect.top));
-      left = rect.left + rect.width + 12;
+    if (spaceBelow > TOOLTIP_H_EST) {
+      top = rect.top + rect.height + GAP;
+      left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left + rect.width / 2 - tooltipW / 2));
+      placement = "bottom";
+    } else if (spaceAbove > TOOLTIP_H_EST) {
+      top = Math.max(8, rect.top - GAP - TOOLTIP_H_EST);
+      left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left + rect.width / 2 - tooltipW / 2));
+      placement = "top";
+    } else if (spaceRight > tooltipW + GAP) {
+      top = Math.max(8, Math.min(bottomLimit - TOOLTIP_H_EST, rect.top + rect.height / 2 - TOOLTIP_H_EST / 2));
+      left = rect.left + rect.width + GAP;
+      placement = "right";
+    } else if (spaceLeft > tooltipW + GAP) {
+      top = Math.max(8, Math.min(bottomLimit - TOOLTIP_H_EST, rect.top + rect.height / 2 - TOOLTIP_H_EST / 2));
+      left = rect.left - tooltipW - GAP;
+      placement = "left";
     } else {
-      top = Math.max(8, Math.min(bottomLimit - 220, rect.top));
-      left = Math.max(8, rect.left - tooltipW - 12);
+      top = Math.max(8, Math.min(bottomLimit - TOOLTIP_H_EST, rect.top + rect.height + GAP));
+      left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left));
+      placement = "bottom";
     }
-    // Clamp above bottom nav
-    top = Math.min(top, bottomLimit - 220);
+    top = Math.min(top, bottomLimit - TOOLTIP_H_EST);
     tooltipStyle = { position: "fixed", top, left, width: tooltipW };
+
+    // Arrow relative to tooltip
+    const targetCx = rect.left + rect.width / 2;
+    const targetCy = rect.top + rect.height / 2;
+    const arrowSize = 10;
+    const arrowBase: React.CSSProperties = {
+      position: "absolute",
+      width: arrowSize * 2,
+      height: arrowSize * 2,
+      transform: "rotate(45deg)",
+      background: "hsl(var(--card))",
+      borderColor: "hsl(var(--border))",
+      borderStyle: "solid",
+    };
+    if (placement === "bottom") {
+      arrowStyle = {
+        ...arrowBase,
+        top: -arrowSize,
+        left: Math.max(12, Math.min(tooltipW - 28, targetCx - left - arrowSize)),
+        borderWidth: "1px 0 0 1px",
+      };
+    } else if (placement === "top") {
+      arrowStyle = {
+        ...arrowBase,
+        bottom: -arrowSize,
+        left: Math.max(12, Math.min(tooltipW - 28, targetCx - left - arrowSize)),
+        borderWidth: "0 1px 1px 0",
+      };
+    } else if (placement === "right") {
+      arrowStyle = {
+        ...arrowBase,
+        left: -arrowSize,
+        top: Math.max(12, Math.min(TOOLTIP_H_EST - 28, targetCy - top - arrowSize)),
+        borderWidth: "0 0 1px 1px",
+      };
+    } else if (placement === "left") {
+      arrowStyle = {
+        ...arrowBase,
+        right: -arrowSize,
+        top: Math.max(12, Math.min(TOOLTIP_H_EST - 28, targetCy - top - arrowSize)),
+        borderWidth: "1px 1px 0 0",
+      };
+    }
   } else {
-    // Center fallback
     tooltipStyle = {
       position: "fixed",
       left: "50%",
@@ -249,6 +295,7 @@ export function OnboardingTour() {
   }
 
   const isLast = stepIndex === total - 1;
+  const StepIcon = step.icon ?? Sparkles;
 
   const content = (
     <div
@@ -257,7 +304,6 @@ export function OnboardingTour() {
       aria-labelledby="tour-title"
       className="fixed inset-0 z-[200] animate-in fade-in duration-200"
     >
-      {/* SVG mask overlay */}
       <svg
         className="absolute inset-0 w-full h-full pointer-events-auto"
         onClick={() => close(true)}
@@ -283,15 +329,14 @@ export function OnboardingTour() {
           width="100%"
           height="100%"
           fill="hsl(var(--background))"
-          fillOpacity="0.78"
+          fillOpacity="0.82"
           mask="url(#tour-mask)"
         />
       </svg>
 
-      {/* Highlight ring */}
       {rect && (
         <div
-          className="absolute pointer-events-none rounded-xl ring-2 ring-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.25)] motion-safe:animate-pulse"
+          className="absolute pointer-events-none rounded-xl ring-2 ring-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.25),0_0_40px_hsl(var(--primary)/0.4)] motion-safe:animate-pulse"
           style={{
             top: rect.top,
             left: rect.left,
@@ -302,21 +347,22 @@ export function OnboardingTour() {
         />
       )}
 
-      {/* Tooltip / bottom sheet */}
       <div
         ref={tooltipRef}
         style={tooltipStyle}
         className={cn(
-          "bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-4 sm:p-5",
-          "animate-in fade-in slide-in-from-bottom-2 duration-200",
+          "bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-4 sm:p-5 relative",
+          "animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-300",
         )}
       >
+        {arrowStyle && <div style={arrowStyle} aria-hidden />}
+
         {isMobileMode && (
           <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/30" aria-hidden />
         )}
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="h-4 w-4 text-primary" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/25 to-primary/10 ring-1 ring-primary/20 flex items-center justify-center flex-shrink-0">
+            <StepIcon className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 justify-between">
@@ -326,42 +372,62 @@ export function OnboardingTour() {
               <button
                 type="button"
                 onClick={() => close(true)}
-                className="text-muted-foreground hover:text-foreground rounded p-1"
+                className="text-muted-foreground hover:text-foreground rounded p-1 -m-1"
                 aria-label="Close tour"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <h2 id="tour-title" className="text-base sm:text-lg font-semibold text-foreground mt-1">
+            <h2 id="tour-title" className="text-base sm:text-lg font-semibold text-foreground mt-1 leading-snug">
               {step.title}
             </h2>
-            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+            <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
               {step.body}
             </p>
+            {step.hint && (
+              <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
+                <span className="inline-block w-1 h-1 rounded-full bg-primary/60" />
+                {step.hint}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Progress dots */}
         <div className="flex items-center gap-1 mt-4" aria-hidden>
           {steps.map((_, i) => (
-            <span
+            <button
               key={i}
+              type="button"
+              onClick={() => setStepIndex(i)}
               className={cn(
-                "h-1 flex-1 rounded-full transition-all",
+                "h-1 flex-1 rounded-full transition-all cursor-pointer",
                 i < stepIndex && "bg-primary/70",
                 i === stepIndex && "bg-primary",
-                i > stepIndex && "bg-muted",
+                i > stepIndex && "bg-muted hover:bg-muted-foreground/30",
               )}
+              aria-label={`Go to step ${i + 1}`}
             />
           ))}
         </div>
 
-        {/* Actions */}
         <div className="flex items-center justify-between gap-2 mt-4">
-          <Button variant="ghost" size="sm" onClick={() => close(true)}>
-            Skip
-          </Button>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={() => close(true)}>
+              Skip
+            </Button>
+            {!isMobileMode && (
+              <div className="hidden md:flex items-center gap-1 ml-1 text-[10px] text-muted-foreground/70">
+                <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5">Esc</kbd>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {!isMobileMode && (
+              <div className="hidden md:flex items-center gap-1 mr-1 text-[10px] text-muted-foreground/70">
+                <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5">←</kbd>
+                <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5">→</kbd>
+              </div>
+            )}
             <Button
               variant="outline"
               size="sm"

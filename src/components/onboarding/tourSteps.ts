@@ -1,3 +1,16 @@
+import type { LucideIcon } from "lucide-react";
+import {
+  Sparkles,
+  LayoutDashboard,
+  Wand2,
+  CalendarClock,
+  Bot,
+  BarChart3,
+  Bell,
+  Smartphone,
+  LifeBuoy,
+} from "lucide-react";
+
 export interface TourStep {
   id: string;
   title: string;
@@ -10,14 +23,20 @@ export interface TourStep {
   route?: string;
   desktopOnly?: boolean;
   mobileOnly?: boolean;
+  /** Illustration icon in tooltip header */
+  icon?: LucideIcon;
+  /** Optional short tip / keyboard hint */
+  hint?: string;
 }
 
 export const tourSteps: TourStep[] = [
   {
     id: "welcome",
     title: "Welcome to SMMSAAS",
-    body: "This quick tour shows you where everything lives. You can skip anytime.",
+    body: "A quick tour of where everything lives — you can skip anytime with Esc.",
     target: '[data-tour="brand"]',
+    icon: Sparkles,
+    hint: "Use ← → arrows to navigate",
   },
   {
     id: "dashboard",
@@ -26,6 +45,7 @@ export const tourSteps: TourStep[] = [
     target: '[data-tour="nav-dashboard"]',
     mobileTarget: '[data-tour="mobile-nav-home"]',
     route: "/dashboard",
+    icon: LayoutDashboard,
   },
   {
     id: "create",
@@ -34,14 +54,16 @@ export const tourSteps: TourStep[] = [
     target: '[data-tour="nav-create"]',
     mobileTarget: '[data-tour="mobile-nav-create"]',
     route: "/dashboard/create",
+    icon: Wand2,
   },
   {
     id: "publish",
     title: "Publish & Schedule",
-    body: "Queue posts across all your connected platforms from one place.",
+    body: "Queue posts across every connected platform from one place.",
     target: '[data-tour="nav-publish"]',
     mobileTarget: '[data-tour="mobile-nav-publish"]',
     route: "/dashboard/publish",
+    icon: CalendarClock,
   },
   {
     id: "engage",
@@ -50,6 +72,7 @@ export const tourSteps: TourStep[] = [
     target: '[data-tour="nav-engage"]',
     mobileTarget: '[data-tour="mobile-nav-engage"]',
     route: "/dashboard/engage",
+    icon: Bot,
   },
   {
     id: "analytics",
@@ -58,24 +81,29 @@ export const tourSteps: TourStep[] = [
     target: '[data-tour="nav-analytics"]',
     mobileTarget: '[data-tour="mobile-nav-analytics"]',
     route: "/dashboard/analytics",
+    icon: BarChart3,
   },
   {
     id: "notifications",
     title: "Stay in the loop",
     body: "Real-time alerts for milestones, account health, and AI activity.",
     target: '[data-tour="notifications"]',
+    icon: Bell,
   },
   {
     id: "mobile-nav",
     title: "Bottom navigation",
-    body: "On mobile, jump between hubs from this bar. The center button opens Publish.",
+    body: "Jump between hubs from this bar. The center button opens Publish.",
     target: '[data-tour="mobile-nav"]',
     mobileOnly: true,
+    icon: Smartphone,
+    hint: "Swipe left/right on this card to move steps",
   },
   {
-    id: "support",
-    title: "Need help?",
-    body: "Open Support anytime for FAQs, contact, or to re-run this tour.",
-    target: '[data-tour="support"]',
+    id: "help",
+    title: "Help is one tap away",
+    body: "Open the Help widget anytime for tour, shortcuts, or to contact us.",
+    target: '[data-tour="help-widget"]',
+    icon: LifeBuoy,
   },
 ];
