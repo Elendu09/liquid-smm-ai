@@ -198,8 +198,12 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const openOnboarding = () => {
+  const openOnboardingSetup = () => {
     window.dispatchEvent(new CustomEvent("smmpilot:open-onboarding"));
+    onNavigate?.();
+  };
+  const openOnboardingTour = () => {
+    window.dispatchEvent(new CustomEvent("smmpilot:open-onboarding-tour"));
     onNavigate?.();
   };
 
@@ -208,7 +212,8 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
   // Flat command results for search palette
   const commands: CommandResult[] = useMemo(() => {
     const cmds: CommandResult[] = [
-      { id: "cmd-onboarding", label: "Start onboarding tour", icon: HelpCircle, group: "Commands", action: openOnboarding, hint: "Guide" },
+      { id: "cmd-tour", label: "Start product tour", icon: HelpCircle, group: "Commands", action: openOnboardingTour, hint: "Guided walkthrough" },
+      { id: "cmd-setup", label: "Re-run onboarding setup", icon: Sparkles, group: "Commands", action: openOnboardingSetup, hint: "Profile wizard" },
       { id: "cmd-settings", label: "Open Settings", icon: Cog, group: "Commands", href: "/dashboard/settings", hint: "Preferences" },
       { id: "cmd-notifications", label: "Open Notifications", icon: Bell, group: "Commands", href: "/dashboard/activity/notifications" },
       { id: "cmd-signout", label: "Sign out", icon: LogOut, group: "Commands", action: () => navigate("/login") },
