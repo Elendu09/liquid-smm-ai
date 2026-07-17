@@ -369,15 +369,18 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
       className="fixed inset-0 z-[100] bg-background flex flex-col animate-in fade-in duration-200"
     >
       {/* Top bar */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="h-5 w-5 text-primary" />
+      <header
+        className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <div className="mx-auto max-w-5xl px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           </div>
           <div className="min-w-0 flex-1 flex flex-col items-center">
             {/* Dot / pill progress */}
             <div
-              className="flex items-center gap-1.5"
+              className="flex items-center gap-1 sm:gap-1.5 max-w-full"
               role="progressbar"
               aria-valuemin={1}
               aria-valuemax={totalSteps}
@@ -397,7 +400,7 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
                     className={cn(
                       "h-1.5 rounded-full transition-all duration-300 ease-out",
                       active
-                        ? "w-7 bg-primary"
+                        ? "w-6 sm:w-7 bg-primary"
                         : done
                           ? "w-1.5 bg-primary/70 hover:bg-primary"
                           : "w-1.5 bg-muted-foreground/25 hover:bg-muted-foreground/40",
@@ -406,11 +409,17 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
                 );
               })}
             </div>
-            <div className="mt-1.5 text-[11px] text-muted-foreground truncate">
+            <div className="mt-1 sm:mt-1.5 text-[10px] sm:text-[11px] text-muted-foreground truncate max-w-full">
               Step {step + 1} of {totalSteps} · {current.title}
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} aria-label="Close">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+            aria-label="Close"
+            className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 flex-shrink-0"
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
