@@ -30,6 +30,8 @@ import {
   NotificationSettingsDialog,
   useNotificationPrefs,
 } from "@/components/activity/NotificationSettingsDialog";
+import { NotificationExtrasDialog } from "@/components/activity/NotificationExtrasDialog";
+import { Webhook } from "lucide-react";
 
 const TYPE_META: Record<
   Notification["type"],
