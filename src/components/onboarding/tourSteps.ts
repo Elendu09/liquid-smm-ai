@@ -7,7 +7,6 @@ import {
   Bot,
   BarChart3,
   Bell,
-  Smartphone,
   LifeBuoy,
 } from "lucide-react";
 
