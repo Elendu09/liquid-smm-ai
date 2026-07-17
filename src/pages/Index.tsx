@@ -8,6 +8,8 @@ import { WhatWeOffer } from "@/components/landing/WhatWeOffer";
 import { StatsSection } from "@/components/landing/StatsSection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { CTASection } from "@/components/landing/CTASection";
+import { PillarsSection } from "@/components/landing/PillarsSection";
+import { SolutionsGrid } from "@/components/landing/SolutionsGrid";
 
 const Index = () => {
   return (
@@ -33,8 +35,15 @@ const Index = () => {
           <FeaturesSection />
         </section>
         
+        {/* Value pillars */}
+        <PillarsSection />
+
+        {/* Solutions grid */}
+        <SolutionsGrid limit={6} />
+
         {/* What We Offer */}
         <WhatWeOffer />
+        
         
         {/* Stats/Social Proof */}
         <StatsSection />

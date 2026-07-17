@@ -13,6 +13,7 @@ import OAuthConsent from "./pages/OAuthConsent";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Pricing from "./pages/Pricing";
+import Solutions from "./pages/Solutions";
 
 
 // Dashboard shell
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/solutions" element={<Solutions />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
 
               
