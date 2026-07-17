@@ -132,6 +132,10 @@ export function OnboardingTour() {
 
   useEffect(() => {
     if (!open || !step) return;
+    if (step.centered) {
+      setRect(null);
+      return;
+    }
     const selector = mode !== "desktop" && step.mobileTarget ? step.mobileTarget : step.target;
     const update = () => {
       const el = document.querySelector<HTMLElement>(selector);
