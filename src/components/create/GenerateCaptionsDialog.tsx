@@ -87,6 +87,22 @@ export function GenerateCaptionsDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
+          {active && (
+            <label className="flex items-center justify-between gap-2 text-[11px] bg-muted/40 rounded-md px-2 py-1.5 cursor-pointer">
+              <span className="flex items-center gap-1.5 min-w-0">
+                <Sparkles className="h-3 w-3 text-primary shrink-0" />
+                <span className="text-muted-foreground shrink-0">Voice:</span>
+                <span className="font-medium truncate">{active.name}</span>
+                <span className="text-muted-foreground truncate">· {active.tone}</span>
+              </span>
+              <input
+                type="checkbox"
+                checked={useVoice}
+                onChange={(e) => setUseVoice(e.target.checked)}
+                className="h-3.5 w-3.5"
+              />
+            </label>
+          )}
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Topic</label>
             <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. new product launch" />
