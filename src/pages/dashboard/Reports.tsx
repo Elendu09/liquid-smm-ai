@@ -437,20 +437,54 @@ export default function ReportsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Scheduled Reports
-          </CardTitle>
-          <CardDescription>Automatically generate and deliver reports</CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Scheduled Reports
+              </CardTitle>
+              <CardDescription>Automatically generate and deliver reports</CardDescription>
+            </div>
+            <div className="flex gap-1 p-1 rounded-lg bg-muted/60 text-xs">
+              {(["all", "active", "paused"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setScheduleFilter(f)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md font-medium capitalize transition-colors",
+                    scheduleFilter === f
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {schedules.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No scheduled reports. Set one up to get regular updates.
-            </p>
-          ) : (
+          {(() => {
+            const filteredSchedules = schedules.filter((s) =>
+              scheduleFilter === "all" ? true : scheduleFilter === "active" ? s.active : !s.active,
+            );
+            if (schedules.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No scheduled reports. Set one up to get regular updates.
+                </p>
+              );
+            }
+            if (filteredSchedules.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No {scheduleFilter} schedules.
+                </p>
+              );
+            }
+            return (
             <div className="space-y-3">
-              {schedules.map((s) => (
+              {filteredSchedules.map((s) => (
                 <div
                   key={s.id}
                   className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 rounded-lg border"
