@@ -1,11 +1,13 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
-import { BarChart3, FileText, Activity } from "lucide-react";
+import { BarChart3, FileText, Activity, LayoutDashboard } from "lucide-react";
 import { PageHeader, HubTabs, StatusBoard, type HubTab } from "@/components/dashboard/shell";
 import Analytics from "../Analytics";
 import Reports from "../Reports";
+import CustomReportsView from "../views/CustomReportsView";
 
 const tabs: HubTab[] = [
   { label: "Overview", href: "/dashboard/analytics/overview", icon: BarChart3 },
+  { label: "Custom", href: "/dashboard/analytics/custom", icon: LayoutDashboard },
   { label: "Reports", href: "/dashboard/analytics/reports", icon: FileText },
   { label: "Health", href: "/dashboard/analytics/health", icon: Activity },
 ];
@@ -39,6 +41,7 @@ export default function AnalyticsHub() {
       <Route element={<AnalyticsLayout />}>
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<Analytics />} />
+        <Route path="custom" element={<CustomReportsView />} />
         <Route path="reports" element={<Reports />} />
         <Route
           path="health"

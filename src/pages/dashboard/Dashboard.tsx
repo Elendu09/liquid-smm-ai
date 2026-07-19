@@ -25,6 +25,7 @@ import {
 } from "@/components/dashboard/shell";
 import { OnboardingChecklistCard } from "@/components/dashboard/OnboardingChecklistCard";
 import { AiCommandBar } from "@/components/dashboard/AiCommandBar";
+import { HomeSummaryCard } from "@/components/dashboard/HomeSummaryCard";
 import { useOnboarding } from "@/hooks/useOnboarding";
 
 
@@ -142,6 +143,8 @@ export default function Dashboard() {
           </div>
         }
       />
+
+      <HomeSummaryCard />
 
       <AiCommandBar />
 
