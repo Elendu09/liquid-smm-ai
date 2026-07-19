@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { aiCreate } from "@/hooks/useAiCreate";
 import { pushLocalCollection, useLocalCollection } from "@/hooks/useLocalCollection";
 import { useScheduledPosts, type Recurrence } from "@/hooks/useScheduledPosts";
@@ -190,7 +191,7 @@ export function NewPostDialog({ open, onOpenChange }: { open: boolean; onOpenCha
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Schedule for</label>
-              <Input type="datetime-local" value={scheduleAt} onChange={(e) => setScheduleAt(e.target.value)} />
+              <DateTimePicker value={scheduleAt} onChange={setScheduleAt} placeholder="Pick a date & time" />
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">

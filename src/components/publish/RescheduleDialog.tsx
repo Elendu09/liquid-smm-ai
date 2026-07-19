@@ -9,8 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import {
   Select,
   SelectContent,
@@ -90,7 +90,7 @@ export function RescheduleDialog({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label>New time</Label>
-            <Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
+            <DateTimePicker value={when} onChange={setWhen} />
           </div>
           <div className="space-y-1.5">
             <Label>Timezone</Label>
