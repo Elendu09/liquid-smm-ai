@@ -89,7 +89,30 @@ function InboxCard({
           <p className="text-[11px] text-muted-foreground truncate">{item.handle}</p>
         </div>
       </div>
+      <div className="flex items-center gap-1 flex-wrap">
+        <span className={cn("px-1.5 py-0.5 rounded-full border text-[10px] font-medium capitalize", SENTIMENT_STYLE[sentiment])}>
+          {sentiment}
+        </span>
+        <span className="px-1.5 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-[10px] font-medium">
+          {INTENT_LABEL[intent]}
+        </span>
+      </div>
       <p className="text-sm text-foreground line-clamp-3">{item.message}</p>
+      {snippet && item.status !== "replied" && (
+        <button
+          type="button"
+          onClick={() => onQuickReply(snippet)}
+          className="w-full text-left rounded-md border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors px-2 py-1.5 group"
+        >
+          <div className="flex items-center gap-1 text-[10px] text-primary font-medium mb-0.5">
+            <Sparkles className="h-3 w-3" />
+            AI suggested reply
+          </div>
+          <p className="text-[11px] text-muted-foreground line-clamp-2 group-hover:text-foreground">
+            {snippet}
+          </p>
+        </button>
+      )}
       <div className="flex items-center justify-between pt-1">
         <span className="text-[10px] text-muted-foreground">
           {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
