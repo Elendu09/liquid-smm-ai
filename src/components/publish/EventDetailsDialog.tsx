@@ -50,7 +50,7 @@ export function EventDetailsDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-w-[calc(100vw-2rem)] w-full">
           <DialogHeader>
             <DialogTitle>Scheduled post</DialogTitle>
             <DialogDescription>
