@@ -30,11 +30,11 @@ export function PageHeader({
 
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
-            {title}
+          <h1 className="font-['Instrument_Serif'] font-normal tracking-tight leading-[0.95] text-4xl sm:text-5xl lg:text-6xl text-foreground truncate">
+            {title}<span className="italic text-primary">.</span>
           </h1>
           {description && (
-            <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+            <p className="mt-3 text-[11px] uppercase tracking-[0.22em] text-muted-foreground max-w-2xl">
               {description}
             </p>
           )}

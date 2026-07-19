@@ -59,14 +59,8 @@ export function Navbar() {
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group">
-              <div className="relative">
-                <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-primary flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-primary-foreground" />
-                </div>
-                <div className="absolute inset-0 rounded-xl bg-primary opacity-0 group-hover:opacity-40 blur-lg transition-opacity" />
-              </div>
-              <span className="text-lg lg:text-xl font-black tracking-tight text-foreground">
-                SMMSAAS
+              <span className="font-['Instrument_Serif'] text-3xl lg:text-4xl leading-none tracking-tight text-foreground">
+                SMMSAAS<span className="italic text-primary">.</span>
               </span>
             </Link>
 
@@ -77,14 +71,14 @@ export function Navbar() {
                   key={item.label}
                   onClick={() => scrollToSection(item.href)}
                   className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary relative group",
+                    "text-[11px] uppercase tracking-[0.22em] font-medium transition-colors hover:text-foreground relative group",
                     location.pathname === item.href
-                      ? "text-primary"
+                      ? "text-foreground"
                       : "text-muted-foreground"
                   )}
                 >
                   {item.label}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+                  <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
                 </button>
               ))}
             </nav>
@@ -92,16 +86,16 @@ export function Navbar() {
             {/* Actions */}
             <div className="flex items-center gap-3">
               <ThemeToggle />
-              <div className="hidden sm:flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2">
                 <Link to="/dashboard">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="text-[11px] uppercase tracking-[0.2em]">
                     Login
                   </Button>
                 </Link>
                 <Link to="/dashboard">
-                  <Button variant="primaryGlow" size="sm">
+                  <Button size="sm" className="h-9 rounded-full px-5 text-[11px] uppercase tracking-[0.2em] font-semibold shadow-[0_0_20px_hsl(var(--primary)/0.35)]">
                     Get Started
-                    <ChevronRight className="w-4 h-4 ml-1" />
+                    <ChevronRight className="w-3.5 h-3.5 ml-1" />
                   </Button>
                 </Link>
               </div>
