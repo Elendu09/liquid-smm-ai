@@ -148,10 +148,12 @@ export default function ReportsPage() {
   const { rows: runRows } = useRunHistory();
   const {
     items: reports,
+    add: addReport,
     remove: removeReport,
   } = useLocalCollection<GeneratedReport>("reports", "generated", seedReports);
   const {
     items: schedules,
+    add: addSchedule,
     update: updateSchedule,
     remove: removeSchedule,
   } = useLocalCollection<ScheduledReport>("reports", "scheduled", seedSchedules);
@@ -162,6 +164,8 @@ export default function ReportsPage() {
   const [scheduleTemplateName, setScheduleTemplateName] = useState<string | undefined>();
   const [previewReport, setPreviewReport] = useState<GeneratedReport | null>(null);
   const [toDelete, setToDelete] = useState<GeneratedReport | null>(null);
+  const [reportSearch, setReportSearch] = useState("");
+  const [scheduleFilter, setScheduleFilter] = useState<"all" | "active" | "paused">("all");
 
   const openTemplate = (id: string) => {
     setNewTemplateId(id);
