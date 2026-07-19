@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   FileBarChart,
   Download,
@@ -157,7 +157,6 @@ export default function ReportsPage() {
   } = useLocalCollection<GeneratedReport>("reports", "generated", seedReports);
   const {
     items: schedules,
-    add: addSchedule,
     update: updateSchedule,
     remove: removeSchedule,
   } = useLocalCollection<ScheduledReport>("reports", "scheduled", seedSchedules);
