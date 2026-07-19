@@ -592,6 +592,7 @@ export const ContentCalendar = () => {
                           </span>
                           <span className="text-xs text-muted-foreground">· {fmtTime(p.scheduledAt)}</span>
                           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{relative}</span>
+                          <StatusPill post={p} />
                           {p.approvalStatus && p.approvalStatus !== "draft" && (
                             <ApprovalBadge status={p.approvalStatus} />
                           )}
