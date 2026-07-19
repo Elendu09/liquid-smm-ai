@@ -177,6 +177,8 @@ export function InboxBoard({ kind, title, description }: InboxBoardProps) {
   const { items, setItems, update } = useLocalCollection<InboxItem>("engage", kind);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InboxStatus | "all">("all");
+  const [variants, setVariants] = useState<Record<string, number>>({});
+  const [replyTarget, setReplyTarget] = useState<InboxItem | null>(null);
 
   useEffect(() => {
     if (items.length === 0) setItems(seed(kind));
@@ -192,25 +194,36 @@ export function InboxBoard({ kind, title, description }: InboxBoardProps) {
     return out;
   }, [items, filter, search]);
 
+  const scheduleReply = (item: InboxItem) => {
+    const mins = window.prompt(`Send reply to ${item.author} in how many minutes?`, "15");
+    if (!mins) return;
+    const n = Math.max(1, parseInt(mins, 10) || 15);
+    const when = new Date(Date.now() + n * 60_000).toISOString();
+    update(item.id, { scheduledFor: when, status: "snoozed" });
+    toast.success(`Reply scheduled in ${n} min`, {
+      description: new Date(when).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    });
+  };
+
   const actions = (item: InboxItem) => ({
-    onReply: () => {
-      update(item.id, { status: "replied" });
-      toast.success(`Reply sent to ${item.author}`);
+    onReply: () => setReplyTarget(item),
+    onSchedule: () => scheduleReply(item),
+    onRetry: () => {
+      setVariants((v) => ({ ...v, [item.id]: (v[item.id] ?? 0) + 1 }));
+      toast("Generated a new variation");
     },
-    onSnooze: () => {
-      update(item.id, { status: "snoozed" });
-      toast(`${item.author} snoozed for 24h`);
-    },
-    onResolve: () => {
-      update(item.id, { status: "resolved" });
-      toast.success("Marked resolved");
+    onApprove: (text: string) => {
+      update(item.id, { status: "replied", scheduledFor: undefined });
+      toast.success(text ? `Approved & sent to ${item.author}` : `Marked handled`, {
+        description: text ? text.slice(0, 80) + (text.length > 80 ? "…" : "") : undefined,
+      });
     },
     onReopen: () => {
-      update(item.id, { status: "new" });
+      update(item.id, { status: "new", scheduledFor: undefined });
       toast("Reopened");
     },
     onQuickReply: (text: string) => {
-      update(item.id, { status: "replied" });
+      update(item.id, { status: "replied", scheduledFor: undefined });
       toast.success(`AI reply sent to ${item.author}`, { description: text.slice(0, 80) + (text.length > 80 ? "…" : "") });
     },
   });
@@ -265,7 +278,7 @@ export function InboxBoard({ kind, title, description }: InboxBoardProps) {
             update(item.id, { status: to });
             toast.success(`Moved to ${to}`);
           }}
-          renderItem={(i) => <InboxCard item={i} {...actions(i)} />}
+          renderItem={(i) => <InboxCard item={i} variant={variants[i.id] ?? 0} {...actions(i)} />}
         />
       ) : (
         <ListView
@@ -274,11 +287,24 @@ export function InboxBoard({ kind, title, description }: InboxBoardProps) {
           emptyLabel="No conversations match your filters."
           renderItem={(i) => (
             <div className="p-4">
-              <InboxCard item={i} {...actions(i)} />
+              <InboxCard item={i} variant={variants[i.id] ?? 0} {...actions(i)} />
             </div>
           )}
         />
       )}
+
+      <ReplyDialog
+        open={!!replyTarget}
+        onOpenChange={(o) => !o && setReplyTarget(null)}
+        comment={replyTarget ? { id: 0, user: replyTarget.author, content: replyTarget.message } : null}
+        onSend={(text) => {
+          if (!replyTarget) return;
+          update(replyTarget.id, { status: "replied", scheduledFor: undefined });
+          toast.success(`Reply sent to ${replyTarget.author}`, {
+            description: text.slice(0, 80) + (text.length > 80 ? "…" : ""),
+          });
+        }}
+      />
     </div>
   );
 }
