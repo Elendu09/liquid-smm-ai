@@ -80,7 +80,7 @@ export function EventDetailsDialog({
               </p>
             )}
           </div>
-          <div className="flex flex-wrap justify-end gap-2 pt-2">
+          <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:justify-end gap-2 pt-2">
             <Button variant="ghost" size="sm" onClick={duplicate} className="flex-1 sm:flex-initial min-w-0">
               <Copy className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Duplicate
             </Button>
