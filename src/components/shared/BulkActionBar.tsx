@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -25,16 +24,14 @@ interface BulkActionBarProps {
  * Mount once per page next to the list; feed it from useBulkSelection.
  */
 export function BulkActionBar({ count, onClear, actions, label = "selected", className }: BulkActionBarProps) {
+  if (count <= 0) return null;
   return (
-    <AnimatePresence>
-      {count > 0 && (
-        <motion.div
-          initial={{ y: 24, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 24, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 320, damping: 28 }}
+    <>
+      {(
+        <div
           className={cn(
             "pointer-events-auto fixed inset-x-0 bottom-24 z-40 mx-auto flex w-fit max-w-[95vw] items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-2 shadow-xl backdrop-blur-xl md:bottom-8",
+            "animate-in fade-in slide-in-from-bottom-4 duration-200",
             className,
           )}
           role="toolbar"
