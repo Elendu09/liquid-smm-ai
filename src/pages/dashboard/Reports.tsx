@@ -525,6 +525,14 @@ export default function ReportsPage() {
                       onCheckedChange={(v) => updateSchedule(s.id, { active: v })}
                     />
                     <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toast({ title: "Sent now", description: `${s.name} delivered to ${s.email}` })}
+                    >
+                      <Send className="mr-1.5 h-3.5 w-3.5" />
+                      Send now
+                    </Button>
+                    <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => {
@@ -538,7 +546,8 @@ export default function ReportsPage() {
                 </div>
               ))}
             </div>
-          )}
+            );
+          })()}
         </CardContent>
       </Card>
 
