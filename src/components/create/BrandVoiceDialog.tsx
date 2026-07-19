@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, Plus, X } from "lucide-react";
+import { Sparkles, Plus, X, Layers, ChevronDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useBrandVoices, type BrandVoice } from "@/hooks/useBrandVoices";
+import {
+  useBrandVoices,
+  type BrandVoice,
+  type PlatformKey,
+  type PlatformOverride,
+  PLATFORM_KEYS,
+  PLATFORM_LABELS,
+} from "@/hooks/useBrandVoices";
+import { PLATFORM_ICON, PLATFORM_ACCENT } from "@/components/create/platformIcons";
 import { cn } from "@/lib/utils";
 
 const empty = (): BrandVoice => ({
@@ -33,6 +41,7 @@ const empty = (): BrandVoice => ({
   donts: [],
   samples: [],
   createdAt: new Date().toISOString(),
+  platformOverrides: {},
 });
 
 export function BrandVoiceDialog({
@@ -49,11 +58,13 @@ export function BrandVoiceDialog({
   const [doInput, setDoInput] = useState("");
   const [dontInput, setDontInput] = useState("");
   const [sampleInput, setSampleInput] = useState("");
+  const [openPlatform, setOpenPlatform] = useState<PlatformKey | null>(null);
 
   useEffect(() => {
     if (open) {
-      setV(editing ? { ...editing } : empty());
+      setV(editing ? { platformOverrides: {}, ...editing } : empty());
       setDoInput(""); setDontInput(""); setSampleInput("");
+      setOpenPlatform(null);
     }
   }, [open, editing]);
 
@@ -76,6 +87,22 @@ export function BrandVoiceDialog({
 
   const removeSample = (i: number) =>
     setV((prev) => ({ ...prev, samples: prev.samples.filter((_, idx) => idx !== i) }));
+
+  const setOverride = (p: PlatformKey, patch: Partial<PlatformOverride>) =>
+    setV((prev) => ({
+      ...prev,
+      platformOverrides: {
+        ...(prev.platformOverrides ?? {}),
+        [p]: { ...(prev.platformOverrides?.[p] ?? {}), ...patch },
+      },
+    }));
+
+  const clearOverride = (p: PlatformKey) =>
+    setV((prev) => {
+      const next = { ...(prev.platformOverrides ?? {}) };
+      delete next[p];
+      return { ...prev, platformOverrides: next };
+    });
 
   const save = () => {
     if (!v.name.trim() || !v.tone.trim()) {
@@ -188,6 +215,103 @@ export function BrandVoiceDialog({
               </ul>
             )}
           </div>
+
+          {/* ── Platform-specific overrides ─────────────────────── */}
+          <div className="rounded-xl border border-border/60 p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Layers className="h-3.5 w-3.5 text-primary" />
+              <Label className="!mb-0">Platform overrides</Label>
+              <span className="text-[10px] text-muted-foreground">Same voice, tuned per channel</span>
+            </div>
+            <div className="grid grid-cols-1 gap-1.5">
+              {PLATFORM_KEYS.map((p) => {
+                const Icon = PLATFORM_ICON[p];
+                const override = v.platformOverrides?.[p];
+                const enabled = !!override;
+                const isOpen = openPlatform === p;
+                return (
+                  <div key={p} className={cn("rounded-lg border transition-colors", enabled ? "border-primary/50 bg-primary/[0.03]" : "border-border/50")}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenPlatform(isOpen ? null : p)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left"
+                    >
+                      <Icon className={cn("h-4 w-4", PLATFORM_ACCENT[p])} strokeWidth={1.75} />
+                      <span className="text-sm font-medium flex-1">{PLATFORM_LABELS[p]}</span>
+                      {enabled && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">Customised</span>
+                      )}
+                      <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+                    </button>
+                    {isOpen && (
+                      <div className="px-3 pb-3 space-y-2 border-t border-border/40 pt-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <div>
+                            <Label className="text-[10px]">Tone override</Label>
+                            <Input
+                              className="h-8 text-xs"
+                              placeholder={`(inherits: ${v.tone || "—"})`}
+                              value={override?.tone ?? ""}
+                              onChange={(e) => setOverride(p, { tone: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px]">Length</Label>
+                            <Select
+                              value={override?.length ?? "__inherit"}
+                              onValueChange={(x) => setOverride(p, { length: x === "__inherit" ? undefined : (x as PlatformOverride["length"]) })}
+                            >
+                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__inherit">Inherit ({v.length})</SelectItem>
+                                <SelectItem value="short">Short</SelectItem>
+                                <SelectItem value="medium">Medium</SelectItem>
+                                <SelectItem value="long">Long</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="text-[10px]">Emoji</Label>
+                            <Select
+                              value={override?.emojis ?? "__inherit"}
+                              onValueChange={(x) => setOverride(p, { emojis: x === "__inherit" ? undefined : (x as PlatformOverride["emojis"]) })}
+                            >
+                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__inherit">Inherit ({v.emojis})</SelectItem>
+                                <SelectItem value="none">None</SelectItem>
+                                <SelectItem value="minimal">Minimal</SelectItem>
+                                <SelectItem value="expressive">Expressive</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-[10px]">Platform note</Label>
+                          <Textarea
+                            rows={2}
+                            className="text-xs"
+                            placeholder={placeholderFor(p)}
+                            value={override?.notes ?? ""}
+                            onChange={(e) => setOverride(p, { notes: e.target.value })}
+                          />
+                        </div>
+                        {enabled && (
+                          <button
+                            type="button"
+                            onClick={() => clearOverride(p)}
+                            className="text-[10px] text-muted-foreground hover:text-destructive"
+                          >
+                            Clear override
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
@@ -196,6 +320,16 @@ export function BrandVoiceDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function placeholderFor(p: PlatformKey): string {
+  switch (p) {
+    case "instagram": return "Hook in the first line, 8-15 hashtags, save-worthy tip.";
+    case "tiktok": return "Punchy hook <2s, casual voice, trending sound reference.";
+    case "twitter": return "Under 240 chars, one idea, no hashtags unless essential.";
+    case "facebook": return "Conversational, longer form OK, question at the end.";
+    case "linkedin": return "Thought leadership, story arc, 1 CTA, 3-5 tags.";
+  }
 }
 
 function ChipList({
