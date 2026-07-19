@@ -411,9 +411,9 @@ export const ContentCalendar = () => {
       )}
 
       {view === "list" && (
-        <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+        <div className="space-y-4">
           {filtered.length === 0 ? (
-            <div className="p-10 text-center">
+            <div className="rounded-2xl border border-border/60 bg-card p-10 text-center">
               <CalendarDays className="h-8 w-8 mx-auto text-muted-foreground mb-2" strokeWidth={1.5} />
               <p className="text-sm font-medium">No scheduled posts</p>
               <Button size="sm" onClick={() => setNewOpen(true)} className="mt-3">
@@ -421,54 +421,103 @@ export const ContentCalendar = () => {
               </Button>
             </div>
           ) : (
-            <ul className="divide-y divide-border/60">
-              {[...filtered]
+            Object.entries(
+              [...filtered]
                 .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt))
-                .map((p) => (
-                  <li key={p.id} className="p-3 sm:p-4 hover:bg-muted/40 transition-colors flex items-center gap-3">
-                    <div className="flex flex-col items-center min-w-14">
-                      <span className="text-[10px] uppercase text-muted-foreground">
-                        {new Date(p.scheduledAt).toLocaleDateString([], { month: "short" })}
+                .reduce<Record<string, ScheduledPost[]>>((acc, p) => {
+                  const d = new Date(p.scheduledAt);
+                  const key = d.toDateString();
+                  (acc[key] ||= []).push(p);
+                  return acc;
+                }, {}),
+            ).map(([dayKey, dayPosts]) => {
+              const d = new Date(dayKey);
+              const isToday = sameDay(d, new Date());
+              return (
+                <section key={dayKey} className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+                  <header className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">
+                        {isToday ? "Today" : d.toLocaleDateString([], { weekday: "long" })}
                       </span>
-                      <span className="text-lg font-bold tabular-nums leading-none">
-                        {new Date(p.scheduledAt).getDate()}
+                      <span className="text-xs text-muted-foreground">
+                        {d.toLocaleDateString([], { month: "short", day: "numeric" })}
                       </span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5">{fmtTime(p.scheduledAt)}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <p className="text-sm truncate flex-1 min-w-0">{p.caption}</p>
-                        {p.approvalStatus && p.approvalStatus !== "draft" && (
-                          <ApprovalBadge status={p.approvalStatus} />
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 mt-1">
-                        {p.platformIds.map((id) => (
-                          <PlatformIcon key={id} platform={id} size="xs" />
-                        ))}
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button size="icon" variant="ghost" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => duplicatePost(p)}>
-                          <Copy className="h-3.5 w-3.5 mr-2" /> Duplicate
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setSelectedDay(new Date(p.scheduledAt))}>
-                          <ExternalLink className="h-3.5 w-3.5 mr-2" /> Open day
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => { remove(p.id); toast.success("Deleted"); }}>
-                          <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </li>
-                ))}
-            </ul>
+                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground tabular-nums">
+                      {dayPosts.length} {dayPosts.length === 1 ? "post" : "posts"}
+                    </span>
+                  </header>
+                  <ul className="divide-y divide-border/60">
+                    {dayPosts.map((p) => (
+                      <li key={p.id} className="relative group">
+                        <button
+                          type="button"
+                          onClick={() => setDetailsPost(p)}
+                          className="w-full text-left flex items-stretch gap-3 p-3 sm:p-4 hover:bg-muted/40 transition-colors"
+                        >
+                          <div className="flex flex-col items-end justify-start pt-0.5 w-14 sm:w-16 shrink-0">
+                            <span className="text-sm font-semibold tabular-nums">
+                              {new Date(p.scheduledAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(p.scheduledAt).toLocaleTimeString([], { hour: "2-digit", hour12: false })}h
+                            </span>
+                          </div>
+                          <div
+                            className={cn(
+                              "w-1 rounded-full shrink-0",
+                              statusBar(p),
+                            )}
+                            aria-hidden
+                          />
+                          <div className="flex-1 min-w-0 space-y-1.5">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm font-medium line-clamp-2 flex-1">{p.caption || "(no caption)"}</p>
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button size="icon" variant="ghost" className="h-7 w-7">
+                                      <MoreHorizontal className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => duplicatePost(p)}>
+                                      <Copy className="h-3.5 w-3.5 mr-2" /> Duplicate
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setSelectedDay(new Date(p.scheduledAt))}>
+                                      <ExternalLink className="h-3.5 w-3.5 mr-2" /> Open day
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-destructive" onClick={() => { remove(p.id); toast.success("Deleted"); }}>
+                                      <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <StatusPill post={p} />
+                              {p.approvalStatus && p.approvalStatus !== "draft" && (
+                                <ApprovalBadge status={p.approvalStatus} />
+                              )}
+                              {p.platformIds.slice(0, 3).map((id) => (
+                                <span key={id} className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded-full">
+                                  <PlatformIcon platform={id} size="xs" />
+                                  <span className="capitalize hidden sm:inline">{id}</span>
+                                </span>
+                              ))}
+                              {p.platformIds.length > 3 && (
+                                <span className="text-[10px] text-muted-foreground">+{p.platformIds.length - 3}</span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })
           )}
         </div>
       )}
