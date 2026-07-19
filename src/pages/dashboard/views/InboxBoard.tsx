@@ -61,21 +61,25 @@ const seed = (kind: "comment" | "dm"): InboxItem[] => {
 
 function InboxCard({
   item,
+  variant,
   onReply,
-  onSnooze,
-  onResolve,
+  onSchedule,
+  onRetry,
+  onApprove,
   onReopen,
   onQuickReply,
 }: {
   item: InboxItem;
+  variant: number;
   onReply: () => void;
-  onSnooze: () => void;
-  onResolve: () => void;
+  onSchedule: () => void;
+  onRetry: () => void;
+  onApprove: (text: string) => void;
   onReopen: () => void;
   onQuickReply: (text: string) => void;
 }) {
   const { sentiment, intent } = useMemo(() => analyzeMessage(item.message), [item.message]);
-  const snippet = useMemo(() => snippetFor(intent, item.author), [intent, item.author]);
+  const snippet = useMemo(() => snippetFor(intent, item.author, variant), [intent, item.author, variant]);
   return (
     <div className="p-3 space-y-2">
       <div className="flex items-start gap-2">
@@ -97,44 +101,61 @@ function InboxCard({
         <span className="px-1.5 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-[10px] font-medium">
           {INTENT_LABEL[intent]}
         </span>
+        {item.scheduledFor && (
+          <span className="px-1.5 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-500 text-[10px] font-medium">
+            Scheduled {new Date(item.scheduledFor).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </span>
+        )}
       </div>
       <p className="text-sm text-foreground line-clamp-3">{item.message}</p>
       {snippet && item.status !== "replied" && (
-        <button
-          type="button"
-          onClick={() => onQuickReply(snippet)}
-          className="w-full text-left rounded-md border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors px-2 py-1.5 group"
-        >
+        <div className="rounded-md border border-dashed border-primary/30 bg-primary/5 px-2 py-1.5">
           <div className="flex items-center gap-1 text-[10px] text-primary font-medium mb-0.5">
             <Sparkles className="h-3 w-3" />
             AI suggested reply
           </div>
-          <p className="text-[11px] text-muted-foreground line-clamp-2 group-hover:text-foreground">
-            {snippet}
-          </p>
-        </button>
+          <button
+            type="button"
+            onClick={() => onQuickReply(snippet)}
+            className="text-left w-full"
+            aria-label="Use AI reply"
+          >
+            <p className="text-[11px] text-muted-foreground line-clamp-2 hover:text-foreground transition-colors">
+              {snippet}
+            </p>
+          </button>
+        </div>
       )}
-      <div className="flex items-center justify-between pt-1">
+      <div className="flex items-center justify-between pt-1 border-t border-border/40">
         <span className="text-[10px] text-muted-foreground">
           {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>
         <div className="flex items-center gap-0.5">
-          {item.status !== "replied" && (
-            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Reply" onClick={onReply}>
-              <Reply className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          {item.status === "new" && (
-            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Snooze" onClick={onSnooze}>
-              <Clock className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          {item.status !== "resolved" ? (
-            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Mark resolved" onClick={onResolve}>
-              <Check className="h-3.5 w-3.5" />
-            </Button>
+          {item.status !== "replied" ? (
+            <>
+              <Button variant="ghost" size="icon" className="h-7 w-7" title="Reply" aria-label="Reply" onClick={onReply}>
+                <Reply className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" title="Schedule reply" aria-label="Schedule" onClick={onSchedule}>
+                <Clock className="h-3.5 w-3.5" />
+              </Button>
+              {snippet && (
+                <Button variant="ghost" size="icon" className="h-7 w-7" title="Retry AI reply" aria-label="Retry AI" onClick={onRetry}>
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              {snippet ? (
+                <Button size="icon" className="h-7 w-7" title="Approve & send AI reply" aria-label="Approve and send" onClick={() => onApprove(snippet)}>
+                  <Send className="h-3.5 w-3.5" />
+                </Button>
+              ) : (
+                <Button size="icon" className="h-7 w-7" title="Mark handled" aria-label="Mark handled" onClick={() => onApprove("")}>
+                  <Check className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </>
           ) : (
-            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Reopen" onClick={onReopen}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" title="Reopen" aria-label="Reopen" onClick={onReopen}>
               <RotateCcw className="h-3.5 w-3.5" />
             </Button>
           )}
