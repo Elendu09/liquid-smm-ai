@@ -258,7 +258,14 @@ export default function AssetsBoard() {
                   )}
                 </button>
                 <div className="p-2.5">
-                  <p className="text-xs font-semibold truncate">{a.title}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-semibold truncate flex-1">{a.title}</p>
+                    {getVersionCount(a.id) > 0 && (
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                        v{getVersionCount(a.id)}
+                      </span>
+                    )}
+                  </div>
                   {a.subtitle && (
                     <p className="text-[10px] text-muted-foreground truncate mt-0.5">{a.subtitle}</p>
                   )}
@@ -268,6 +275,9 @@ export default function AssetsBoard() {
                     </Button>
                     <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Edit" onClick={() => setEditing(a)}>
                       <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Version history" onClick={() => setVersionsFor(a)}>
+                      <History className="h-3.5 w-3.5" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:text-primary" aria-label="Send to studio" onClick={() => sendToStudio(a)}>
                       <Send className="h-3.5 w-3.5" />
