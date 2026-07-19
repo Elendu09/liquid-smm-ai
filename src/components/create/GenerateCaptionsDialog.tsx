@@ -32,8 +32,11 @@ export function GenerateCaptionsDialog({
   const run = async () => {
     if (!topic.trim()) return;
     setBusy(true);
-    const voice = useVoice ? serializeVoice(active) : "";
-    const effectiveTone = useVoice && active ? active.tone : tone;
+    const voice = useVoice ? serializeVoice(active, platform) : "";
+    const effectiveTone =
+      useVoice && active
+        ? (active.platformOverrides?.[platform as never] as { tone?: string } | undefined)?.tone || active.tone
+        : tone;
     const res = await aiCreate.captions({
       topic: voice ? `${topic}\n\nBRAND VOICE:\n${voice}` : topic,
       tone: effectiveTone,
