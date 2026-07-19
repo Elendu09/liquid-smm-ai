@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Sparkles, Plus, Pencil, Trash2, Check, Star } from "lucide-react";
+import { Sparkles, Plus, Pencil, Trash2, Check, Star, Users, AlignLeft, Smile, Quote } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useBrandVoices, type BrandVoice } from "@/hooks/useBrandVoices";
+import { useBrandVoices, type BrandVoice, PLATFORM_KEYS, PLATFORM_LABELS } from "@/hooks/useBrandVoices";
 import { BrandVoiceDialog } from "@/components/create/BrandVoiceDialog";
+import { PLATFORM_ICON, PLATFORM_ACCENT } from "@/components/create/platformIcons";
 import { cn } from "@/lib/utils";
 
 export default function BrandVoicesView() {
@@ -66,11 +67,28 @@ export default function BrandVoicesView() {
                 )}
               </header>
               <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                <span className="px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground truncate">👥 {v.audience || "—"}</span>
-                <span className="px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground capitalize">📝 {v.length}</span>
-                <span className="px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground capitalize">😊 {v.emojis}</span>
-                <span className="px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">✍ {v.samples.length} samples</span>
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground truncate"><Users className="h-3 w-3 shrink-0" strokeWidth={1.75} /> {v.audience || "—"}</span>
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground capitalize"><AlignLeft className="h-3 w-3 shrink-0" strokeWidth={1.75} /> {v.length}</span>
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground capitalize"><Smile className="h-3 w-3 shrink-0" strokeWidth={1.75} /> {v.emojis}</span>
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground"><Quote className="h-3 w-3 shrink-0" strokeWidth={1.75} /> {v.samples.length} samples</span>
               </div>
+              {PLATFORM_KEYS.some((p) => v.platformOverrides?.[p]) && (
+                <div className="flex flex-wrap gap-1 pt-0.5">
+                  {PLATFORM_KEYS.filter((p) => v.platformOverrides?.[p]).map((p) => {
+                    const Icon = PLATFORM_ICON[p];
+                    return (
+                      <span
+                        key={p}
+                        title={`${PLATFORM_LABELS[p]} override`}
+                        className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary"
+                      >
+                        <Icon className={cn("h-3 w-3", PLATFORM_ACCENT[p])} strokeWidth={1.75} />
+                        {PLATFORM_LABELS[p]}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
               {(v.dos.length > 0 || v.donts.length > 0) && (
                 <div className="flex flex-wrap gap-1">
                   {v.dos.slice(0, 2).map((d, i) => (
