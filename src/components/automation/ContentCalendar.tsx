@@ -165,24 +165,24 @@ export const ContentCalendar = () => {
       onDragEnd={() => { setDragId(null); setDropTarget(null); }}
       onClick={(e) => { e.stopPropagation(); setDetailsPost(p); }}
       className={cn(
-        "group text-[11px] rounded-md px-1.5 py-1 border cursor-grab active:cursor-grabbing",
+        "group text-[10px] sm:text-[11px] rounded-md px-1 sm:px-1.5 py-0.5 sm:py-1 border cursor-grab active:cursor-grabbing",
         "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15 transition-colors",
-        "flex items-center gap-1 min-w-0",
+        "flex items-center gap-1 min-w-0 max-w-full overflow-hidden",
         dragId === p.id && "opacity-50",
       )}
     >
       <Clock className="h-2.5 w-2.5 shrink-0 opacity-70" strokeWidth={2} />
-      <span className="tabular-nums font-medium shrink-0">{fmtTime(p.scheduledAt)}</span>
+      <span className="tabular-nums font-medium shrink-0 truncate">{fmtTime(p.scheduledAt)}</span>
       {!compact && (
         <>
-          <div className="flex -space-x-1 shrink-0">
+          <div className="hidden sm:flex -space-x-1 shrink-0">
             {p.platformIds.slice(0, 2).map((id) => (
               <div key={id} className="rounded-full ring-1 ring-background">
                 <PlatformIcon platform={id} size="xs" showBackground />
               </div>
             ))}
           </div>
-          <span className="truncate text-foreground/80">{p.caption.slice(0, 24)}</span>
+          <span className="truncate text-foreground/80 min-w-0">{p.caption.slice(0, 24)}</span>
         </>
       )}
     </div>
@@ -201,7 +201,7 @@ export const ContentCalendar = () => {
         onDragLeave={() => setDropTarget((t) => (t === key ? null : t))}
         onDrop={() => handleDrop(date)}
         className={cn(
-          "min-h-[100px] md:min-h-[120px] p-1.5 rounded-lg border transition-all cursor-pointer flex flex-col gap-1",
+          "min-w-0 min-h-[70px] sm:min-h-[100px] md:min-h-[120px] p-1 sm:p-1.5 rounded-lg border transition-all cursor-pointer flex flex-col gap-1 overflow-hidden",
           "hover:border-primary/50",
           isSelected ? "border-primary bg-primary/5" : "border-border/50 bg-card/40",
           isToday && !isSelected && "bg-primary/[0.06] border-primary/30",

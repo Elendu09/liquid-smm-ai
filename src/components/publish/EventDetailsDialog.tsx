@@ -50,7 +50,7 @@ export function EventDetailsDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-w-[calc(100vw-2rem)] w-full">
           <DialogHeader>
             <DialogTitle>Scheduled post</DialogTitle>
             <DialogDescription>
@@ -80,23 +80,24 @@ export function EventDetailsDialog({
               </p>
             )}
           </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="ghost" size="sm" onClick={duplicate}>
-              <Copy className="h-3.5 w-3.5 mr-1.5" /> Duplicate
+          <div className="flex flex-wrap justify-end gap-2 pt-2">
+            <Button variant="ghost" size="sm" onClick={duplicate} className="flex-1 sm:flex-initial min-w-0">
+              <Copy className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Duplicate
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setReOpen(true)}>
-              <CalendarClock className="h-3.5 w-3.5 mr-1.5" /> Reschedule
+            <Button variant="outline" size="sm" onClick={() => setReOpen(true)} className="flex-1 sm:flex-initial min-w-0">
+              <CalendarClock className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Reschedule
             </Button>
             <Button
               variant="destructive"
               size="sm"
+              className="flex-1 sm:flex-initial min-w-0"
               onClick={() => {
                 remove(post.id);
                 toast.success("Deleted");
                 onOpenChange(false);
               }}
             >
-              <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Delete
+              <Trash2 className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Delete
             </Button>
           </div>
         </DialogContent>
