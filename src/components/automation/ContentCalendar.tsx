@@ -210,16 +210,36 @@ export const ContentCalendar = () => {
       >
         <div className="flex items-center justify-between">
           <span className={cn(
-            "text-xs font-semibold h-5 min-w-5 px-1 inline-flex items-center justify-center rounded-full",
+            "text-[11px] sm:text-xs font-semibold h-5 min-w-5 px-1 inline-flex items-center justify-center rounded-full",
             isToday ? "bg-primary text-primary-foreground" : "text-foreground/80",
           )}>
             {date.getDate()}
           </span>
           {dayPosts.length > 0 && (
-            <span className="text-[10px] text-muted-foreground">{dayPosts.length}</span>
+            <span className="text-[10px] text-muted-foreground tabular-nums">{dayPosts.length}</span>
           )}
         </div>
-        <div className="flex-1 space-y-1 overflow-hidden">
+
+        {/* Mobile: compact dot row (chips overflow tiny cells) */}
+        <div className="sm:hidden flex-1 flex items-end">
+          {dayPosts.length > 0 && (
+            <div className="flex flex-wrap gap-0.5 w-full">
+              {dayPosts.slice(0, 6).map((p) => (
+                <span
+                  key={p.id}
+                  className="h-1.5 w-1.5 rounded-full bg-primary/70"
+                  title={fmtTime(p.scheduledAt)}
+                />
+              ))}
+              {dayPosts.length > 6 && (
+                <span className="text-[9px] text-muted-foreground leading-none self-center">+{dayPosts.length - 6}</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop/tablet: full chips */}
+        <div className="hidden sm:block flex-1 space-y-1 overflow-hidden">
           {dayPosts.slice(0, 3).map((p) => renderChip(p, true))}
           {dayPosts.length > 3 && (
             <div className="text-[10px] text-muted-foreground text-center pt-0.5">+{dayPosts.length - 3} more</div>
