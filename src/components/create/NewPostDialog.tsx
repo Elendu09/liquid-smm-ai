@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, Loader2, Send, BookMarked, Repeat } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Sparkles, Loader2, Send, BookMarked, Repeat, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -110,17 +110,18 @@ export function NewPostDialog({ open, onOpenChange }: { open: boolean; onOpenCha
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto [&>button.absolute]:hidden">
         <DialogHeader>
           <div className="flex items-center justify-between gap-2">
             <DialogTitle>New post</DialogTitle>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="mr-12">
-                  <BookMarked className="h-3.5 w-3.5 mr-1.5" />
-                  Templates {templates.length > 0 && <span className="ml-1 text-muted-foreground">({templates.length})</span>}
-                </Button>
-              </PopoverTrigger>
+            <div className="flex items-center gap-2 shrink-0">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <BookMarked className="h-3.5 w-3.5 mr-1.5" />
+                    Templates {templates.length > 0 && <span className="ml-1 text-muted-foreground">({templates.length})</span>}
+                  </Button>
+                </PopoverTrigger>
               <PopoverContent className="w-72 p-2" align="end">
                 {templates.length === 0 ? (
                   <p className="text-xs text-muted-foreground p-2">No templates yet. Tick “Save as template” below.</p>
@@ -144,7 +145,12 @@ export function NewPostDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                   </div>
                 )}
               </PopoverContent>
-            </Popover>
+              </Popover>
+              <DialogClose className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/70 text-muted-foreground backdrop-blur transition hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </DialogClose>
+            </div>
           </div>
         </DialogHeader>
         <div className="space-y-4">

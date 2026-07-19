@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   CalendarDays, Plus, ChevronLeft, ChevronRight, MoreHorizontal,
-  Search, Trash2, Copy, ExternalLink, Clock, ListFilter, Sparkles,
+  Search, Trash2, Copy, ExternalLink, Clock, ListFilter, Sparkles, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose,
 } from "@/components/ui/sheet";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -421,17 +421,23 @@ export const ContentCalendar = () => {
 
       {/* Day details sheet */}
       <Sheet open={!!selectedDay} onOpenChange={(o) => !o && setSelectedDay(null)}>
-        <SheetContent className="w-full sm:max-w-md">
+        <SheetContent className="w-full sm:max-w-md [&>button.absolute]:hidden">
           {selectedDay && (
             <>
               <SheetHeader>
-                <SheetTitle className="flex items-center justify-between gap-2 pr-12">
-                  <span>
+                <SheetTitle className="flex items-center justify-between gap-2">
+                  <span className="truncate">
                     {selectedDay.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}
                   </span>
-                  <Button size="sm" onClick={() => setNewOpen(true)}>
-                    <Plus className="h-4 w-4 mr-1" /> Add
-                  </Button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button size="sm" onClick={() => setNewOpen(true)}>
+                      <Plus className="h-4 w-4 mr-1" /> Add
+                    </Button>
+                    <SheetClose className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/70 text-muted-foreground backdrop-blur transition hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">Close</span>
+                    </SheetClose>
+                  </div>
                 </SheetTitle>
               </SheetHeader>
               <div className="mt-4 space-y-2">
