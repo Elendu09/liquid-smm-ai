@@ -17,7 +17,7 @@ export type SavedView<F = Record<string, unknown>> = {
  * Shared cache — writing on one page reflects everywhere via useLocalCollection.
  */
 export function useSavedViews<F = Record<string, unknown>>(scopeKey: string) {
-  const [views, setViews] = useLocalCollection<SavedView<F>>("views", scopeKey, []);
+  const { items: views, setItems: setViews } = useLocalCollection<SavedView<F>>("views", scopeKey, []);
 
   const save = useCallback(
     (name: string, filters: F, id?: string) => {
