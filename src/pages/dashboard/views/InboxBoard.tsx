@@ -64,13 +64,17 @@ function InboxCard({
   onSnooze,
   onResolve,
   onReopen,
+  onQuickReply,
 }: {
   item: InboxItem;
   onReply: () => void;
   onSnooze: () => void;
   onResolve: () => void;
   onReopen: () => void;
+  onQuickReply: (text: string) => void;
 }) {
+  const { sentiment, intent } = useMemo(() => analyzeMessage(item.message), [item.message]);
+  const snippet = useMemo(() => snippetFor(intent, item.author), [intent, item.author]);
   return (
     <div className="p-3 space-y-2">
       <div className="flex items-start gap-2">
