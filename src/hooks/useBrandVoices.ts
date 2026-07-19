@@ -6,7 +6,27 @@ import { useLocalCollection } from "./useLocalCollection";
  * lightweight persona (tone, do/don't lists, sample lines, emoji use,
  * average caption length) that is serialised into the AI prompt so
  * generations stay on-brand across sessions and accounts.
+ *
+ * Per-platform overrides let the same voice adapt its style to each
+ * channel — e.g. shorter + punchier on X, hook-heavy on TikTok,
+ * hashtag-rich on Instagram, thought-leadership on LinkedIn.
  */
+export type PlatformKey =
+  | "instagram"
+  | "tiktok"
+  | "twitter"
+  | "facebook"
+  | "linkedin";
+
+export interface PlatformOverride {
+  tone?: string;
+  length?: "short" | "medium" | "long";
+  emojis?: "none" | "minimal" | "expressive";
+  extraDos?: string[];
+  extraDonts?: string[];
+  notes?: string;
+}
+
 export interface BrandVoice {
   id: string;
   name: string;
@@ -19,7 +39,24 @@ export interface BrandVoice {
   samples: string[]; // few-shot examples
   createdAt: string;
   isDefault?: boolean;
+  platformOverrides?: Partial<Record<PlatformKey, PlatformOverride>>;
 }
+
+export const PLATFORM_KEYS: PlatformKey[] = [
+  "instagram",
+  "tiktok",
+  "twitter",
+  "facebook",
+  "linkedin",
+];
+
+export const PLATFORM_LABELS: Record<PlatformKey, string> = {
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  twitter: "X",
+  facebook: "Facebook",
+  linkedin: "LinkedIn",
+};
 
 export const DEFAULT_VOICES: BrandVoice[] = [
   {
@@ -56,18 +93,45 @@ export function useBrandVoices() {
   return { ...col, active, activeId: active?.id ?? null, setActive };
 }
 
+/** Resolve the effective voice fields for a given platform. */
+export function resolveVoiceForPlatform(
+  v: BrandVoice | null | undefined,
+  platform?: string,
+): BrandVoice | null | undefined {
+  if (!v || !platform) return v;
+  const key = platform.toLowerCase() as PlatformKey;
+  const o = v.platformOverrides?.[key];
+  if (!o) return v;
+  return {
+    ...v,
+    tone: o.tone?.trim() ? o.tone : v.tone,
+    length: o.length ?? v.length,
+    emojis: o.emojis ?? v.emojis,
+    dos: [...v.dos, ...(o.extraDos ?? [])],
+    donts: [...v.donts, ...(o.extraDonts ?? [])],
+  };
+}
+
 /** Compact serialisation used by prompts and edge fn payloads. */
-export function serializeVoice(v: BrandVoice | null | undefined): string {
+export function serializeVoice(
+  v: BrandVoice | null | undefined,
+  platform?: string,
+): string {
   if (!v) return "";
+  const resolved = resolveVoiceForPlatform(v, platform)!;
   const parts = [
-    `Tone: ${v.tone}`,
-    `Audience: ${v.audience}`,
-    `Emoji use: ${v.emojis}`,
-    `Length: ${v.length}`,
+    `Tone: ${resolved.tone}`,
+    `Audience: ${resolved.audience}`,
+    `Emoji use: ${resolved.emojis}`,
+    `Length: ${resolved.length}`,
   ];
-  if (v.dos.length) parts.push(`Do: ${v.dos.join("; ")}`);
-  if (v.donts.length) parts.push(`Don't: ${v.donts.join("; ")}`);
-  if (v.samples.length)
-    parts.push(`Reference samples:\n${v.samples.map((s) => `- ${s}`).join("\n")}`);
+  if (resolved.dos.length) parts.push(`Do: ${resolved.dos.join("; ")}`);
+  if (resolved.donts.length) parts.push(`Don't: ${resolved.donts.join("; ")}`);
+  const note = platform
+    ? v.platformOverrides?.[platform.toLowerCase() as PlatformKey]?.notes
+    : undefined;
+  if (note) parts.push(`Platform note (${platform}): ${note}`);
+  if (resolved.samples.length)
+    parts.push(`Reference samples:\n${resolved.samples.map((s) => `- ${s}`).join("\n")}`);
   return parts.join("\n");
 }
