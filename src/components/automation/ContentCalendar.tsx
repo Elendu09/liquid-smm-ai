@@ -30,7 +30,7 @@ import { toast } from "sonner";
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-type ViewMode = "month" | "week" | "list";
+type ViewMode = "month" | "week" | "list" | "feed";
 
 function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
@@ -281,7 +281,7 @@ export const ContentCalendar = () => {
         </div>
 
         <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/40">
-          {(["month", "week", "list"] as ViewMode[]).map((v) => (
+          {(["month", "week", "list", "feed"] as ViewMode[]).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -378,7 +378,7 @@ export const ContentCalendar = () => {
       </div>
 
       {/* Nav header */}
-      {view !== "list" && (
+      {(view === "month" || view === "week") && (
         <div className="rounded-2xl border border-border/60 bg-card p-3 sm:p-4">
           <div className="flex items-center justify-between mb-3">
             <Button variant="ghost" size="icon" onClick={() => shift(-1)} aria-label="Previous">
@@ -469,6 +469,113 @@ export const ContentCalendar = () => {
                   </li>
                 ))}
             </ul>
+          )}
+        </div>
+      )}
+
+      {view === "feed" && (
+        <div className="max-w-2xl mx-auto space-y-4">
+          {filtered.length === 0 ? (
+            <div className="rounded-2xl border border-border/60 bg-card p-10 text-center">
+              <CalendarDays className="h-8 w-8 mx-auto text-muted-foreground mb-2" strokeWidth={1.5} />
+              <p className="text-sm font-medium">No scheduled posts</p>
+              <Button size="sm" onClick={() => setNewOpen(true)} className="mt-3">
+                <Plus className="h-4 w-4 mr-1" /> Schedule your first post
+              </Button>
+            </div>
+          ) : (
+            [...filtered]
+              .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt))
+              .map((p) => {
+                const d = new Date(p.scheduledAt);
+                const relative = (() => {
+                  const diff = d.getTime() - Date.now();
+                  const abs = Math.abs(diff);
+                  const mins = Math.round(abs / 60000);
+                  const hours = Math.round(mins / 60);
+                  const days = Math.round(hours / 24);
+                  const fmt = days >= 1 ? `${days}d` : hours >= 1 ? `${hours}h` : `${mins}m`;
+                  return diff >= 0 ? `in ${fmt}` : `${fmt} ago`;
+                })();
+                return (
+                  <article
+                    key={p.id}
+                    className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <header className="flex items-center gap-3 p-3 sm:p-4">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <CalendarDays className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-sm font-semibold">
+                            {d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}
+                          </span>
+                          <span className="text-xs text-muted-foreground">· {fmtTime(p.scheduledAt)}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{relative}</span>
+                          {p.approvalStatus && p.approvalStatus !== "draft" && (
+                            <ApprovalBadge status={p.approvalStatus} />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {p.platformIds.map((id) => (
+                            <div key={id} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <PlatformIcon platform={id} size="xs" />
+                              <span className="capitalize">{id}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="icon" variant="ghost" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setDetailsPost(p)}>
+                            <ExternalLink className="h-3.5 w-3.5 mr-2" /> Open
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => duplicatePost(p)}>
+                            <Copy className="h-3.5 w-3.5 mr-2" /> Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => { remove(p.id); toast.success("Deleted"); }}>
+                            <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </header>
+                    <div className="px-3 sm:px-4 pb-3">
+                      <p className="text-sm whitespace-pre-wrap">{p.caption || "(no caption)"}</p>
+                    </div>
+                    {p.mediaUrl && (
+                      <div className="border-y border-border/60 bg-muted/20">
+                        <img src={p.mediaUrl} alt="" className="w-full max-h-[420px] object-cover" />
+                      </div>
+                    )}
+                    <footer className="grid grid-cols-3 divide-x divide-border/60 border-t border-border/60">
+                      <button
+                        onClick={() => setDetailsPost(p)}
+                        className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground transition-colors"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" /> Details
+                      </button>
+                      <button
+                        onClick={() => duplicatePost(p)}
+                        className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground transition-colors"
+                      >
+                        <Copy className="h-3.5 w-3.5" /> Duplicate
+                      </button>
+                      <button
+                        onClick={() => { remove(p.id); toast.success("Deleted"); }}
+                        className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                      </button>
+                    </footer>
+                  </article>
+                );
+              })
           )}
         </div>
       )}

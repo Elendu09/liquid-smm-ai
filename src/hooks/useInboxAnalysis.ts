@@ -41,26 +41,49 @@ export function analyzeMessage(text: string): { sentiment: Sentiment; intent: In
   return { sentiment, intent };
 }
 
-export function snippetFor(intent: Intent, author: string): string {
+const VARIANTS: Record<Intent, (n: string) => string[]> = {
+  question: (n) => [
+    `Hey ${n}, great question — happy to walk you through it. DM us and we'll get you sorted!`,
+    `${n}, love this one. Short answer: yes — long answer in your DMs 👀`,
+    `Great ask, ${n}. We just replied with the full breakdown in DM.`,
+  ],
+  compliment: (n) => [
+    `Thank you so much, ${n} 🙌 means the world!`,
+    `${n} you're the best 💜 thanks for the love!`,
+    `Appreciate you, ${n} — comments like this keep us going 🔥`,
+  ],
+  complaint: (n) => [
+    `So sorry about this, ${n}. Can you DM us the details so we can make it right?`,
+    `${n}, that's not the experience we want you to have. DM incoming.`,
+    `Totally hear you, ${n} — let's fix this. Sending a DM now.`,
+  ],
+  lead: (n) => [
+    `Hi ${n}, thanks for your interest! Full pricing is on our site — want us to send a quick overview?`,
+    `${n}, happy to help — DM us your use case and we'll tailor a plan.`,
+    `Great timing, ${n} — booking a quick 15-min call this week?`,
+  ],
+  collab: (n) => [
+    `Hey ${n}, love the idea of teaming up. DM us your deck and we'll take a look!`,
+    `${n}, we're open to it — send over the brief and timing.`,
+    `Interesting, ${n} 👀 slide into the DMs with details.`,
+  ],
+  support: (n) => [
+    `We're on it, ${n}. Send a screenshot in DM and we'll troubleshoot right away.`,
+    `${n}, sorry for the hassle — DM us the error and we'll dig in.`,
+    `On it, ${n}. Can you share your account email in DM?`,
+  ],
+  spam: () => [""],
+  other: (n) => [
+    `Thanks for reaching out, ${n} — we'll get back to you shortly.`,
+    `Appreciate the note, ${n} 🙏`,
+    `Hey ${n}, thanks — we'll follow up soon!`,
+  ],
+};
+
+export function snippetFor(intent: Intent, author: string, variant = 0): string {
   const first = author.split(" ")[0] || "there";
-  switch (intent) {
-    case "question":
-      return `Hey ${first}, great question — happy to walk you through it. DM us and we'll get you sorted!`;
-    case "compliment":
-      return `Thank you so much, ${first} 🙌 means the world!`;
-    case "complaint":
-      return `So sorry about this, ${first}. Can you DM us the details so we can make it right?`;
-    case "lead":
-      return `Hi ${first}, thanks for your interest! Full pricing is on our site — want us to send a quick overview?`;
-    case "collab":
-      return `Hey ${first}, love the idea of teaming up. DM us your deck and we'll take a look!`;
-    case "support":
-      return `We're on it, ${first}. Send a screenshot in DM and we'll troubleshoot right away.`;
-    case "spam":
-      return "";
-    default:
-      return `Thanks for reaching out, ${first} — we'll get back to you shortly.`;
-  }
+  const opts = VARIANTS[intent](first);
+  return opts[variant % opts.length];
 }
 
 export const SENTIMENT_STYLE: Record<Sentiment, string> = {
