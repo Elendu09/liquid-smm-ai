@@ -1,16 +1,18 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
-import { Sparkles, Hash, Wand2, PenLine } from "lucide-react";
+import { Sparkles, Hash, Wand2, PenLine, Mic2 } from "lucide-react";
 import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import CreateStudio from "../views/CreateStudio";
 import CaptionsCreateView from "../views/CaptionsCreateView";
 import HashtagsCreateView from "../views/HashtagsCreateView";
 import AiCreateView from "../views/AiCreateView";
+import BrandVoicesView from "../views/BrandVoicesView";
 
 const tabs: HubTab[] = [
   { label: "Studio", href: "/dashboard/create/studio", icon: PenLine },
   { label: "Captions", href: "/dashboard/create/captions", icon: Sparkles },
   { label: "Hashtags", href: "/dashboard/create/hashtags", icon: Hash },
   { label: "AI Studio", href: "/dashboard/create/ai", icon: Wand2 },
+  { label: "Brand Voice", href: "/dashboard/create/voices", icon: Mic2 },
 ];
 
 function CreateLayout() {
@@ -38,6 +40,7 @@ export default function CreateHub() {
         <Route path="captions" element={<CaptionsCreateView />} />
         <Route path="hashtags" element={<HashtagsCreateView />} />
         <Route path="ai" element={<AiCreateView />} />
+        <Route path="voices" element={<BrandVoicesView />} />
       </Route>
     </Routes>
   );
