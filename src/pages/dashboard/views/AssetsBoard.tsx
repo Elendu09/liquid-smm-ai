@@ -2,7 +2,7 @@ import { useMemo, useState, DragEvent } from "react";
 import { toast } from "sonner";
 import {
   Upload, Trash2, Copy, Send, FileText, Film, Image as ImageIcon,
-  Search, Pencil, X, CheckSquare,
+  Search, Pencil, X, CheckSquare, History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,8 @@ import { useNavigate } from "react-router-dom";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { UploadAssetDialog } from "@/components/library/UploadAssetDialog";
 import { EditAssetDialog } from "@/components/library/EditAssetDialog";
+import { AssetVersionsDialog } from "@/components/library/AssetVersionsDialog";
+import { assetVersionsApi, getVersionCount } from "@/hooks/useAssetVersions";
 import { cn } from "@/lib/utils";
 
 interface Asset {
@@ -46,6 +48,7 @@ export default function AssetsBoard() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDel, setBulkDel] = useState(false);
   const [pageDrag, setPageDrag] = useState(false);
+  const [versionsFor, setVersionsFor] = useState<Asset | null>(null);
   const nav = useNavigate();
 
   const tags = useMemo(() => {
