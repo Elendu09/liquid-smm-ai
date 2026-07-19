@@ -70,8 +70,8 @@ export function BulkActionBar({ count, onClear, actions, label = "selected", cla
           >
             <X className="h-4 w-4" />
           </Button>
-        </motion.div>
+        </div>
       )}
-    </AnimatePresence>
+    </>
   );
 }
