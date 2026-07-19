@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
 import { RescheduleDialog } from "./RescheduleDialog";
+import { ApprovalControls } from "./ApprovalControls";
 
 /**
  * Read-only event view for a scheduled post opened from the calendar chip.
@@ -79,6 +80,7 @@ export function EventDetailsDialog({
                 Status: <span className="capitalize font-medium">{post.status}</span>
               </p>
             )}
+            <ApprovalControls post={post} />
           </div>
           <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:justify-end gap-2 pt-2">
             <Button variant="ghost" size="sm" onClick={duplicate} className="flex-1 sm:flex-initial min-w-0">

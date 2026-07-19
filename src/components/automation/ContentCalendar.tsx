@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   CalendarDays, Plus, ChevronLeft, ChevronRight, MoreHorizontal,
   Search, Trash2, Copy, ExternalLink, Clock, ListFilter, Sparkles, X,
+  Star, Repeat2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,8 +19,11 @@ import {
 import { NewPostDialog } from "@/components/create/NewPostDialog";
 import { EventDetailsDialog } from "@/components/publish/EventDetailsDialog";
 import { AiFillWeekDialog } from "@/components/publish/AiFillWeekDialog";
+import { RecyclingRulesDialog } from "@/components/publish/RecyclingRulesDialog";
+import { ApprovalBadge } from "@/components/publish/ApprovalControls";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
+import { useBestTimes } from "@/hooks/useBestTimes";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -47,7 +51,11 @@ export const ContentCalendar = () => {
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [fillWeekOpen, setFillWeekOpen] = useState(false);
+  const [recycleOpen, setRecycleOpen] = useState(false);
+  const [showBestTimes, setShowBestTimes] = useState(true);
   const [detailsPost, setDetailsPost] = useState<ScheduledPost | null>(null);
+
+  const bestTimes = useBestTimes();
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -215,9 +223,18 @@ export const ContentCalendar = () => {
           )}>
             {date.getDate()}
           </span>
-          {dayPosts.length > 0 && (
-            <span className="text-[10px] text-muted-foreground tabular-nums">{dayPosts.length}</span>
-          )}
+          <div className="flex items-center gap-1">
+            {showBestTimes && bestTimes.isBestDay(date) && (
+              <Star
+                className="h-2.5 w-2.5 text-amber-500 fill-amber-500/60"
+                strokeWidth={1.5}
+                aria-label="Best time to post"
+              />
+            )}
+            {dayPosts.length > 0 && (
+              <span className="text-[10px] text-muted-foreground tabular-nums">{dayPosts.length}</span>
+            )}
+          </div>
         </div>
 
         {/* Mobile: compact dot row (chips overflow tiny cells) */}
@@ -279,6 +296,18 @@ export const ContentCalendar = () => {
         </div>
 
         <Button size="sm" variant="outline" onClick={today}>Today</Button>
+        <Button
+          size="sm"
+          variant={showBestTimes ? "default" : "outline"}
+          onClick={() => setShowBestTimes((v) => !v)}
+          title="Toggle best-time overlay"
+        >
+          <Star className={cn("h-4 w-4 sm:mr-1", showBestTimes && "fill-current")} />
+          <span className="hidden sm:inline">Best times</span>
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => setRecycleOpen(true)}>
+          <Repeat2 className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Recycle</span>
+        </Button>
         <Button size="sm" variant="outline" onClick={() => setFillWeekOpen(true)}>
           <Sparkles className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">AI Fill Week</span>
         </Button>
@@ -407,7 +436,12 @@ export const ContentCalendar = () => {
                       <span className="text-[10px] text-muted-foreground mt-0.5">{fmtTime(p.scheduledAt)}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm truncate">{p.caption}</p>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <p className="text-sm truncate flex-1 min-w-0">{p.caption}</p>
+                        {p.approvalStatus && p.approvalStatus !== "draft" && (
+                          <ApprovalBadge status={p.approvalStatus} />
+                        )}
+                      </div>
                       <div className="flex items-center gap-1 mt-1">
                         {p.platformIds.map((id) => (
                           <PlatformIcon key={id} platform={id} size="xs" />
@@ -503,6 +537,7 @@ export const ContentCalendar = () => {
 
       <NewPostDialog open={newOpen} onOpenChange={setNewOpen} />
       <AiFillWeekDialog open={fillWeekOpen} onOpenChange={setFillWeekOpen} startDate={selectedDay ?? undefined} />
+      <RecyclingRulesDialog open={recycleOpen} onOpenChange={setRecycleOpen} />
       <EventDetailsDialog post={detailsPost} open={!!detailsPost} onOpenChange={(o) => !o && setDetailsPost(null)} />
     </div>
   );

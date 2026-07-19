@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 
 export type Recurrence = { freq: "daily" | "weekly" | "monthly"; count: number };
 export type SendStatus = "queued" | "paused" | "sending" | "completed" | "failed";
+export type ApprovalStatus = "draft" | "pending" | "approved" | "rejected";
 
 export interface ScheduledPost {
   id: string;
@@ -21,7 +22,15 @@ export interface ScheduledPost {
   sendProgress?: number; // 0..100 while sending
   error?: string; // populated on failure
   sentAt?: string; // ISO — when send finalized
+  /** Approval workflow — controls whether the post can auto-send. */
+  approvalStatus?: ApprovalStatus;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectionReason?: string;
+  /** Link to a recycling rule (see useRecyclingRules). */
+  recycleRuleId?: string;
 }
+
 
 const STORAGE_KEY = "smmpilot:scheduled-posts";
 
