@@ -27,6 +27,7 @@ export interface InboxItem {
   createdAt: string;
   status: InboxStatus;
   kind: "comment" | "dm";
+  scheduledFor?: string;
 }
 
 const columns: KanbanColumnDef<InboxStatus>[] = [
