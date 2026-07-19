@@ -54,7 +54,7 @@ export function ComposeVariantsDialog({
     if (!topic.trim()) { toast.error("Add a topic"); return; }
     setBusy(true);
     setVariants([]);
-    const voiceLine = serializeVoice(active);
+    const voiceLine = serializeVoice(active, platform);
     // Three parallel runs with distinct tone directives for real A/B contrast.
     const angles = [
       `${active?.tone ?? "engaging"} — open with a punchy hook, keep it snappy.`,
