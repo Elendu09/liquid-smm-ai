@@ -276,6 +276,8 @@ export default function Support() {
           </Card>
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
 
       <ContactSupportDialog
         open={contactOpen}
