@@ -82,12 +82,6 @@ const chips = [
   },
 ];
 
-const tools = [
-  { name: "AI Captions", price: "$0.05", unit: "/ post", Icon: Sparkles, badge: "ACTIVE" },
-  { name: "Auto DMs", price: "$1.20", unit: "/ 100", Icon: MessageSquare, badge: "ADD" },
-  { name: "Scheduler", price: "$15", unit: "/ mo", Icon: Calendar, badge: "BEST", highlight: true },
-  { name: "Engagement", price: "$0.80", unit: "/ 1k", Icon: Heart, badge: "ADD" },
-];
 
 export function Hero() {
   return (
