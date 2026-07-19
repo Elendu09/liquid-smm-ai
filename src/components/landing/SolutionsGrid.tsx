@@ -11,22 +11,21 @@ export function SolutionsGrid({ heading = true, limit }: SolutionsGridProps) {
   const items = typeof limit === "number" ? solutions.slice(0, limit) : solutions;
 
   return (
-    <section id="solutions" className="py-20 lg:py-28">
+    <section id="solutions" className="py-20 lg:py-28 bg-background border-y border-white/5">
       <div className="container mx-auto px-4">
         {heading && (
-          <div className="text-center max-w-3xl mx-auto mb-14">
-            <span className="text-sm font-medium text-primary uppercase tracking-wider">
-              Solutions
-            </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-4 mb-6">
-              Solutions for your{" "}
-              <span className="bg-gradient-to-r from-brand-cyan to-brand-green bg-clip-text text-transparent">
-                social media
-              </span>
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Every solution ships with ready-made applications, templates, and playbooks.
-            </p>
+          <div className="grid lg:grid-cols-12 gap-10 mb-14 items-end">
+            <div className="lg:col-span-7">
+              <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— Solutions</p>
+              <h2 className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
+                Solutions for your <span className="italic text-primary">social media.</span>
+              </h2>
+            </div>
+            <div className="lg:col-span-5 lg:pl-8 lg:border-l lg:border-white/10">
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+                Every solution ships with ready-made applications, templates, and playbooks you can put to work today.
+              </p>
+            </div>
           </div>
         )}
 
@@ -34,34 +33,32 @@ export function SolutionsGrid({ heading = true, limit }: SolutionsGridProps) {
           {items.map((s) => (
             <article
               key={s.id}
-              className="group relative flex flex-col rounded-3xl border border-border/60 bg-card/70 backdrop-blur-xl p-6 lg:p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50"
+              className="group relative flex flex-col rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:bg-white/[0.04]"
             >
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
-                <s.icon className="w-6 h-6 text-primary" aria-hidden />
+              <div className="w-11 h-11 rounded-full border border-white/15 bg-primary/10 flex items-center justify-center text-primary mb-6">
+                <s.icon className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">{s.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-5 flex-1">
-                {s.description}
-              </p>
+              <h3 className="font-['Instrument_Serif'] text-3xl leading-tight mb-3">{s.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1">{s.description}</p>
 
-              <ul className="flex flex-wrap gap-2 mb-5" aria-label="Included assets">
-                <li className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-                  {s.applications} Applications
+              <ul className="flex flex-wrap gap-2 mb-6" aria-label="Included assets">
+                <li className="text-[10px] uppercase tracking-[0.15em] font-semibold px-2.5 py-1 rounded-full border border-white/10 text-muted-foreground">
+                  {s.applications} Apps
                 </li>
-                <li className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-brand-green/10 text-brand-green">
+                <li className="text-[10px] uppercase tracking-[0.15em] font-semibold px-2.5 py-1 rounded-full border border-white/10 text-muted-foreground">
                   {s.templates} Templates
                 </li>
-                <li className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-brand-cyan/10 text-brand-cyan">
-                  {s.blogPosts} Blog posts
+                <li className="text-[10px] uppercase tracking-[0.15em] font-semibold px-2.5 py-1 rounded-full border border-white/10 text-muted-foreground">
+                  {s.blogPosts} Posts
                 </li>
               </ul>
 
               <Link
                 to={s.ctaHref}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+                className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] font-semibold text-primary hover:gap-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
               >
                 {s.ctaLabel}
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </article>
           ))}

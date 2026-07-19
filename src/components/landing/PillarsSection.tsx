@@ -1,75 +1,13 @@
 import { Link } from "react-router-dom";
-import {
-  Rocket,
-  Sparkles,
-  Send,
-  Palette,
-  Users,
-  LifeBuoy,
-  ArrowRight,
-} from "lucide-react";
+import { Rocket, Sparkles, Send, Palette, Users, LifeBuoy, ArrowRight } from "lucide-react";
 
 const pillars = [
-  {
-    icon: Rocket,
-    eyebrow: "Pillar 01",
-    title: "Fast, Friendly Onboarding",
-    description:
-      "Connect every account, learn the ropes with a guided tour, and ship your first post in under five minutes.",
-    ctaLabel: "Start the tour",
-    href: "/dashboard",
-    accent: "from-brand-cyan/20 to-primary/10",
-  },
-  {
-    icon: Sparkles,
-    eyebrow: "Pillar 02",
-    title: "Stunning Content, Tailored to You",
-    description:
-      "SkyRank AI learns your brand, audience, and style — then generates scroll-stopping captions, hashtags, and visuals on demand.",
-    ctaLabel: "Open the AI Studio",
-    href: "/dashboard/create/ai",
-    accent: "from-primary/20 to-brand-green/10",
-  },
-  {
-    icon: Send,
-    eyebrow: "Pillar 03",
-    title: "One-click, Multi-Platform Posting",
-    description:
-      "Publish and schedule to Facebook, Instagram, LinkedIn, X, Google Business, TikTok, Pinterest — from a single composer.",
-    ctaLabel: "Open the scheduler",
-    href: "/dashboard/publish/queue",
-    accent: "from-brand-green/20 to-brand-cyan/10",
-  },
-  {
-    icon: Palette,
-    eyebrow: "Pillar 04",
-    title: "Customize Like a Pro",
-    description:
-      "Swap images, tweak captions, and remix professionally designed presets — every post looks unmistakably yours.",
-    ctaLabel: "Browse templates",
-    href: "/dashboard/library/presets",
-    accent: "from-brand-orange/20 to-primary/10",
-  },
-  {
-    icon: Users,
-    eyebrow: "Pillar 05",
-    title: "Team Collaboration",
-    description:
-      "Invite teammates, set granular roles and approvals, and keep every campaign moving without the group-chat chaos.",
-    ctaLabel: "Manage your team",
-    href: "/dashboard/settings/team",
-    accent: "from-primary/20 to-brand-orange/10",
-  },
-  {
-    icon: LifeBuoy,
-    eyebrow: "Pillar 06",
-    title: "Always-On Support",
-    description:
-      "Real humans, 24/7. Reach us from the in-app Help widget or email support with an average first reply under an hour.",
-    ctaLabel: "Contact support",
-    href: "/dashboard/support",
-    accent: "from-brand-cyan/20 to-brand-green/10",
-  },
+  { icon: Rocket, eyebrow: "Pillar 01", title: "Fast, friendly onboarding", description: "Connect every account, learn the ropes with a guided tour, and ship your first post in under five minutes.", ctaLabel: "Start the tour", href: "/dashboard" },
+  { icon: Sparkles, eyebrow: "Pillar 02", title: "Stunning content, tailored to you", description: "SkyRank AI learns your brand, audience, and style — then generates scroll-stopping captions, hashtags, and visuals on demand.", ctaLabel: "Open AI Studio", href: "/dashboard/create/ai" },
+  { icon: Send, eyebrow: "Pillar 03", title: "One-click, multi-platform posting", description: "Publish and schedule to Facebook, Instagram, LinkedIn, X, Google Business, TikTok, YouTube — from a single composer.", ctaLabel: "Open scheduler", href: "/dashboard/publish/queue" },
+  { icon: Palette, eyebrow: "Pillar 04", title: "Customize like a pro", description: "Swap images, tweak captions, and remix professionally designed presets — every post looks unmistakably yours.", ctaLabel: "Browse templates", href: "/dashboard/library/presets" },
+  { icon: Users, eyebrow: "Pillar 05", title: "Team collaboration", description: "Invite teammates, set granular roles and approvals, and keep every campaign moving without the group-chat chaos.", ctaLabel: "Manage team", href: "/dashboard/settings/team" },
+  { icon: LifeBuoy, eyebrow: "Pillar 06", title: "Always-on support", description: "Real humans, 24/7. Reach us from the in-app Help widget or email support with an average first reply under an hour.", ctaLabel: "Contact support", href: "/dashboard/support" },
 ];
 
 export function PillarsSection() {
@@ -77,16 +15,11 @@ export function PillarsSection() {
     <section id="pillars" className="py-20 lg:py-32">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-sm font-medium text-primary uppercase tracking-wider">
-            Why teams pick SMMSAAS
-          </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-4 mb-6">
-            Six pillars.{" "}
-            <span className="bg-gradient-to-r from-brand-cyan to-brand-green bg-clip-text text-transparent">
-              One unfair advantage.
-            </span>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— Why teams pick SMMSAAS</p>
+          <h2 className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
+            Six pillars. <span className="italic text-primary">One</span> unfair advantage.
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="mt-6 text-base sm:text-lg text-muted-foreground">
             Every promise below is wired to a real surface in the app — click through to see it live.
           </p>
         </div>
@@ -96,30 +29,22 @@ export function PillarsSection() {
             <Link
               key={p.title}
               to={p.href}
-              className="group relative overflow-hidden rounded-3xl border border-border/60 bg-card/70 backdrop-blur-xl p-6 lg:p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="group relative flex flex-col rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
-              <div
-                className={`pointer-events-none absolute -inset-px bg-gradient-to-br ${p.accent} opacity-0 group-hover:opacity-100 transition-opacity`}
-                aria-hidden
-              />
-              <div className="relative">
-                <div className="flex items-center justify-between mb-5">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                    <p.icon className="w-6 h-6 text-primary" aria-hidden />
-                  </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    {p.eyebrow}
-                  </span>
+              <div className="flex items-center justify-between mb-8">
+                <div className="w-11 h-11 rounded-full border border-white/15 bg-primary/10 flex items-center justify-center text-primary">
+                  <p.icon className="w-5 h-5" />
                 </div>
-                <h3 className="text-lg lg:text-xl font-semibold mb-2">{p.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-                  {p.description}
-                </p>
-                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
-                  {p.ctaLabel}
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-muted-foreground">
+                  {p.eyebrow}
                 </span>
               </div>
+              <h3 className="font-['Instrument_Serif'] text-3xl leading-tight mb-3">{p.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1">{p.description}</p>
+              <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] font-semibold text-primary">
+                {p.ctaLabel}
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+              </span>
             </Link>
           ))}
         </div>
