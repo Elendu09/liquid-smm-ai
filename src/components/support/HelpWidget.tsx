@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { LifeBuoy, X, Sparkles, MessageCircle, Keyboard, BookOpen, ChevronRight } from "lucide-react";
+import { LifeBuoy, X, Sparkles, MessageCircle, Keyboard, BookOpen, ChevronRight, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useViewportMode } from "@/hooks/useViewportMode";
 import { TOUR_OPEN_EVENT } from "@/hooks/useOnboardingTour";
@@ -88,6 +88,15 @@ export function HelpWidget() {
               }}
             />
             <HelpItem icon={Keyboard} label="Keyboard shortcuts" hint="Press ⌘K" onClick={openShortcuts} />
+            <HelpItem
+              icon={Activity}
+              label="Run troubleshooter"
+              hint="Diagnose common issues"
+              onClick={() => {
+                setOpen(false);
+                navigate("/dashboard/support?tab=troubleshooter");
+              }}
+            />
             <HelpItem
               icon={BookOpen}
               label="Help center"
