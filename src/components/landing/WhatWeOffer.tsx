@@ -3,7 +3,8 @@ import { Check, Sparkles, Rocket, Crown } from "lucide-react";
 const offerings = [
   {
     icon: Sparkles,
-    title: "For Content Creators",
+    label: "01 · Creators",
+    title: "For content creators",
     description: "Focus on creating amazing content while we handle the rest.",
     features: [
       "AI-generated captions that match your voice",
@@ -12,11 +13,11 @@ const offerings = [
       "Engagement analytics and insights",
       "Comment management with AI replies",
     ],
-    color: "from-brand-blue to-brand-cyan",
   },
   {
     icon: Rocket,
-    title: "For Marketing Agencies",
+    label: "02 · Agencies",
+    title: "For marketing agencies",
     description: "Scale your social media services without scaling your team.",
     features: [
       "Multi-client dashboard management",
@@ -25,11 +26,11 @@ const offerings = [
       "Bulk scheduling across accounts",
       "Custom branding for client portals",
     ],
-    color: "from-brand-purple to-brand-pink",
   },
   {
     icon: Crown,
-    title: "For Businesses",
+    label: "03 · Businesses",
+    title: "For businesses",
     description: "Build brand awareness and drive conversions on autopilot.",
     features: [
       "Consistent brand voice across platforms",
@@ -38,7 +39,6 @@ const offerings = [
       "Lead generation through engagement",
       "Customer support via social channels",
     ],
-    color: "from-brand-orange to-brand-green",
   },
 ];
 
@@ -47,46 +47,43 @@ export function WhatWeOffer() {
     <section className="py-20 lg:py-32">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-sm font-medium text-primary uppercase tracking-wider">What We Offer</span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-4 mb-6">
-            Tailored Solutions for{" "}
-            <span className="bg-gradient-to-r from-brand-orange to-brand-pink bg-clip-text text-transparent">
-              Every Need
-            </span>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— What we offer</p>
+          <h2 className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
+            Tailored solutions for <span className="italic text-primary">every</span> need.
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="mt-6 text-base sm:text-lg text-muted-foreground">
             Whether you're a solo creator or a large agency, we have the tools to accelerate your growth.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {offerings.map((offering) => (
+        <div className="grid lg:grid-cols-3 gap-6">
+          {offerings.map((o) => (
             <div
-              key={offering.title}
-              className="relative group overflow-hidden rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300"
+              key={o.title}
+              className="flex flex-col rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl overflow-hidden hover:border-primary/40 transition-colors"
             >
-              {/* Header */}
-              <div className={`p-8 bg-gradient-to-br ${offering.color}`}>
-                <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
-                  <offering.icon className="w-7 h-7 text-white" />
+              <div className="p-8 border-b border-white/10">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-11 h-11 rounded-full border border-white/15 bg-primary/10 flex items-center justify-center text-primary">
+                    <o.icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-muted-foreground">
+                    {o.label}
+                  </span>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">{offering.title}</h3>
-                <p className="text-white/80">{offering.description}</p>
+                <h3 className="font-['Instrument_Serif'] text-3xl leading-tight mb-3">{o.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{o.description}</p>
               </div>
-
-              {/* Features */}
-              <div className="p-8">
-                <ul className="space-y-4">
-                  {offering.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="w-3 h-3 text-primary" />
-                      </div>
-                      <span className="text-muted-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <ul className="p-8 space-y-4 flex-1">
+                {o.features.map((f) => (
+                  <li key={f} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-primary" />
+                    </div>
+                    <span className="text-sm text-muted-foreground leading-relaxed">{f}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>

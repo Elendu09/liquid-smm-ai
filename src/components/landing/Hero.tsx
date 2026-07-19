@@ -6,7 +6,6 @@ import {
   MessageSquare,
   Calendar,
   Heart,
-  Zap,
   ShieldCheck,
   Clock,
   Users,
@@ -50,85 +49,44 @@ const TelegramIcon = () => (
 );
 
 const platforms = [
-  { name: "Instagram", Icon: InstagramIcon, color: "text-pink-500" },
-  { name: "TikTok", Icon: TikTokIcon, color: "text-foreground" },
-  { name: "YouTube", Icon: YouTubeIcon, color: "text-red-500" },
-  { name: "X", Icon: TwitterIcon, color: "text-foreground" },
-  { name: "Facebook", Icon: FacebookIcon, color: "text-blue-600" },
-  { name: "LinkedIn", Icon: LinkedInIcon, color: "text-blue-500" },
-  { name: "Telegram", Icon: TelegramIcon, color: "text-sky-500" },
+  { name: "Instagram", Icon: InstagramIcon },
+  { name: "TikTok", Icon: TikTokIcon },
+  { name: "YouTube", Icon: YouTubeIcon },
+  { name: "X", Icon: TwitterIcon },
+  { name: "Facebook", Icon: FacebookIcon },
+  { name: "LinkedIn", Icon: LinkedInIcon },
+  { name: "Telegram", Icon: TelegramIcon },
 ];
 
 const chips = [
   {
     title: "Ultra fast.",
     body: "Almost speed-of-light execution.",
-    accent: "text-[hsl(217_92%_66%)]",
-    position:
-      "hidden lg:block absolute -left-4 xl:-left-24 top-4 -rotate-6",
+    position: "hidden lg:block absolute -left-4 xl:-left-24 top-4 -rotate-6",
     bar: true,
   },
   {
-    title: "Hot design.",
-    body: "Far ahead of competitors.",
-    accent: "text-orange-400",
-    position:
-      "hidden lg:block absolute -left-10 xl:-left-40 bottom-8 rotate-3",
+    title: "Editorial design.",
+    body: "Far ahead of the market.",
+    position: "hidden lg:block absolute -left-10 xl:-left-40 bottom-8 rotate-3",
   },
   {
     title: "Cool functions.",
-    body: "Updates every month.",
-    accent: "text-emerald-400",
-    position:
-      "hidden lg:block absolute -right-4 xl:-right-24 top-10 rotate-6",
+    body: "Shipping updates monthly.",
+    position: "hidden lg:block absolute -right-4 xl:-right-24 top-10 rotate-6",
   },
   {
     title: "Ecosystem.",
-    body: "Market transparency.",
-    accent: "text-green-400",
-    position:
-      "hidden lg:block absolute -right-10 xl:-right-32 bottom-4 -rotate-3",
+    body: "Total market transparency.",
+    position: "hidden lg:block absolute -right-10 xl:-right-32 bottom-4 -rotate-3",
   },
 ];
 
 const tools = [
-  {
-    name: "AI Captions",
-    price: "$0.05",
-    unit: "/ post",
-    Icon: Sparkles,
-    iconWrap: "bg-blue-500/15 text-[hsl(217_92%_66%)]",
-    badge: "ACTIVE",
-    badgeClass: "bg-white/5 text-[hsl(217_92%_66%)]",
-  },
-  {
-    name: "Auto DMs",
-    price: "$1.20",
-    unit: "/ 100",
-    Icon: MessageSquare,
-    iconWrap: "bg-purple-500/15 text-purple-300",
-    badge: "ADD SERVICE",
-    badgeClass: "bg-white/5 text-slate-400",
-  },
-  {
-    name: "Scheduler",
-    price: "$15",
-    unit: "/ mo",
-    Icon: Calendar,
-    iconWrap: "bg-emerald-500/15 text-emerald-300",
-    badge: "BEST VALUE",
-    badgeClass: "bg-emerald-500/20 text-emerald-300",
-    highlight: true,
-  },
-  {
-    name: "Engagement",
-    price: "$0.80",
-    unit: "/ 1k",
-    Icon: Heart,
-    iconWrap: "bg-pink-500/15 text-pink-300",
-    badge: "ADD SERVICE",
-    badgeClass: "bg-white/5 text-slate-400",
-  },
+  { name: "AI Captions", price: "$0.05", unit: "/ post", Icon: Sparkles, badge: "ACTIVE" },
+  { name: "Auto DMs", price: "$1.20", unit: "/ 100", Icon: MessageSquare, badge: "ADD" },
+  { name: "Scheduler", price: "$15", unit: "/ mo", Icon: Calendar, badge: "BEST", highlight: true },
+  { name: "Engagement", price: "$0.80", unit: "/ 1k", Icon: Heart, badge: "ADD" },
 ];
 
 export function Hero() {
@@ -137,7 +95,6 @@ export function Hero() {
       aria-labelledby="hero-heading"
       className="relative isolate overflow-hidden bg-background text-foreground"
     >
-      {/* Background: grid + aurora */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
         <div
           className="absolute inset-0 opacity-[0.18] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_60%,transparent_100%)]"
@@ -148,21 +105,23 @@ export function Hero() {
           }}
         />
         <div className="absolute -top-32 -left-32 h-[420px] w-[420px] rounded-full bg-primary/20 blur-[120px]" />
-        <div className="absolute -top-24 -right-24 h-[360px] w-[360px] rounded-full bg-brand-purple/20 blur-[120px]" />
+        <div className="absolute -top-24 -right-24 h-[360px] w-[360px] rounded-full bg-primary/10 blur-[120px]" />
       </div>
 
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4 pt-16 pb-24 sm:px-6 lg:pt-24 lg:pb-32">
-        {/* Hero copy */}
-        <div className="relative w-full max-w-4xl text-center">
-          {/* Floating chips (desktop only) */}
+        <div className="relative w-full max-w-5xl text-center">
           {chips.map((c) => (
             <div
               key={c.title}
               aria-hidden="true"
-              className={`${c.position} w-48 rounded-2xl border border-white/10 bg-white/5 p-5 text-left shadow-2xl backdrop-blur-xl transition-transform duration-500 hover:rotate-0`}
+              className={`${c.position} w-52 rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-left shadow-2xl backdrop-blur-xl transition-transform duration-500 hover:rotate-0`}
             >
-              <div className={`font-bold mb-1 ${c.accent}`}>{c.title}</div>
-              <div className="text-xs text-muted-foreground">{c.body}</div>
+              <div className="font-['Instrument_Serif'] text-2xl leading-none mb-1 text-foreground">
+                {c.title}
+              </div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                {c.body}
+              </div>
               {c.bar && (
                 <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-white/10">
                   <div className="h-full w-4/5 bg-primary" />
@@ -171,58 +130,48 @@ export function Hero() {
             </div>
           ))}
 
-          {/* Eyebrow */}
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
-            <span className="relative flex h-2 w-2" aria-hidden="true">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-            </span>
-            Automation-First SMM Platform
-          </div>
+          <p className="mb-8 text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+            — Automation-first SMM platform
+          </p>
 
           <h1
             id="hero-heading"
-            className="mb-6 font-black leading-[0.95] tracking-tighter text-foreground text-[clamp(2.5rem,7vw,5.5rem)]"
-            style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}
+            className="font-['Instrument_Serif'] font-normal leading-[0.92] tracking-tight text-foreground text-[clamp(3rem,9vw,7.5rem)]"
           >
-            Automate{" "}
-            <span className="bg-gradient-to-r from-primary to-sky-300 bg-clip-text text-transparent">
-              80% of Your
-            </span>{" "}
-            SMM Work in Minutes
+            Automate <span className="italic text-primary">80%</span>
+            <br />
+            of your social <span className="italic">media</span> work
+            <span className="text-primary">.</span>
           </h1>
 
-          <p className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg md:text-xl">
+          <p className="mx-auto mt-8 mb-10 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             The most powerful automation panel built for scale. Generate captions,
             schedule posts, and grow every account with AI-driven precision.
           </p>
 
-          {/* CTAs */}
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
             <Link to="/dashboard" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="h-13 w-full min-h-11 px-8 text-base font-bold shadow-[0_0_24px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_32px_hsl(var(--primary)/0.55)] sm:w-auto"
+                className="h-12 w-full min-h-11 rounded-full px-8 text-sm font-semibold uppercase tracking-[0.15em] shadow-[0_0_24px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_32px_hsl(var(--primary)/0.55)] sm:w-auto"
               >
-                Start Free Trial
-                <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
+                Start free trial
+                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </Button>
             </Link>
             <Button
               size="lg"
               variant="outline"
-              className="h-13 w-full min-h-11 border-white/10 bg-white/5 px-8 text-base font-bold backdrop-blur-sm hover:bg-white/10 sm:w-auto"
-              aria-label="Watch product demo"
+              className="h-12 w-full min-h-11 rounded-full border-white/15 bg-white/5 px-8 text-sm font-semibold uppercase tracking-[0.15em] backdrop-blur-sm hover:bg-white/10 sm:w-auto"
             >
-              <Play className="mr-2 h-5 w-5" aria-hidden="true" />
-              Watch Demo
+              <Play className="mr-2 h-4 w-4" aria-hidden="true" />
+              Watch demo
             </Button>
           </div>
 
-          {/* Trust row */}
-          <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+          <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
             <li className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+              <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
               No credit card required
             </li>
             <li className="flex items-center gap-2">
@@ -230,61 +179,61 @@ export function Hero() {
               14-day free trial
             </li>
             <li className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-brand-purple" aria-hidden="true" />
+              <Users className="h-4 w-4 text-primary" aria-hidden="true" />
               50K+ marketers trust us
             </li>
           </ul>
         </div>
 
-        {/* Dashboard preview */}
         <div className="group relative mt-20 w-full max-w-5xl [perspective:1200px]">
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-card/80 shadow-[0_50px_100px_rgba(0,0,0,0.55)] backdrop-blur-3xl transition-transform duration-700 ease-out [transform:rotateX(10deg)] group-hover:[transform:rotateX(4deg)_translateY(-6px)]">
-            {/* Preview header */}
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-card/70 shadow-[0_50px_100px_rgba(0,0,0,0.55)] backdrop-blur-3xl transition-transform duration-700 ease-out [transform:rotateX(10deg)] group-hover:[transform:rotateX(4deg)_translateY(-6px)]">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 p-5 sm:p-6">
               <div className="flex items-center gap-4 sm:gap-6">
-                <div className="flex items-center gap-2 text-lg font-bold tracking-tighter">
-                  <div className="h-6 w-6 rounded-lg bg-primary" aria-hidden="true" />
-                  PANEL
+                <div className="font-['Instrument_Serif'] text-2xl leading-none">
+                  Panel<span className="italic text-primary">.</span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
+                  <span className="rounded-full bg-primary px-3 py-1 text-[10px] uppercase tracking-[0.18em] font-semibold text-primary-foreground">
                     New order
                   </span>
-                  <span className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-bold text-muted-foreground">
-                    My orders <span className="ml-1 text-foreground">12</span>
+                  <span className="rounded-full bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.18em] font-semibold text-muted-foreground">
+                    My orders · 12
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-muted-foreground sm:text-sm">
-                  Current balance
+              <div className="flex items-baseline gap-3">
+                <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Balance
                 </span>
-                <span className="text-lg font-bold text-primary sm:text-xl">
+                <span className="font-['Instrument_Serif'] text-2xl text-primary">
                   $1,240.50
                 </span>
               </div>
             </div>
 
-            {/* Pricing grid */}
             <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-4 lg:gap-6 lg:p-8">
               {tools.map((t) => (
                 <article
                   key={t.name}
                   className={`rounded-2xl border p-5 transition-all ${
                     t.highlight
-                      ? "border-primary/40 bg-white/[0.04] ring-2 ring-primary/30"
+                      ? "border-primary/40 bg-white/[0.04] ring-1 ring-primary/30"
                       : "border-white/5 bg-white/[0.03] hover:border-primary/40"
                   }`}
                 >
-                  <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${t.iconWrap}`}>
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
                     <t.Icon className="h-5 w-5" aria-hidden="true" />
                   </div>
-                  <h3 className="mb-1 text-sm font-bold text-foreground">{t.name}</h3>
+                  <h3 className="mb-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                    {t.name}
+                  </h3>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-black text-foreground">{t.price}</span>
+                    <span className="font-['Instrument_Serif'] text-3xl text-foreground">
+                      {t.price}
+                    </span>
                     <span className="text-xs text-muted-foreground">{t.unit}</span>
                   </div>
-                  <div className={`mt-4 rounded-lg py-2 text-center text-[10px] font-bold tracking-wider ${t.badgeClass}`}>
+                  <div className="mt-4 rounded-full border border-white/10 py-1.5 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     {t.badge}
                   </div>
                 </article>
@@ -297,16 +246,15 @@ export function Hero() {
           />
         </div>
 
-        {/* Platform strip */}
         <div className="mt-16 flex flex-col items-center gap-4">
-          <span className="text-sm text-muted-foreground">
+          <span className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
             Works with all major platforms
           </span>
           <ul className="flex flex-wrap items-center justify-center gap-6">
             {platforms.map((p) => (
               <li
                 key={p.name}
-                className={`${p.color} opacity-70 transition-all hover:scale-110 hover:opacity-100`}
+                className="text-muted-foreground opacity-70 transition-all hover:scale-110 hover:opacity-100 hover:text-foreground"
                 title={p.name}
               >
                 <span className="sr-only">{p.name}</span>
