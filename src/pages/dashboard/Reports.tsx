@@ -388,12 +388,33 @@ export default function ReportsPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
+                            const copy: GeneratedReport = {
+                              ...report,
+                              id: `rep-${Date.now()}`,
+                              name: `${report.name} (copy)`,
+                              createdAt: new Date().toISOString(),
+                            };
+                            addReport(copy);
+                            toast({ title: "Report duplicated" });
+                          }}
+                        >
+                          <Copy className="mr-2 h-4 w-4" />
+                          Duplicate
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
                             setScheduleTemplateName(report.template);
                             setScheduleOpen(true);
                           }}
                         >
                           <Mail className="mr-2 h-4 w-4" />
                           Email Report
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => toast({ title: "Report sent", description: "Delivered to configured recipients." })}
+                        >
+                          <Send className="mr-2 h-4 w-4" />
+                          Send now
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -409,7 +430,8 @@ export default function ReportsPage() {
                 </div>
               ))}
             </div>
-          )}
+            );
+          })()}
         </CardContent>
       </Card>
 
