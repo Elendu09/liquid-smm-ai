@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { aiCreate, type GeneratedCaption } from "@/hooks/useAiCreate";
 import { pushLocalCollection } from "@/hooks/useLocalCollection";
+import { useBrandVoices, serializeVoice } from "@/hooks/useBrandVoices";
 import { cn } from "@/lib/utils";
 
 const TONES = ["playful", "professional", "bold", "minimal", "witty", "inspiring"];
@@ -18,6 +19,7 @@ export function GenerateCaptionsDialog({
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }) {
+  const { active } = useBrandVoices();
   const [topic, setTopic] = useState("");
   const [tone, setTone] = useState("playful");
   const [platform, setPlatform] = useState("instagram");
@@ -25,11 +27,19 @@ export function GenerateCaptionsDialog({
   const [busy, setBusy] = useState(false);
   const [results, setResults] = useState<GeneratedCaption[]>([]);
   const [picked, setPicked] = useState<Set<number>>(new Set());
+  const [useVoice, setUseVoice] = useState(true);
 
   const run = async () => {
     if (!topic.trim()) return;
     setBusy(true);
-    const res = await aiCreate.captions({ topic, tone, platform, count });
+    const voice = useVoice ? serializeVoice(active) : "";
+    const effectiveTone = useVoice && active ? active.tone : tone;
+    const res = await aiCreate.captions({
+      topic: voice ? `${topic}\n\nBRAND VOICE:\n${voice}` : topic,
+      tone: effectiveTone,
+      platform,
+      count,
+    });
     setBusy(false);
     if (res?.captions) {
       setResults(res.captions);
