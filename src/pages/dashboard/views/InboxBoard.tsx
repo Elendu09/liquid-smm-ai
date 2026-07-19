@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Reply, Clock, Check, RotateCcw, User, Sparkles } from "lucide-react";
+import { Reply, Clock, Check, RotateCcw, User, Sparkles, RefreshCw, Send } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
+import { ReplyDialog } from "@/components/engage/ReplyDialog";
 import { analyzeMessage, snippetFor, SENTIMENT_STYLE, INTENT_LABEL } from "@/hooks/useInboxAnalysis";
 
 type InboxStatus = "new" | "replied" | "snoozed" | "resolved";
