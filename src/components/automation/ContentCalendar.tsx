@@ -21,7 +21,6 @@ import { EventDetailsDialog } from "@/components/publish/EventDetailsDialog";
 import { AiFillWeekDialog } from "@/components/publish/AiFillWeekDialog";
 import { RecyclingRulesDialog } from "@/components/publish/RecyclingRulesDialog";
 import { ApprovalBadge } from "@/components/publish/ApprovalControls";
-export { ApprovalBadge as _ApprovalBadge }; // re-export so tree-shaking keeps it; used in list view below
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
 import { useBestTimes } from "@/hooks/useBestTimes";
