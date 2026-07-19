@@ -378,7 +378,7 @@ export const ContentCalendar = () => {
       </div>
 
       {/* Nav header */}
-      {view !== "list" && (
+      {(view === "month" || view === "week") && (
         <div className="rounded-2xl border border-border/60 bg-card p-3 sm:p-4">
           <div className="flex items-center justify-between mb-3">
             <Button variant="ghost" size="icon" onClick={() => shift(-1)} aria-label="Previous">
