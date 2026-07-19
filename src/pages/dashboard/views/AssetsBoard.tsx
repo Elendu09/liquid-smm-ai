@@ -2,7 +2,7 @@ import { useMemo, useState, DragEvent } from "react";
 import { toast } from "sonner";
 import {
   Upload, Trash2, Copy, Send, FileText, Film, Image as ImageIcon,
-  Search, Pencil, X, CheckSquare,
+  Search, Pencil, X, CheckSquare, History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,8 @@ import { useNavigate } from "react-router-dom";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { UploadAssetDialog } from "@/components/library/UploadAssetDialog";
 import { EditAssetDialog } from "@/components/library/EditAssetDialog";
+import { AssetVersionsDialog } from "@/components/library/AssetVersionsDialog";
+import { assetVersionsApi, getVersionCount } from "@/hooks/useAssetVersions";
 import { cn } from "@/lib/utils";
 
 interface Asset {
@@ -46,6 +48,7 @@ export default function AssetsBoard() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDel, setBulkDel] = useState(false);
   const [pageDrag, setPageDrag] = useState(false);
+  const [versionsFor, setVersionsFor] = useState<Asset | null>(null);
   const nav = useNavigate();
 
   const tags = useMemo(() => {
@@ -255,7 +258,14 @@ export default function AssetsBoard() {
                   )}
                 </button>
                 <div className="p-2.5">
-                  <p className="text-xs font-semibold truncate">{a.title}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-semibold truncate flex-1">{a.title}</p>
+                    {getVersionCount(a.id) > 0 && (
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                        v{getVersionCount(a.id)}
+                      </span>
+                    )}
+                  </div>
                   {a.subtitle && (
                     <p className="text-[10px] text-muted-foreground truncate mt-0.5">{a.subtitle}</p>
                   )}
@@ -265,6 +275,9 @@ export default function AssetsBoard() {
                     </Button>
                     <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Edit" onClick={() => setEditing(a)}>
                       <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Version history" onClick={() => setVersionsFor(a)}>
+                      <History className="h-3.5 w-3.5" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:text-primary" aria-label="Send to studio" onClick={() => sendToStudio(a)}>
                       <Send className="h-3.5 w-3.5" />
@@ -318,7 +331,35 @@ export default function AssetsBoard() {
         open={!!editing}
         onOpenChange={(o) => !o && setEditing(null)}
         asset={editing}
-        onSave={(id, patch) => update(id, patch as Partial<Asset>)}
+        onSave={(id, patch) => {
+          const prev = items.find((a) => a.id === id);
+          if (prev) {
+            const p = patch as Partial<Asset>;
+            const titleChanged = p.title !== undefined && p.title !== prev.title;
+            const tagsChanged =
+              p.tags !== undefined && JSON.stringify(p.tags) !== JSON.stringify(prev.tags);
+            const urlChanged = p.url !== undefined && p.url !== prev.url;
+            if (titleChanged || tagsChanged || urlChanged) {
+              // Snapshot the *previous* state so history is non-destructive.
+              assetVersionsApi.push(id, {
+                title: prev.title,
+                subtitle: prev.subtitle,
+                tags: prev.tags,
+                url: prev.url,
+                type: prev.type,
+                reason: urlChanged ? "replace" : titleChanged ? "rename" : "tags",
+              });
+            }
+          }
+          update(id, patch as Partial<Asset>);
+        }}
+      />
+
+      <AssetVersionsDialog
+        open={!!versionsFor}
+        onOpenChange={(o) => !o && setVersionsFor(null)}
+        asset={versionsFor}
+        onRestore={(patch) => versionsFor && update(versionsFor.id, patch as Partial<Asset>)}
       />
 
       <AlertDialog open={!!confirmDel} onOpenChange={(o) => !o && setConfirmDel(null)}>

@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/dashboard/shell/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Accordion,
   AccordionContent,
@@ -23,8 +24,10 @@ import {
   Keyboard,
   Circle,
   LifeBuoy,
+  Activity,
 } from "lucide-react";
 import { ContactSupportDialog } from "@/components/support/ContactSupportDialog";
+import { TroubleshooterPanel } from "@/components/support/TroubleshooterPanel";
 import { TOUR_OPEN_EVENT } from "@/hooks/useOnboardingTour";
 
 const FAQ = [
@@ -74,6 +77,8 @@ export default function Support() {
   const [query, setQuery] = useState("");
   const [contactOpen, setContactOpen] = useState(false);
   const [category, setCategory] = useState("Feedback");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") === "troubleshooter" ? "troubleshooter" : "help";
 
   const filteredFaq = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -96,8 +101,26 @@ export default function Support() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       <PageHeader
         title="Help & Support"
-        description="Search the FAQ, contact us, or take a quick product tour."
+        description="Search the FAQ, run diagnostics, or take a quick product tour."
       />
+
+      <Tabs
+        value={tab}
+        onValueChange={(v) => setSearchParams(v === "troubleshooter" ? { tab: "troubleshooter" } : {})}
+        className="mb-6"
+      >
+        <TabsList>
+          <TabsTrigger value="help">
+            <LifeBuoy className="w-3.5 h-3.5 mr-1.5" /> Help center
+          </TabsTrigger>
+          <TabsTrigger value="troubleshooter">
+            <Activity className="w-3.5 h-3.5 mr-1.5" /> Troubleshooter
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="troubleshooter" className="mt-6">
+          <TroubleshooterPanel />
+        </TabsContent>
+        <TabsContent value="help" className="mt-6 space-y-8">
 
       {/* Hero search */}
       <div className="relative mb-8">
@@ -253,6 +276,8 @@ export default function Support() {
           </Card>
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
 
       <ContactSupportDialog
         open={contactOpen}
