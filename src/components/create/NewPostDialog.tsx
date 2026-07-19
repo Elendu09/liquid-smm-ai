@@ -145,7 +145,12 @@ export function NewPostDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                   </div>
                 )}
               </PopoverContent>
-            </Popover>
+              </Popover>
+              <DialogClose className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/70 text-muted-foreground backdrop-blur transition hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </DialogClose>
+            </div>
           </div>
         </DialogHeader>
         <div className="space-y-4">
