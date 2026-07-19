@@ -24,7 +24,7 @@ import {
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useRecyclingRules, type RecycleCadence } from "@/hooks/useRecyclingRules";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
-import { PLATFORMS } from "@/config/platforms";
+import { platforms as PLATFORMS } from "@/config/platforms";
 import { cn } from "@/lib/utils";
 
 const CADENCES: { value: RecycleCadence; label: string; hint: string }[] = [
