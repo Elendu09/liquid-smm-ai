@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   CalendarDays, Plus, ChevronLeft, ChevronRight, MoreHorizontal,
   Search, Trash2, Copy, ExternalLink, Clock, ListFilter, Sparkles, X,
+  Star, Repeat2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,8 +19,11 @@ import {
 import { NewPostDialog } from "@/components/create/NewPostDialog";
 import { EventDetailsDialog } from "@/components/publish/EventDetailsDialog";
 import { AiFillWeekDialog } from "@/components/publish/AiFillWeekDialog";
+import { RecyclingRulesDialog } from "@/components/publish/RecyclingRulesDialog";
+import { ApprovalBadge } from "@/components/publish/ApprovalControls";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
+import { useBestTimes } from "@/hooks/useBestTimes";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -47,7 +51,11 @@ export const ContentCalendar = () => {
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [fillWeekOpen, setFillWeekOpen] = useState(false);
+  const [recycleOpen, setRecycleOpen] = useState(false);
+  const [showBestTimes, setShowBestTimes] = useState(true);
   const [detailsPost, setDetailsPost] = useState<ScheduledPost | null>(null);
+
+  const bestTimes = useBestTimes();
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
