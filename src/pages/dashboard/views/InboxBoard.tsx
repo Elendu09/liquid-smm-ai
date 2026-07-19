@@ -186,6 +186,10 @@ export function InboxBoard({ kind, title, description }: InboxBoardProps) {
       update(item.id, { status: "new" });
       toast("Reopened");
     },
+    onQuickReply: (text: string) => {
+      update(item.id, { status: "replied" });
+      toast.success(`AI reply sent to ${item.author}`, { description: text.slice(0, 80) + (text.length > 80 ? "…" : "") });
+    },
   });
 
   const filterChips: [InboxStatus | "all", string][] = [
