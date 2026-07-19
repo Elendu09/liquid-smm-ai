@@ -116,7 +116,7 @@ export function NewPostDialog({ open, onOpenChange }: { open: boolean; onOpenCha
             <DialogTitle>New post</DialogTitle>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="mr-6">
+                <Button variant="outline" size="sm" className="mr-12">
                   <BookMarked className="h-3.5 w-3.5 mr-1.5" />
                   Templates {templates.length > 0 && <span className="ml-1 text-muted-foreground">({templates.length})</span>}
                 </Button>
