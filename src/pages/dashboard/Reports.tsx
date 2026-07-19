@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   FileBarChart,
   Download,
@@ -16,7 +16,11 @@ import {
   Trash2,
   History,
   AlertCircle,
+  Search,
+  Send,
+  Copy,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -302,17 +306,46 @@ export default function ReportsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Reports</CardTitle>
-          <CardDescription>View and download your generated reports</CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <CardTitle>Recent Reports</CardTitle>
+              <CardDescription>View and download your generated reports</CardDescription>
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                value={reportSearch}
+                onChange={(e) => setReportSearch(e.target.value)}
+                placeholder="Search reports…"
+                className="pl-8 h-9"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {reports.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No reports yet. Create your first report to get started.
-            </p>
-          ) : (
+          {(() => {
+            const filtered = reports.filter((r) => {
+              const q = reportSearch.trim().toLowerCase();
+              if (!q) return true;
+              return `${r.name} ${r.template} ${r.period}`.toLowerCase().includes(q);
+            });
+            if (reports.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No reports yet. Create your first report to get started.
+                </p>
+              );
+            }
+            if (filtered.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No reports match "{reportSearch}".
+                </p>
+              );
+            }
+            return (
             <div className="space-y-3">
-              {reports.map((report) => (
+              {filtered.map((report) => (
                 <div
                   key={report.id}
                   className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
