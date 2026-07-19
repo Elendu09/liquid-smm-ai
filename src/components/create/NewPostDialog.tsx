@@ -110,17 +110,18 @@ export function NewPostDialog({ open, onOpenChange }: { open: boolean; onOpenCha
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto [&>button.absolute]:hidden">
         <DialogHeader>
           <div className="flex items-center justify-between gap-2">
             <DialogTitle>New post</DialogTitle>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="mr-12">
-                  <BookMarked className="h-3.5 w-3.5 mr-1.5" />
-                  Templates {templates.length > 0 && <span className="ml-1 text-muted-foreground">({templates.length})</span>}
-                </Button>
-              </PopoverTrigger>
+            <div className="flex items-center gap-2 shrink-0">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <BookMarked className="h-3.5 w-3.5 mr-1.5" />
+                    Templates {templates.length > 0 && <span className="ml-1 text-muted-foreground">({templates.length})</span>}
+                  </Button>
+                </PopoverTrigger>
               <PopoverContent className="w-72 p-2" align="end">
                 {templates.length === 0 ? (
                   <p className="text-xs text-muted-foreground p-2">No templates yet. Tick “Save as template” below.</p>
