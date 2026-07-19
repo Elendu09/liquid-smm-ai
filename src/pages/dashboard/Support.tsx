@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/dashboard/shell/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Accordion,
   AccordionContent,
@@ -23,8 +24,10 @@ import {
   Keyboard,
   Circle,
   LifeBuoy,
+  Activity,
 } from "lucide-react";
 import { ContactSupportDialog } from "@/components/support/ContactSupportDialog";
+import { TroubleshooterPanel } from "@/components/support/TroubleshooterPanel";
 import { TOUR_OPEN_EVENT } from "@/hooks/useOnboardingTour";
 
 const FAQ = [
