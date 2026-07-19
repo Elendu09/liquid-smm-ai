@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -60,8 +60,8 @@ export function PostingHeatmap() {
               </div>
             ))}
             {DAYS.map((d, di) => (
-              <>
-                <div key={`l-${d}`} className="text-[10px] text-muted-foreground pr-1 flex items-center">{d}</div>
+              <Fragment key={d}>
+                <div className="text-[10px] text-muted-foreground pr-1 flex items-center">{d}</div>
                 {HOURS.map((h) => {
                   const v = grid[di][h];
                   const isBest = di === best.d && h === best.h;
@@ -77,7 +77,7 @@ export function PostingHeatmap() {
                     />
                   );
                 })}
-              </>
+              </Fragment>
             ))}
           </div>
         </div>
