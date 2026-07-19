@@ -40,6 +40,36 @@ function fmtTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+/** Left color bar for the timeline list view — encodes send + approval state. */
+function statusBar(p: ScheduledPost): string {
+  if (p.status === "failed") return "bg-rose-500";
+  if (p.status === "completed") return "bg-emerald-500";
+  if (p.status === "sending") return "bg-blue-500 animate-pulse";
+  if (p.status === "paused") return "bg-amber-500";
+  if (p.approvalStatus === "approved") return "bg-emerald-400/70";
+  if (p.approvalStatus === "pending") return "bg-amber-400/70";
+  if (p.approvalStatus === "rejected") return "bg-rose-400/70";
+  return "bg-primary/60";
+}
+
+function StatusPill({ post }: { post: ScheduledPost }) {
+  const map: Record<string, { label: string; cls: string }> = {
+    failed:    { label: "Failed · retry",   cls: "bg-rose-500/15 text-rose-500 border-rose-500/30" },
+    completed: { label: "Sent",             cls: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30" },
+    sending:   { label: "Sending…",         cls: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
+    paused:    { label: "Paused",           cls: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
+    queued:    { label: "Scheduled",        cls: "bg-primary/10 text-primary border-primary/30" },
+  };
+  const key = post.status ?? "queued";
+  const s = map[key] ?? map.queued;
+  return (
+    <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[10px] font-medium", s.cls)}>
+      {key === "sending" && <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />}
+      {s.label}
+    </span>
+  );
+}
+
 export const ContentCalendar = () => {
   const { posts, update, remove, add } = useScheduledPosts();
   const [cursor, setCursor] = useState(new Date());
