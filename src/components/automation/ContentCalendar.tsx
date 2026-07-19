@@ -436,7 +436,12 @@ export const ContentCalendar = () => {
                       <span className="text-[10px] text-muted-foreground mt-0.5">{fmtTime(p.scheduledAt)}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm truncate">{p.caption}</p>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <p className="text-sm truncate flex-1 min-w-0">{p.caption}</p>
+                        {p.approvalStatus && p.approvalStatus !== "draft" && (
+                          <ApprovalBadge status={p.approvalStatus} />
+                        )}
+                      </div>
                       <div className="flex items-center gap-1 mt-1">
                         {p.platformIds.map((id) => (
                           <PlatformIcon key={id} platform={id} size="xs" />
