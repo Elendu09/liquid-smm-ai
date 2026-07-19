@@ -331,7 +331,35 @@ export default function AssetsBoard() {
         open={!!editing}
         onOpenChange={(o) => !o && setEditing(null)}
         asset={editing}
-        onSave={(id, patch) => update(id, patch as Partial<Asset>)}
+        onSave={(id, patch) => {
+          const prev = items.find((a) => a.id === id);
+          if (prev) {
+            const p = patch as Partial<Asset>;
+            const titleChanged = p.title !== undefined && p.title !== prev.title;
+            const tagsChanged =
+              p.tags !== undefined && JSON.stringify(p.tags) !== JSON.stringify(prev.tags);
+            const urlChanged = p.url !== undefined && p.url !== prev.url;
+            if (titleChanged || tagsChanged || urlChanged) {
+              // Snapshot the *previous* state so history is non-destructive.
+              assetVersionsApi.push(id, {
+                title: prev.title,
+                subtitle: prev.subtitle,
+                tags: prev.tags,
+                url: prev.url,
+                type: prev.type,
+                reason: urlChanged ? "replace" : titleChanged ? "rename" : "tags",
+              });
+            }
+          }
+          update(id, patch as Partial<Asset>);
+        }}
+      />
+
+      <AssetVersionsDialog
+        open={!!versionsFor}
+        onOpenChange={(o) => !o && setVersionsFor(null)}
+        asset={versionsFor}
+        onRestore={(patch) => versionsFor && update(versionsFor.id, patch as Partial<Asset>)}
       />
 
       <AlertDialog open={!!confirmDel} onOpenChange={(o) => !o && setConfirmDel(null)}>
