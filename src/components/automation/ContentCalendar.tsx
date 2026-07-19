@@ -532,6 +532,7 @@ export const ContentCalendar = () => {
 
       <NewPostDialog open={newOpen} onOpenChange={setNewOpen} />
       <AiFillWeekDialog open={fillWeekOpen} onOpenChange={setFillWeekOpen} startDate={selectedDay ?? undefined} />
+      <RecyclingRulesDialog open={recycleOpen} onOpenChange={setRecycleOpen} />
       <EventDetailsDialog post={detailsPost} open={!!detailsPost} onOpenChange={(o) => !o && setDetailsPost(null)} />
     </div>
   );
