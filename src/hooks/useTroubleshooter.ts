@@ -19,7 +19,7 @@ const APP_VERSION = "v2.4.1";
 export function useTroubleshooter() {
   const { accounts } = useAccounts();
   const { posts } = useScheduledPosts();
-  const { preferences } = useNotificationPreferences();
+  const { prefs } = useNotificationPreferences();
   const [results, setResults] = useState<CheckResult[]>([]);
   const [running, setRunning] = useState(false);
   const [ranAt, setRanAt] = useState<Date | null>(null);
@@ -59,22 +59,25 @@ export function useTroubleshooter() {
       fix: () => window.location.assign("/dashboard/publish/queue"),
     });
 
-    // 3) Notification wiring
-    const webhook = preferences?.channels?.webhook;
-    const email = preferences?.channels?.email;
-    const hasChannel = webhook?.enabled || email?.enabled || preferences?.channels?.inApp?.enabled;
+    // 3) Notification wiring — aggregate channel flags across all severities
+    const channels = prefs?.channels ?? {};
+    const flags = { inapp: false, toast: false, email: false, push: false };
+    Object.values(channels).forEach((c) => {
+      if (!c) return;
+      flags.inapp = flags.inapp || !!c.inapp;
+      flags.toast = flags.toast || !!c.toast;
+      flags.email = flags.email || !!c.email;
+      flags.push = flags.push || !!c.push;
+    });
+    const activeChannels = Object.entries(flags)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
     out.push({
       id: "notifications",
       label: "Notification channels",
-      status: hasChannel ? "pass" : "warn",
-      detail: hasChannel
-        ? `Active channels: ${[
-            preferences?.channels?.inApp?.enabled && "in-app",
-            email?.enabled && "email",
-            webhook?.enabled && "webhook",
-          ]
-            .filter(Boolean)
-            .join(", ") || "in-app"}.`
+      status: activeChannels.length ? "pass" : "warn",
+      detail: activeChannels.length
+        ? `Active channels: ${activeChannels.join(", ")}.`
         : "No delivery channels enabled — you may miss important alerts.",
       fixLabel: "Notification settings",
       fix: () => window.location.assign("/dashboard/activity/notifications"),
@@ -152,7 +155,7 @@ export function useTroubleshooter() {
     setResults(out);
     setRanAt(new Date());
     setRunning(false);
-  }, [accounts, posts, preferences]);
+  }, [accounts, posts, prefs]);
 
   const report = useCallback(() => {
     return [
