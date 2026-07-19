@@ -223,9 +223,18 @@ export const ContentCalendar = () => {
           )}>
             {date.getDate()}
           </span>
-          {dayPosts.length > 0 && (
-            <span className="text-[10px] text-muted-foreground tabular-nums">{dayPosts.length}</span>
-          )}
+          <div className="flex items-center gap-1">
+            {showBestTimes && bestTimes.isBestDay(date) && (
+              <Star
+                className="h-2.5 w-2.5 text-amber-500 fill-amber-500/60"
+                strokeWidth={1.5}
+                aria-label="Best time to post"
+              />
+            )}
+            {dayPosts.length > 0 && (
+              <span className="text-[10px] text-muted-foreground tabular-nums">{dayPosts.length}</span>
+            )}
+          </div>
         </div>
 
         {/* Mobile: compact dot row (chips overflow tiny cells) */}
