@@ -425,7 +425,7 @@ export const ContentCalendar = () => {
           {selectedDay && (
             <>
               <SheetHeader>
-                <SheetTitle className="flex items-center justify-between">
+                <SheetTitle className="flex items-center justify-between gap-2 pr-12">
                   <span>
                     {selectedDay.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}
                   </span>
