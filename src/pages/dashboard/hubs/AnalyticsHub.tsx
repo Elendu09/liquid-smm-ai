@@ -1,9 +1,10 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { BarChart3, FileText, Activity, LayoutDashboard } from "lucide-react";
-import { PageHeader, HubTabs, StatusBoard, type HubTab } from "@/components/dashboard/shell";
+import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import Analytics from "../Analytics";
 import Reports from "../Reports";
 import CustomReportsView from "../views/CustomReportsView";
+import HealthOverviewView from "../views/HealthOverviewView";
 
 const tabs: HubTab[] = [
   { label: "Overview", href: "/dashboard/analytics/overview", icon: BarChart3 },
@@ -28,13 +29,6 @@ function AnalyticsLayout() {
   );
 }
 
-
-const healthSeed = [
-  { id: "h1", title: "Instagram · @smmpilot", subtitle: "Reach down 12% w/w", status: "warning", createdAt: new Date().toISOString() },
-  { id: "h2", title: "TikTok · @smmpilot_official", subtitle: "All systems green", status: "healthy", createdAt: new Date().toISOString() },
-  { id: "h3", title: "YouTube · SMMSAASChannel", subtitle: "Copyright strike pending", status: "critical", createdAt: new Date().toISOString() },
-];
-
 export default function AnalyticsHub() {
   return (
     <Routes>
@@ -43,24 +37,7 @@ export default function AnalyticsHub() {
         <Route path="overview" element={<Analytics />} />
         <Route path="custom" element={<CustomReportsView />} />
         <Route path="reports" element={<Reports />} />
-        <Route
-          path="health"
-          element={
-            <StatusBoard
-              storageKey="analytics:health"
-              hubKey="analytics-health"
-              icon={Activity}
-              searchPlaceholder="Search accounts…"
-              addPlaceholder="Add check…"
-              seed={healthSeed}
-              columns={[
-                { id: "healthy", label: "Healthy" },
-                { id: "warning", label: "Warning" },
-                { id: "critical", label: "Critical" },
-              ]}
-            />
-          }
-        />
+        <Route path="health" element={<HealthOverviewView />} />
       </Route>
     </Routes>
   );

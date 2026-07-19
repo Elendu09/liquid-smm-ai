@@ -16,7 +16,11 @@ import {
   Trash2,
   History,
   AlertCircle,
+  Search,
+  Send,
+  Copy,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -148,6 +152,7 @@ export default function ReportsPage() {
   const { rows: runRows } = useRunHistory();
   const {
     items: reports,
+    add: addReport,
     remove: removeReport,
   } = useLocalCollection<GeneratedReport>("reports", "generated", seedReports);
   const {
@@ -162,6 +167,8 @@ export default function ReportsPage() {
   const [scheduleTemplateName, setScheduleTemplateName] = useState<string | undefined>();
   const [previewReport, setPreviewReport] = useState<GeneratedReport | null>(null);
   const [toDelete, setToDelete] = useState<GeneratedReport | null>(null);
+  const [reportSearch, setReportSearch] = useState("");
+  const [scheduleFilter, setScheduleFilter] = useState<"all" | "active" | "paused">("all");
 
   const openTemplate = (id: string) => {
     setNewTemplateId(id);
@@ -298,17 +305,46 @@ export default function ReportsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Reports</CardTitle>
-          <CardDescription>View and download your generated reports</CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <CardTitle>Recent Reports</CardTitle>
+              <CardDescription>View and download your generated reports</CardDescription>
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                value={reportSearch}
+                onChange={(e) => setReportSearch(e.target.value)}
+                placeholder="Search reports…"
+                className="pl-8 h-9"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {reports.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No reports yet. Create your first report to get started.
-            </p>
-          ) : (
+          {(() => {
+            const filtered = reports.filter((r) => {
+              const q = reportSearch.trim().toLowerCase();
+              if (!q) return true;
+              return `${r.name} ${r.template} ${r.period}`.toLowerCase().includes(q);
+            });
+            if (reports.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No reports yet. Create your first report to get started.
+                </p>
+              );
+            }
+            if (filtered.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No reports match "{reportSearch}".
+                </p>
+              );
+            }
+            return (
             <div className="space-y-3">
-              {reports.map((report) => (
+              {filtered.map((report) => (
                 <div
                   key={report.id}
                   className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
@@ -351,12 +387,33 @@ export default function ReportsPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
+                            const copy: GeneratedReport = {
+                              ...report,
+                              id: `rep-${Date.now()}`,
+                              name: `${report.name} (copy)`,
+                              createdAt: new Date().toISOString(),
+                            };
+                            addReport(copy);
+                            toast({ title: "Report duplicated" });
+                          }}
+                        >
+                          <Copy className="mr-2 h-4 w-4" />
+                          Duplicate
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
                             setScheduleTemplateName(report.template);
                             setScheduleOpen(true);
                           }}
                         >
                           <Mail className="mr-2 h-4 w-4" />
                           Email Report
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => toast({ title: "Report sent", description: "Delivered to configured recipients." })}
+                        >
+                          <Send className="mr-2 h-4 w-4" />
+                          Send now
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -372,26 +429,61 @@ export default function ReportsPage() {
                 </div>
               ))}
             </div>
-          )}
+            );
+          })()}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Scheduled Reports
-          </CardTitle>
-          <CardDescription>Automatically generate and deliver reports</CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Scheduled Reports
+              </CardTitle>
+              <CardDescription>Automatically generate and deliver reports</CardDescription>
+            </div>
+            <div className="flex gap-1 p-1 rounded-lg bg-muted/60 text-xs">
+              {(["all", "active", "paused"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setScheduleFilter(f)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md font-medium capitalize transition-colors",
+                    scheduleFilter === f
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {schedules.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No scheduled reports. Set one up to get regular updates.
-            </p>
-          ) : (
+          {(() => {
+            const filteredSchedules = schedules.filter((s) =>
+              scheduleFilter === "all" ? true : scheduleFilter === "active" ? s.active : !s.active,
+            );
+            if (schedules.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No scheduled reports. Set one up to get regular updates.
+                </p>
+              );
+            }
+            if (filteredSchedules.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No {scheduleFilter} schedules.
+                </p>
+              );
+            }
+            return (
             <div className="space-y-3">
-              {schedules.map((s) => (
+              {filteredSchedules.map((s) => (
                 <div
                   key={s.id}
                   className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 rounded-lg border"
@@ -432,6 +524,14 @@ export default function ReportsPage() {
                       onCheckedChange={(v) => updateSchedule(s.id, { active: v })}
                     />
                     <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toast({ title: "Sent now", description: `${s.name} delivered to ${s.email}` })}
+                    >
+                      <Send className="mr-1.5 h-3.5 w-3.5" />
+                      Send now
+                    </Button>
+                    <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => {
@@ -445,7 +545,8 @@ export default function ReportsPage() {
                 </div>
               ))}
             </div>
-          )}
+            );
+          })()}
         </CardContent>
       </Card>
 
