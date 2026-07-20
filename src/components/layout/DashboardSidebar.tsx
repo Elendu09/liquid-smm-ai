@@ -620,7 +620,10 @@ export function DashboardSidebar() {
 
   return (
     <>
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-card/95 backdrop-blur-md border-b border-border flex items-center justify-between px-4">
+      <div
+        className="lg:hidden fixed left-0 right-0 z-40 h-14 bg-card/95 backdrop-blur-md border-b border-border flex items-center justify-between px-4"
+        style={{ top: "var(--demo-banner-h, 0px)" }}
+      >
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" data-tour="mobile-menu" className="h-9 w-9" aria-label="Open navigation">

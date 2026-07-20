@@ -32,9 +32,15 @@ export function DashboardLayout() {
 
   return (
     <div className="flex min-h-dvh w-full bg-background">
+      <DemoBanner />
       <DashboardSidebar />
-      <main className="flex-1 overflow-auto pt-14 lg:pt-0 min-w-0">
-        <DemoBanner />
+      <main
+        className="flex-1 overflow-auto min-w-0"
+        style={{
+          paddingTop:
+            "calc(var(--demo-banner-h, 0px) + var(--mobile-header-h, 0px))",
+        }}
+      >
         <PresetLandingBanner />
         <Outlet />
         <div className="h-20 lg:hidden" aria-hidden />
