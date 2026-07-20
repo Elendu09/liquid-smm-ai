@@ -164,6 +164,18 @@ export function ReportHeader({
           <Download className="h-3.5 w-3.5" />
           <span className="text-xs">PNG</span>
         </Button>
+        {active?.templateId && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-primary"
+            onClick={onDuplicateFromTemplate}
+            title="Create another variant from the same template"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span className="text-xs">New variant</span>
+          </Button>
+        )}
         <Button variant="ghost" size="sm" className="h-8 gap-1.5" onClick={onDuplicate} disabled={!active}>
           <Copy className="h-3.5 w-3.5" />
           <span className="text-xs">Duplicate</span>
