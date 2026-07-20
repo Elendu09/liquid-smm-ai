@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import {
   CalendarDays, Plus, ChevronLeft, ChevronRight, MoreHorizontal,
   Search, Trash2, Copy, ExternalLink, Clock, ListFilter, Sparkles, X,
-  Star, Repeat2,
+  Star, Repeat2, Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ import { NewPostDialog } from "@/components/create/NewPostDialog";
 import { EventDetailsDialog } from "@/components/publish/EventDetailsDialog";
 import { AiFillWeekDialog } from "@/components/publish/AiFillWeekDialog";
 import { RecyclingRulesDialog } from "@/components/publish/RecyclingRulesDialog";
+import { BulkCsvImportDialog } from "@/components/publish/BulkCsvImportDialog";
 import { ApprovalBadge } from "@/components/publish/ApprovalControls";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
@@ -82,6 +83,7 @@ export const ContentCalendar = () => {
   const [newOpen, setNewOpen] = useState(false);
   const [fillWeekOpen, setFillWeekOpen] = useState(false);
   const [recycleOpen, setRecycleOpen] = useState(false);
+  const [csvOpen, setCsvOpen] = useState(false);
   const [showBestTimes, setShowBestTimes] = useState(true);
   const [detailsPost, setDetailsPost] = useState<ScheduledPost | null>(null);
 
@@ -337,6 +339,9 @@ export const ContentCalendar = () => {
         </Button>
         <Button size="sm" variant="outline" onClick={() => setRecycleOpen(true)}>
           <Repeat2 className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Recycle</span>
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => setCsvOpen(true)}>
+          <Upload className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Import CSV</span>
         </Button>
         <Button size="sm" variant="outline" onClick={() => setFillWeekOpen(true)}>
           <Sparkles className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">AI Fill Week</span>
