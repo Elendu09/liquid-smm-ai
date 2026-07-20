@@ -130,7 +130,7 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
 
   const startAuthorize = async () => {
     if (!platform) return;
-    const isRealNow = REAL_OAUTH_PLATFORMS.includes(platform.id);
+    const isRealNow = isRealReady(platform.id);
     if (isRealNow && !isGuestSession()) {
       setAuthorizing(true);
       setStep("authorize");
@@ -188,7 +188,7 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
     handleClose(false);
   };
 
-  const isReal = platform ? REAL_OAUTH_PLATFORMS.includes(platform.id) : false;
+  const isReal = platform ? isRealReady(platform.id) : false;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -225,7 +225,7 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[380px] overflow-y-auto pr-1">
               {filtered.map((p) => {
-                const real = REAL_OAUTH_PLATFORMS.includes(p.id);
+                const real = isRealReady(p.id);
                 return (
                   <button
                     key={p.id}
