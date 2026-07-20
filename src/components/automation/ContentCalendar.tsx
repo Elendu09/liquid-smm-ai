@@ -340,16 +340,28 @@ export const ContentCalendar = () => {
 
         <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/40">
           <button
-            onClick={() => setView("columns")}
+            onClick={() => { setView("columns"); setColumnsLayout("kanban"); }}
             className={cn(
               "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md transition-colors",
-              view === "columns" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
+              view === "columns" && columnsLayout === "kanban" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
-            aria-pressed={view === "columns"}
-            title="Column / list view"
+            aria-pressed={view === "columns" && columnsLayout === "kanban"}
+            title="Kanban columns"
           >
             <Columns3 className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Columns</span>
+          </button>
+          <button
+            onClick={() => { setView("columns"); setColumnsLayout("list"); }}
+            className={cn(
+              "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md transition-colors",
+              view === "columns" && columnsLayout === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
+            aria-pressed={view === "columns" && columnsLayout === "list"}
+            title="Vertical list"
+          >
+            <Rows3 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">List</span>
           </button>
         </div>
 
@@ -473,34 +485,11 @@ export const ContentCalendar = () => {
 
       {view === "columns" && (
         <div className="relative space-y-4 pb-20">
-          {/* Sub-toggle: kanban columns vs vertical list */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/40">
-              <button
-                onClick={() => setColumnsLayout("kanban")}
-                className={cn(
-                  "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md transition-colors",
-                  columnsLayout === "kanban" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
-                )}
-                aria-pressed={columnsLayout === "kanban"}
-              >
-                <Columns3 className="h-3.5 w-3.5" /> Columns
-              </button>
-              <button
-                onClick={() => setColumnsLayout("list")}
-                className={cn(
-                  "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md transition-colors",
-                  columnsLayout === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
-                )}
-                aria-pressed={columnsLayout === "list"}
-              >
-                <Rows3 className="h-3.5 w-3.5" /> List
-              </button>
-            </div>
-            <p className="text-[11px] text-muted-foreground hidden sm:block">
-              {columnsLayout === "kanban" ? "Drag posts between columns to change status." : "Grouped by day, sorted chronologically."}
-            </p>
-          </div>
+          <p className="text-[11px] text-muted-foreground hidden sm:block">
+            {columnsLayout === "kanban" ? "Drag posts between columns to change status." : "Grouped by day, sorted chronologically."}
+          </p>
+
+
 
           {filtered.length === 0 ? (
             <div className="rounded-2xl border border-border/60 bg-card p-10 text-center">
