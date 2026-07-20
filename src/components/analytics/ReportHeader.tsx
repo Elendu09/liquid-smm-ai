@@ -29,6 +29,7 @@ export function ReportHeader({
   onCreate,
   onCreateFromTemplate,
   onDuplicate,
+  onDuplicateFromTemplate,
   onDelete,
   onRename,
   onRangeChange,
@@ -41,6 +42,7 @@ export function ReportHeader({
   onCreate: (name: string) => void;
   onCreateFromTemplate: (templateId: string) => void;
   onDuplicate: () => void;
+  onDuplicateFromTemplate: () => void;
   onDelete: () => void;
   onRename: (name: string) => void;
   onRangeChange: (r: RangeKey) => void;
