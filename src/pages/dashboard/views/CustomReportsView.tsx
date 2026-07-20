@@ -18,7 +18,7 @@ import {
 import { useAccounts } from "@/contexts/AccountContext";
 
 export default function CustomReportsView() {
-  const { reports, add, addFromTemplate, update, remove, duplicate, upsertCard, removeCard } = useCustomReports();
+  const { reports, add, addFromTemplate, duplicateFromTemplate, update, remove, duplicate, upsertCard, removeCard } = useCustomReports();
   const { accounts } = useAccounts();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeId, setActiveId] = useState<string | null>(() => {
