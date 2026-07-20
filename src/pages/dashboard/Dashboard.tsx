@@ -153,7 +153,7 @@ export default function Dashboard() {
 
       {/* KPI strip — moved directly below AI command. Mobile: compact horizontal scroll, desktop: 4-col grid */}
       <div className="-mx-4 sm:mx-0">
-        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 overflow-x-auto snap-x snap-mandatory px-4 sm:px-0 pb-2 sm:pb-0 scrollbar-hide">
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 overflow-x-auto snap-x snap-mandatory px-6 sm:px-0 pb-2 sm:pb-0 scrollbar-hide">
           <KpiTile
             label="Connected accounts"
             value={totalAccounts}
