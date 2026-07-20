@@ -27,6 +27,7 @@ export interface CustomReport {
   name: string;
   cards: ChartCardConfig[];
   range: RangeKey;
+  templateId?: string;
   createdAt: string;
   updatedAt: string;
 }
