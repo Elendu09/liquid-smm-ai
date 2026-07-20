@@ -87,7 +87,26 @@ const chips = [
 
 
 export function Hero() {
-  return (
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+
+  const handleDemo = () => {
+    enableGuest();
+    toast.success("Demo mode enabled", { description: "Exploring the live dashboard as a guest." });
+    navigate("/dashboard");
+  };
+
+  const handleEmailStart = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = email.trim();
+    if (!trimmed || !/^\S+@\S+\.\S+$/.test(trimmed)) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+    try { sessionStorage.setItem("smmpilot:signup-email", trimmed); } catch { /* noop */ }
+    navigate(`/signup?email=${encodeURIComponent(trimmed)}`);
+  };
+
     <section
       aria-labelledby="hero-heading"
       className="relative isolate overflow-hidden bg-background text-foreground"
