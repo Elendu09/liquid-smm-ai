@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Trash2, Plus, Link as LinkIcon, Download, Check } from "lucide-react";
+import { Copy, Trash2, Plus, Link as LinkIcon, Download, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
