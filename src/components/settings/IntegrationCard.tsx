@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Circle } from "lucide-react";
 import type { Integration } from "@/config/integrations";
+import { useIntegrationSettings, timeAgo } from "@/hooks/useIntegrationSettings";
 
 interface Props {
   integration: Integration;
@@ -9,6 +10,11 @@ interface Props {
 
 export function IntegrationCard({ integration, connected }: Props) {
   const Icon = integration.icon;
+  const { get } = useIntegrationSettings();
+  const s = get(integration.slug);
+  const used = timeAgo(s.lastUsedAt);
+  const showConnected = connected || s.lastStatus === "ok";
+
   return (
     <Link
       to={`/dashboard/settings/integrations/${integration.slug}`}
@@ -18,17 +24,32 @@ export function IntegrationCard({ integration, connected }: Props) {
         <Icon className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <h3 className="text-sm font-semibold text-foreground truncate">{integration.name}</h3>
-          {connected && (
+          {showConnected && (
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
               Connected
+            </span>
+          )}
+          {!s.enabled && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60">
+              Disabled
             </span>
           )}
         </div>
         <p className="text-xs text-muted-foreground leading-snug mt-1 line-clamp-2">
           {integration.tagline}
         </p>
+        {used && (
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
+            <Circle
+              className={`w-2 h-2 fill-current ${s.lastStatus === "ok" ? "text-emerald-500" : "text-destructive"}`}
+              strokeWidth={0}
+            />
+            Last used {used}
+            {typeof s.toolCount === "number" && ` · ${s.toolCount} tools`}
+          </div>
+        )}
       </div>
       <ArrowUpRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors flex-shrink-0" />
     </Link>
