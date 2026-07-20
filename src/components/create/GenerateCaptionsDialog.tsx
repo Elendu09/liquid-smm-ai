@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { aiCreate, type GeneratedCaption } from "@/hooks/useAiCreate";
-import { pushLocalCollection } from "@/hooks/useLocalCollection";
+import { pushHubItems } from "@/hooks/useHubItems";
 import { useBrandVoices, serializeVoice } from "@/hooks/useBrandVoices";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +50,7 @@ export function GenerateCaptionsDialog({
     }
   };
 
-  const save = () => {
+  const save = async () => {
     const items = results
       .filter((_, i) => picked.has(i))
       .map((c) => ({
@@ -59,14 +59,13 @@ export function GenerateCaptionsDialog({
         subtitle: c.body.slice(0, 140),
         status: "idea",
         createdAt: new Date().toISOString(),
-        body: c.body,
-        hashtags: c.hashtags,
+        metadata: { body: c.body, hashtags: c.hashtags, tone, platform, topic },
       }));
     if (items.length === 0) {
       toast.error("Pick at least one caption");
       return;
     }
-    pushLocalCollection("create", "captions", items);
+    await pushHubItems("create-captions", items);
     toast.success(`Saved ${items.length} caption${items.length > 1 ? "s" : ""}`);
     onOpenChange(false);
     setResults([]);

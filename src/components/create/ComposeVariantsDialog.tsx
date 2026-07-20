@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { aiCreate, type GeneratedCaption } from "@/hooks/useAiCreate";
-import { pushLocalCollection } from "@/hooks/useLocalCollection";
+import { pushHubItems } from "@/hooks/useHubItems";
 import { useBrandVoices, serializeVoice } from "@/hooks/useBrandVoices";
 import { cn } from "@/lib/utils";
 
@@ -90,15 +90,14 @@ export function ComposeVariantsDialog({
     setTimeout(() => setCopied(null), 1500);
   };
 
-  const saveWinner = (v: Variant) => {
-    pushLocalCollection("create", "captions", [{
+  const saveWinner = async (v: Variant) => {
+    await pushHubItems("create-captions", [{
       id: crypto.randomUUID(),
       title: v.title,
       subtitle: v.body.slice(0, 140),
       status: "polished",
       createdAt: new Date().toISOString(),
-      body: v.body,
-      hashtags: v.hashtags,
+      metadata: { body: v.body, hashtags: v.hashtags, variant: v.label, score: v.score, platform, topic },
     }]);
     toast.success(`"${v.label}" saved as polished caption`);
     onOpenChange(false);
