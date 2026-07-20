@@ -658,6 +658,7 @@ export function SecurityPanel() {
 
   const [passkeyOpen, setPasskeyOpen] = useState(false);
   const [tfaOpen, setTfaOpen] = useState(false);
+  const [signOutAllOpen, setSignOutAllOpen] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("john.backup@example.com");
   const [recoveryPhone, setRecoveryPhone] = useState("+1 (555) 987-6543");
@@ -909,7 +910,7 @@ export function SecurityPanel() {
           ))}
         </CardContent>
         <CardFooter className="border-t bg-muted/30">
-          <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => confirm("Sign out of all devices?") && toast.success("Signed out of all devices")}>
+          <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setSignOutAllOpen(true)}>
             <AlertCircle className="w-4 h-4 mr-2" />
             Sign out all devices
           </Button>
