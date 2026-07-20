@@ -34,24 +34,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useLocalCollection } from "@/hooks/useLocalCollection";
-import { ChangeRoleDialog, type MemberRole } from "@/components/settings/ChangeRoleDialog";
+import { ChangeRoleDialog } from "@/components/settings/ChangeRoleDialog";
 import { InviteMemberDialog } from "@/components/settings/InviteMemberDialog";
 import { logAudit } from "@/components/settings/AuditPanel";
-
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  role: MemberRole;
-  status: "active" | "pending" | "inactive";
-  lastActiveAt?: string;
-  joinedAt: string;
-  inviteToken?: string;
-  inviteExpiresAt?: string;
-  note?: string;
-}
+import { useTeamMembers, type MemberRole, type TeamMember } from "@/hooks/useTeamMembers";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 const seedMembers: TeamMember[] = [
   {
