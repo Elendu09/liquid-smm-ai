@@ -138,6 +138,15 @@ export default function CustomReportsView() {
           }
         }}
         onDuplicate={handleDuplicate}
+        onDuplicateFromTemplate={() => {
+          if (!active?.templateId) return;
+          const v = duplicateFromTemplate(active.id);
+          if (v) {
+            setActiveId(v.id);
+            setSelectedCardId(null);
+            toast.success(`Created "${v.name}"`);
+          }
+        }}
         onDelete={handleDelete}
         onRename={(name) => active && update(active.id, { name })}
         onRangeChange={(r) => active && update(active.id, { range: r })}
