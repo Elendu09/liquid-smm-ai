@@ -161,6 +161,14 @@ Deno.serve(async (req) => {
           .maybeSingle();
         if (existing) continue;
 
+        // Resolve a consistent, cached thumbnail up-front so both the scheduled
+        // post's media_url and the rss_items row use the same processed image.
+        let finalImage = item.imageUrl ?? null;
+        if (!finalImage && item.link) {
+          finalImage = await scrapeOgImage(item.link);
+        }
+        const thumbnailUrl = toThumbnailUrl(finalImage);
+
         let scheduledPostId: string | null = null;
         if (feed.auto_publish) {
           let caption =
@@ -198,7 +206,7 @@ Deno.serve(async (req) => {
             .insert({
               user_id: userId,
               caption,
-              media_url: item.imageUrl ?? null,
+              media_url: thumbnailUrl ?? finalImage ?? null,
               status: "draft",
               platform_ids: platforms,
               scheduled_at: null,
@@ -207,12 +215,6 @@ Deno.serve(async (req) => {
             .single();
           scheduledPostId = post?.id ?? null;
         }
-
-        let finalImage = item.imageUrl ?? null;
-        if (!finalImage && item.link) {
-          finalImage = await scrapeOgImage(item.link);
-        }
-        const thumbnailUrl = toThumbnailUrl(finalImage);
 
         await admin.from("rss_items").insert({
           feed_id: feed.id,
