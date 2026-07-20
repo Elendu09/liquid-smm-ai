@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client"
+import type { Json } from "@/integrations/supabase/types";
 import { isGuestSession } from "@/hooks/useGuest";
 
 export interface HubItem {
@@ -8,7 +9,7 @@ export interface HubItem {
   subtitle?: string;
   status: string;
   meta?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Json;
   createdAt: string;
 }
 
@@ -18,7 +19,7 @@ interface Row {
   subtitle: string | null;
   status: string;
   meta: string | null;
-  metadata: Record<string, unknown> | null;
+  metadata: Json | null;
   created_at: string;
 }
 
@@ -149,7 +150,7 @@ export function useHubItems(hubKey: string, seed: HubItem[]) {
     setItems(next);
     if (!uid) { writeLocal(hubKey, next); return; }
     if (isGuestSession()) return;
-    const row: Record<string, unknown> = {};
+    const row: Record<string, Json | string | null> = {};
     if (patch.title !== undefined) row.title = patch.title;
     if (patch.subtitle !== undefined) row.subtitle = patch.subtitle;
     if (patch.status !== undefined) row.status = patch.status;
