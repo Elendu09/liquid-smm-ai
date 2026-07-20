@@ -172,6 +172,39 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_reports: {
+        Row: {
+          cards: Json
+          created_at: string
+          id: string
+          name: string
+          range: string
+          template_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cards?: Json
+          created_at?: string
+          id: string
+          name: string
+          range?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cards?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          range?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       milestone_state: {
         Row: {
           account_id: string
@@ -527,6 +560,39 @@ export type Database = {
           name?: string
           next_run_at?: string
           platform_ids?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_views: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          name: string
+          pinned: boolean
+          scope: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id: string
+          name: string
+          pinned?: boolean
+          scope: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          name?: string
+          pinned?: boolean
+          scope?: string
           updated_at?: string
           user_id?: string
         }
