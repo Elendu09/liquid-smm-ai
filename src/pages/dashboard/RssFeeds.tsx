@@ -134,6 +134,18 @@ export default function RssFeedsPage() {
   const [interval, setInterval] = useState(60);
   const [template, setTemplate] = useState("📢 {title}\n\n{link}");
 
+  // Bulk-import form state
+  const [bulkUrls, setBulkUrls] = useState("");
+  const [bulkAuto, setBulkAuto] = useState(false);
+  const [bulkAi, setBulkAi] = useState(false);
+  const [bulkPlatforms, setBulkPlatforms] = useState<string[]>([]);
+  const [bulkInclude, setBulkInclude] = useState("");
+  const [bulkExclude, setBulkExclude] = useState("");
+  const [bulkInterval, setBulkInterval] = useState(60);
+  const [bulkTemplate, setBulkTemplate] = useState("📢 {title}\n\n{link}");
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+
+
   const resetForm = () => {
     setUrl("");
     setTitle("");
