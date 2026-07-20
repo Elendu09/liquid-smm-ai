@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   ArrowRight,
   Play,
@@ -11,6 +12,8 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { enableGuest } from "@/hooks/useGuest";
+import { toast } from "sonner";
 
 const InstagramIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
