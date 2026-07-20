@@ -444,15 +444,32 @@ export default function RssFeedsPage() {
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {filteredItems.map((it) => (
               <Card key={it.id} className="overflow-hidden group hover:border-primary/40 transition-colors">
-                {it.image_url && (
-                  <div className="aspect-video overflow-hidden bg-muted">
+                <div className="aspect-video overflow-hidden bg-muted relative">
+                  {it.thumbnail_url || it.image_url ? (
                     <img
-                      src={it.image_url}
+                      src={it.thumbnail_url ?? it.image_url ?? ""}
                       alt=""
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       loading="lazy"
+                      onError={(e) => {
+                        const el = e.currentTarget;
+                        // Fall back to raw image if the cached thumbnail 404s
+                        if (it.image_url && el.src !== it.image_url) {
+                          el.src = it.image_url;
+                        } else {
+                          el.style.display = "none";
+                        }
+                      }}
                     />
-                  </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-500/15 via-amber-500/10 to-primary/10">
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                        <ImageIcon className="h-6 w-6" />
+                        <span className="text-[10px] uppercase tracking-wider">No image</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 )}
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
