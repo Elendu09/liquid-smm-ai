@@ -11,7 +11,8 @@ import {
 } from "./index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { useHubItems } from "@/hooks/useHubItems";
+import { useGuest } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
 
 export interface StatusItem {
@@ -49,15 +50,10 @@ export function StatusBoard<S extends string>({
   description,
 }: StatusBoardConfig<S>) {
   const [view, setView] = useViewMode(hubKey, "kanban");
-  const [tool, scope] = storageKey.split(":");
-  const { items, setItems, add, update, remove } = useLocalCollection<StatusItem>(tool, scope);
+  const { guardWrite } = useGuest();
+  const { items, add, update, remove } = useHubItems(storageKey, seed as StatusItem[]);
   const [search, setSearch] = useState("");
   const [newTitle, setNewTitle] = useState("");
-
-  useEffect(() => {
-    if (items.length === 0) setItems(seed);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const filtered = useMemo(
     () =>
@@ -71,7 +67,8 @@ export function StatusBoard<S extends string>({
 
   const addItem = () => {
     if (!newTitle.trim()) return;
-    add({
+    if (!guardWrite("add items")) return;
+    void add({
       id: crypto.randomUUID(),
       title: newTitle.trim(),
       status: columns[0].id,
@@ -99,7 +96,8 @@ export function StatusBoard<S extends string>({
         className="h-7 w-7 text-destructive hover:text-destructive flex-shrink-0"
         aria-label={`Delete ${i.title}`}
         onClick={() => {
-          remove(i.id);
+          if (!guardWrite("delete items")) return;
+          void remove(i.id);
           toast.success("Deleted");
         }}
       >
@@ -145,7 +143,8 @@ export function StatusBoard<S extends string>({
           getKey={(i: any) => i.id}
           getStatus={(i: any) => i.status}
           onMove={(item: any, _from, to) => {
-            update(item.id, { status: to });
+            if (!guardWrite("move items")) return;
+            void update(item.id, { status: to });
             toast.success(`Moved to ${to}`);
           }}
           renderItem={(i: any) => card(i)}

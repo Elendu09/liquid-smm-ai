@@ -573,6 +573,48 @@ export type Database = {
         }
         Relationships: []
       }
+      hub_items: {
+        Row: {
+          created_at: string
+          hub_key: string
+          id: string
+          meta: string | null
+          metadata: Json
+          order_index: number
+          status: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hub_key: string
+          id?: string
+          meta?: string | null
+          metadata?: Json
+          order_index?: number
+          status: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hub_key?: string
+          id?: string
+          meta?: string | null
+          metadata?: Json
+          order_index?: number
+          status?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       inbox_messages: {
         Row: {
           account_id: string | null
