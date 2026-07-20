@@ -340,16 +340,28 @@ export const ContentCalendar = () => {
 
         <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/40">
           <button
-            onClick={() => setView("columns")}
+            onClick={() => { setView("columns"); setColumnsLayout("kanban"); }}
             className={cn(
               "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md transition-colors",
-              view === "columns" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
+              view === "columns" && columnsLayout === "kanban" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
-            aria-pressed={view === "columns"}
-            title="Column / list view"
+            aria-pressed={view === "columns" && columnsLayout === "kanban"}
+            title="Kanban columns"
           >
             <Columns3 className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Columns</span>
+          </button>
+          <button
+            onClick={() => { setView("columns"); setColumnsLayout("list"); }}
+            className={cn(
+              "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md transition-colors",
+              view === "columns" && columnsLayout === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
+            aria-pressed={view === "columns" && columnsLayout === "list"}
+            title="Vertical list"
+          >
+            <Rows3 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">List</span>
           </button>
         </div>
 
