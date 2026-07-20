@@ -123,8 +123,8 @@ const rowToPost = (r: Row): ScheduledPost => ({
   categoryId: r.category_id ?? undefined,
 });
 
-function postToRow(p: Partial<ScheduledPost>) {
-  const row: Record<string, unknown> = {};
+function postToRow(p: Partial<ScheduledPost>): ScheduledPostUpdate {
+  const row: ScheduledPostUpdate = {};
   if (p.caption !== undefined) row.caption = p.caption;
   if (p.mediaUrl !== undefined) row.media_url = p.mediaUrl ?? null;
   if (p.scheduledAt !== undefined) row.scheduled_at = p.scheduledAt;
