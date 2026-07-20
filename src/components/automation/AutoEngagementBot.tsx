@@ -33,6 +33,9 @@ export const AutoEngagementBot = () => {
   const [dailyLimit, setDailyLimit] = useState([150]);
   const [engagements, setEngagements] = useState(engagementTypes);
   const [keywords, setKeywords] = useState("#fitness #motivation #growth");
+  const [negativeKeywords, setNegativeKeywords] = useState("#spam #giveaway #followback");
+  const [competitorAllowList, setCompetitorAllowList] = useState("@brand_x @rival_co");
+
 
   const toggleEngagement = (id: string) => {
     setEngagements((prev) =>
