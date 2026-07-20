@@ -32,6 +32,7 @@ export interface RssItem {
   link: string | null;
   summary: string | null;
   image_url: string | null;
+  thumbnail_url: string | null;
   published_at: string | null;
   imported: boolean;
   scheduled_post_id: string | null;
