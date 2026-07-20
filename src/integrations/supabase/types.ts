@@ -346,6 +346,84 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_posts: {
+        Row: {
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
+          caption: string
+          category_id: string | null
+          created_at: string
+          error: string | null
+          first_comment: string | null
+          hashtags: string[] | null
+          id: string
+          media_url: string | null
+          platform_ids: string[]
+          platform_overrides: Json
+          recycle_rule_id: string | null
+          rejection_reason: string | null
+          scheduled_at: string
+          send_progress: number | null
+          sent_at: string | null
+          series_id: string | null
+          status: string
+          timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          caption?: string
+          category_id?: string | null
+          created_at?: string
+          error?: string | null
+          first_comment?: string | null
+          hashtags?: string[] | null
+          id?: string
+          media_url?: string | null
+          platform_ids?: string[]
+          platform_overrides?: Json
+          recycle_rule_id?: string | null
+          rejection_reason?: string | null
+          scheduled_at: string
+          send_progress?: number | null
+          sent_at?: string | null
+          series_id?: string | null
+          status?: string
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          caption?: string
+          category_id?: string | null
+          created_at?: string
+          error?: string | null
+          first_comment?: string | null
+          hashtags?: string[] | null
+          id?: string
+          media_url?: string | null
+          platform_ids?: string[]
+          platform_overrides?: Json
+          recycle_rule_id?: string | null
+          rejection_reason?: string | null
+          scheduled_at?: string
+          send_progress?: number | null
+          sent_at?: string | null
+          series_id?: string | null
+          status?: string
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       social_accounts: {
         Row: {
           avatar_url: string | null
