@@ -158,28 +158,34 @@ export default function Dashboard() {
       {!onboarding.completed && <OnboardingChecklistCard onReopen={openTour} />}
 
 
-      {/* KPI strip */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <KpiTile
-          label="Connected accounts"
-          value={totalAccounts}
-          icon={Users}
-        />
-        <KpiTile
-          label="Total followers"
-          value={totalFollowers.toLocaleString()}
-          icon={TrendingUp}
-        />
-        <KpiTile
-          label="Scheduled posts"
-          value={posts.length}
-          icon={Calendar}
-        />
-        <KpiTile
-          label="Success rate"
-          value={`${successRate.toFixed(0)}%`}
-          icon={CircleCheck}
-        />
+      {/* KPI strip — mobile: horizontal scroll snap, desktop: 4-col grid */}
+      <div className="-mx-4 sm:mx-0">
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory px-4 sm:px-0 pb-2 sm:pb-0 scrollbar-hide">
+          <KpiTile
+            label="Connected accounts"
+            value={totalAccounts}
+            icon={Users}
+            className="snap-start shrink-0 w-[42vw] sm:w-auto"
+          />
+          <KpiTile
+            label="Total followers"
+            value={totalFollowers.toLocaleString()}
+            icon={TrendingUp}
+            className="snap-start shrink-0 w-[42vw] sm:w-auto"
+          />
+          <KpiTile
+            label="Scheduled posts"
+            value={posts.length}
+            icon={Calendar}
+            className="snap-start shrink-0 w-[42vw] sm:w-auto"
+          />
+          <KpiTile
+            label="Success rate"
+            value={`${successRate.toFixed(0)}%`}
+            icon={CircleCheck}
+            className="snap-start shrink-0 w-[42vw] sm:w-auto"
+          />
+        </div>
       </div>
 
       {/* Kanban lanes: Upcoming · Health · Activity */}
