@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { Copy, Check, Loader2, Terminal, ShieldCheck, ExternalLink } from "lucide-react";
+import { Copy, Check, Loader2, Terminal, ShieldCheck, ExternalLink, Rocket, Activity, Power } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import type { Integration } from "@/config/integrations";
-import { getMcpServerUrl } from "@/config/integrations";
+import { getMcpServerUrl, MCP_TOOLS } from "@/config/integrations";
 import { Link } from "react-router-dom";
+import { useIntegrationSettings, timeAgo } from "@/hooks/useIntegrationSettings";
+import { useMcpActivity } from "@/hooks/useMcpActivity";
 
 interface Props {
   integration: Integration;
@@ -37,12 +40,15 @@ function CopyChip({ value, className }: { value: string; className?: string }) {
 
 export function McpSetupSteps({ integration }: Props) {
   const serverUrl = getMcpServerUrl();
+  const { settings, update, toggleTool, markUsed } = useIntegrationSettings(integration.slug);
+  const { entries } = useMcpActivity();
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ ok: boolean; count?: number; error?: string } | null>(null);
+  const s = settings!;
+
+  const recent = entries.slice(0, 5);
 
   async function testConnection() {
     setTesting(true);
-    setTestResult(null);
     try {
       const { data: sess } = await supabase.auth.getSession();
       const token = sess.session?.access_token;
@@ -52,22 +58,73 @@ export function McpSetupSteps({ integration }: Props) {
           : { Accept: "application/json, text/event-stream" },
       });
       if (!res.ok) {
-        setTestResult({ ok: false, error: `HTTP ${res.status}` });
+        markUsed(integration.slug, "error", { error: `HTTP ${res.status}` });
+        toast.error(`Connection failed · HTTP ${res.status}`);
       } else {
         const json = await res.json().catch(() => null);
         const tools = json?.tools ?? json?.result?.tools ?? [];
-        setTestResult({ ok: true, count: Array.isArray(tools) ? tools.length : undefined });
-        toast.success("MCP server reachable");
+        const count = Array.isArray(tools) ? tools.length : undefined;
+        markUsed(integration.slug, "ok", { toolCount: count });
+        toast.success(`MCP server reachable · ${count ?? "?"} tools`);
       }
     } catch (e: any) {
-      setTestResult({ ok: false, error: e?.message ?? "Network error" });
+      markUsed(integration.slug, "error", { error: e?.message ?? "Network error" });
+      toast.error(e?.message ?? "Network error");
     } finally {
       setTesting(false);
     }
   }
 
+  const lastUsed = timeAgo(s.lastUsedAt);
+
   return (
     <div className="space-y-6">
+      {/* Status + enable */}
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/40 p-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-2.5 h-2.5 rounded-full ${s.lastStatus === "ok" ? "bg-emerald-500" : s.lastStatus === "error" ? "bg-destructive" : "bg-muted-foreground/40"}`} />
+          <div>
+            <p className="text-sm font-medium">
+              {s.lastStatus === "ok" ? "Connected" : s.lastStatus === "error" ? "Connection error" : "Not verified yet"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {lastUsed ? `Last checked ${lastUsed}` : "Run a test to verify this integration"}
+              {s.lastError && ` · ${s.lastError}`}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Power className="w-3.5 h-3.5" />
+            <span>{s.enabled ? "Enabled" : "Disabled"}</span>
+            <Switch
+              checked={s.enabled}
+              onCheckedChange={(v) => update(integration.slug, { enabled: v })}
+            />
+          </label>
+        </div>
+      </section>
+
+      {/* Deep-link install */}
+      {integration.deepLink && (
+        <section className="rounded-2xl border border-primary/30 bg-primary/[0.04] p-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
+              <Rocket className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">One-click install</p>
+              <p className="text-xs text-muted-foreground">Open {integration.name} with the SkyRank MCP server prefilled.</p>
+            </div>
+          </div>
+          <Button asChild size="sm" className="h-9">
+            <a href={integration.deepLink(serverUrl)} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Add to {integration.name}
+            </a>
+          </Button>
+        </section>
+      )}
+
       <section className="space-y-4">
         <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Setup</h3>
         <ol className="space-y-4">
@@ -112,13 +169,6 @@ export function McpSetupSteps({ integration }: Props) {
                       )}
                       Test connection
                     </Button>
-                    {testResult && (
-                      <span className={`text-xs font-medium ${testResult.ok ? "text-emerald-500" : "text-destructive"}`}>
-                        {testResult.ok
-                          ? `Live · ${testResult.count ?? "?"} tools`
-                          : `Failed · ${testResult.error}`}
-                      </span>
-                    )}
                   </div>
                 )}
               </div>
@@ -142,6 +192,73 @@ export function McpSetupSteps({ integration }: Props) {
           </div>
         </section>
       )}
+
+      {/* Tool scopes */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Tool scopes</h3>
+          <span className="text-[11px] text-muted-foreground">
+            {MCP_TOOLS.length - (s.disabledTools?.length ?? 0)} of {MCP_TOOLS.length} enabled
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Choose which tools this integration is allowed to call on your behalf. Write tools are highlighted.
+        </p>
+        <div className="rounded-2xl border border-border/60 bg-card/40 divide-y divide-border/60">
+          {MCP_TOOLS.map((t) => {
+            const enabled = !s.disabledTools?.includes(t.name);
+            return (
+              <div key={t.name} className="flex items-center justify-between gap-3 p-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium truncate">{t.label}</span>
+                    {t.write && (
+                      <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/40">
+                        write
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{t.description}</p>
+                </div>
+                <Switch checked={enabled} onCheckedChange={() => toggleTool(integration.slug, t.name)} />
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Activity */}
+      <section className="space-y-3">
+        <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground flex items-center gap-2">
+          <Activity className="w-3.5 h-3.5" /> Recent MCP activity
+        </h3>
+        {recent.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border/60 bg-card/30 p-4 text-xs text-muted-foreground">
+            No MCP calls recorded yet. Once agents connect, their tool calls will appear here.
+          </div>
+        ) : (
+          <ul className="rounded-2xl border border-border/60 bg-card/40 divide-y divide-border/60">
+            {recent.map((e) => (
+              <li key={e.id} className="flex items-start gap-3 p-3">
+                <div
+                  className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
+                    e.status === "success" ? "bg-emerald-500" : e.status === "error" ? "bg-destructive" : "bg-amber-500"
+                  }`}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium truncate">{e.tool}</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {timeAgo(e.timestamp)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{e.summary}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="space-y-3">
         <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Try it out</h3>
