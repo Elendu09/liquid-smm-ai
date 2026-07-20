@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import {
   CalendarDays, Plus, ChevronLeft, ChevronRight, MoreHorizontal,
   Search, Trash2, Copy, ExternalLink, Clock, ListFilter, Sparkles, X,
-  Star, Repeat2, Upload,
+  Star, Repeat2, Upload, Columns3, LayoutGrid, Rows3, Rss,
 } from "lucide-react";
+import { KanbanBoard, type KanbanColumnDef } from "@/components/dashboard/shell/KanbanBoard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
