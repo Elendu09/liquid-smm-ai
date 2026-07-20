@@ -40,49 +40,6 @@ import { logAudit } from "@/components/settings/AuditPanel";
 import { useTeamMembers, type MemberRole, type TeamMember } from "@/hooks/useTeamMembers";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
-const seedMembers: TeamMember[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john@company.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
-    role: "admin",
-    status: "active",
-    lastActiveAt: new Date().toISOString(),
-    joinedAt: new Date("2024-01-01").toISOString(),
-  },
-  {
-    id: "2",
-    name: "Sarah Smith",
-    email: "sarah@company.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
-    role: "editor",
-    status: "active",
-    lastActiveAt: new Date(Date.now() - 1_800_000).toISOString(),
-    joinedAt: new Date("2024-02-15").toISOString(),
-  },
-  {
-    id: "3",
-    name: "Mike Johnson",
-    email: "mike@company.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike",
-    role: "editor",
-    status: "active",
-    lastActiveAt: new Date(Date.now() - 7_200_000).toISOString(),
-    joinedAt: new Date("2024-03-01").toISOString(),
-  },
-  {
-    id: "4",
-    name: "Emily Chen",
-    email: "emily@company.com",
-    role: "viewer",
-    status: "pending",
-    joinedAt: new Date().toISOString(),
-    inviteToken: "seed-token-xyz",
-    inviteExpiresAt: new Date(Date.now() + 7 * 86_400_000).toISOString(),
-  },
-];
-
 const ROLE_BADGE: Record<MemberRole, string> = {
   admin: "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20",
   editor: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20",
