@@ -39,6 +39,7 @@ import { useAccounts, type ConnectedAccount } from "@/contexts/AccountContext";
 import { platforms } from "@/config/platforms";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { ConnectAccountDialog } from "@/components/accounts/ConnectAccountDialog";
+import { OAuthReadinessPanel } from "@/components/settings/OAuthReadinessPanel";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
@@ -282,6 +283,8 @@ export function ConnectedPanel() {
           <Plus className="w-4 h-4 mr-1.5" /> Connect Channel
         </Button>
       </div>
+      {/* OAuth provider readiness */}
+      <OAuthReadinessPanel />
 
       {/* Plan callout */}
       <Card className="border-border/60 bg-gradient-to-r from-primary/[0.06] via-card/60 to-card/60">
