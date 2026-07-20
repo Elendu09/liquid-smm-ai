@@ -268,6 +268,7 @@ export function useRssFeeds() {
     loading,
     fetching,
     addFeed,
+    addFeedsBulk,
     updateFeed,
     removeFeed,
     fetchNow,
