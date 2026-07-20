@@ -884,30 +884,13 @@ export function SecurityPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Active sessions</CardTitle>
-          <CardDescription>Manage devices where you're logged in</CardDescription>
+          <CardTitle>Active session</CardTitle>
+          <CardDescription>
+            Your current sign-in on this device. Session listing across other devices requires an admin key not exposed to the browser — use <span className="font-medium">Sign out all devices</span> to revoke everything.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {[
-            { device: "MacBook Pro", location: "New York, US", current: true, lastActive: "Now" },
-            { device: "iPhone 14", location: "New York, US", current: false, lastActive: "2 hours ago" },
-            { device: "Chrome on Windows", location: "Boston, US", current: false, lastActive: "3 days ago" },
-          ].map((session, index) => (
-            <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-medium">{session.device}</h4>
-                  {session.current && (
-                    <Badge variant="secondary" className="bg-green-500/10 text-green-500">Current</Badge>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">{session.location} • {session.lastActive}</p>
-              </div>
-              {!session.current && (
-                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => toast.success(`${session.device} signed out`)}>Revoke</Button>
-              )}
-            </div>
-          ))}
+        <CardContent>
+          <CurrentSessionRow />
         </CardContent>
         <CardFooter className="border-t bg-muted/30">
           <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setSignOutAllOpen(true)}>
