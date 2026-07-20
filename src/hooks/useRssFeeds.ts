@@ -13,6 +13,9 @@ export interface RssFeed {
   auto_publish: boolean;
   poll_interval_minutes: number;
   filter_keywords: string[];
+  exclude_keywords: string[];
+  ai_rewrite: boolean;
+  last_item_count: number;
   caption_template: string | null;
   last_fetched_at: string | null;
   last_status: string | null;
