@@ -316,11 +316,13 @@ export function useScheduledPosts() {
     if (mode === "remote" && remoteUserId) {
       // Optimistic
       setCache([...items, ...cache]);
-      const rows = items.map((it) => ({
+      const rows: ScheduledPostInsert[] = items.map((it) => ({
+        ...postToRow(it),
         id: it.id,
         user_id: remoteUserId!,
         created_at: it.createdAt,
-        ...postToRow(it),
+        scheduled_at: it.scheduledAt,
+        caption: it.caption,
       }));
       void supabase.from("scheduled_posts").insert(rows).then(({ error }) => {
         if (error) {
