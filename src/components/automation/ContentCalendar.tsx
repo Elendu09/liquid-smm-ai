@@ -285,16 +285,22 @@ export const ContentCalendar = () => {
     const isToday = sameDay(date, new Date());
     const isSelected = selectedDay && sameDay(date, selectedDay);
     const key = date.toISOString();
+    const bestHours = bestTimes.topHoursFor(date.getDay());
+    const heat = bestHours.length; // 0-3
+    const heatBg = showBestTimes && heat > 0
+      ? (heat >= 3 ? "bg-amber-500/[0.10]" : heat === 2 ? "bg-amber-500/[0.07]" : "bg-amber-500/[0.04]")
+      : "";
     return (
       <div
         onClick={() => setSelectedDay(date)}
         onDragOver={(e) => { if (dragId) { e.preventDefault(); setDropTarget(key); } }}
         onDragLeave={() => setDropTarget((t) => (t === key ? null : t))}
         onDrop={(e) => handleDrop(date, e)}
+        title={showBestTimes && bestHours.length ? `Best hours: ${bestHours.map((h) => `${h}:00`).join(", ")}` : undefined}
         className={cn(
-          "min-w-0 min-h-[70px] sm:min-h-[100px] md:min-h-[120px] p-1 sm:p-1.5 rounded-lg border transition-all cursor-pointer flex flex-col gap-1 overflow-hidden",
+          "min-w-0 min-h-[70px] sm:min-h-[100px] md:min-h-[120px] p-1 sm:p-1.5 rounded-lg border transition-all cursor-pointer flex flex-col gap-1 overflow-hidden relative",
           "hover:border-primary/50",
-          isSelected ? "border-primary bg-primary/5" : "border-border/50 bg-card/40",
+          isSelected ? "border-primary bg-primary/5" : cn("border-border/50", heatBg || "bg-card/40"),
           isToday && !isSelected && "bg-primary/[0.06] border-primary/30",
           dropTarget === key && "border-primary bg-primary/10 ring-2 ring-primary/40",
         )}
@@ -307,6 +313,11 @@ export const ContentCalendar = () => {
             {date.getDate()}
           </span>
           <div className="flex items-center gap-1">
+            {showBestTimes && bestHours.length > 0 && (
+              <span className="hidden md:inline text-[9px] tabular-nums text-amber-600 dark:text-amber-400 font-medium">
+                {bestHours[0]}:00
+              </span>
+            )}
             {showBestTimes && bestTimes.isBestDay(date) && (
               <Star
                 className="h-2.5 w-2.5 text-amber-500 fill-amber-500/60"
@@ -319,6 +330,7 @@ export const ContentCalendar = () => {
             )}
           </div>
         </div>
+
 
         {/* Mobile: compact dot row (chips overflow tiny cells) */}
         <div className="sm:hidden flex-1 flex items-end">
