@@ -45,7 +45,7 @@ export function HomeSummaryCard() {
     >
       <div className={cn("absolute left-0 top-0 h-full w-1", pulse.bar)} />
       <div className="p-4 sm:p-5 pl-5 sm:pl-6">
-        <header className="flex items-start justify-between gap-3">
+        <header className="flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => canExpand && setOpen((o) => !o)}
