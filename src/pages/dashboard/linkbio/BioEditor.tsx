@@ -129,7 +129,7 @@ export default function BioEditor() {
         <div className="flex-1 flex flex-col min-w-0 border-r border-border/50">
           {/* Top toolbar */}
           <div className="h-14 shrink-0 border-b border-border/50 bg-card/60 backdrop-blur-sm px-4 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="hidden md:flex items-center gap-2 min-w-0">
               <Sparkles className="w-4 h-4 text-primary shrink-0" />
               <span className="text-sm font-semibold truncate">
                 {rail === "design" && "Design Editor"}
