@@ -13,6 +13,8 @@ import {
   BookmarkPlus,
   Wand2,
   Send,
+  Sparkles,
+  Loader2,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,10 +25,23 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { NewPostDialog, type NewPostInitial } from "@/components/create/NewPostDialog";
 import { useContentTemplates } from "@/hooks/useContentTemplates";
+import { useBrandVoices, serializeVoice, PLATFORM_LABELS, type PlatformKey } from "@/hooks/useBrandVoices";
+import { aiCreate } from "@/hooks/useAiCreate";
 import { cn } from "@/lib/utils";
 
 export interface PromptTemplate {
@@ -102,6 +117,43 @@ const TEMPLATES: PromptTemplate[] = [
   },
 ];
 
+const TONE_OPTIONS = [
+  "Punchy & bold",
+  "Warm & conversational",
+  "Authoritative & expert",
+  "Playful & witty",
+  "Story-driven",
+  "Data-driven",
+  "Inspirational",
+  "Contrarian",
+];
+
+const AUDIENCE_OPTIONS = [
+  "Founders & operators",
+  "Creators & marketers",
+  "Designers & builders",
+  "SMB owners",
+  "Enterprise buyers",
+  "Gen-Z community",
+  "Developers",
+  "General audience",
+];
+
+const PLATFORM_OPTIONS: PlatformKey[] = [
+  "instagram",
+  "tiktok",
+  "twitter",
+  "linkedin",
+  "facebook",
+];
+
+const DATA_SOURCES = [
+  { id: "brand-voice", label: "My brand voice" },
+  { id: "recent-posts", label: "Recent top posts" },
+  { id: "trending", label: "Trending in niche" },
+  { id: "audience-insights", label: "Audience insights" },
+] as const;
+
 function CategoryBadge({ label }: { label: PromptTemplate["category"] }) {
   return (
     <Badge variant="secondary" className="text-[10px] font-medium px-1.5 py-0.5">
@@ -116,6 +168,18 @@ export function TemplatesSection() {
   const [draft, setDraft] = useState("");
   const [newPost, setNewPost] = useState<NewPostInitial | null>(null);
   const { upsert: upsertContentTemplate } = useContentTemplates();
+  const { active: activeVoice } = useBrandVoices();
+
+  // Remix controls
+  const [remixOpen, setRemixOpen] = useState(false);
+  const [remixing, setRemixing] = useState(false);
+  const [tone, setTone] = useState<string>(TONE_OPTIONS[0]);
+  const [audience, setAudience] = useState<string>(AUDIENCE_OPTIONS[0]);
+  const [platform, setPlatform] = useState<PlatformKey>("instagram");
+  const [angle, setAngle] = useState("");
+  const [sources, setSources] = useState<Record<string, boolean>>({
+    "brand-voice": true,
+  });
 
   const active = TEMPLATES.find((t) => t.id === previewId) ?? null;
   const bodyValue = editing ? draft : active?.body ?? "";
@@ -157,27 +221,51 @@ export function TemplatesSection() {
     toast.success("Saved to your template library");
   };
 
-  const aiRemix = () => {
+  const runRemix = async () => {
     if (!active) return;
-    setNewPost({
-      title: `${active.title} · remix`,
-      caption: bodyValue + "\n\n[Ask AI to rewrite this in your voice above.]",
-    });
-    closePreview();
+    setRemixing(true);
+    const enabledSources = DATA_SOURCES.filter((s) => sources[s.id]).map((s) => s.label);
+    const voiceBlock =
+      sources["brand-voice"] && activeVoice ? serializeVoice(activeVoice, platform) : "";
+
+    const topic = [
+      `Rewrite this template into a finished post for ${PLATFORM_LABELS[platform]}.`,
+      `Tone: ${tone}.`,
+      `Audience: ${audience}.`,
+      angle ? `Angle to emphasize: ${angle}.` : "",
+      enabledSources.length ? `Draw from: ${enabledSources.join(", ")}.` : "",
+      voiceBlock ? `\nBrand voice:\n${voiceBlock}` : "",
+      `\nTemplate:\n${bodyValue}`,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const res = await aiCreate.captions({ topic, tone, platform, count: 1 });
+    setRemixing(false);
+    if (!res?.captions?.length) return;
+    const first = res.captions[0];
+    const merged = [first.body, first.hashtags?.length ? `\n\n${first.hashtags.join(" ")}` : ""].join("");
+    setDraft(merged);
+    setEditing(true);
+    setRemixOpen(false);
+    toast.success("Remix applied — review and tweak before using");
   };
 
+  const toggleSource = (id: string, v: boolean) =>
+    setSources((s) => ({ ...s, [id]: v }));
+
   return (
-    <div className="hidden md:block">
+    <div className="block">
       <div className="flex items-baseline justify-between mb-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Templates
         </h2>
-        <span className="text-xs text-muted-foreground">
+        <span className="hidden sm:inline text-xs text-muted-foreground">
           Prompt-ready starters for your next post
         </span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {TEMPLATES.map((t) => {
           const Icon = t.icon;
           return (
@@ -259,10 +347,10 @@ export function TemplatesSection() {
                     <span className="text-xs">Save</span>
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="secondary"
                     size="sm"
                     className="h-8 gap-1.5"
-                    onClick={aiRemix}
+                    onClick={() => setRemixOpen(true)}
                   >
                     <Wand2 className="h-3.5 w-3.5" />
                     <span className="text-xs">AI remix</span>
@@ -283,6 +371,107 @@ export function TemplatesSection() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Advanced AI Remix Controls */}
+      <Dialog open={remixOpen} onOpenChange={setRemixOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+              <Sparkles className="h-5 w-5 text-primary" strokeWidth={1.75} />
+            </div>
+            <DialogTitle>Steer the remix</DialogTitle>
+            <DialogDescription>
+              Set tone, audience, platform, and data sources. The AI will rewrite the template and drop it back into the editor.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label className="text-xs">Tone</Label>
+                <Select value={tone} onValueChange={setTone}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {TONE_OPTIONS.map((o) => (
+                      <SelectItem key={o} value={o}>{o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1.5">
+                <Label className="text-xs">Audience</Label>
+                <Select value={audience} onValueChange={setAudience}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {AUDIENCE_OPTIONS.map((o) => (
+                      <SelectItem key={o} value={o}>{o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label className="text-xs">Platform</Label>
+              <Select value={platform} onValueChange={(v) => setPlatform(v as PlatformKey)}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PLATFORM_OPTIONS.map((p) => (
+                    <SelectItem key={p} value={p}>{PLATFORM_LABELS[p]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label className="text-xs">Angle to emphasize (optional)</Label>
+              <Input
+                value={angle}
+                onChange={(e) => setAngle(e.target.value)}
+                placeholder="e.g. focus on measurable outcomes"
+                className="h-9"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="text-xs">Pull from</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {DATA_SOURCES.map((s) => (
+                  <label
+                    key={s.id}
+                    className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 py-2 cursor-pointer hover:bg-muted/50"
+                  >
+                    <Checkbox
+                      checked={!!sources[s.id]}
+                      onCheckedChange={(v) => toggleSource(s.id, !!v)}
+                    />
+                    <span className="text-xs">{s.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-row gap-2 sm:justify-end">
+            <Button variant="ghost" size="sm" onClick={() => setRemixOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={runRemix} disabled={remixing} className="gap-1.5">
+              {remixing ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Remixing…
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-3.5 w-3.5" />
+                  Remix & apply
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
