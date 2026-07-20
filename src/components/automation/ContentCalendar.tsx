@@ -608,15 +608,6 @@ export const ContentCalendar = () => {
                 </section>
               );
             })
-          ) : (
-            <div className="rounded-2xl border border-border/60 bg-card p-10 text-center">
-              <CalendarDays className="h-8 w-8 mx-auto text-muted-foreground mb-2" strokeWidth={1.5} />
-              <p className="text-sm font-medium">No scheduled posts</p>
-              <Button size="sm" onClick={() => setNewOpen(true)} className="mt-3">
-                <Plus className="h-4 w-4 mr-1" /> Schedule your first post
-              </Button>
-            </div>
-          ) : (
             <KanbanBoard<ScheduledPost, ColumnStatus>
               columns={KANBAN_COLUMNS}
               items={[...filtered].sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt))}
