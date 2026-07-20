@@ -65,6 +65,8 @@ export const AICaptionGenerator = ({ defaultPlatformId }: AICaptionGeneratorProp
   const [topic, setTopic] = useState(template?.body ?? "");
   const [copied, setCopied] = useState(false);
   const [translateTo, setTranslateTo] = useState("");
+  const [abBusy, setAbBusy] = useState(false);
+  const [abVariants, setAbVariants] = useState<{ text: string; hashtags: string[]; tone: string; score: number }[]>([]);
 
   // Sync tone when preset changes (e.g. user picks different one in context bar)
   useEffect(() => {
