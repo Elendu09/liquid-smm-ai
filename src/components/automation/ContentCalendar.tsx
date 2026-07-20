@@ -608,6 +608,7 @@ export const ContentCalendar = () => {
                 </section>
               );
             })
+          ) : (
             <KanbanBoard<ScheduledPost, ColumnStatus>
               columns={KANBAN_COLUMNS}
               items={[...filtered].sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt))}
