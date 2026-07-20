@@ -12,6 +12,14 @@ export interface OnboardingScoreItem {
   href?: string;
 }
 
+// (marker)
+export type _UnusedMarker = never;
+declare const _fix: void;
+
+interface _Noop {
+  _: never;
+}
+
 /**
  * Buffer-style 0–100 setup score. Aggregates concrete signals that a workspace
  * is production-ready: profile, connected channels, scheduled cadence, brand
