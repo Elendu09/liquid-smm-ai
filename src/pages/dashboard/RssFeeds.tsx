@@ -708,8 +708,12 @@ export default function RssFeedsPage() {
               </DialogDescription>
             )}
           </DialogHeader>
-          {previewItem?.image_url && (
-            <img src={previewItem.image_url} alt="" className="w-full rounded-lg" />
+          {(previewItem?.thumbnail_url || previewItem?.image_url) && (
+            <img
+              src={previewItem.thumbnail_url ?? previewItem.image_url ?? ""}
+              alt=""
+              className="w-full rounded-lg aspect-video object-cover bg-muted"
+            />
           )}
           <p className="text-sm text-muted-foreground whitespace-pre-line">{previewItem?.summary}</p>
           {previewItem?.link && (
