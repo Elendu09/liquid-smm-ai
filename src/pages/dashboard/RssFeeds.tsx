@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useRssFeeds } from "@/hooks/useRssFeeds";
-import { PLATFORMS } from "@/config/platforms";
+import { platforms as PLATFORMS } from "@/config/platforms";
 import { toast } from "sonner";
 
 export default function RssFeedsPage() {
@@ -222,7 +222,7 @@ export default function RssFeedsPage() {
                           : "border-border hover:bg-muted"
                       }`}
                     >
-                      {p.label}
+                      {p.name}
                     </button>
                   );
                 })}
