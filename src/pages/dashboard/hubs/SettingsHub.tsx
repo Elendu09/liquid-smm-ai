@@ -1,5 +1,5 @@
 import { Route, Routes, Navigate, Outlet } from "react-router-dom";
-import { UserCog, Bell, BellRing, Link2, CreditCard, Shield, Users, ScrollText } from "lucide-react";
+import { UserCog, Bell, BellRing, Link2, CreditCard, Shield, Users, ScrollText, Puzzle } from "lucide-react";
 import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import {
   AccountPanel,
@@ -11,12 +11,15 @@ import {
 } from "@/components/settings/SettingsPanels";
 import { AuditPanel } from "@/components/settings/AuditPanel";
 import Team from "../Team";
+import Integrations from "../Integrations";
+import IntegrationDetail from "../IntegrationDetail";
 
 const tabs: HubTab[] = [
   { label: "Account", href: "/dashboard/settings/account", icon: UserCog },
   { label: "Notifications", href: "/dashboard/settings/notifications", icon: Bell },
   { label: "Team alerts", href: "/dashboard/settings/team-alerts", icon: BellRing },
   { label: "Connected", href: "/dashboard/settings/connected", icon: Link2 },
+  { label: "Integrations", href: "/dashboard/settings/integrations", icon: Puzzle },
   { label: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
   { label: "Security", href: "/dashboard/settings/security", icon: Shield },
   { label: "Team", href: "/dashboard/settings/team", icon: Users },
@@ -56,6 +59,8 @@ export default function SettingsHub() {
         <Route path="notifications" element={<Wrap><NotificationPreferencesPanel /></Wrap>} />
         <Route path="team-alerts" element={<Wrap><TeamActivityNotificationsPanel /></Wrap>} />
         <Route path="connected" element={<Wrap><ConnectedPanel /></Wrap>} />
+        <Route path="integrations" element={<Wrap><Integrations /></Wrap>} />
+        <Route path="integrations/:slug" element={<Wrap><IntegrationDetail /></Wrap>} />
         <Route path="billing" element={<Wrap><BillingPanel /></Wrap>} />
         <Route path="security" element={<Wrap><SecurityPanel /></Wrap>} />
         <Route path="team" element={<Team />} />
@@ -64,4 +69,5 @@ export default function SettingsHub() {
     </Routes>
   );
 }
+
 
