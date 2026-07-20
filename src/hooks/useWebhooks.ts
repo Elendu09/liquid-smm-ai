@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
+import { createRemoteCollection } from "./_remoteCollection";
 
 export type WebhookEvent =
   | "post.scheduled"
@@ -36,39 +37,63 @@ export interface WebhookDelivery {
   error?: string;
 }
 
-const HOOKS_KEY = "smmpilot:webhooks";
+// ---- Local-only delivery log (per-device history) ----
 const LOG_KEY = "smmpilot:webhook-deliveries";
-
-function readHooks(): Webhook[] {
-  try { return JSON.parse(localStorage.getItem(HOOKS_KEY) || "[]"); } catch { return []; }
-}
 function readLog(): WebhookDelivery[] {
   try { return JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); } catch { return []; }
 }
-
-let hooksCache = typeof window !== "undefined" ? readHooks() : [];
 let logCache = typeof window !== "undefined" ? readLog() : [];
-const hooksListeners = new Set<() => void>();
 const logListeners = new Set<() => void>();
-
-function emitHooks() { hooksCache = readHooks(); hooksListeners.forEach((l) => l()); }
-function emitLog()   { logCache   = readLog();   logListeners.forEach((l) => l()); }
-
+function emitLog() { logCache = readLog(); logListeners.forEach((l) => l()); }
 if (typeof window !== "undefined") {
-  window.addEventListener("storage", (e) => {
-    if (e.key === HOOKS_KEY) emitHooks();
-    if (e.key === LOG_KEY) emitLog();
-  });
-}
-
-function writeHooks(next: Webhook[]) {
-  localStorage.setItem(HOOKS_KEY, JSON.stringify(next));
-  emitHooks();
+  window.addEventListener("storage", (e) => { if (e.key === LOG_KEY) emitLog(); });
 }
 function writeLog(next: WebhookDelivery[]) {
   localStorage.setItem(LOG_KEY, JSON.stringify(next.slice(0, 200)));
   emitLog();
 }
+
+// ---- Remote-backed hooks collection ----
+type Row = {
+  id: string; label: string | null; url: string; provider: Webhook["provider"];
+  secret: string | null; event_types: string[]; active: boolean;
+  last_fired_at: string | null; last_status_label: Webhook["lastStatus"] | null;
+  failure_count: number; created_at: string;
+};
+
+const store = createRemoteCollection<Webhook, Row>({
+  table: "notification_webhooks",
+  localKey: "smmpilot:webhooks",
+  orderBy: { column: "created_at", ascending: false },
+  fromRow: (r) => ({
+    id: r.id, name: r.label ?? "Webhook", url: r.url, provider: r.provider ?? "custom",
+    events: (r.event_types ?? []) as WebhookEvent[], active: r.active,
+    secret: r.secret ?? undefined,
+    createdAt: r.created_at,
+    lastFiredAt: r.last_fired_at ?? undefined,
+    lastStatus: r.last_status_label ?? undefined,
+    failures: r.failure_count ?? 0,
+  }),
+  toInsertRow: (h, userId) => ({
+    id: h.id, user_id: userId, label: h.name, url: h.url, provider: h.provider,
+    secret: h.secret ?? null, event_types: h.events, active: h.active,
+    last_fired_at: h.lastFiredAt ?? null, last_status_label: h.lastStatus ?? null,
+    failure_count: h.failures ?? 0, created_at: h.createdAt,
+  }),
+  toUpdateRow: (p) => {
+    const r: Record<string, unknown> = {};
+    if (p.name !== undefined) r.label = p.name;
+    if (p.url !== undefined) r.url = p.url;
+    if (p.provider !== undefined) r.provider = p.provider;
+    if (p.secret !== undefined) r.secret = p.secret ?? null;
+    if (p.events !== undefined) r.event_types = p.events;
+    if (p.active !== undefined) r.active = p.active;
+    if (p.lastFiredAt !== undefined) r.last_fired_at = p.lastFiredAt ?? null;
+    if (p.lastStatus !== undefined) r.last_status_label = p.lastStatus ?? null;
+    if (p.failures !== undefined) r.failure_count = p.failures;
+    return r;
+  },
+});
 
 export const WEBHOOK_EVENTS: { id: WebhookEvent; label: string; description: string }[] = [
   { id: "post.scheduled",       label: "Post scheduled",     description: "A new post has been added to the queue." },
@@ -83,11 +108,7 @@ export const WEBHOOK_EVENTS: { id: WebhookEvent; label: string; description: str
 ];
 
 export function useWebhooks() {
-  const hooks = useSyncExternalStore(
-    (cb) => (hooksListeners.add(cb), () => hooksListeners.delete(cb)),
-    () => hooksCache,
-    () => hooksCache,
-  );
+  const hooks = store.useItems();
   const log = useSyncExternalStore(
     (cb) => (logListeners.add(cb), () => logListeners.delete(cb)),
     () => logCache,
@@ -101,21 +122,21 @@ export function useWebhooks() {
       createdAt: new Date().toISOString(),
       failures: 0,
     };
-    writeHooks([item, ...readHooks()]);
+    void store.add(item);
     return item;
   }, []);
 
   const update = useCallback((id: string, patch: Partial<Webhook>) => {
-    writeHooks(readHooks().map((h) => (h.id === id ? { ...h, ...patch } : h)));
+    void store.update(id, patch);
   }, []);
 
   const remove = useCallback((id: string) => {
-    writeHooks(readHooks().filter((h) => h.id !== id));
+    void store.remove(id);
     writeLog(readLog().filter((d) => d.webhookId !== id));
   }, []);
 
   const test = useCallback(async (id: string, event: WebhookEvent = "post.published") => {
-    const hook = readHooks().find((h) => h.id === id);
+    const hook = store.read().find((h) => h.id === id);
     if (!hook) return { ok: false, error: "Not found" };
     const started = performance.now();
     const payload = {
@@ -141,7 +162,7 @@ export function useWebhooks() {
           ...(hook.secret ? { "X-Webhook-Secret": hook.secret } : {}),
         },
         body: JSON.stringify(payload),
-        mode: "no-cors", // Zapier/Make catch-hooks are cross-origin; we don't need the response body
+        mode: "no-cors",
       });
       status = res.status || 0;
       ok = true;
@@ -159,13 +180,13 @@ export function useWebhooks() {
       error,
     };
     writeLog([delivery, ...readLog()]);
-    update(id, {
+    void store.update(id, {
       lastFiredAt: delivery.at,
       lastStatus: delivery.status,
       failures: ok ? 0 : (hook.failures ?? 0) + 1,
     });
     return { ok, delivery };
-  }, [update]);
+  }, []);
 
   return { hooks, log, add, update, remove, test };
 }
