@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_preferences: {
+        Row: {
+          active_account_id: string | null
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_account_id?: string | null
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_account_id?: string | null
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_preferences_active_account_id_fkey"
+            columns: ["active_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       milestone_state: {
         Row: {
           account_id: string
@@ -314,6 +343,69 @@ export type Database = {
           onboarding_state?: Json
           timezone?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      social_accounts: {
+        Row: {
+          avatar_url: string | null
+          connected_at: string
+          created_at: string
+          display_name: string
+          engagement: number
+          followers: number
+          following: number
+          health_score: number
+          id: string
+          is_active: boolean
+          last_sync: string | null
+          metadata: Json
+          platform_id: string
+          posts: number
+          status: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          connected_at?: string
+          created_at?: string
+          display_name: string
+          engagement?: number
+          followers?: number
+          following?: number
+          health_score?: number
+          id?: string
+          is_active?: boolean
+          last_sync?: string | null
+          metadata?: Json
+          platform_id: string
+          posts?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          connected_at?: string
+          created_at?: string
+          display_name?: string
+          engagement?: number
+          followers?: number
+          following?: number
+          health_score?: number
+          id?: string
+          is_active?: boolean
+          last_sync?: string | null
+          metadata?: Json
+          platform_id?: string
+          posts?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
         }
         Relationships: []
       }
