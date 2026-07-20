@@ -1,14 +1,16 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
-import { Calendar, CalendarDays, Film } from "lucide-react";
+import { Calendar, CalendarDays, Film, Rss } from "lucide-react";
 import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import QueueBoard from "../views/QueueBoard";
 import ContentCalendar from "../ContentCalendar";
 import StoryBoard from "../views/StoryBoard";
+import RssFeeds from "../RssFeeds";
 
 const tabs: HubTab[] = [
   { label: "Queue", href: "/dashboard/publish/queue", icon: Calendar },
   { label: "Calendar", href: "/dashboard/publish/calendar", icon: CalendarDays },
   { label: "Stories", href: "/dashboard/publish/stories", icon: Film },
+  { label: "RSS", href: "/dashboard/publish/rss", icon: Rss },
 ];
 
 function PublishLayout() {
@@ -35,6 +37,7 @@ export default function PublishHub() {
         <Route path="queue" element={<QueueBoard />} />
         <Route path="calendar" element={<ContentCalendar />} />
         <Route path="stories" element={<StoryBoard />} />
+        <Route path="rss" element={<RssFeeds />} />
       </Route>
     </Routes>
   );
