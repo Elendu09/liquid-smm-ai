@@ -52,7 +52,8 @@ export function HubTabs({ tabs, className, children }: HubTabsProps) {
                 </span>
               )}
             </NavLink>
-          ))}
+            );
+          })}
         </div>
       </div>
       {children}
