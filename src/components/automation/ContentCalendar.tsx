@@ -843,6 +843,7 @@ export const ContentCalendar = () => {
       <AiFillWeekDialog open={fillWeekOpen} onOpenChange={setFillWeekOpen} startDate={selectedDay ?? undefined} />
       <RecyclingRulesDialog open={recycleOpen} onOpenChange={setRecycleOpen} />
       <BulkCsvImportDialog open={csvOpen} onOpenChange={setCsvOpen} />
+      <PublicCalendarShareDialog open={shareOpen} onOpenChange={setShareOpen} />
       <EventDetailsDialog post={detailsPost} open={!!detailsPost} onOpenChange={(o) => !o && setDetailsPost(null)} />
     </div>
   );
