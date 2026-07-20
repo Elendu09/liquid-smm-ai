@@ -44,12 +44,13 @@ export function OnboardingScoreCard() {
             </h3>
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-right hidden sm:block">
           <p className="text-[11px] text-muted-foreground">Points</p>
           <p className="text-sm font-semibold tabular-nums">
             {earned}<span className="text-muted-foreground font-normal">/{total}</span>
           </p>
         </div>
+
       </div>
 
       <Progress value={score} className="h-2 hidden sm:block" />
