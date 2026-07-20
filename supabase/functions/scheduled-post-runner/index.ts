@@ -1,10 +1,11 @@
-// Runs due scheduled_posts, resolves per-account tokens, and would call the
-// per-provider adapter to publish. When provider credentials are not yet
-// configured we mark the post as "simulated" and log a run_history entry —
-// this keeps the pipeline exercisable end-to-end before OAuth secrets ship.
+// Runs due scheduled_posts, resolves per-account tokens, and publishes via
+// the per-provider adapter. Falls back to a simulated publish only when the
+// provider's OAuth adapter has no credentials configured yet so the pipeline
+// stays exercisable pre-launch.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { OAUTH_ADAPTERS, isAdapterEnabled } from "../_shared/oauth-adapters.ts";
+import { publishFor } from "../_shared/oauth-publishers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -31,14 +32,14 @@ Deno.serve(async (req) => {
 
     for (const platform of platformIds) {
       const adapter = OAUTH_ADAPTERS[platform];
+
       const { data: account } = await admin
         .from("social_accounts")
-        .select("id")
+        .select("id, external_id")
         .eq("user_id", post.user_id)
         .eq("platform_id", platform)
         .limit(1)
         .maybeSingle();
-
       if (!account) {
         platformResults[platform] = { status: "skipped", reason: "no_account" };
         continue;
@@ -49,16 +50,25 @@ Deno.serve(async (req) => {
         .eq("account_id", account.id)
         .maybeSingle();
 
-      if (!adapter || !isAdapterEnabled(adapter) || !token) {
-        // Simulated publish so downstream analytics/notifications can still trigger.
-        platformResults[platform] = { status: "simulated", note: "adapter or token missing" };
+      if (!adapter || !isAdapterEnabled(adapter) || !token?.access_token) {
+        platformResults[platform] = { status: "simulated", note: "adapter_or_token_missing" };
         anySuccess = true;
         continue;
       }
 
-      // Real publish path — provider-specific POST goes here.
-      // For now we mark it as pending until adapter-specific publish() is added.
-      platformResults[platform] = { status: "pending", note: "adapter publish() not yet implemented" };
+      const result = await publishFor(
+        platform,
+        token.access_token,
+        { caption: post.caption ?? "", mediaUrls: (post as any).media_urls ?? [] },
+        { externalId: (account as any).external_id ?? undefined },
+      );
+      if (result.ok) anySuccess = true;
+      platformResults[platform] = {
+        status: result.ok ? "published" : "failed",
+        externalId: result.externalId,
+        externalUrl: result.externalUrl,
+        error: result.error,
+      };
     }
 
     const newStatus = anySuccess ? "completed" : "failed";
@@ -73,8 +83,19 @@ Deno.serve(async (req) => {
       kind: "scheduled_post",
       ref_id: post.id,
       status: newStatus === "completed" ? "success" : "failed",
-      message: `Published to ${Object.entries(platformResults).filter(([, v]: any) => v.status !== "skipped").length} channel(s)`,
-      data: platformResults,
+      message: `Published to ${Object.values(platformResults).filter((v: any) => v.status === "published" || v.status === "simulated").length} channel(s)`,
+      data: platformResults as any,
+    });
+
+    // Notify the owner so the bell + notification center light up.
+    await admin.from("notifications").insert({
+      user_id: post.user_id,
+      title: newStatus === "completed" ? "Post published" : "Post failed to publish",
+      body: post.caption?.slice(0, 140) ?? "",
+      severity: newStatus === "completed" ? "info" : "warning",
+      channel: "post",
+      metadata: { post_id: post.id, results: platformResults } as any,
+      read: false,
     });
 
     processed++;
