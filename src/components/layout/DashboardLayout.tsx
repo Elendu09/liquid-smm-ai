@@ -5,6 +5,7 @@ import { MobileHubNav } from "@/components/dashboard/shell/MobileHubNav";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { HelpWidget } from "@/components/support/HelpWidget";
+import { AiAssistantDrawer } from "@/components/dashboard/AiAssistantDrawer";
 import { PresetHandler } from "@/components/support/PresetHandler";
 import { PresetLandingBanner } from "@/components/dashboard/PresetLandingBanner";
 import { useOnboarding } from "@/hooks/useOnboarding";
