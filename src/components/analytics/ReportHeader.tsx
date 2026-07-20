@@ -88,6 +88,20 @@ export function ReportHeader({
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            Start from template
+          </DropdownMenuLabel>
+          {REPORT_TEMPLATES.map((t) => (
+            <DropdownMenuItem
+              key={t.id}
+              onSelect={() => onCreateFromTemplate(t.id)}
+              className="flex flex-col items-start gap-0.5 py-1.5"
+            >
+              <span className="text-xs font-medium">{t.name}</span>
+              <span className="text-[10px] text-muted-foreground leading-snug">{t.description}</span>
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuSeparator />
           <div className="flex items-center gap-1 p-1">
             <Input
               placeholder="Name new report"
