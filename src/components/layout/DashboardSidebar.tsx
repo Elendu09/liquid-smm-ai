@@ -38,6 +38,7 @@ import {
   CornerDownLeft,
   Palette,
 } from "lucide-react";
+import { ConnectChannelsSection } from "./ConnectChannelsSection";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
