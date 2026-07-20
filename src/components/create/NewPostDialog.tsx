@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Sparkles, Loader2, Send, BookMarked, Repeat, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
@@ -26,21 +26,46 @@ export interface PostTemplate {
   createdAt: string;
 }
 
-export function NewPostDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+export interface NewPostInitial {
+  title?: string;
+  caption?: string;
+  platformIds?: string[];
+}
+
+export function NewPostDialog({
+  open,
+  onOpenChange,
+  initial,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  initial?: NewPostInitial;
+}) {
   const { accounts } = useAccounts();
   const { add: addScheduled } = useScheduledPosts();
   const { items: templates, add: addTemplate, remove: removeTemplate } =
     useLocalCollection<PostTemplate>("publish", "templates");
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initial?.title ?? "");
   const [topic, setTopic] = useState("");
-  const [caption, setCaption] = useState("");
-  const [selected, setSelected] = useState<string[]>([accounts[0]?.platformId ?? "instagram"]);
+  const [caption, setCaption] = useState(initial?.caption ?? "");
+  const [selected, setSelected] = useState<string[]>(
+    initial?.platformIds?.length ? initial.platformIds : [accounts[0]?.platformId ?? "instagram"],
+  );
   const [scheduleAt, setScheduleAt] = useState("");
   const [busy, setBusy] = useState(false);
   const [recFreq, setRecFreq] = useState<"none" | Recurrence["freq"]>("none");
   const [recCount, setRecCount] = useState(4);
   const [saveTemplate, setSaveTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
+
+  // Reseed when reopened with a new template.
+  useEffect(() => {
+    if (!open || !initial) return;
+    if (initial.title !== undefined) setTitle(initial.title);
+    if (initial.caption !== undefined) setCaption(initial.caption);
+    if (initial.platformIds?.length) setSelected(initial.platformIds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initial?.title, initial?.caption, initial?.platformIds?.join(",")]);
 
   const toggle = (p: string) =>
     setSelected((s) => (s.includes(p) ? s.filter((x) => x !== p) : [...s, p]));
