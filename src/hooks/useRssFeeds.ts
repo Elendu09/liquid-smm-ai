@@ -32,6 +32,7 @@ export interface RssItem {
   link: string | null;
   summary: string | null;
   image_url: string | null;
+  thumbnail_url: string | null;
   published_at: string | null;
   imported: boolean;
   scheduled_post_id: string | null;
@@ -124,6 +125,70 @@ export function useRssFeeds() {
     [user],
   );
 
+  const addFeedsBulk = useCallback(
+    async (
+      urls: string[],
+      defaults: {
+        auto_publish?: boolean;
+        ai_rewrite?: boolean;
+        target_platforms?: string[];
+        filter_keywords?: string[];
+        exclude_keywords?: string[];
+        poll_interval_minutes?: number;
+        caption_template?: string;
+      },
+    ) => {
+      if (!guardWrite("bulk import RSS feeds")) return { inserted: 0, skipped: 0 };
+      if (!user) {
+        toast.error("Sign in to add feeds");
+        return { inserted: 0, skipped: 0 };
+      }
+      const clean = Array.from(
+        new Set(
+          urls
+            .map((u) => u.trim())
+            .filter((u) => /^https?:\/\//i.test(u)),
+        ),
+      );
+      if (clean.length === 0) {
+        toast.error("Paste at least one valid feed URL");
+        return { inserted: 0, skipped: 0 };
+      }
+      const existing = new Set(feeds.map((f) => f.url));
+      const fresh = clean.filter((u) => !existing.has(u));
+      const skipped = clean.length - fresh.length;
+      if (fresh.length === 0) {
+        toast.info("All feeds are already in your library");
+        return { inserted: 0, skipped };
+      }
+      const rows = fresh.map((url) => ({
+        owner_id: user.id,
+        url,
+        title: null,
+        target_platforms: defaults.target_platforms ?? [],
+        target_account_ids: [],
+        auto_publish: defaults.auto_publish ?? false,
+        poll_interval_minutes: defaults.poll_interval_minutes ?? 60,
+        filter_keywords: defaults.filter_keywords ?? [],
+        exclude_keywords: defaults.exclude_keywords ?? [],
+        ai_rewrite: defaults.ai_rewrite ?? false,
+        caption_template: defaults.caption_template ?? "{title}\n\n{link}",
+        active: true,
+      }));
+      const { error } = await client.from("rss_feeds").insert(rows);
+      if (error) {
+        toast.error(error.message);
+        return { inserted: 0, skipped };
+      }
+      toast.success(
+        `Added ${fresh.length} feed${fresh.length === 1 ? "" : "s"}${skipped ? ` · skipped ${skipped} duplicate${skipped === 1 ? "" : "s"}` : ""}`,
+      );
+      await load();
+      return { inserted: fresh.length, skipped };
+    },
+    [user, feeds, load],
+  );
+
   const updateFeed = useCallback(async (id: string, patch: Partial<RssFeed>) => {
     if (!guardWrite("update RSS feed")) return;
     const { error } = await client.from("rss_feeds").update(patch).eq("id", id);
@@ -203,6 +268,7 @@ export function useRssFeeds() {
     loading,
     fetching,
     addFeed,
+    addFeedsBulk,
     updateFeed,
     removeFeed,
     fetchNow,

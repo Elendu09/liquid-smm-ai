@@ -20,6 +20,8 @@ import {
   Newspaper,
   Compass,
   BookOpen,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -105,6 +107,7 @@ export default function RssFeedsPage() {
     loading,
     fetching,
     addFeed,
+    addFeedsBulk,
     updateFeed,
     removeFeed,
     fetchNow,
@@ -114,6 +117,7 @@ export default function RssFeedsPage() {
 
   const [tab, setTab] = useState<"feeds" | "items" | "discover">("feeds");
   const [open, setOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [editing, setEditing] = useState<RssFeed | null>(null);
   const [previewItem, setPreviewItem] = useState<RssItem | null>(null);
   const [search, setSearch] = useState("");
@@ -129,6 +133,18 @@ export default function RssFeedsPage() {
   const [excludes, setExcludes] = useState("");
   const [interval, setInterval] = useState(60);
   const [template, setTemplate] = useState("📢 {title}\n\n{link}");
+
+  // Bulk-import form state
+  const [bulkUrls, setBulkUrls] = useState("");
+  const [bulkAuto, setBulkAuto] = useState(false);
+  const [bulkAi, setBulkAi] = useState(false);
+  const [bulkPlatforms, setBulkPlatforms] = useState<string[]>([]);
+  const [bulkInclude, setBulkInclude] = useState("");
+  const [bulkExclude, setBulkExclude] = useState("");
+  const [bulkInterval, setBulkInterval] = useState(60);
+  const [bulkTemplate, setBulkTemplate] = useState("📢 {title}\n\n{link}");
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+
 
   const resetForm = () => {
     setUrl("");
@@ -242,6 +258,10 @@ export default function RssFeedsPage() {
             <Button variant="outline" onClick={() => fetchNow()} disabled={fetching || feeds.length === 0}>
               <RefreshCw className={`mr-2 h-4 w-4 ${fetching ? "animate-spin" : ""}`} />
               Fetch all
+            </Button>
+            <Button variant="outline" onClick={() => setBulkOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Bulk import
             </Button>
             <Button onClick={() => openAdd()} className="shadow-lg shadow-orange-500/20">
               <Plus className="mr-2 h-4 w-4" />
@@ -424,16 +444,32 @@ export default function RssFeedsPage() {
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {filteredItems.map((it) => (
               <Card key={it.id} className="overflow-hidden group hover:border-primary/40 transition-colors">
-                {it.image_url && (
-                  <div className="aspect-video overflow-hidden bg-muted">
+                <div className="aspect-video overflow-hidden bg-muted relative">
+                  {it.thumbnail_url || it.image_url ? (
                     <img
-                      src={it.image_url}
+                      src={it.thumbnail_url ?? it.image_url ?? ""}
                       alt=""
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       loading="lazy"
+                      onError={(e) => {
+                        const el = e.currentTarget;
+                        // Fall back to raw image if the cached thumbnail 404s
+                        if (it.image_url && el.src !== it.image_url) {
+                          el.src = it.image_url;
+                        } else {
+                          el.style.display = "none";
+                        }
+                      }}
                     />
-                  </div>
-                )}
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-500/15 via-amber-500/10 to-primary/10">
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                        <ImageIcon className="h-6 w-6" />
+                        <span className="text-[10px] uppercase tracking-wider">No image</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <h4 className="font-semibold line-clamp-2 text-sm">{it.title}</h4>
@@ -661,6 +697,162 @@ export default function RssFeedsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Bulk import dialog */}
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5 text-orange-500" />
+              Bulk import RSS feeds
+            </DialogTitle>
+            <DialogDescription>
+              Paste one URL per line (or comma-separated). These defaults apply to every new feed — you can fine-tune any of them later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Feed URLs *</Label>
+              <Textarea
+                rows={7}
+                placeholder={"https://techcrunch.com/feed/\nhttps://www.theverge.com/rss/index.xml\nhttps://hnrss.org/frontpage"}
+                value={bulkUrls}
+                onChange={(e) => setBulkUrls(e.target.value)}
+                className="font-mono text-xs"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                {bulkUrls
+                  .split(/[\n,]/)
+                  .map((u) => u.trim())
+                  .filter((u) => /^https?:\/\//i.test(u)).length}{" "}
+                valid URL(s) detected · duplicates are auto-skipped.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Poll interval</Label>
+                <Select value={String(bulkInterval)} onValueChange={(v) => setBulkInterval(Number(v))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {INTERVAL_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={String(o.value)}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Mode</Label>
+                <Select value={bulkAuto ? "auto" : "draft"} onValueChange={(v) => setBulkAuto(v === "auto")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Save as drafts</SelectItem>
+                    <SelectItem value="auto">Auto-publish</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Target platforms</Label>
+              <div className="flex flex-wrap gap-2">
+                {PLATFORMS.slice(0, 10).map((p) => {
+                  const active = bulkPlatforms.includes(p.id);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() =>
+                        setBulkPlatforms((prev) =>
+                          active ? prev.filter((x) => x !== p.id) : [...prev, p.id],
+                        )
+                      }
+                      className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                        active
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border hover:bg-muted"
+                      }`}
+                    >
+                      {p.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-green-600">Include keywords</Label>
+                <Input
+                  placeholder="ai, launch, product"
+                  value={bulkInclude}
+                  onChange={(e) => setBulkInclude(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-destructive">Exclude keywords</Label>
+                <Input
+                  placeholder="crypto, nsfw"
+                  value={bulkExclude}
+                  onChange={(e) => setBulkExclude(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Caption template</Label>
+              <Textarea
+                rows={2}
+                value={bulkTemplate}
+                onChange={(e) => setBulkTemplate(e.target.value)}
+                placeholder="{title}, {link}, {summary}"
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-3 bg-primary/5">
+              <div className="flex items-start gap-2">
+                <Sparkles className="h-4 w-4 text-primary mt-0.5" />
+                <div>
+                  <div className="text-sm font-medium">AI rewrite</div>
+                  <div className="text-xs text-muted-foreground">
+                    Rewrite every headline into an engaging social hook.
+                  </div>
+                </div>
+              </div>
+              <Switch checked={bulkAi} onCheckedChange={setBulkAi} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setBulkOpen(false)}>Cancel</Button>
+            <Button
+              disabled={bulkSubmitting}
+              onClick={async () => {
+                setBulkSubmitting(true);
+                const urls = bulkUrls.split(/[\n,]/);
+                const res = await addFeedsBulk(urls, {
+                  auto_publish: bulkAuto,
+                  ai_rewrite: bulkAi,
+                  target_platforms: bulkPlatforms,
+                  filter_keywords: bulkInclude.split(",").map((k) => k.trim()).filter(Boolean),
+                  exclude_keywords: bulkExclude.split(",").map((k) => k.trim()).filter(Boolean),
+                  poll_interval_minutes: bulkInterval,
+                  caption_template: bulkTemplate,
+                });
+                setBulkSubmitting(false);
+                if (res && res.inserted > 0) {
+                  setBulkOpen(false);
+                  setBulkUrls("");
+                  // Kick off a fetch so items with thumbnails populate immediately
+                  fetchNow();
+                }
+              }}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {bulkSubmitting ? "Importing…" : "Import feeds"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Item preview */}
       <Dialog open={!!previewItem} onOpenChange={(v) => !v && setPreviewItem(null)}>
         <DialogContent className="max-w-lg">
@@ -672,8 +864,12 @@ export default function RssFeedsPage() {
               </DialogDescription>
             )}
           </DialogHeader>
-          {previewItem?.image_url && (
-            <img src={previewItem.image_url} alt="" className="w-full rounded-lg" />
+          {(previewItem?.thumbnail_url || previewItem?.image_url) && (
+            <img
+              src={previewItem.thumbnail_url ?? previewItem.image_url ?? ""}
+              alt=""
+              className="w-full rounded-lg aspect-video object-cover bg-muted"
+            />
           )}
           <p className="text-sm text-muted-foreground whitespace-pre-line">{previewItem?.summary}</p>
           {previewItem?.link && (

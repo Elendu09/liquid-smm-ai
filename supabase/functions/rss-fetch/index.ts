@@ -52,6 +52,52 @@ function parseFeed(xml: string) {
   return { title: feedTitle, items };
 }
 
+/**
+ * Route an image URL through wsrv.nl for consistent 1200x675 (16:9) center-cropped,
+ * CDN-cached JPEG thumbnails. Falls back to raw URL if input isn't http(s).
+ */
+function toThumbnailUrl(src: string | undefined | null): string | null {
+  if (!src) return null;
+  const clean = src.trim();
+  if (!/^https?:\/\//i.test(clean)) return clean || null;
+  const noProto = clean.replace(/^https?:\/\//i, "");
+  return `https://wsrv.nl/?url=${encodeURIComponent(noProto)}&w=1200&h=675&fit=cover&a=attention&output=jpg&q=82&il`;
+}
+
+/**
+ * Scrape an article page for og:image / twitter:image when the RSS item has no media.
+ * Best-effort: 4s timeout, ignore failures.
+ */
+async function scrapeOgImage(articleUrl: string): Promise<string | null> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 4000);
+    const res = await fetch(articleUrl, {
+      signal: ctrl.signal,
+      headers: { "User-Agent": "SMMSAAS-RSS/1.0 (+thumbnail)" },
+    });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const html = (await res.text()).slice(0, 200_000);
+    const m =
+      html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i) ??
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ??
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    if (!m) return null;
+    let url = m[1];
+    if (url.startsWith("//")) url = "https:" + url;
+    else if (url.startsWith("/")) {
+      try {
+        const base = new URL(articleUrl);
+        url = `${base.origin}${url}`;
+      } catch { /* noop */ }
+    }
+    return url;
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -115,6 +161,14 @@ Deno.serve(async (req) => {
           .maybeSingle();
         if (existing) continue;
 
+        // Resolve a consistent, cached thumbnail up-front so both the scheduled
+        // post's media_url and the rss_items row use the same processed image.
+        let finalImage = item.imageUrl ?? null;
+        if (!finalImage && item.link) {
+          finalImage = await scrapeOgImage(item.link);
+        }
+        const thumbnailUrl = toThumbnailUrl(finalImage);
+
         let scheduledPostId: string | null = null;
         if (feed.auto_publish) {
           let caption =
@@ -152,7 +206,7 @@ Deno.serve(async (req) => {
             .insert({
               user_id: userId,
               caption,
-              media_url: item.imageUrl ?? null,
+              media_url: thumbnailUrl ?? finalImage ?? null,
               status: "draft",
               platform_ids: platforms,
               scheduled_at: null,
@@ -169,7 +223,8 @@ Deno.serve(async (req) => {
           title: item.title,
           link: item.link,
           summary: item.summary,
-          image_url: item.imageUrl,
+          image_url: finalImage,
+          thumbnail_url: thumbnailUrl,
           published_at: item.publishedAt,
           imported: !!scheduledPostId,
           scheduled_post_id: scheduledPostId,
