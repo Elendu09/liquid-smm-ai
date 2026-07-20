@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { enableGuest } from "@/hooks/useGuest";
 
 function safeNext(next: string | null): string {
   if (!next) return "/dashboard";
@@ -175,12 +176,17 @@ const Login = () => {
         </div>
 
         <div className="text-center">
-          <Link
-            to="/dashboard"
+          <button
+            type="button"
+            onClick={() => {
+              enableGuest();
+              toast.info("Demo mode enabled — read-only preview");
+              navigate("/dashboard", { replace: true });
+            }}
             className="text-xs text-muted-foreground/80 hover:text-foreground underline underline-offset-4"
           >
-            Continue as guest → preview the dashboard
-          </Link>
+            Continue as guest → read-only demo
+          </button>
         </div>
       </div>
     </AuthLayout>
