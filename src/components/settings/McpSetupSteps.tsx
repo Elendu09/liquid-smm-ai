@@ -138,18 +138,18 @@ export function McpSetupSteps({ integration }: Props) {
                 <p className="text-sm text-muted-foreground leading-relaxed">{step.body}</p>
 
                 {i === 1 && (
-                  <div className="mt-3 rounded-xl border border-border/60 bg-card/60 p-3 space-y-2">
-                    <div className="flex items-center justify-between gap-3">
+                  <div className="mt-3 rounded-xl border border-border/60 bg-card/60 p-3 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 min-w-0">
                       <span className="text-xs text-muted-foreground">Server Name</span>
-                      <CopyChip value={integration.serverName} />
+                      <CopyChip value={integration.serverName} className="w-full sm:w-auto justify-between" />
                     </div>
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 min-w-0">
                       <span className="text-xs text-muted-foreground">Transport</span>
-                      <Badge variant="secondary" className="uppercase text-[10px]">{integration.transport}</Badge>
+                      <Badge variant="secondary" className="uppercase text-[10px] w-fit">{integration.transport}</Badge>
                     </div>
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 min-w-0">
                       <span className="text-xs text-muted-foreground">Server URL</span>
-                      <CopyChip value={serverUrl} className="max-w-[280px]" />
+                      <CopyChip value={serverUrl} className="w-full sm:max-w-[280px] justify-between" />
                     </div>
                   </div>
                 )}
