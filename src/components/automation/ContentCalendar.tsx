@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import {
   CalendarDays, Plus, ChevronLeft, ChevronRight, MoreHorizontal,
   Search, Trash2, Copy, ExternalLink, Clock, ListFilter, Sparkles, X,
-  Star, Repeat2,
+  Star, Repeat2, Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ import { NewPostDialog } from "@/components/create/NewPostDialog";
 import { EventDetailsDialog } from "@/components/publish/EventDetailsDialog";
 import { AiFillWeekDialog } from "@/components/publish/AiFillWeekDialog";
 import { RecyclingRulesDialog } from "@/components/publish/RecyclingRulesDialog";
+import { BulkCsvImportDialog } from "@/components/publish/BulkCsvImportDialog";
 import { ApprovalBadge } from "@/components/publish/ApprovalControls";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
@@ -82,6 +83,7 @@ export const ContentCalendar = () => {
   const [newOpen, setNewOpen] = useState(false);
   const [fillWeekOpen, setFillWeekOpen] = useState(false);
   const [recycleOpen, setRecycleOpen] = useState(false);
+  const [csvOpen, setCsvOpen] = useState(false);
   const [showBestTimes, setShowBestTimes] = useState(true);
   const [detailsPost, setDetailsPost] = useState<ScheduledPost | null>(null);
 
@@ -338,6 +340,9 @@ export const ContentCalendar = () => {
         <Button size="sm" variant="outline" onClick={() => setRecycleOpen(true)}>
           <Repeat2 className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Recycle</span>
         </Button>
+        <Button size="sm" variant="outline" onClick={() => setCsvOpen(true)}>
+          <Upload className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Import CSV</span>
+        </Button>
         <Button size="sm" variant="outline" onClick={() => setFillWeekOpen(true)}>
           <Sparkles className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">AI Fill Week</span>
         </Button>
@@ -441,7 +446,7 @@ export const ContentCalendar = () => {
       )}
 
       {view === "list" && (
-        <div className="space-y-4">
+        <div className="relative space-y-4 pb-20">
           {filtered.length === 0 ? (
             <div className="rounded-2xl border border-border/60 bg-card p-10 text-center">
               <CalendarDays className="h-8 w-8 mx-auto text-muted-foreground mb-2" strokeWidth={1.5} />
@@ -463,10 +468,14 @@ export const ContentCalendar = () => {
             ).map(([dayKey, dayPosts]) => {
               const d = new Date(dayKey);
               const isToday = sameDay(d, new Date());
+              const lastTime = dayPosts.length
+                ? new Date(dayPosts[dayPosts.length - 1].scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                : null;
               return (
                 <section key={dayKey} className="rounded-2xl border border-border/60 bg-card overflow-hidden">
-                  <header className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-muted/30">
+                  <header className="sticky top-0 z-10 flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
                     <div className="flex items-center gap-2">
+                      {isToday && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" aria-hidden />}
                       <span className="text-sm font-semibold">
                         {isToday ? "Today" : d.toLocaleDateString([], { weekday: "long" })}
                       </span>
@@ -495,16 +504,13 @@ export const ContentCalendar = () => {
                             </span>
                           </div>
                           <div
-                            className={cn(
-                              "w-1 rounded-full shrink-0",
-                              statusBar(p),
-                            )}
+                            className={cn("w-1 rounded-full shrink-0", statusBar(p))}
                             aria-hidden
                           />
                           <div className="flex-1 min-w-0 space-y-1.5">
                             <div className="flex items-start justify-between gap-2">
                               <p className="text-sm font-medium line-clamp-2 flex-1">{p.caption || "(no caption)"}</p>
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                              <div className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button size="icon" variant="ghost" className="h-7 w-7">
@@ -545,12 +551,29 @@ export const ContentCalendar = () => {
                       </li>
                     ))}
                   </ul>
+                  {lastTime && (
+                    <footer className="px-4 py-2 text-[11px] text-muted-foreground bg-muted/20 border-t border-border/60 flex items-center gap-1.5">
+                      <Clock className="h-3 w-3" /> No posts after {lastTime}
+                    </footer>
+                  )}
                 </section>
               );
             })
           )}
+
+          {/* Floating quick-schedule FAB */}
+          <button
+            type="button"
+            onClick={() => setNewOpen(true)}
+            className="fixed bottom-24 lg:bottom-8 right-4 sm:right-6 z-30 inline-flex items-center gap-1.5 h-12 px-4 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+            aria-label="Quick schedule"
+          >
+            <Plus className="h-5 w-5" />
+            <span className="text-sm font-semibold">Quick Schedule</span>
+          </button>
         </div>
       )}
+
 
       {view === "feed" && (
         <div className="max-w-2xl mx-auto space-y-4">
@@ -725,6 +748,7 @@ export const ContentCalendar = () => {
       <NewPostDialog open={newOpen} onOpenChange={setNewOpen} />
       <AiFillWeekDialog open={fillWeekOpen} onOpenChange={setFillWeekOpen} startDate={selectedDay ?? undefined} />
       <RecyclingRulesDialog open={recycleOpen} onOpenChange={setRecycleOpen} />
+      <BulkCsvImportDialog open={csvOpen} onOpenChange={setCsvOpen} />
       <EventDetailsDialog post={detailsPost} open={!!detailsPost} onOpenChange={(o) => !o && setDetailsPost(null)} />
     </div>
   );
