@@ -107,6 +107,7 @@ export default function RssFeedsPage() {
     loading,
     fetching,
     addFeed,
+    addFeedsBulk,
     updateFeed,
     removeFeed,
     fetchNow,
@@ -116,6 +117,7 @@ export default function RssFeedsPage() {
 
   const [tab, setTab] = useState<"feeds" | "items" | "discover">("feeds");
   const [open, setOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [editing, setEditing] = useState<RssFeed | null>(null);
   const [previewItem, setPreviewItem] = useState<RssItem | null>(null);
   const [search, setSearch] = useState("");
