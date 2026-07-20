@@ -47,6 +47,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { SignOutDialog } from "@/components/auth/SignOutDialog";
 
 type SubItem = { label: string; href: string; icon: React.ComponentType<{ className?: string }> };
 type NavItem = {
@@ -163,6 +164,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [activeIdx, setActiveIdx] = useState(0);
+  const [signOutOpen, setSignOutOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
@@ -217,7 +219,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
       { id: "cmd-setup", label: "Re-run onboarding setup", icon: Sparkles, group: "Commands", action: openOnboardingSetup, hint: "Profile wizard" },
       { id: "cmd-settings", label: "Open Settings", icon: Cog, group: "Commands", href: "/dashboard/settings", hint: "Preferences" },
       { id: "cmd-notifications", label: "Open Notifications", icon: Bell, group: "Commands", href: "/dashboard/activity/notifications" },
-      { id: "cmd-signout", label: "Sign out", icon: LogOut, group: "Commands", action: () => navigate("/login") },
+      { id: "cmd-signout", label: "Sign out", icon: LogOut, group: "Commands", action: () => setSignOutOpen(true) },
     ];
     const pages: CommandResult[] = [];
     for (const it of navItems) {
@@ -588,8 +590,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                 size="icon"
                 className="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                 onClick={() => {
-                  onNavigate?.();
-                  navigate("/login");
+                  setSignOutOpen(true);
                 }}
                 aria-label="Sign out"
               >
@@ -600,6 +601,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
           </Tooltip>
         </div>
       </div>
+      <SignOutDialog open={signOutOpen} onOpenChange={setSignOutOpen} />
     </TooltipProvider>
   );
 }

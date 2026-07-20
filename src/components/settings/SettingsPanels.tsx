@@ -1,6 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { useGuest, guardWrite } from "@/hooks/useGuest";
+import { SignOutDialog } from "@/components/auth/SignOutDialog";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,13 +72,103 @@ import { logAudit } from "./AuditPanel";
 /* ============================== Account =============================== */
 
 export function AccountPanel() {
+  const { user, isGuest } = useAuthUser();
   const [profile, setProfile] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+1 (555) 123-4567",
+    name: "",
+    email: "",
+    phone: "",
     timezone: "America/New_York",
-    language: "en",
+    avatarUrl: "",
   });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [signOutOpen, setSignOutOpen] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!user) {
+      setLoading(false);
+      if (isGuest) {
+        setProfile({
+          name: "Guest visitor",
+          email: "guest@demo.local",
+          phone: "",
+          timezone: "America/New_York",
+          avatarUrl: "",
+        });
+      }
+      return;
+    }
+    setLoading(true);
+    (async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url, timezone")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!mounted) return;
+      if (error) toast.error(error.message);
+      setProfile({
+        name: data?.display_name ?? (user.user_metadata?.full_name as string) ?? user.email?.split("@")[0] ?? "",
+        email: user.email ?? "",
+        phone: (user.phone as string) ?? "",
+        timezone: data?.timezone ?? "America/New_York",
+        avatarUrl: data?.avatar_url ?? (user.user_metadata?.avatar_url as string) ?? "",
+      });
+      setLoading(false);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [user, isGuest]);
+
+  const initials = useMemo(() => {
+    const n = (profile.name || profile.email || "?").trim();
+    return n
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((s) => s[0]?.toUpperCase() ?? "")
+      .join("") || "?";
+  }, [profile.name, profile.email]);
+
+  const handleSave = async () => {
+    if (!guardWrite("update your profile")) return;
+    if (!user) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        display_name: profile.name,
+        timezone: profile.timezone,
+      })
+      .eq("id", user.id);
+    if (!error && profile.email && profile.email !== user.email) {
+      const { error: eErr } = await supabase.auth.updateUser({ email: profile.email });
+      if (eErr) toast.error(eErr.message);
+      else toast.success("Confirmation email sent to new address");
+    }
+    setSaving(false);
+    if (error) toast.error(error.message);
+    else toast.success("Profile saved");
+  };
+
+  const handleResetPassword = async () => {
+    if (!guardWrite("reset your password")) return;
+    if (!profile.email) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(profile.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) toast.error(error.message);
+    else toast.success("Password reset email sent");
+  };
+
+  const handleDelete = async () => {
+    if (!guardWrite("delete your account")) return;
+    if (!confirm("Delete your account? This cannot be undone.")) return;
+    toast.info("Account deletion requested — our team will follow up by email.");
+  };
+
   return (
     <div className="space-y-6">
       <Card className="overflow-hidden">
@@ -82,25 +177,25 @@ export function AccountPanel() {
           <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-10">
             <div className="relative">
               <Avatar className="w-20 h-20 ring-4 ring-background">
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback className="text-xl">JD</AvatarFallback>
+                <AvatarImage src={profile.avatarUrl || "/placeholder.svg"} />
+                <AvatarFallback className="text-xl">{initials}</AvatarFallback>
               </Avatar>
               <Button
                 size="icon"
                 className="absolute -bottom-1 -right-1 rounded-full w-7 h-7"
                 aria-label="Change avatar"
-                onClick={() => toast("Avatar upload")}
+                onClick={() => guardWrite("change your avatar") && toast("Avatar upload coming soon")}
               >
                 <Camera className="w-3.5 h-3.5" />
               </Button>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-lg truncate">{profile.name}</h3>
-              <p className="text-sm text-muted-foreground truncate">{profile.email}</p>
+              <h3 className="font-semibold text-lg truncate">{profile.name || "—"}</h3>
+              <p className="text-sm text-muted-foreground truncate">{profile.email || "—"}</p>
             </div>
             <Badge variant="secondary" className="self-start sm:self-auto">
               <Crown className="w-3 h-3 mr-1" />
-              Professional
+              {isGuest ? "Demo" : "Professional"}
             </Badge>
           </div>
 
@@ -111,21 +206,21 @@ export function AccountPanel() {
               <Label htmlFor="name">Full name</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input id="name" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} className="pl-10" />
+                <Input id="name" value={profile.name} disabled={loading} onChange={(e) => setProfile({ ...profile, name: e.target.value })} className="pl-10" />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email address</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input id="email" type="email" value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} className="pl-10" />
+                <Input id="email" type="email" value={profile.email} disabled={loading || isGuest} onChange={(e) => setProfile({ ...profile, email: e.target.value })} className="pl-10" />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone number</Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input id="phone" type="tel" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="pl-10" />
+                <Input id="phone" type="tel" value={profile.phone} disabled={loading} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="pl-10" />
               </div>
             </div>
             <div className="space-y-2">
@@ -148,8 +243,16 @@ export function AccountPanel() {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="border-t bg-muted/30">
-          <Button onClick={() => toast.success("Profile saved")}>Save changes</Button>
+        <CardFooter className="border-t bg-muted/30 flex flex-wrap gap-2">
+          <Button onClick={handleSave} disabled={saving || loading}>{saving ? "Saving…" : "Save changes"}</Button>
+          <Button variant="outline" onClick={handleResetPassword} disabled={!profile.email}>
+            <KeyRound className="w-4 h-4 mr-2" />
+            Send password reset
+          </Button>
+          <Button variant="ghost" className="ml-auto text-destructive hover:text-destructive" onClick={() => setSignOutOpen(true)}>
+            <LogOut className="w-4 h-4 mr-2" />
+            {isGuest ? "Leave demo" : "Sign out"}
+          </Button>
         </CardFooter>
       </Card>
 
@@ -164,11 +267,7 @@ export function AccountPanel() {
               <h4 className="font-medium">Delete account</h4>
               <p className="text-sm text-muted-foreground">Permanently delete your account and all associated data.</p>
             </div>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => confirm("Delete your account? This cannot be undone.") && toast.success("Account deletion requested")}
-            >
+            <Button variant="destructive" size="sm" onClick={handleDelete}>
               <Trash2 className="w-4 h-4 mr-2" />
               Delete account
             </Button>
@@ -185,9 +284,12 @@ export function AccountPanel() {
           </div>
         </CardContent>
       </Card>
+
+      <SignOutDialog open={signOutOpen} onOpenChange={setSignOutOpen} />
     </div>
   );
 }
+
 
 /* ============================ Notifications =========================== */
 
@@ -556,6 +658,7 @@ export function SecurityPanel() {
 
   const [passkeyOpen, setPasskeyOpen] = useState(false);
   const [tfaOpen, setTfaOpen] = useState(false);
+  const [signOutAllOpen, setSignOutAllOpen] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("john.backup@example.com");
   const [recoveryPhone, setRecoveryPhone] = useState("+1 (555) 987-6543");
@@ -807,7 +910,7 @@ export function SecurityPanel() {
           ))}
         </CardContent>
         <CardFooter className="border-t bg-muted/30">
-          <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => confirm("Sign out of all devices?") && toast.success("Signed out of all devices")}>
+          <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setSignOutAllOpen(true)}>
             <AlertCircle className="w-4 h-4 mr-2" />
             Sign out all devices
           </Button>
@@ -820,6 +923,7 @@ export function SecurityPanel() {
         onOpenChange={setTfaOpen}
         onEnabled={() => setTwoFactorEnabled(true)}
       />
+      <SignOutDialog open={signOutAllOpen} onOpenChange={setSignOutAllOpen} scope="all" />
     </div>
   );
 }

@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function RequireAuth({ children }: Props) {
-  const { user, loading } = useAuthUser();
+  const { user, loading, isGuest } = useAuthUser();
   const location = useLocation();
 
   if (loading) {
@@ -22,7 +22,7 @@ export function RequireAuth({ children }: Props) {
     );
   }
 
-  if (!user) {
+  if (!user && !isGuest) {
     const next = encodeURIComponent(location.pathname + location.search);
     return <Navigate to={`/login?next=${next}`} replace />;
   }

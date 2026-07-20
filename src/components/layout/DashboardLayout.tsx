@@ -8,6 +8,7 @@ import { HelpWidget } from "@/components/support/HelpWidget";
 import { AiAssistantDrawer } from "@/components/dashboard/AiAssistantDrawer";
 import { PresetHandler } from "@/components/support/PresetHandler";
 import { PresetLandingBanner } from "@/components/dashboard/PresetLandingBanner";
+import { DemoBanner } from "@/components/layout/DemoBanner";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useSendSimulator } from "@/hooks/useSendSimulator";
 
@@ -33,6 +34,7 @@ export function DashboardLayout() {
     <div className="flex min-h-dvh w-full bg-background">
       <DashboardSidebar />
       <main className="flex-1 overflow-auto pt-14 lg:pt-0 min-w-0">
+        <DemoBanner />
         <PresetLandingBanner />
         <Outlet />
         <div className="h-20 lg:hidden" aria-hidden />
