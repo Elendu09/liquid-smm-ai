@@ -107,7 +107,9 @@ export function Hero() {
     navigate(`/signup?email=${encodeURIComponent(trimmed)}`);
   };
 
+  return (
     <section
+
       aria-labelledby="hero-heading"
       className="relative isolate overflow-hidden bg-background text-foreground"
     >
