@@ -166,8 +166,8 @@ export function RolesMatrixPanel() {
               </thead>
               <tbody>
                 {CAPS.map((grp) => (
-                  <>
-                    <tr key={grp.group} className="bg-muted/20">
+                  <Fragment key={grp.group}>
+                    <tr className="bg-muted/20">
                       <td colSpan={ROLES.length + 1} className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                         {grp.group}
                       </td>
@@ -190,7 +190,7 @@ export function RolesMatrixPanel() {
                         ))}
                       </tr>
                     ))}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
             </table>
