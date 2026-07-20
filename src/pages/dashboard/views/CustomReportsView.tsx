@@ -9,6 +9,7 @@ import { ChartInspector } from "@/components/analytics/ChartInspector";
 import { ReportHeader } from "@/components/analytics/ReportHeader";
 import {
   useCustomReports,
+  REPORT_TEMPLATES,
   type MetricId,
   type ChartCardConfig,
   type RangeKey,
