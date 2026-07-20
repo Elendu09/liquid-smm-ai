@@ -22,6 +22,7 @@ import PublicCalendar from "./pages/PublicCalendar";
 
 // Dashboard shell
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import Dashboard from "@/pages/dashboard/Dashboard";
 
 // Hubs
@@ -85,7 +86,14 @@ const App = () => (
               
 
               {/* Dashboard */}
-              <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route
+                path="/dashboard"
+                element={
+                  <RequireAuth>
+                    <DashboardLayout />
+                  </RequireAuth>
+                }
+              >
                 <Route index element={<Dashboard />} />
 
                 {/* Hubs */}
