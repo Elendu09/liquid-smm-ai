@@ -754,6 +754,116 @@ export type Database = {
         }
         Relationships: []
       }
+      rss_feeds: {
+        Row: {
+          active: boolean
+          auto_publish: boolean
+          caption_template: string | null
+          created_at: string
+          filter_keywords: string[]
+          id: string
+          last_error: string | null
+          last_fetched_at: string | null
+          last_status: string | null
+          owner_id: string
+          poll_interval_minutes: number
+          target_account_ids: Json
+          target_platforms: Json
+          title: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          active?: boolean
+          auto_publish?: boolean
+          caption_template?: string | null
+          created_at?: string
+          filter_keywords?: string[]
+          id?: string
+          last_error?: string | null
+          last_fetched_at?: string | null
+          last_status?: string | null
+          owner_id: string
+          poll_interval_minutes?: number
+          target_account_ids?: Json
+          target_platforms?: Json
+          title?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          active?: boolean
+          auto_publish?: boolean
+          caption_template?: string | null
+          created_at?: string
+          filter_keywords?: string[]
+          id?: string
+          last_error?: string | null
+          last_fetched_at?: string | null
+          last_status?: string | null
+          owner_id?: string
+          poll_interval_minutes?: number
+          target_account_ids?: Json
+          target_platforms?: Json
+          title?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      rss_items: {
+        Row: {
+          created_at: string
+          feed_id: string
+          guid: string
+          id: string
+          image_url: string | null
+          imported: boolean
+          link: string | null
+          owner_id: string
+          published_at: string | null
+          scheduled_post_id: string | null
+          summary: string | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          feed_id: string
+          guid: string
+          id?: string
+          image_url?: string | null
+          imported?: boolean
+          link?: string | null
+          owner_id: string
+          published_at?: string | null
+          scheduled_post_id?: string | null
+          summary?: string | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          feed_id?: string
+          guid?: string
+          id?: string
+          image_url?: string | null
+          imported?: boolean
+          link?: string | null
+          owner_id?: string
+          published_at?: string | null
+          scheduled_post_id?: string | null
+          summary?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rss_items_feed_id_fkey"
+            columns: ["feed_id"]
+            isOneToOne: false
+            referencedRelation: "rss_feeds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_views: {
         Row: {
           created_at: string
