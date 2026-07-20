@@ -259,6 +259,10 @@ export default function RssFeedsPage() {
               <RefreshCw className={`mr-2 h-4 w-4 ${fetching ? "animate-spin" : ""}`} />
               Fetch all
             </Button>
+            <Button variant="outline" onClick={() => setBulkOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Bulk import
+            </Button>
             <Button onClick={() => openAdd()} className="shadow-lg shadow-orange-500/20">
               <Plus className="mr-2 h-4 w-4" />
               Add feed
