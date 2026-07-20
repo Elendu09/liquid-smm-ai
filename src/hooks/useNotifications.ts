@@ -155,11 +155,17 @@ export function useNotifications() {
     };
   }, []);
 
+  // Keep latest prefs in a ref so realtime effect doesn't re-subscribe on every prefs change.
+  const prefsRef = useRef(prefs);
+  useEffect(() => {
+    prefsRef.current = prefs;
+  }, [prefs]);
+
   // Realtime subscription
   useEffect(() => {
     if (!userId) return;
-    const channel = supabase
-      .channel(`notifications:${userId}`)
+    const channel = supabase.channel(`notifications:${userId}:${Math.random().toString(36).slice(2)}`);
+    channel
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
@@ -169,7 +175,7 @@ export function useNotifications() {
             if (payload.eventType === "INSERT") {
               const n = fromRow(payload.new);
               // Toast on new (respect user pref)
-              const ch = prefs.channels?.[n.type];
+              const ch = prefsRef.current.channels?.[n.type];
               if (ch?.toast !== false) {
                 const fn =
                   n.severity === "critical" || n.severity === "warning"
@@ -201,7 +207,8 @@ export function useNotifications() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, prefs]);
+  }, [userId]);
+
 
   const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
