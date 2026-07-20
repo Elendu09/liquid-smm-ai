@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Repeat2, Plus, Trash2, Power, Clock } from "lucide-react";
+import { Repeat2, Plus, Trash2, Power, Clock, Tag, Settings2 } from "lucide-react";
+import { ContentCategoriesDialog } from "./ContentCategoriesDialog";
+import { useContentCategories } from "@/hooks/useContentCategories";
 import {
   Dialog,
   DialogContent,
@@ -42,12 +44,15 @@ export function RecyclingRulesDialog({
 }) {
   const { rules, add, remove, toggle, advance } = useRecyclingRules();
   const { add: addPost } = useScheduledPosts();
+  const { categories, byId: categoryById } = useContentCategories();
 
   const [name, setName] = useState("");
   const [caption, setCaption] = useState("");
   const [cadence, setCadence] = useState<RecycleCadence>("weekly");
   const [hour, setHour] = useState(10);
   const [platforms, setPlatforms] = useState<string[]>([]);
+  const [categoryId, setCategoryId] = useState<string>("");
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
 
   const canSave = name.trim() && caption.trim() && platforms.length > 0;
 
@@ -60,10 +65,19 @@ export function RecyclingRulesDialog({
     setCadence("weekly");
     setHour(10);
     setPlatforms([]);
+    setCategoryId("");
   };
 
   const save = () => {
-    add({ name: name.trim(), caption: caption.trim(), cadence, hour, platformIds: platforms, enabled: true });
+    add({
+      name: name.trim(),
+      caption: caption.trim(),
+      cadence,
+      hour,
+      platformIds: platforms,
+      enabled: true,
+      categoryId: categoryId || undefined,
+    });
     toast.success("Recycling rule created");
     reset();
   };
