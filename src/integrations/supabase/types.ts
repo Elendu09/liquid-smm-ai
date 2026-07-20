@@ -314,6 +314,8 @@ export type Database = {
           label: string | null
           last_fired_at: string | null
           last_status: number | null
+          last_status_label: string | null
+          provider: string
           secret: string | null
           updated_at: string
           url: string
@@ -328,6 +330,8 @@ export type Database = {
           label?: string | null
           last_fired_at?: string | null
           last_status?: number | null
+          last_status_label?: string | null
+          provider?: string
           secret?: string | null
           updated_at?: string
           url: string
@@ -342,6 +346,8 @@ export type Database = {
           label?: string | null
           last_fired_at?: string | null
           last_status?: number | null
+          last_status_label?: string | null
+          provider?: string
           secret?: string | null
           updated_at?: string
           url?: string
