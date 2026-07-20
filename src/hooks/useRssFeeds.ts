@@ -113,6 +113,8 @@ export function useRssFeeds() {
         auto_publish: input.auto_publish ?? false,
         poll_interval_minutes: input.poll_interval_minutes ?? 60,
         filter_keywords: input.filter_keywords ?? [],
+        exclude_keywords: input.exclude_keywords ?? [],
+        ai_rewrite: input.ai_rewrite ?? false,
         caption_template: input.caption_template ?? "{title}\n\n{link}",
         active: true,
       });
