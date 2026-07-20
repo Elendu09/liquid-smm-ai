@@ -163,6 +163,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
   const showLabels = isMobile || !collapsed;
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const { isAdmin } = useHasRole();
   const [query, setQuery] = useState("");
   const [activeIdx, setActiveIdx] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
