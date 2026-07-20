@@ -37,7 +37,21 @@ export interface Integration {
   steps: IntegrationStep[];
   prompts: string[];
   docsUrl?: string;
+  /** Optional deep-link that opens the target client and prefills the MCP server. */
+  deepLink?: (serverUrl: string) => string;
 }
+
+/** Catalog of the tools this app's MCP server exposes. Kept in sync with src/lib/mcp/index.ts */
+export const MCP_TOOLS: { name: string; label: string; description: string; write?: boolean }[] = [
+  { name: "whoami", label: "Who am I", description: "Return the signed-in caller's identity." },
+  { name: "get_user_profile", label: "Get user profile", description: "Read the user's profile and preferences." },
+  { name: "get_automation_settings", label: "Automation settings", description: "Read automation and posting settings." },
+  { name: "list_platforms", label: "List platforms", description: "List supported social platforms and channel status." },
+  { name: "list_scheduled_posts", label: "List scheduled posts", description: "Read the user's scheduled post queue." },
+  { name: "queue_cross_platform_post", label: "Queue cross-platform post", description: "Schedule a new post across selected channels.", write: true },
+  { name: "list_captions", label: "List captions", description: "Browse saved caption library entries." },
+  { name: "create_caption_draft", label: "Create caption draft", description: "Save a new caption draft to the library.", write: true },
+];
 
 const SERVER_NAME = "SkyRank MCP Server";
 
