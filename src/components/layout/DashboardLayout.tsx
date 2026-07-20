@@ -41,6 +41,7 @@ export function DashboardLayout() {
       <OnboardingWizard open={tourOpen} onOpenChange={setTourOpen} />
       <OnboardingTour />
       <HelpWidget />
+      <AiAssistantDrawer />
       <PresetHandler />
     </div>
   );
