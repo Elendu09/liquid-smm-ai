@@ -172,10 +172,15 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const updateAccount = useCallback(async (accountId: string, updates: Partial<ConnectedAccount>) => {
     setAccounts((prev) => prev.map((a) => (a.id === accountId ? { ...a, ...updates } : a)));
     if (!user) return;
-    const patch: Record<string, unknown> = {};
+    const patch: Partial<{
+      username: string; display_name: string; avatar_url: string | null;
+      is_active: boolean; followers: number; following: number; posts: number;
+      engagement: number; health_score: number;
+      status: ConnectedAccount["status"]; last_sync: string | null;
+    }> = {};
     if (updates.username !== undefined) patch.username = updates.username;
     if (updates.displayName !== undefined) patch.display_name = updates.displayName;
-    if (updates.avatar !== undefined) patch.avatar_url = updates.avatar;
+    if (updates.avatar !== undefined) patch.avatar_url = updates.avatar ?? null;
     if (updates.isActive !== undefined) patch.is_active = updates.isActive;
     if (updates.followers !== undefined) patch.followers = updates.followers;
     if (updates.following !== undefined) patch.following = updates.following;
