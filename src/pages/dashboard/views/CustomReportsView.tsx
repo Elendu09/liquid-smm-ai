@@ -128,6 +128,15 @@ export default function CustomReportsView() {
         activeId={active?.id ?? null}
         onSelect={(id) => { setActiveId(id); setSelectedCardId(null); }}
         onCreate={handleCreate}
+        onCreateFromTemplate={(tplId) => {
+          const r = addFromTemplate(tplId);
+          if (r) {
+            setActiveId(r.id);
+            setSelectedCardId(null);
+            const tpl = REPORT_TEMPLATES.find((t) => t.id === tplId);
+            toast.success(`Started "${tpl?.name ?? "report"}" from template`);
+          }
+        }}
         onDuplicate={handleDuplicate}
         onDelete={handleDelete}
         onRename={(name) => active && update(active.id, { name })}
