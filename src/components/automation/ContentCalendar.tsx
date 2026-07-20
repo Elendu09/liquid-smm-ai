@@ -323,16 +323,23 @@ export const ContentCalendar = () => {
         </div>
 
         <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/40">
-          {(["month", "week", "list", "feed"] as ViewMode[]).map((v) => (
+          {([
+            { id: "month",   label: "Month",   Icon: CalendarDays },
+            { id: "week",    label: "Week",    Icon: LayoutGrid },
+            { id: "columns", label: "Columns", Icon: Columns3 },
+            { id: "feed",    label: "Feed",    Icon: Rss },
+          ] as { id: ViewMode; label: string; Icon: typeof CalendarDays }[]).map(({ id, label, Icon }) => (
             <button
-              key={v}
-              onClick={() => setView(v)}
+              key={id}
+              onClick={() => setView(id)}
               className={cn(
-                "text-xs font-medium capitalize px-2.5 py-1 rounded-md transition-colors",
-                view === v ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
+                "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md transition-colors",
+                view === id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
+              aria-pressed={view === id}
             >
-              {v}
+              <Icon className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{label}</span>
             </button>
           ))}
         </div>
