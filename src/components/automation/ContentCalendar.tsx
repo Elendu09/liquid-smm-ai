@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import {
   CalendarDays, Plus, ChevronLeft, ChevronRight, MoreHorizontal,
   Search, Trash2, Copy, ExternalLink, Clock, ListFilter, Sparkles, X,
-  Star, Repeat2, Upload, Columns3, LayoutGrid, Rows3, Rss,
+  Star, Repeat2, Upload, Columns3, LayoutGrid, Rows3, Rss, Share2,
 } from "lucide-react";
 import { KanbanBoard, type KanbanColumnDef } from "@/components/dashboard/shell/KanbanBoard";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import { EventDetailsDialog } from "@/components/publish/EventDetailsDialog";
 import { AiFillWeekDialog } from "@/components/publish/AiFillWeekDialog";
 import { RecyclingRulesDialog } from "@/components/publish/RecyclingRulesDialog";
 import { BulkCsvImportDialog } from "@/components/publish/BulkCsvImportDialog";
+import { PublicCalendarShareDialog } from "@/components/publish/PublicCalendarShareDialog";
 import { ApprovalBadge } from "@/components/publish/ApprovalControls";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
