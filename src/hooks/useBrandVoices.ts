@@ -1,22 +1,9 @@
-import { useCallback } from "react";
-import { useLocalCollection } from "./useLocalCollection";
+import { useCallback, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { createRemoteCollection } from "./_remoteCollection";
 
-/**
- * Brand voice profiles power every Create AI dialog. A voice is a
- * lightweight persona (tone, do/don't lists, sample lines, emoji use,
- * average caption length) that is serialised into the AI prompt so
- * generations stay on-brand across sessions and accounts.
- *
- * Per-platform overrides let the same voice adapt its style to each
- * channel — e.g. shorter + punchier on X, hook-heavy on TikTok,
- * hashtag-rich on Instagram, thought-leadership on LinkedIn.
- */
 export type PlatformKey =
-  | "instagram"
-  | "tiktok"
-  | "twitter"
-  | "facebook"
-  | "linkedin";
+  | "instagram" | "tiktok" | "twitter" | "facebook" | "linkedin";
 
 export interface PlatformOverride {
   tone?: string;
@@ -30,67 +17,116 @@ export interface PlatformOverride {
 export interface BrandVoice {
   id: string;
   name: string;
-  tone: string; // e.g. "playful + confident"
-  audience: string; // "gen-z SaaS founders"
+  tone: string;
+  audience: string;
   emojis: "none" | "minimal" | "expressive";
   length: "short" | "medium" | "long";
   dos: string[];
   donts: string[];
-  samples: string[]; // few-shot examples
+  samples: string[];
   createdAt: string;
   isDefault?: boolean;
+  isActive?: boolean;
   platformOverrides?: Partial<Record<PlatformKey, PlatformOverride>>;
 }
 
-export const PLATFORM_KEYS: PlatformKey[] = [
-  "instagram",
-  "tiktok",
-  "twitter",
-  "facebook",
-  "linkedin",
-];
-
+export const PLATFORM_KEYS: PlatformKey[] = ["instagram","tiktok","twitter","facebook","linkedin"];
 export const PLATFORM_LABELS: Record<PlatformKey, string> = {
-  instagram: "Instagram",
-  tiktok: "TikTok",
-  twitter: "X",
-  facebook: "Facebook",
-  linkedin: "LinkedIn",
+  instagram: "Instagram", tiktok: "TikTok", twitter: "X", facebook: "Facebook", linkedin: "LinkedIn",
 };
 
-export const DEFAULT_VOICES: BrandVoice[] = [
-  {
-    id: "voice-default",
-    name: "Balanced",
-    tone: "friendly, clear, confident",
-    audience: "general audience",
-    emojis: "minimal",
-    length: "medium",
-    dos: ["Lead with the hook", "Use plain language"],
-    donts: ["Avoid corporate jargon", "No hard sell"],
-    samples: [],
-    createdAt: new Date().toISOString(),
-    isDefault: true,
-  },
-];
+export const DEFAULT_VOICES: BrandVoice[] = [{
+  id: "voice-default", name: "Balanced",
+  tone: "friendly, clear, confident",
+  audience: "general audience",
+  emojis: "minimal", length: "medium",
+  dos: ["Lead with the hook", "Use plain language"],
+  donts: ["Avoid corporate jargon", "No hard sell"],
+  samples: [], createdAt: new Date().toISOString(), isDefault: true,
+}];
 
-const KEY = "brand-voices";
-const ACTIVE = "smmpilot:brand-voice-active";
+type Row = {
+  id: string; name: string; tone: string; audience: string;
+  emojis: BrandVoice["emojis"]; length: BrandVoice["length"];
+  dos: string[]; donts: string[]; samples: string[];
+  is_default: boolean; is_active: boolean;
+  platform_overrides: Partial<Record<PlatformKey, PlatformOverride>>;
+  created_at: string;
+};
+
+const store = createRemoteCollection<BrandVoice, Row>({
+  table: "brand_voices",
+  localKey: "smmpilot:create:brand-voices",
+  seed: DEFAULT_VOICES,
+  orderBy: { column: "created_at", ascending: true },
+  fromRow: (r) => ({
+    id: r.id, name: r.name, tone: r.tone, audience: r.audience,
+    emojis: r.emojis, length: r.length,
+    dos: r.dos ?? [], donts: r.donts ?? [], samples: r.samples ?? [],
+    createdAt: r.created_at, isDefault: r.is_default, isActive: r.is_active,
+    platformOverrides: r.platform_overrides ?? undefined,
+  }),
+  toInsertRow: (v, userId) => ({
+    id: v.id, user_id: userId, name: v.name, tone: v.tone, audience: v.audience,
+    emojis: v.emojis, length: v.length, dos: v.dos, donts: v.donts, samples: v.samples,
+    is_default: !!v.isDefault, is_active: !!v.isActive,
+    platform_overrides: v.platformOverrides ?? {},
+    created_at: v.createdAt,
+  }),
+  toUpdateRow: (p) => {
+    const r: Record<string, unknown> = {};
+    if (p.name !== undefined) r.name = p.name;
+    if (p.tone !== undefined) r.tone = p.tone;
+    if (p.audience !== undefined) r.audience = p.audience;
+    if (p.emojis !== undefined) r.emojis = p.emojis;
+    if (p.length !== undefined) r.length = p.length;
+    if (p.dos !== undefined) r.dos = p.dos;
+    if (p.donts !== undefined) r.donts = p.donts;
+    if (p.samples !== undefined) r.samples = p.samples;
+    if (p.isDefault !== undefined) r.is_default = p.isDefault;
+    if (p.isActive !== undefined) r.is_active = p.isActive;
+    if (p.platformOverrides !== undefined) r.platform_overrides = p.platformOverrides ?? {};
+    return r;
+  },
+});
+
+const ACTIVE_LOCAL = "smmpilot:brand-voice-active";
 
 export function useBrandVoices() {
-  const col = useLocalCollection<BrandVoice>("create", KEY, DEFAULT_VOICES);
+  const items = store.useItems();
 
-  const setActive = useCallback((id: string) => {
-    try { localStorage.setItem(ACTIVE, id); } catch { /* noop */ }
+  const setItems = useCallback((updater: (prev: BrandVoice[]) => BrandVoice[]) => {
+    store.replace(updater(store.read()));
   }, []);
 
-  const activeId = typeof window !== "undefined" ? localStorage.getItem(ACTIVE) : null;
-  const active =
-    col.items.find((v) => v.id === activeId) ??
-    col.items.find((v) => v.isDefault) ??
-    col.items[0];
+  const setActive = useCallback((id: string) => {
+    // Optimistically flip local flag + persist selection.
+    try { localStorage.setItem(ACTIVE_LOCAL, id); } catch { /* noop */ }
+    const next = store.read().map((v) => ({ ...v, isActive: v.id === id }));
+    store.replace(next);
+    // Server: clear others, set target.
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) return;
+      await supabase.from("brand_voices").update({ is_active: false }).eq("user_id", data.session.user.id);
+      await supabase.from("brand_voices").update({ is_active: true }).eq("id", id);
+    })();
+  }, []);
 
-  return { ...col, active, activeId: active?.id ?? null, setActive };
+  const active = useMemo(() => {
+    const flagged = items.find((v) => v.isActive);
+    if (flagged) return flagged;
+    const localId = typeof window !== "undefined" ? localStorage.getItem(ACTIVE_LOCAL) : null;
+    return items.find((v) => v.id === localId) ?? items.find((v) => v.isDefault) ?? items[0];
+  }, [items]);
+
+  return {
+    items, setItems,
+    add: (v: BrandVoice) => store.add(v),
+    update: (id: string, patch: Partial<BrandVoice>) => store.update(id, patch),
+    remove: (id: string) => store.remove(id),
+    active, activeId: active?.id ?? null, setActive,
+  };
 }
 
 /** Resolve the effective voice fields for a given platform. */
@@ -112,7 +148,6 @@ export function resolveVoiceForPlatform(
   };
 }
 
-/** Compact serialisation used by prompts and edge fn payloads. */
 export function serializeVoice(
   v: BrandVoice | null | undefined,
   platform?: string,
