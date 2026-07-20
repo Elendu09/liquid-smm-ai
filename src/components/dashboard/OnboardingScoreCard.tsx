@@ -60,7 +60,7 @@ export function OnboardingScoreCard() {
           <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
             <Sparkles className="h-3 w-3" /> What's next
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
             {nextThree.map((i, idx) => {
               const body = (
                 <div className="h-full rounded-xl border border-border/60 bg-background/40 hover:bg-background/70 hover:border-primary/40 p-3 transition-colors flex flex-col gap-2">
