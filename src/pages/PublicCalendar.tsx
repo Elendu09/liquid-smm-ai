@@ -114,7 +114,7 @@ export default function PublicCalendar() {
                       <p className="text-sm line-clamp-3">{p.caption || "Untitled post"}</p>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {p.platformIds?.map((id) => (
-                          <PlatformIcon key={id} platformId={id} className="w-3.5 h-3.5" />
+                          <PlatformIcon key={id} platform={id} className="w-3.5 h-3.5" />
                         ))}
                         {p.status && (
                           <Badge variant="secondary" className="text-[10px] capitalize">{p.status}</Badge>
