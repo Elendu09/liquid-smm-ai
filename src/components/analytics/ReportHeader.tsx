@@ -16,6 +16,7 @@ import {
   type CustomReport,
   type RangeKey,
   RANGE_DAYS,
+  REPORT_TEMPLATES,
 } from "@/hooks/useCustomReports";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ export function ReportHeader({
   activeId,
   onSelect,
   onCreate,
+  onCreateFromTemplate,
   onDuplicate,
   onDelete,
   onRename,
@@ -37,6 +39,7 @@ export function ReportHeader({
   activeId: string | null;
   onSelect: (id: string) => void;
   onCreate: (name: string) => void;
+  onCreateFromTemplate: (templateId: string) => void;
   onDuplicate: () => void;
   onDelete: () => void;
   onRename: (name: string) => void;
