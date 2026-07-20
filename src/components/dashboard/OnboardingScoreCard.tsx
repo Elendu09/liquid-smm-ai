@@ -27,7 +27,7 @@ export function OnboardingScoreCard() {
     score >= 90 ? "Almost there" : score >= 60 ? "Great progress" : score >= 30 ? "Getting started" : "Just beginning";
 
   return (
-    <section className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md p-5 sm:p-6 space-y-5">
+    <section className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md p-3 sm:p-6 space-y-3 sm:space-y-5">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <div className={cn("h-11 w-11 rounded-xl flex items-center justify-center", toneBg, tone)}>
@@ -52,7 +52,7 @@ export function OnboardingScoreCard() {
         </div>
       </div>
 
-      <Progress value={score} className="h-2" />
+      <Progress value={score} className="h-2 hidden sm:block" />
 
       {/* What's next — top 3 pending actions */}
       {nextThree.length > 0 && (
