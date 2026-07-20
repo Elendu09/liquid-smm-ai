@@ -398,6 +398,7 @@ export function BillingPanel() {
   const [editing, setEditing] = useState<PaymentMethodRecord | null>(null);
 
   const savePm = (pm: PaymentMethodRecord) => {
+    if (!guardWrite("save payment methods")) return;
     setMethods((prev) => {
       const next = prev.filter((m) => m.id !== pm.id).map((m) =>
         pm.isDefault ? { ...m, isDefault: false } : m,
@@ -407,11 +408,13 @@ export function BillingPanel() {
   };
 
   const setDefault = (id: string) => {
+    if (!guardWrite("update payment methods")) return;
     setMethods((prev) => prev.map((m) => ({ ...m, isDefault: m.id === id })));
     toast.success("Default payment method updated");
   };
 
   const remove = (id: string) => {
+    if (!guardWrite("remove payment methods")) return;
     removeMethod(id);
     toast.success("Payment method removed");
     logAudit({ actor: "You", action: "Removed payment method", category: "billing" });
