@@ -52,7 +52,7 @@ export function PublishStoryDialog({
         <DialogHeader>
           <DialogTitle>Publish {story.title}</DialogTitle>
           <DialogDescription>
-            {story.slides.length} slide{story.slides.length === 1 ? "" : "s"}. Pick "now" to go live immediately, or set a time.
+            {(story.slides?.length ?? 0)} slide{(story.slides?.length ?? 0) === 1 ? "" : "s"}. Pick "now" to go live immediately, or set a time.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
