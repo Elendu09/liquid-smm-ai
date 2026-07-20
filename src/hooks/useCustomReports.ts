@@ -1,5 +1,5 @@
-import { useCallback, useMemo } from "react";
-import { useLocalCollection } from "./useLocalCollection";
+import { useCallback } from "react";
+import { createRemoteCollection } from "./_remoteCollection";
 
 export type MetricId =
   | "impressions"
@@ -17,9 +17,9 @@ export interface ChartCardConfig {
   name: string;
   metric: MetricId;
   viz: VizType;
-  platformId?: string; // optional platform filter
+  platformId?: string;
   color?: string;
-  compare?: boolean; // vs previous period
+  compare?: boolean;
 }
 
 export interface CustomReport {
@@ -73,104 +73,137 @@ export const RANGE_DAYS: Record<RangeKey, number> = {
   "90d": 90,
 };
 
+type Row = {
+  id: string;
+  name: string;
+  cards: ChartCardConfig[] | null;
+  range: string;
+  template_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+const store = createRemoteCollection<CustomReport, Row>({
+  table: "custom_reports",
+  localKey: "smmpilot:analytics:custom-reports",
+  seed: DEFAULT_REPORTS,
+  orderBy: { column: "created_at", ascending: false },
+  fromRow: (r) => ({
+    id: r.id,
+    name: r.name,
+    cards: (r.cards ?? []) as ChartCardConfig[],
+    range: (r.range as RangeKey) ?? "7d",
+    templateId: r.template_id ?? undefined,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  }),
+  toInsertRow: (r, userId) => ({
+    id: r.id,
+    user_id: userId,
+    name: r.name,
+    cards: r.cards,
+    range: r.range,
+    template_id: r.templateId ?? null,
+    created_at: r.createdAt,
+    updated_at: r.updatedAt,
+  }),
+  toUpdateRow: (p) => {
+    const row: Record<string, unknown> = {};
+    if (p.name !== undefined) row.name = p.name;
+    if (p.cards !== undefined) row.cards = p.cards;
+    if (p.range !== undefined) row.range = p.range;
+    if (p.templateId !== undefined) row.template_id = p.templateId ?? null;
+    return row;
+  },
+});
+
+function newId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
 export function useCustomReports() {
-  const col = useLocalCollection<CustomReport>("analytics", "custom-reports", DEFAULT_REPORTS);
+  const reports = store.useItems();
 
   const add = useCallback((name = "Untitled report") => {
     const now = new Date().toISOString();
     const report: CustomReport = {
-      id: `report-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: newId("report"),
       name,
       cards: [],
       range: "7d",
       createdAt: now,
       updatedAt: now,
     };
-    col.setItems((prev) => [report, ...prev]);
+    void store.add(report);
     return report;
-  }, [col]);
+  }, []);
 
   const addFromTemplate = useCallback((templateId: string, nameOverride?: string) => {
     const tpl = REPORT_TEMPLATES.find((t) => t.id === templateId);
     if (!tpl) return null;
     const now = new Date().toISOString();
     const report: CustomReport = {
-      id: `report-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: newId("report"),
       name: nameOverride ?? tpl.name,
       range: tpl.range,
       templateId: tpl.id,
-      cards: tpl.cards.map((c, i) => ({
-        ...c,
-        id: `c-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
-      })),
+      cards: tpl.cards.map((c, i) => ({ ...c, id: `c-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}` })),
       createdAt: now,
       updatedAt: now,
     };
-    col.setItems((prev) => [report, ...prev]);
+    void store.add(report);
     return report;
-  }, [col]);
+  }, []);
 
-  /**
-   * One-click variant for a template-derived report. Re-instantiates a fresh
-   * copy of the source template (not a snapshot of the current edits) so users
-   * can quickly A/B different tweaks of the same starter without starting over.
-   */
   const duplicateFromTemplate = useCallback((reportId: string) => {
-    const src = col.items.find((r) => r.id === reportId);
+    const src = store.read().find((r) => r.id === reportId);
     if (!src?.templateId) return null;
     const tpl = REPORT_TEMPLATES.find((t) => t.id === src.templateId);
     if (!tpl) return null;
-    // Count existing variants so the new one auto-numbers (v2, v3, …).
-    const siblings = col.items.filter((r) => r.templateId === src.templateId);
-    const nextIndex = siblings.length + 1;
-    return addFromTemplate(src.templateId, `${tpl.name} · variant ${nextIndex}`);
-  }, [col, addFromTemplate]);
-
+    const siblings = store.read().filter((r) => r.templateId === src.templateId);
+    return addFromTemplate(src.templateId, `${tpl.name} · variant ${siblings.length + 1}`);
+  }, [addFromTemplate]);
 
   const update = useCallback((id: string, patch: Partial<CustomReport>) => {
-    col.setItems((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch, updatedAt: new Date().toISOString() } : r)));
-  }, [col]);
+    void store.update(id, { ...patch, updatedAt: new Date().toISOString() });
+  }, []);
 
   const remove = useCallback((id: string) => {
-    col.setItems((prev) => prev.filter((r) => r.id !== id));
-  }, [col]);
+    void store.remove(id);
+  }, []);
 
   const duplicate = useCallback((id: string) => {
-    const src = col.items.find((r) => r.id === id);
+    const src = store.read().find((r) => r.id === id);
     if (!src) return;
     const now = new Date().toISOString();
     const copy: CustomReport = {
       ...src,
-      id: `report-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: newId("report"),
       name: `${src.name} (copy)`,
       cards: src.cards.map((c) => ({ ...c, id: `c-${Date.now()}-${Math.random().toString(36).slice(2, 5)}` })),
       createdAt: now,
       updatedAt: now,
     };
-    col.setItems((prev) => [copy, ...prev]);
+    void store.add(copy);
     return copy;
-  }, [col]);
+  }, []);
 
   const upsertCard = useCallback((reportId: string, card: ChartCardConfig) => {
-    col.setItems((prev) => prev.map((r) => {
-      if (r.id !== reportId) return r;
-      const idx = r.cards.findIndex((c) => c.id === card.id);
-      const cards = idx >= 0
-        ? r.cards.map((c) => (c.id === card.id ? card : c))
-        : [...r.cards, card];
-      return { ...r, cards, updatedAt: new Date().toISOString() };
-    }));
-  }, [col]);
+    const src = store.read().find((r) => r.id === reportId);
+    if (!src) return;
+    const idx = src.cards.findIndex((c) => c.id === card.id);
+    const cards = idx >= 0 ? src.cards.map((c) => (c.id === card.id ? card : c)) : [...src.cards, card];
+    void store.update(reportId, { cards, updatedAt: new Date().toISOString() });
+  }, []);
 
   const removeCard = useCallback((reportId: string, cardId: string) => {
-    col.setItems((prev) => prev.map((r) =>
-      r.id === reportId
-        ? { ...r, cards: r.cards.filter((c) => c.id !== cardId), updatedAt: new Date().toISOString() }
-        : r
-    ));
-  }, [col]);
-
-  const reports = useMemo(() => col.items, [col.items]);
+    const src = store.read().find((r) => r.id === reportId);
+    if (!src) return;
+    void store.update(reportId, {
+      cards: src.cards.filter((c) => c.id !== cardId),
+      updatedAt: new Date().toISOString(),
+    });
+  }, []);
 
   return { reports, add, addFromTemplate, duplicateFromTemplate, update, remove, duplicate, upsertCard, removeCard };
 }
@@ -233,12 +266,6 @@ export const REPORT_TEMPLATES: ReportTemplate[] = [
   },
 ];
 
-/**
- * Deterministic mock metric resolver. Reuses the follower/engagement values
- * from the active accounts and folds in a stable per-day seed so charts
- * animate but stay reproducible per (metric, platform, day). Swap this out
- * for a real SkyRank feed later without touching any UI.
- */
 export function resolveMetric(
   metric: MetricId,
   days: number,
