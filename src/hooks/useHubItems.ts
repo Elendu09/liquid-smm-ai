@@ -140,8 +140,8 @@ export function useHubItems(hubKey: string, seed: HubItem[]) {
       subtitle: item.subtitle ?? null,
       status: item.status,
       meta: item.meta ?? null,
-      metadata: item.metadata ?? {},
-    });
+      metadata: (item.metadata ?? {}) as Json,
+    } as never);
     if (error) setItems(items);
   }, [items, uid, hubKey]);
 
