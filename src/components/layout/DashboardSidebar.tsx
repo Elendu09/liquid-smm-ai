@@ -38,6 +38,7 @@ import {
   CornerDownLeft,
   Palette,
 } from "lucide-react";
+import { ConnectChannelsSection } from "./ConnectChannelsSection";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
@@ -475,6 +476,8 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
               );
             })}
 
+            {showLabels && <ConnectChannelsSection onNavigate={onNavigate} />}
+
             {showLabels && (
               <>
                 <div className="px-2 pt-4 pb-1 text-[9.5px] font-bold tracking-[0.18em] text-muted-foreground/70 uppercase">
@@ -514,25 +517,28 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
               </>
             )}
             {!showLabels && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <NavLink
-                    to="/dashboard/settings"
-                    onClick={onNavigate}
-                    className={({ isActive }) =>
-                      cn(
-                        "flex items-center justify-center px-0 py-2 rounded-lg min-h-[36px] transition-colors",
-                        isActive
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
-                      )
-                    }
-                  >
-                    <Cog className="w-4 h-4" />
-                  </NavLink>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="text-xs">Settings</TooltipContent>
-              </Tooltip>
+              <>
+                <ConnectChannelsSection collapsed />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <NavLink
+                      to="/dashboard/settings"
+                      onClick={onNavigate}
+                      className={({ isActive }) =>
+                        cn(
+                          "mt-2 flex items-center justify-center px-0 py-2 rounded-lg min-h-[36px] transition-colors",
+                          isActive
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                        )
+                      }
+                    >
+                      <Cog className="w-4 h-4" />
+                    </NavLink>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="text-xs">Settings</TooltipContent>
+                </Tooltip>
+              </>
             )}
           </>
         )}
