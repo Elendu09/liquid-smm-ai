@@ -13,6 +13,9 @@ export interface RssFeed {
   auto_publish: boolean;
   poll_interval_minutes: number;
   filter_keywords: string[];
+  exclude_keywords: string[];
+  ai_rewrite: boolean;
+  last_item_count: number;
   caption_template: string | null;
   last_fetched_at: string | null;
   last_status: string | null;
@@ -64,6 +67,9 @@ export function useRssFeeds() {
         target_platforms: (r.target_platforms as string[]) ?? [],
         target_account_ids: (r.target_account_ids as string[]) ?? [],
         filter_keywords: (r.filter_keywords as string[]) ?? [],
+        exclude_keywords: (r.exclude_keywords as string[]) ?? [],
+        ai_rewrite: (r.ai_rewrite as boolean) ?? false,
+        last_item_count: (r.last_item_count as number) ?? 0,
       })) as RssFeed[],
     );
     setItems((i.data ?? []) as RssItem[]);
@@ -107,6 +113,8 @@ export function useRssFeeds() {
         auto_publish: input.auto_publish ?? false,
         poll_interval_minutes: input.poll_interval_minutes ?? 60,
         filter_keywords: input.filter_keywords ?? [],
+        exclude_keywords: input.exclude_keywords ?? [],
+        ai_rewrite: input.ai_rewrite ?? false,
         caption_template: input.caption_template ?? "{title}\n\n{link}",
         active: true,
       });
@@ -149,5 +157,57 @@ export function useRssFeeds() {
     }
   }, [load]);
 
-  return { feeds, items, loading, fetching, addFeed, updateFeed, removeFeed, fetchNow, refetch: load };
+  const importItem = useCallback(
+    async (item: RssItem, opts?: { platforms?: string[]; scheduledAt?: string | null }) => {
+      if (!guardWrite("import RSS item")) return;
+      if (!user) return toast.error("Sign in first");
+      const feed = feeds.find((f) => f.id === item.feed_id);
+      const platforms = opts?.platforms ?? feed?.target_platforms ?? [];
+      const caption =
+        (feed?.caption_template ?? "{title}\n\n{link}")
+          .split("{title}").join(item.title ?? "")
+          .split("{link}").join(item.link ?? "")
+          .split("{summary}").join(item.summary ?? "");
+      const { data: post, error } = await client
+        .from("scheduled_posts")
+        .insert({
+          user_id: user.id,
+          caption,
+          media_url: item.image_url ?? null,
+          status: opts?.scheduledAt ? "scheduled" : "draft",
+          platform_ids: platforms,
+          scheduled_at: opts?.scheduledAt ?? null,
+        })
+        .select("id")
+        .single();
+      if (error) return toast.error(error.message);
+      await client
+        .from("rss_items")
+        .update({ imported: true, scheduled_post_id: post?.id ?? null })
+        .eq("id", item.id);
+      toast.success(opts?.scheduledAt ? "Scheduled from RSS" : "Draft created");
+      await load();
+    },
+    [user, feeds, load],
+  );
+
+  const dismissItem = useCallback(async (id: string) => {
+    if (!guardWrite("dismiss item")) return;
+    const { error } = await client.from("rss_items").delete().eq("id", id);
+    if (error) toast.error(error.message);
+  }, []);
+
+  return {
+    feeds,
+    items,
+    loading,
+    fetching,
+    addFeed,
+    updateFeed,
+    removeFeed,
+    fetchNow,
+    importItem,
+    dismissItem,
+    refetch: load,
+  };
 }

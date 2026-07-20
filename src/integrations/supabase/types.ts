@@ -757,13 +757,16 @@ export type Database = {
       rss_feeds: {
         Row: {
           active: boolean
+          ai_rewrite: boolean
           auto_publish: boolean
           caption_template: string | null
           created_at: string
+          exclude_keywords: string[]
           filter_keywords: string[]
           id: string
           last_error: string | null
           last_fetched_at: string | null
+          last_item_count: number
           last_status: string | null
           owner_id: string
           poll_interval_minutes: number
@@ -775,13 +778,16 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          ai_rewrite?: boolean
           auto_publish?: boolean
           caption_template?: string | null
           created_at?: string
+          exclude_keywords?: string[]
           filter_keywords?: string[]
           id?: string
           last_error?: string | null
           last_fetched_at?: string | null
+          last_item_count?: number
           last_status?: string | null
           owner_id: string
           poll_interval_minutes?: number
@@ -793,13 +799,16 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          ai_rewrite?: boolean
           auto_publish?: boolean
           caption_template?: string | null
           created_at?: string
+          exclude_keywords?: string[]
           filter_keywords?: string[]
           id?: string
           last_error?: string | null
           last_fetched_at?: string | null
+          last_item_count?: number
           last_status?: string | null
           owner_id?: string
           poll_interval_minutes?: number
