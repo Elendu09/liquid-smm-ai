@@ -67,6 +67,9 @@ export function useRssFeeds() {
         target_platforms: (r.target_platforms as string[]) ?? [],
         target_account_ids: (r.target_account_ids as string[]) ?? [],
         filter_keywords: (r.filter_keywords as string[]) ?? [],
+        exclude_keywords: (r.exclude_keywords as string[]) ?? [],
+        ai_rewrite: (r.ai_rewrite as boolean) ?? false,
+        last_item_count: (r.last_item_count as number) ?? 0,
       })) as RssFeed[],
     );
     setItems((i.data ?? []) as RssItem[]);
