@@ -34,6 +34,7 @@ const fromRow = (r: Row): HubItem => ({
 });
 
 const localKey = (hubKey: string) => `hub_items:${hubKey}`;
+const evtName = (hubKey: string) => `hub_items:update:${hubKey}`;
 
 function readLocal(hubKey: string, seed: HubItem[]): HubItem[] {
   try {
@@ -46,7 +47,38 @@ function readLocal(hubKey: string, seed: HubItem[]): HubItem[] {
   }
 }
 function writeLocal(hubKey: string, items: HubItem[]) {
-  try { localStorage.setItem(localKey(hubKey), JSON.stringify(items)); } catch { /* ignore */ }
+  try {
+    localStorage.setItem(localKey(hubKey), JSON.stringify(items));
+    window.dispatchEvent(new CustomEvent(evtName(hubKey)));
+  } catch { /* ignore */ }
+}
+
+/**
+ * Imperative push from non-React modules (dialogs, AI generators).
+ * Persists to `hub_items` when signed-in, or to the guest/local cache
+ * (with a broadcast) so mounted boards refresh instantly.
+ */
+export async function pushHubItems(hubKey: string, items: HubItem[]) {
+  if (!items.length) return;
+  const { data } = await supabase.auth.getSession();
+  const uid = data.session?.user?.id ?? null;
+  if (!uid || isGuestSession()) {
+    const current = readLocal(hubKey, []);
+    writeLocal(hubKey, [...items, ...current]);
+    return;
+  }
+  await supabase.from("hub_items").insert(
+    items.map((it) => ({
+      id: it.id,
+      user_id: uid,
+      hub_key: hubKey,
+      title: it.title,
+      subtitle: it.subtitle ?? null,
+      status: it.status,
+      meta: it.meta ?? null,
+      metadata: (it.metadata ?? {}) as Json,
+    })) as never,
+  );
 }
 
 /**
