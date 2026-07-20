@@ -416,3 +416,10 @@
     display: none;
   }
 }
+
+:root {
+  --mobile-header-h: 3.5rem;
+}
+@media (min-width: 1024px) {
+  :root { --mobile-header-h: 0px; }
+}
