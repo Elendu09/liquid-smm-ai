@@ -7,6 +7,9 @@ import { PostingHeatmap } from "@/components/analytics/PostingHeatmap";
 import { FunnelCard } from "@/components/analytics/FunnelCard";
 import { AudienceMix } from "@/components/analytics/AudienceMix";
 import { AnomalyFeed } from "@/components/analytics/AnomalyFeed";
+import { BestTimeInsightsCard } from "@/components/analytics/BestTimeInsightsCard";
+import { HashtagPerformanceCard } from "@/components/analytics/HashtagPerformanceCard";
+import { CompetitorBenchmarkCard } from "@/components/audience/CompetitorBenchmarkCard";
 
 export default function AnalyticsPage() {
   const [range, setRange] = useState<RangeKey>("30D");
@@ -18,11 +21,14 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
           <PlatformBreakdown range={range} />
+          <BestTimeInsightsCard />
           <PostingHeatmap />
           <TopPostsLeaderboard />
         </div>
         <div className="space-y-4">
           <FunnelCard />
+          <HashtagPerformanceCard />
+          <CompetitorBenchmarkCard />
           <AudienceMix />
           <AnomalyFeed />
         </div>
