@@ -13,6 +13,8 @@ import NotFound from "./pages/NotFound";
 import OAuthConsent from "./pages/OAuthConsent";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Pricing from "./pages/Pricing";
 import Solutions from "./pages/Solutions";
 import PublicCalendar from "./pages/PublicCalendar";
@@ -73,6 +75,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/solutions" element={<Solutions />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
