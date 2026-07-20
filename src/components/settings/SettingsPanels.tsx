@@ -642,6 +642,36 @@ export function BillingPanel() {
   );
 }
 
+/* ============================== Session row ============================== */
+
+function CurrentSessionRow() {
+  const { user } = useAuthUser();
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  const device = /iPhone|iPad/.test(ua)
+    ? "iPhone / iPad"
+    : /Android/.test(ua)
+    ? "Android device"
+    : /Macintosh/.test(ua)
+    ? "Mac"
+    : /Windows/.test(ua)
+    ? "Windows PC"
+    : "This device";
+  const browser = /Chrome/.test(ua) ? "Chrome" : /Firefox/.test(ua) ? "Firefox" : /Safari/.test(ua) ? "Safari" : "Browser";
+  return (
+    <div className="flex items-center justify-between p-3 rounded-lg border">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <h4 className="font-medium truncate">{browser} on {device}</h4>
+          <Badge variant="secondary" className="bg-green-500/10 text-green-500">Current</Badge>
+        </div>
+        <p className="text-sm text-muted-foreground truncate">
+          {user?.email ?? "guest"} · signed in {user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : "just now"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /* ============================== Security ============================== */
 
 export function SecurityPanel() {
