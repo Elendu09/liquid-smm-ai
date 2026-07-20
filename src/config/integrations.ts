@@ -82,6 +82,7 @@ export const INTEGRATIONS: Integration[] = [
     transport: "http",
     cli: [{ label: "Codex CLI", command: "codex mcp add skyrank --url {SERVER_URL}" }],
     steps: baseSteps("ChatGPT"),
+    deepLink: (u) => `https://chatgpt.com/?mcp=${encodeURIComponent(u)}`,
     prompts: [
       "Show me all my scheduled SkyRank posts for this week",
       "Draft a post in SkyRank that says 'We just launched our redesigned dashboard' for my X channel",
@@ -98,6 +99,7 @@ export const INTEGRATIONS: Integration[] = [
     serverName: SERVER_NAME,
     transport: "http",
     cli: [{ label: "Claude Code", command: "claude mcp add skyrank --url {SERVER_URL}" }],
+    deepLink: (u) => `claude://mcp/install?name=skyrank&url=${encodeURIComponent(u)}`,
     steps: baseSteps("Claude"),
     prompts: [
       "List every connected SkyRank channel with its health status",
@@ -131,6 +133,7 @@ export const INTEGRATIONS: Integration[] = [
     serverName: SERVER_NAME,
     transport: "http",
     steps: baseSteps("Cursor"),
+    deepLink: (u) => `cursor://anysphere.cursor-deeplink/mcp/install?name=skyrank&url=${encodeURIComponent(u)}`,
     prompts: [
       "Pull my last 5 SkyRank captions into this file",
       "Schedule a launch post at 9am tomorrow across Instagram and LinkedIn",
