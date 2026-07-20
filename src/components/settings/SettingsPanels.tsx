@@ -923,6 +923,7 @@ export function SecurityPanel() {
         onOpenChange={setTfaOpen}
         onEnabled={() => setTwoFactorEnabled(true)}
       />
+      <SignOutDialog open={signOutAllOpen} onOpenChange={setSignOutAllOpen} scope="all" />
     </div>
   );
 }
