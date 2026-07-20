@@ -83,6 +83,21 @@ export default function TeamPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [roleTarget, setRoleTarget] = useState<TeamMember | null>(null);
   const [removeTarget, setRemoveTarget] = useState<TeamMember | null>(null);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | MemberRole>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | TeamMember["status"]>("all");
+  const seatLimit = 10;
+  const seatPct = Math.min(100, (members.length / seatLimit) * 100);
+
+  const visibleMembers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return members.filter((m) => {
+      if (roleFilter !== "all" && m.role !== roleFilter) return false;
+      if (statusFilter !== "all" && m.status !== statusFilter) return false;
+      if (q && !(m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q))) return false;
+      return true;
+    });
+  }, [members, search, roleFilter, statusFilter]);
 
   const stats = useMemo(
     () => ({
