@@ -43,6 +43,69 @@ export type Database = {
           },
         ]
       }
+      ai_command_history: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          prompt: string
+          status: string
+          text: string
+          tool_calls: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          prompt: string
+          status?: string
+          text?: string
+          tool_calls?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          prompt?: string
+          status?: string
+          text?: string
+          tool_calls?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_command_settings: {
+        Row: {
+          created_at: string
+          enter_behavior: string
+          extras: Json
+          ghost_autocomplete: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enter_behavior?: string
+          extras?: Json
+          ghost_autocomplete?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enter_behavior?: string
+          extras?: Json
+          ghost_autocomplete?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       brand_voices: {
         Row: {
           audience: string
@@ -443,6 +506,42 @@ export type Database = {
           snoozed_until?: string | null
           title?: string
           type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      platform_presets: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          platform: string
+          tool_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          platform: string
+          tool_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          platform?: string
+          tool_key?: string
           updated_at?: string
           user_id?: string
         }
