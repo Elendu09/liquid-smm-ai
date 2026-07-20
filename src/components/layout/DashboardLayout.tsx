@@ -8,7 +8,7 @@ import { HelpWidget } from "@/components/support/HelpWidget";
 import { AiAssistantDrawer } from "@/components/dashboard/AiAssistantDrawer";
 import { PresetHandler } from "@/components/support/PresetHandler";
 import { PresetLandingBanner } from "@/components/dashboard/PresetLandingBanner";
-import { DemoBanner } from "@/components/layout/DemoBanner";
+import { DemoBanner, DemoBannerInline } from "@/components/layout/DemoBanner";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useSendSimulator } from "@/hooks/useSendSimulator";
 
@@ -41,6 +41,7 @@ export function DashboardLayout() {
             "calc(var(--demo-banner-h, 0px) + var(--mobile-header-h, 0px))",
         }}
       >
+        <DemoBannerInline />
         <PresetLandingBanner />
         <Outlet />
         <div className="h-20 lg:hidden" aria-hidden />
