@@ -13,6 +13,7 @@ import { aiCreate } from "@/hooks/useAiCreate";
 import { pushLocalCollection, useLocalCollection } from "@/hooks/useLocalCollection";
 import { useScheduledPosts, type Recurrence } from "@/hooks/useScheduledPosts";
 import { useAccounts } from "@/contexts/AccountContext";
+import { useContentCategories } from "@/hooks/useContentCategories";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
 
@@ -43,11 +44,14 @@ export function NewPostDialog({
 }) {
   const { accounts } = useAccounts();
   const { add: addScheduled } = useScheduledPosts();
+  const { categories } = useContentCategories();
   const { items: templates, add: addTemplate, remove: removeTemplate } =
     useLocalCollection<PostTemplate>("publish", "templates");
   const [title, setTitle] = useState(initial?.title ?? "");
   const [topic, setTopic] = useState("");
   const [caption, setCaption] = useState(initial?.caption ?? "");
+  const [firstComment, setFirstComment] = useState("");
+  const [categoryId, setCategoryId] = useState<string>("");
   const [selected, setSelected] = useState<string[]>(
     initial?.platformIds?.length ? initial.platformIds : [accounts[0]?.platformId ?? "instagram"],
   );
@@ -121,7 +125,13 @@ export function NewPostDialog({
     const recurrence: Recurrence | undefined =
       recFreq !== "none" ? { freq: recFreq, count: Math.max(1, recCount) } : undefined;
     addScheduled(
-      { caption, scheduledAt: new Date(scheduleAt).toISOString(), platformIds: selected },
+      {
+        caption,
+        scheduledAt: new Date(scheduleAt).toISOString(),
+        platformIds: selected,
+        firstComment: firstComment.trim() || undefined,
+        categoryId: categoryId || undefined,
+      },
       { recurrence },
     );
     persistTemplateIfRequested();
@@ -131,6 +141,7 @@ export function NewPostDialog({
 
   const reset = () => {
     setTitle(""); setTopic(""); setCaption(""); setScheduleAt("");
+    setFirstComment(""); setCategoryId("");
     setRecFreq("none"); setRecCount(4); setSaveTemplate(false); setTemplateName("");
   };
 
