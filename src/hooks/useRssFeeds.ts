@@ -1,0 +1,153 @@
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { guardWrite } from "@/hooks/useGuest";
+
+export interface RssFeed {
+  id: string;
+  url: string;
+  title: string | null;
+  target_platforms: string[];
+  target_account_ids: string[];
+  auto_publish: boolean;
+  poll_interval_minutes: number;
+  filter_keywords: string[];
+  caption_template: string | null;
+  last_fetched_at: string | null;
+  last_status: string | null;
+  last_error: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+export interface RssItem {
+  id: string;
+  feed_id: string;
+  guid: string;
+  title: string | null;
+  link: string | null;
+  summary: string | null;
+  image_url: string | null;
+  published_at: string | null;
+  imported: boolean;
+  scheduled_post_id: string | null;
+  created_at: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const client = supabase as any;
+
+export function useRssFeeds() {
+  const { user } = useAuthUser();
+  const [feeds, setFeeds] = useState<RssFeed[]>([]);
+  const [items, setItems] = useState<RssItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!user) {
+      setFeeds([]);
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const [f, i] = await Promise.all([
+      client.from("rss_feeds").select("*").order("created_at", { ascending: false }),
+      client.from("rss_items").select("*").order("created_at", { ascending: false }).limit(100),
+    ]);
+    if (f.error) toast.error(f.error.message);
+    setFeeds(
+      (f.data ?? []).map((r: Record<string, unknown>) => ({
+        ...r,
+        target_platforms: (r.target_platforms as string[]) ?? [],
+        target_account_ids: (r.target_account_ids as string[]) ?? [],
+        filter_keywords: (r.filter_keywords as string[]) ?? [],
+      })) as RssFeed[],
+    );
+    setItems((i.data ?? []) as RssItem[]);
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`rss:${user.id}:${Math.random().toString(36).slice(2)}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "rss_feeds", filter: `owner_id=eq.${user.id}` },
+        () => load(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "rss_items", filter: `owner_id=eq.${user.id}` },
+        () => load(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [user, load]);
+
+  const addFeed = useCallback(
+    async (input: Partial<RssFeed> & { url: string }) => {
+      if (!guardWrite("add RSS feeds")) return;
+      if (!user) return toast.error("Sign in to add feeds");
+      const { error } = await client.from("rss_feeds").insert({
+        owner_id: user.id,
+        url: input.url,
+        title: input.title ?? null,
+        target_platforms: input.target_platforms ?? [],
+        target_account_ids: input.target_account_ids ?? [],
+        auto_publish: input.auto_publish ?? false,
+        poll_interval_minutes: input.poll_interval_minutes ?? 60,
+        filter_keywords: input.filter_keywords ?? [],
+        caption_template: input.caption_template ?? "{title}\n\n{link}",
+        active: true,
+      });
+      if (error) return toast.error(error.message);
+      toast.success("RSS feed added");
+    },
+    [user],
+  );
+
+  const updateFeed = useCallback(async (id: string, patch: Partial<RssFeed>) => {
+    if (!guardWrite("update RSS feed")) return;
+    const { error } = await client.from("rss_feeds").update(patch).eq("id", id);
+    if (error) toast.error(error.message);
+  }, []);
+
+  const removeFeed = useCallback(async (id: string) => {
+    if (!guardWrite("delete RSS feed")) return;
+    const { error } = await client.from("rss_feeds").delete().eq("id", id);
+    if (error) toast.error(error.message);
+  }, []);
+
+  const fetchNow = useCallback(async (feedId?: string) => {
+    if (!guardWrite("fetch RSS")) return;
+    setFetching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("rss-fetch", {
+        body: feedId ? { feed_id: feedId } : {},
+      });
+      if (error) throw error;
+      const results = (data as { results?: { imported?: number; error?: string }[] })?.results ?? [];
+      const total = results.reduce((n, r) => n + (r.imported ?? 0), 0);
+      const errs = results.filter((r) => r.error).length;
+      if (errs) toast.warning(`Fetched with ${errs} error(s)`);
+      else toast.success(total ? `Imported ${total} new item(s)` : "Feeds up-to-date");
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Fetch failed");
+    } finally {
+      setFetching(false);
+    }
+  }, [load]);
+
+  return { feeds, items, loading, fetching, addFeed, updateFeed, removeFeed, fetchNow, refetch: load };
+}
