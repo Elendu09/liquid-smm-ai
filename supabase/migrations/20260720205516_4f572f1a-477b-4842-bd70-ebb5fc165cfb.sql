@@ -1,0 +1,1 @@
+ALTER TABLE public.rss_items ADD COLUMN IF NOT EXISTS thumbnail_url TEXT;
