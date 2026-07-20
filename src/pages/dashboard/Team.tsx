@@ -67,11 +67,8 @@ function lastActiveLabel(iso?: string) {
 }
 
 export default function TeamPage() {
-  const { items: members, setItems, add, update, remove } = useLocalCollection<TeamMember>(
-    "settings",
-    "team",
-    seedMembers,
-  );
+  const { user } = useAuthUser();
+  const { members, invite, update, remove } = useTeamMembers();
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [roleTarget, setRoleTarget] = useState<TeamMember | null>(null);
@@ -99,56 +96,36 @@ export default function TeamPage() {
             : m.role === "editor"
             ? "Scheduled content across platforms"
             : "Viewed analytics dashboard",
-        time: lastActiveLabel(m.lastActiveAt),
+        time: lastActiveLabel(m.lastActiveAt ?? undefined),
       }));
   }, [members]);
 
-  const handleInvite = ({
-    email,
-    role,
-    expiresInDays,
-    note,
-  }: {
+  const handleInvite = async (input: {
     email: string;
     role: MemberRole;
     expiresInDays: number;
     note?: string;
   }) => {
-    if (members.some((m) => m.email.toLowerCase() === email.toLowerCase())) {
-      toast.error("That email is already invited");
-      return;
-    }
-    const token = crypto.randomUUID();
-    add({
-      id: crypto.randomUUID(),
-      name: email.split("@")[0],
-      email,
-      role,
-      status: "pending",
-      joinedAt: new Date().toISOString(),
-      inviteToken: token,
-      inviteExpiresAt: new Date(Date.now() + expiresInDays * 86_400_000).toISOString(),
-      note,
-    });
-    logAudit({ actor: "You", action: `Invited ${role}`, target: email, category: "member" });
-    toast.success(`Invite sent to ${email}`);
+    if (!user) return toast.error("Sign in to invite teammates");
+    await invite(input);
+    logAudit({ actor: "You", action: `Invited ${input.role}`, target: input.email, category: "member" });
   };
 
-  const handleRoleChange = (id: string, role: MemberRole) => {
+  const handleRoleChange = async (id: string, role: MemberRole) => {
     const m = members.find((x) => x.id === id);
-    update(id, { role });
+    await update(id, { role });
     if (m) logAudit({ actor: "You", action: `Changed role to ${role}`, target: m.email, category: "member" });
     toast.success("Role updated");
   };
 
-  const handleRemove = (m: TeamMember) => {
-    remove(m.id);
+  const handleRemove = async (m: TeamMember) => {
+    await remove(m.id);
     logAudit({ actor: "You", action: "Removed member", target: m.email, category: "member" });
     toast.success(`${m.name} removed`);
   };
 
-  const handleResend = (m: TeamMember) => {
-    update(m.id, {
+  const handleResend = async (m: TeamMember) => {
+    await update(m.id, {
       inviteExpiresAt: new Date(Date.now() + 7 * 86_400_000).toISOString(),
       inviteToken: crypto.randomUUID(),
     });
@@ -156,8 +133,8 @@ export default function TeamPage() {
     toast.success(`Invite resent to ${m.email}`);
   };
 
-  const handleActivate = (m: TeamMember) => {
-    update(m.id, { status: "active", lastActiveAt: new Date().toISOString() });
+  const handleActivate = async (m: TeamMember) => {
+    await update(m.id, { status: "active", lastActiveAt: new Date().toISOString() });
     logAudit({ actor: "You", action: "Marked invite accepted", target: m.email, category: "member" });
     toast.success(`${m.name} is now active`);
   };
@@ -171,6 +148,7 @@ export default function TeamPage() {
       toast.error("Copy failed");
     }
   };
+
 
   return (
     <div className="relative">
