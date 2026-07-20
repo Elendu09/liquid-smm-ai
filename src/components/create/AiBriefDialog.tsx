@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { aiCreate, type AiBrief } from "@/hooks/useAiCreate";
-import { pushLocalCollection } from "@/hooks/useLocalCollection";
+import { pushHubItems } from "@/hooks/useHubItems";
 
 export function AiBriefDialog({
   open,
@@ -40,26 +40,35 @@ export function AiBriefDialog({
     toast.success("Post kit copied");
   };
 
-  const saveToLibrary = () => {
+  const saveToLibrary = async () => {
     if (!result) return;
-    pushLocalCollection("create", "ai", [
+    await pushHubItems("create-ai", [
       {
         id: crypto.randomUUID(),
         title: topic || "AI brief",
         subtitle: result.caption.slice(0, 120),
         status: "generated",
         createdAt: new Date().toISOString(),
+        metadata: {
+          caption: result.caption,
+          hashtags: result.hashtags,
+          hooks: result.hooks,
+          cta: result.cta,
+          platform,
+          tone,
+          goal,
+          audience,
+        },
       },
     ]);
-    pushLocalCollection("create", "captions", [
+    await pushHubItems("create-captions", [
       {
         id: crypto.randomUUID(),
         title: `Brief: ${topic}`,
         subtitle: result.caption.slice(0, 140),
         status: "polished",
         createdAt: new Date().toISOString(),
-        body: result.caption,
-        hashtags: result.hashtags,
+        metadata: { body: result.caption, hashtags: result.hashtags },
       },
     ]);
     toast.success("Saved to AI Studio + Captions");

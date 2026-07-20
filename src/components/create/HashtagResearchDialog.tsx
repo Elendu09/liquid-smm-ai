@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { aiCreate, type ResearchedHashtag } from "@/hooks/useAiCreate";
-import { pushLocalCollection } from "@/hooks/useLocalCollection";
+import { pushHubItems } from "@/hooks/useHubItems";
 import { cn } from "@/lib/utils";
 
 const VOLUME_TONE: Record<ResearchedHashtag["volume"], string> = {
@@ -54,7 +54,7 @@ export function HashtagResearchDialog({
       return n;
     });
 
-  const save = () => {
+  const save = async () => {
     const items = results
       .filter((r) => picked.has(r.tag))
       .map((r) => ({
@@ -63,12 +63,13 @@ export function HashtagResearchDialog({
         subtitle: `${r.volume} volume · ${r.difficulty} competition`,
         status: r.volume === "viral" ? "trending" : "saved",
         createdAt: new Date().toISOString(),
+        metadata: { tag: r.tag, volume: r.volume, difficulty: r.difficulty, platform, topic },
       }));
     if (items.length === 0) {
       toast.error("Pick at least one hashtag");
       return;
     }
-    pushLocalCollection("create", "hashtags", items);
+    await pushHubItems("create-hashtags", items);
     toast.success(`Saved ${items.length} hashtag${items.length > 1 ? "s" : ""}`);
     onOpenChange(false);
     setResults([]);
