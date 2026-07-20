@@ -183,6 +183,7 @@ Deno.serve(async (req) => {
           last_fetched_at: new Date().toISOString(),
           last_status: "ok",
           last_error: null,
+          last_item_count: parsed.items.length,
           title: feed.title ?? parsed.title,
         })
         .eq("id", feed.id);
