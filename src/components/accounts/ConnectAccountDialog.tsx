@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Loader2, Check, ArrowRight, Shield, Search, Clock, ExternalLink, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -31,10 +31,10 @@ type Step = "platform" | "details" | "authorize";
 
 const REMINDER_KEY = "smmpilot:connect-later";
 
-// Platforms whose OAuth adapter has env credentials at build time. The client
-// probes the `oauth-start` edge function at runtime; when it responds with
-// `adapter_not_configured` we fall back to the manual handshake below.
-const REAL_OAUTH_PLATFORMS: string[] = [
+// Platforms whose adapter registry exists on the server. Actual readiness
+// (env credentials present) is fetched from `oauth-status` at mount time so
+// the UI reflects reality without redeploys.
+const OAUTH_CANDIDATES: string[] = [
   "twitter", "linkedin", "facebook", "instagram", "tiktok", "youtube", "pinterest", "reddit",
 ];
 
