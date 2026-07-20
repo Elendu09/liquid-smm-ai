@@ -1,7 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-// Minimal RSS/Atom parser (no external deps).
 function stripCdata(s: string) {
   return s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").trim();
 }
@@ -58,10 +57,11 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
   const authHeader = req.headers.get("Authorization") ?? "";
 
   const admin = createClient(supabaseUrl, serviceKey);
-  const asUser = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+  const asUser = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
   });
   const { data: u } = await asUser.auth.getUser();
@@ -80,13 +80,6 @@ Deno.serve(async (req) => {
     /* empty */
   }
 
-  const { data: feeds, error } = await admin
-    .from("rss_feeds")
-    .select("*")
-    .eq("owner_id", userId)
-    .eq("active", true)
-    .maybeSingle_ ? [] : [];
-  // simple fetch by id or all
   const query = admin.from("rss_feeds").select("*").eq("owner_id", userId).eq("active", true);
   const { data: feedRows, error: fErr } = body.feed_id
     ? await query.eq("id", body.feed_id)
@@ -101,9 +94,7 @@ Deno.serve(async (req) => {
   const results: Record<string, unknown>[] = [];
   for (const feed of feedRows ?? []) {
     try {
-      const res = await fetch(feed.url, {
-        headers: { "User-Agent": "SMMSAAS-RSS/1.0" },
-      });
+      const res = await fetch(feed.url, { headers: { "User-Agent": "SMMSAAS-RSS/1.0" } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const xml = await res.text();
       const parsed = parseFeed(xml);
@@ -119,10 +110,9 @@ Deno.serve(async (req) => {
         ) {
           continue;
         }
-        // insert item (unique on feed_id+guid)
         const { data: existing } = await admin
           .from("rss_items")
-          .select("id, imported")
+          .select("id")
           .eq("feed_id", feed.id)
           .eq("guid", item.guid)
           .maybeSingle();
@@ -137,18 +127,14 @@ Deno.serve(async (req) => {
               .replaceAll("{summary}", item.summary) ??
             `${item.title}\n\n${item.link}`;
           const platforms = (feed.target_platforms as string[]) ?? [];
-          const accounts = (feed.target_account_ids as string[]) ?? [];
           const { data: post } = await admin
             .from("scheduled_posts")
             .insert({
               user_id: userId,
               caption,
-              media_urls: item.imageUrl ? [item.imageUrl] : [],
-              link_url: item.link,
+              media_url: item.imageUrl ?? null,
               status: "draft",
-              platforms,
-              account_ids: accounts,
-              source: "rss",
+              platform_ids: platforms,
               scheduled_at: null,
             })
             .select("id")
