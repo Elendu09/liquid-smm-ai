@@ -15,6 +15,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Pricing from "./pages/Pricing";
 import Solutions from "./pages/Solutions";
+import PublicCalendar from "./pages/PublicCalendar";
 
 
 // Dashboard shell
@@ -75,6 +76,7 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/solutions" element={<Solutions />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+              <Route path="/public/calendar/:token" element={<PublicCalendar />} />
 
               
 
