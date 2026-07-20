@@ -181,6 +181,25 @@ export function RecyclingRulesDialog({
               />
             </div>
           </div>
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div className="space-y-1.5 flex-1">
+              <Label>Category</Label>
+              <Select value={categoryId || "none"} onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="No category" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No category</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      <span className="mr-1.5">{c.emoji}</span> {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={() => setCategoriesOpen(true)}>
+              <Settings2 className="h-3.5 w-3.5 mr-1.5" /> Manage
+            </Button>
+          </div>
           <div className="flex justify-end">
             <Button size="sm" disabled={!canSave} onClick={save}>
               <Plus className="h-4 w-4 mr-1" /> Add rule
@@ -228,6 +247,11 @@ export function RecyclingRulesDialog({
                     <Badge variant="outline" className="gap-1">
                       <Clock className="h-3 w-3" /> {String(r.hour).padStart(2, "0")}:00
                     </Badge>
+                    {r.categoryId && categoryById(r.categoryId) && (
+                      <Badge variant="outline" className="gap-1" style={{ borderColor: `${categoryById(r.categoryId)!.color}66`, color: categoryById(r.categoryId)!.color }}>
+                        <Tag className="h-3 w-3" /> {categoryById(r.categoryId)!.emoji} {categoryById(r.categoryId)!.name}
+                      </Badge>
+                    )}
                     {r.platformIds.map((id) => (
                       <div key={id} className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted flex items-center gap-1">
                         <PlatformIcon platform={id} size="xs" />
@@ -245,6 +269,7 @@ export function RecyclingRulesDialog({
           )}
         </div>
       </DialogContent>
+      <ContentCategoriesDialog open={categoriesOpen} onOpenChange={setCategoriesOpen} />
     </Dialog>
   );
 }
