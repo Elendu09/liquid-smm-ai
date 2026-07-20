@@ -39,6 +39,7 @@ import { useAccounts, type ConnectedAccount } from "@/contexts/AccountContext";
 import { platforms } from "@/config/platforms";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { ConnectAccountDialog } from "@/components/accounts/ConnectAccountDialog";
+import { OAuthReadinessPanel } from "@/components/settings/OAuthReadinessPanel";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
