@@ -37,7 +37,7 @@ export function AuthLayout({ eyebrow, title, subtitle, children }: Props) {
 
         <div className="relative space-y-8">
           <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-            HOME OF SMM
+            SMMSAAS
           </div>
           <h2 className="font-['Instrument_Serif'] font-normal leading-[0.95] text-[clamp(2.5rem,5vw,4.5rem)] text-foreground">
             One studio.
@@ -65,7 +65,7 @@ export function AuthLayout({ eyebrow, title, subtitle, children }: Props) {
         </div>
 
         <div className="relative text-xs text-muted-foreground">
-          © {new Date().getFullYear()} HOME OF SMM
+          © {new Date().getFullYear()} SMMSAAS
         </div>
       </aside>
 

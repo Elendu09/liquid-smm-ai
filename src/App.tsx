@@ -36,6 +36,7 @@ import LinkInBioHub from "@/pages/dashboard/hubs/LinkInBioHub";
 import ActivityHub from "@/pages/dashboard/hubs/ActivityHub";
 import SettingsHub from "@/pages/dashboard/hubs/SettingsHub";
 import Support from "@/pages/dashboard/Support";
+import Team from "@/pages/dashboard/Team";
 
 const queryClient = new QueryClient();
 
@@ -106,6 +107,7 @@ const App = () => (
                 <Route path="link-in-bio/*" element={<LinkInBioHub />} />
                 <Route path="activity/*" element={<ActivityHub />} />
                 <Route path="settings/*" element={<SettingsHub />} />
+                <Route path="team" element={<Team />} />
                 <Route path="support" element={<Support />} />
 
                 {/* Legacy route redirects */}
