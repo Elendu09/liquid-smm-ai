@@ -153,8 +153,66 @@ export function useCustomReports() {
 
   const reports = useMemo(() => col.items, [col.items]);
 
-  return { reports, add, update, remove, duplicate, upsertCard, removeCard };
+  return { reports, add, addFromTemplate, update, remove, duplicate, upsertCard, removeCard };
 }
+
+export interface ReportTemplate {
+  id: string;
+  name: string;
+  description: string;
+  range: RangeKey;
+  cards: Omit<ChartCardConfig, "id">[];
+}
+
+export const REPORT_TEMPLATES: ReportTemplate[] = [
+  {
+    id: "tpl-reels-growth",
+    name: "Reels growth",
+    description: "Track short-form reach, plays, and follower lift.",
+    range: "14d",
+    cards: [
+      { name: "Reels reach", metric: "reach", viz: "area", color: "hsl(var(--primary))", compare: true },
+      { name: "Impressions", metric: "impressions", viz: "line", color: "#8b5cf6", compare: true },
+      { name: "Engagement rate", metric: "engagement", viz: "line", color: "#10b981", compare: true },
+      { name: "New followers", metric: "followers", viz: "kpi", color: "#f59e0b" },
+    ],
+  },
+  {
+    id: "tpl-reply-engagement",
+    name: "Reply engagement",
+    description: "Conversation volume, response health, and CTR.",
+    range: "7d",
+    cards: [
+      { name: "Replies", metric: "replies", viz: "bar", color: "#ec4899", compare: true },
+      { name: "Engagement rate", metric: "engagement", viz: "area", color: "hsl(var(--primary))", compare: true },
+      { name: "CTR", metric: "ctr", viz: "line", color: "#10b981", compare: true },
+      { name: "Reach", metric: "reach", viz: "kpi", color: "#f59e0b" },
+    ],
+  },
+  {
+    id: "tpl-audience-growth",
+    name: "Audience growth",
+    description: "Follower momentum vs. reach over 30 days.",
+    range: "30d",
+    cards: [
+      { name: "Followers", metric: "followers", viz: "line", color: "hsl(var(--primary))", compare: true },
+      { name: "Reach", metric: "reach", viz: "area", color: "#8b5cf6", compare: true },
+      { name: "Impressions", metric: "impressions", viz: "bar", color: "#f59e0b" },
+    ],
+  },
+  {
+    id: "tpl-content-performance",
+    name: "Content performance",
+    description: "Weekly snapshot of reach, engagement and CTR.",
+    range: "7d",
+    cards: [
+      { name: "Reach", metric: "reach", viz: "kpi", color: "hsl(var(--primary))" },
+      { name: "Engagement", metric: "engagement", viz: "area", color: "#10b981", compare: true },
+      { name: "Impressions", metric: "impressions", viz: "line", color: "#8b5cf6", compare: true },
+      { name: "CTR", metric: "ctr", viz: "bar", color: "#ec4899" },
+    ],
+  },
+];
 
 /**
  * Deterministic mock metric resolver. Reuses the follower/engagement values
