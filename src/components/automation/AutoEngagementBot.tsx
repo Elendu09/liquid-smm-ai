@@ -176,6 +176,43 @@ export const AutoEngagementBot = () => {
               Separate keywords with spaces. Bot will engage with posts using these tags.
             </p>
           </div>
+
+          {/* Negative keywords */}
+          <div>
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <Shield className="h-4 w-4 text-rose-500" />
+              Negative Keywords
+              <Badge variant="secondary" className="text-[10px]">skip</Badge>
+            </h4>
+            <Input
+              value={negativeKeywords}
+              onChange={(e) => setNegativeKeywords(e.target.value)}
+              placeholder="#spam #giveaway #followback"
+              className="bg-secondary/50 border-border"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              Posts matching any of these tags or phrases are always skipped — even if they also match a target keyword.
+            </p>
+          </div>
+
+          {/* Competitor allow-list */}
+          <div>
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <UserPlus className="h-4 w-4 text-emerald-500" />
+              Competitor Allow-list
+              <Badge variant="secondary" className="text-[10px]">only these accounts</Badge>
+            </h4>
+            <Input
+              value={competitorAllowList}
+              onChange={(e) => setCompetitorAllowList(e.target.value)}
+              placeholder="@brand_x @rival_co"
+              className="bg-secondary/50 border-border"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              When set, the bot will only engage with followers of these accounts — perfect for competitor scraping campaigns. Leave empty to engage everyone matching your keywords.
+            </p>
+          </div>
+
         </div>
 
         {/* Activity Log */}
