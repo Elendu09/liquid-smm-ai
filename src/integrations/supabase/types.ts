@@ -106,6 +106,54 @@ export type Database = {
         }
         Relationships: []
       }
+      asset_versions: {
+        Row: {
+          asset_id: string
+          author: string | null
+          created_at: string
+          id: string
+          note: string | null
+          reason: string
+          subtitle: string | null
+          tags: string[]
+          title: string
+          type: string
+          url: string | null
+          user_id: string
+          version: number
+        }
+        Insert: {
+          asset_id: string
+          author?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          reason?: string
+          subtitle?: string | null
+          tags?: string[]
+          title?: string
+          type?: string
+          url?: string | null
+          user_id: string
+          version: number
+        }
+        Update: {
+          asset_id?: string
+          author?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          reason?: string
+          subtitle?: string | null
+          tags?: string[]
+          title?: string
+          type?: string
+          url?: string | null
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
       brand_voices: {
         Row: {
           audience: string
@@ -263,6 +311,48 @@ export type Database = {
           name?: string
           range?: string
           template_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      integration_settings: {
+        Row: {
+          created_at: string
+          disabled_tools: string[]
+          enabled: boolean
+          id: string
+          last_error: string | null
+          last_status: string | null
+          last_used_at: string | null
+          slug: string
+          tool_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          disabled_tools?: string[]
+          enabled?: boolean
+          id?: string
+          last_error?: string | null
+          last_status?: string | null
+          last_used_at?: string | null
+          slug: string
+          tool_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          disabled_tools?: string[]
+          enabled?: boolean
+          id?: string
+          last_error?: string | null
+          last_status?: string | null
+          last_used_at?: string | null
+          slug?: string
+          tool_count?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -855,6 +945,42 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      white_label_config: {
+        Row: {
+          accent_hsl: string
+          brand_name: string
+          created_at: string
+          custom_login_tagline: string
+          hide_badge: boolean
+          logo_url: string
+          support_email: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent_hsl?: string
+          brand_name?: string
+          created_at?: string
+          custom_login_tagline?: string
+          hide_badge?: boolean
+          logo_url?: string
+          support_email?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent_hsl?: string
+          brand_name?: string
+          created_at?: string
+          custom_login_tagline?: string
+          hide_badge?: boolean
+          logo_url?: string
+          support_email?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
