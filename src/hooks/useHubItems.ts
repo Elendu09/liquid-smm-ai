@@ -157,7 +157,7 @@ export function useHubItems(hubKey: string, seed: HubItem[]) {
     if (patch.meta !== undefined) row.meta = patch.meta;
     if (patch.metadata !== undefined) row.metadata = patch.metadata;
     if (Object.keys(row).length) {
-      await supabase.from("hub_items").update(row).eq("id", id);
+      await (supabase.from("hub_items") as unknown as { update: (r: unknown) => { eq: (c: string, v: string) => Promise<unknown> } }).update(row).eq("id", id);
     }
   }, [items, uid, hubKey]);
 
