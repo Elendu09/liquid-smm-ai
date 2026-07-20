@@ -96,6 +96,7 @@ export const ContentCalendar = () => {
   const [fillWeekOpen, setFillWeekOpen] = useState(false);
   const [recycleOpen, setRecycleOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [showBestTimes, setShowBestTimes] = useState(true);
   const [detailsPost, setDetailsPost] = useState<ScheduledPost | null>(null);
 
@@ -381,6 +382,9 @@ export const ContentCalendar = () => {
         </Button>
         <Button size="sm" variant="outline" onClick={() => setCsvOpen(true)}>
           <Upload className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Import CSV</span>
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => setShareOpen(true)}>
+          <Share2 className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Share</span>
         </Button>
         <Button size="sm" variant="outline" onClick={() => setFillWeekOpen(true)}>
           <Sparkles className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">AI Fill Week</span>
