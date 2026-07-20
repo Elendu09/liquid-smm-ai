@@ -112,15 +112,29 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
   };
 
   const startAuthorize = async () => {
-    if (!platform || !handle.trim()) {
+    if (!platform) return;
+    const isRealNow = REAL_OAUTH_PLATFORMS.includes(platform.id);
+    if (isRealNow && !isGuestSession()) {
+      setAuthorizing(true);
+      setStep("authorize");
+      const res = await startProviderOAuth(platform.id);
+      if (!res.ok) {
+        toast.error(res.message ?? "OAuth is not configured yet — falling back to manual.");
+        setAuthorizing(false);
+        setStep("details");
+        return;
+      }
+      // Browser will redirect to provider; nothing else to do.
+      return;
+    }
+    if (!handle.trim()) {
       toast.error("Please enter a handle");
       return;
     }
+    if (!guardWrite("Sign in to connect real accounts")) return;
     setAuthorizing(true);
     setStep("authorize");
-    // Simulated OAuth handshake — replace per-platform with real OAuth
-    // (e.g. Meta Graph API, TikTok Login Kit, YouTube OAuth 2.0) as
-    // provider credentials are configured.
+    // Manual handshake fallback for platforms without configured credentials.
     await new Promise((r) => setTimeout(r, 1500));
 
     const cleanedHandle = handle.replace(/^@/, "").trim();
