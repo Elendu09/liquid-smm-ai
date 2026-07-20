@@ -165,9 +165,9 @@ export function useRssFeeds() {
       const platforms = opts?.platforms ?? feed?.target_platforms ?? [];
       const caption =
         (feed?.caption_template ?? "{title}\n\n{link}")
-          .replaceAll("{title}", item.title ?? "")
-          .replaceAll("{link}", item.link ?? "")
-          .replaceAll("{summary}", item.summary ?? "");
+          .split("{title}").join(item.title ?? "")
+          .split("{link}").join(item.link ?? "")
+          .split("{summary}").join(item.summary ?? "");
       const { data: post, error } = await client
         .from("scheduled_posts")
         .insert({
