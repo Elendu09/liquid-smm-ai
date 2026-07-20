@@ -29,7 +29,7 @@ function parseFeed(xml: string) {
     const title = pick(block, "title") ?? "";
     let link = pick(block, "link") ?? pickAttr(block, "link", "href") ?? "";
     link = link.trim();
-    const guid = pick(block, "guid") ?? pick(block, "id") ?? link || title;
+    const guid = pick(block, "guid") ?? pick(block, "id") ?? (link || title);
     const summary =
       pick(block, "description") ?? pick(block, "summary") ?? pick(block, "content") ?? "";
     const pub = pick(block, "pubDate") ?? pick(block, "published") ?? pick(block, "updated");
