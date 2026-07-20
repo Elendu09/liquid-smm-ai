@@ -462,7 +462,7 @@ export const ContentCalendar = () => {
         </div>
       )}
 
-      {view === "list" && (
+      {view === "columns" && (
         <div className="relative space-y-4 pb-20">
           {filtered.length === 0 ? (
             <div className="rounded-2xl border border-border/60 bg-card p-10 text-center">
