@@ -30,7 +30,7 @@ export function DashboardLayout() {
   }, []);
 
   return (
-    <div className="dashboard-theme flex min-h-dvh w-full bg-background">
+    <div className="flex min-h-dvh w-full bg-background">
       <DashboardSidebar />
       <main className="flex-1 overflow-auto pt-14 lg:pt-0 min-w-0">
         <PresetLandingBanner />
