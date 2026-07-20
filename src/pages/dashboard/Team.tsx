@@ -225,7 +225,7 @@ export default function TeamPage() {
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="relative shrink-0">
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={m.avatar} />
+                          <AvatarImage src={m.avatarUrl ?? undefined} />
                           <AvatarFallback>{m.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <span
@@ -428,8 +428,6 @@ export default function TeamPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-        {/* keep setItems used to silence lint if never invoked */}
-        <span hidden aria-hidden onClick={() => setItems(members)} />
       </div>
     </div>
   );
