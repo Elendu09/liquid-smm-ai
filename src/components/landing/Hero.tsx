@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   ArrowRight,
   Play,
@@ -11,6 +12,8 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { enableGuest } from "@/hooks/useGuest";
+import { toast } from "sonner";
 
 const InstagramIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
@@ -84,8 +87,29 @@ const chips = [
 
 
 export function Hero() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+
+  const handleDemo = () => {
+    enableGuest();
+    toast.success("Demo mode enabled", { description: "Exploring the live dashboard as a guest." });
+    navigate("/dashboard");
+  };
+
+  const handleEmailStart = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = email.trim();
+    if (!trimmed || !/^\S+@\S+\.\S+$/.test(trimmed)) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+    try { sessionStorage.setItem("smmpilot:signup-email", trimmed); } catch { /* noop */ }
+    navigate(`/signup?email=${encodeURIComponent(trimmed)}`);
+  };
+
   return (
     <section
+
       aria-labelledby="hero-heading"
       className="relative isolate overflow-hidden bg-background text-foreground"
     >
@@ -154,16 +178,51 @@ export function Hero() {
               </Button>
             </Link>
             <Button
+              type="button"
+              onClick={handleDemo}
               size="lg"
               variant="outline"
               className="h-12 w-full min-h-11 rounded-full border-white/15 bg-white/5 px-8 text-sm font-semibold uppercase tracking-[0.15em] backdrop-blur-sm hover:bg-white/10 sm:w-auto"
             >
               <Play className="mr-2 h-4 w-4" aria-hidden="true" />
-              Watch demo
+              Try live demo
             </Button>
           </div>
 
+          {/* Email quick-start (Buffer-style) */}
+          <div className="mx-auto mt-10 w-full max-w-xl">
+            <p className="mb-4 font-['Instrument_Serif'] text-2xl leading-tight text-foreground sm:text-3xl">
+              Connected to every platform <span className="italic text-muted-foreground">and tool you use.</span>
+            </p>
+            <form
+              onSubmit={handleEmailStart}
+              className="group relative flex items-center gap-1 rounded-full border border-white/15 bg-white/[0.04] p-1.5 pl-5 shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl focus-within:border-primary/50"
+            >
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email..."
+                aria-label="Email"
+                className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+              <Button
+                type="submit"
+                className="h-10 shrink-0 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                <span className="hidden sm:inline">Get started for free</span>
+                <span className="sm:hidden">Start free</span>
+                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+              </Button>
+            </form>
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              By entering your email, you agree to receive updates from SMMSAAS.
+            </p>
+          </div>
+
           <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+
             <li className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
               No credit card required
