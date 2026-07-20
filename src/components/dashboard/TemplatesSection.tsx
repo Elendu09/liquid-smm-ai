@@ -192,7 +192,7 @@ export function TemplatesSection() {
               )}
             >
               <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/15 transition-colors">
-                <Icon className="h-4.5 w-4.5 text-primary" strokeWidth={1.75} />
+                <Icon className="h-4 w-4 text-primary" strokeWidth={1.75} />
               </div>
               <h3 className="text-sm font-semibold leading-snug line-clamp-3">{t.title}</h3>
               <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{t.short}</p>
