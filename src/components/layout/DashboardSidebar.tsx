@@ -476,6 +476,8 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
               );
             })}
 
+            {showLabels && <ConnectChannelsSection onNavigate={onNavigate} />}
+
             {showLabels && (
               <>
                 <div className="px-2 pt-4 pb-1 text-[9.5px] font-bold tracking-[0.18em] text-muted-foreground/70 uppercase">
