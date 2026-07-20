@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
-import { Sparkles, Copy, RefreshCw, Check, Instagram, Youtube, Twitter, Facebook, Linkedin, Languages, Wand2 } from "lucide-react";
+import { Sparkles, Copy, RefreshCw, Check, Instagram, Youtube, Twitter, Facebook, Linkedin, Languages, Wand2, Trophy, GitCompareArrows } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCaption, useTranslate, useGrammarFix } from "@/hooks/useSkyrank";
+import { generateCaption, generateHashtags } from "@/services/skyrank";
 import { toast } from "@/hooks/use-toast";
 import { logRun } from "@/hooks/useRunHistory";
 import { useActivePreset } from "@/hooks/useActivePreset";
 import { PresetChip } from "@/components/shared/PresetChip";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
