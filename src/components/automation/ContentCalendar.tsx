@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import {
   CalendarDays, Plus, ChevronLeft, ChevronRight, MoreHorizontal,
   Search, Trash2, Copy, ExternalLink, Clock, ListFilter, Sparkles, X,
-  Star, Repeat2, Upload, Columns3, LayoutGrid, Rows3, Rss,
+  Star, Repeat2, Upload, Columns3, LayoutGrid, Rows3, Rss, Share2,
 } from "lucide-react";
 import { KanbanBoard, type KanbanColumnDef } from "@/components/dashboard/shell/KanbanBoard";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import { EventDetailsDialog } from "@/components/publish/EventDetailsDialog";
 import { AiFillWeekDialog } from "@/components/publish/AiFillWeekDialog";
 import { RecyclingRulesDialog } from "@/components/publish/RecyclingRulesDialog";
 import { BulkCsvImportDialog } from "@/components/publish/BulkCsvImportDialog";
+import { PublicCalendarShareDialog } from "@/components/publish/PublicCalendarShareDialog";
 import { ApprovalBadge } from "@/components/publish/ApprovalControls";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
@@ -95,6 +96,7 @@ export const ContentCalendar = () => {
   const [fillWeekOpen, setFillWeekOpen] = useState(false);
   const [recycleOpen, setRecycleOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [showBestTimes, setShowBestTimes] = useState(true);
   const [detailsPost, setDetailsPost] = useState<ScheduledPost | null>(null);
 
@@ -380,6 +382,9 @@ export const ContentCalendar = () => {
         </Button>
         <Button size="sm" variant="outline" onClick={() => setCsvOpen(true)}>
           <Upload className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Import CSV</span>
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => setShareOpen(true)}>
+          <Share2 className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Share</span>
         </Button>
         <Button size="sm" variant="outline" onClick={() => setFillWeekOpen(true)}>
           <Sparkles className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">AI Fill Week</span>
@@ -838,6 +843,7 @@ export const ContentCalendar = () => {
       <AiFillWeekDialog open={fillWeekOpen} onOpenChange={setFillWeekOpen} startDate={selectedDay ?? undefined} />
       <RecyclingRulesDialog open={recycleOpen} onOpenChange={setRecycleOpen} />
       <BulkCsvImportDialog open={csvOpen} onOpenChange={setCsvOpen} />
+      <PublicCalendarShareDialog open={shareOpen} onOpenChange={setShareOpen} />
       <EventDetailsDialog post={detailsPost} open={!!detailsPost} onOpenChange={(o) => !o && setDetailsPost(null)} />
     </div>
   );

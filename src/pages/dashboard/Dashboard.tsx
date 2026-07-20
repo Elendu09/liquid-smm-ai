@@ -24,6 +24,8 @@ import {
   EmptyState,
 } from "@/components/dashboard/shell";
 import { OnboardingChecklistCard } from "@/components/dashboard/OnboardingChecklistCard";
+import { OnboardingScoreCard } from "@/components/dashboard/OnboardingScoreCard";
+import { PWAInstallBanner } from "@/components/dashboard/PWAInstallBanner";
 import { AiCommandBar } from "@/components/dashboard/AiCommandBar";
 import { HomeSummaryCard } from "@/components/dashboard/HomeSummaryCard";
 import { TemplatesSection } from "@/components/dashboard/TemplatesSection";
@@ -148,6 +150,10 @@ export default function Dashboard() {
       <HomeSummaryCard />
 
       <AiCommandBar />
+
+      <PWAInstallBanner />
+
+      <OnboardingScoreCard />
 
       {!onboarding.completed && <OnboardingChecklistCard onReopen={openTour} />}
 
