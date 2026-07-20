@@ -37,7 +37,9 @@ import {
   Bell,
   CornerDownLeft,
   Palette,
+  Shield,
 } from "lucide-react";
+import { useHasRole } from "@/hooks/useHasRole";
 import { ConnectChannelsSection } from "./ConnectChannelsSection";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
