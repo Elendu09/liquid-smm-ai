@@ -1,11 +1,7 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { isGuestSession } from "@/hooks/useGuest";
 
-/**
- * Pending intents produced by MCP tool calls. Write-capable tools mark
- * items with `needsApproval: true`; the app only drains items whose
- * `status` is "approved". Rejected items are kept for the audit trail
- * but never applied.
- */
 export type McpInboxKind = "caption-draft" | "scheduled-post";
 export type McpInboxStatus = "pending" | "approved" | "rejected";
 
@@ -22,40 +18,79 @@ export interface McpInboxItem<TPayload = unknown> {
 
 const KEY = "smmpilot:mcp-inbox";
 
-function read(): McpInboxItem[] {
+function readLocal(): McpInboxItem[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(KEY);
     const parsed = raw ? (JSON.parse(raw) as McpInboxItem[]) : [];
-    // Back-compat: legacy items without status default to approved.
     return parsed.map((it) => ({ ...it, status: it.status ?? "approved" }));
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
-
-const listeners = new Set<() => void>();
-let cache: McpInboxItem[] = read();
-
-function emit() {
-  cache = read();
+function writeLocal(next: McpInboxItem[]) {
+  window.localStorage.setItem(KEY, JSON.stringify(next));
+  cache = next;
   listeners.forEach((l) => l());
 }
 
-function write(next: McpInboxItem[]) {
-  window.localStorage.setItem(KEY, JSON.stringify(next));
-  emit();
-}
-
-if (typeof window !== "undefined") {
-  window.addEventListener("storage", (e) => {
-    if (e.key === KEY) emit();
-  });
-}
+let cache: McpInboxItem[] = readLocal();
+const listeners = new Set<() => void>();
+let hydrated = false;
 
 function subscribe(cb: () => void) {
   listeners.add(cb);
   return () => listeners.delete(cb);
+}
+
+function rowToItem(row: any): McpInboxItem {
+  return {
+    id: row.id,
+    kind: row.kind,
+    createdAt: row.created_at,
+    source: (row.data as any)?.source ?? "mcp",
+    payload: (row.data as any)?.payload ?? {},
+    needsApproval: (row.data as any)?.needsApproval,
+    status: (row.data as any)?.status ?? "approved",
+    decidedAt: (row.data as any)?.decidedAt,
+  };
+}
+
+async function hydrate() {
+  hydrated = true;
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return;
+  const { data } = await supabase
+    .from("mcp_inbox")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (data) writeLocal(data.map(rowToItem));
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === KEY) { cache = readLocal(); listeners.forEach((l) => l()); }
+  });
+  supabase.auth.onAuthStateChange(() => { hydrated = false; void hydrate(); });
+}
+
+async function pushRemote(item: McpInboxItem) {
+  if (isGuestSession()) return;
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return;
+  await supabase.from("mcp_inbox").upsert({
+    id: item.id,
+    user_id: auth.user.id,
+    kind: item.kind,
+    title: item.source,
+    body: null,
+    data: {
+      source: item.source,
+      payload: item.payload,
+      needsApproval: item.needsApproval,
+      status: item.status,
+      decidedAt: item.decidedAt,
+    } as any,
+  });
 }
 
 export function enqueueInbox<T>(
@@ -67,39 +102,44 @@ export function enqueueInbox<T>(
     status: item.needsApproval ? "pending" : (item.status ?? "approved"),
     ...item,
   };
-  write([full, ...read()]);
+  writeLocal([full, ...cache]);
+  void pushRemote(full);
   return full;
 }
 
 export function approveInboxItem(id: string) {
-  write(
-    read().map((it) =>
-      it.id === id ? { ...it, status: "approved", decidedAt: new Date().toISOString() } : it,
-    ),
+  const next = cache.map((it) =>
+    it.id === id ? { ...it, status: "approved" as const, decidedAt: new Date().toISOString() } : it,
   );
+  writeLocal(next);
+  const updated = next.find((it) => it.id === id);
+  if (updated) void pushRemote(updated);
 }
-
 export function rejectInboxItem(id: string) {
-  write(
-    read().map((it) =>
-      it.id === id ? { ...it, status: "rejected", decidedAt: new Date().toISOString() } : it,
-    ),
+  const next = cache.map((it) =>
+    it.id === id ? { ...it, status: "rejected" as const, decidedAt: new Date().toISOString() } : it,
   );
+  writeLocal(next);
+  const updated = next.find((it) => it.id === id);
+  if (updated) void pushRemote(updated);
 }
-
 export function removeInboxItem(id: string) {
-  write(read().filter((it) => it.id !== id));
+  writeLocal(cache.filter((it) => it.id !== id));
+  if (isGuestSession()) return;
+  void supabase.from("mcp_inbox").delete().eq("id", id);
 }
 
 export function useMcpInbox() {
   const items = useSyncExternalStore(subscribe, () => cache, () => cache);
-  /** Drains only APPROVED items of the given kind. Pending items stay put. */
+  useEffect(() => { if (!hydrated) void hydrate(); }, []);
   const drain = (kind: McpInboxKind): McpInboxItem[] => {
-    const all = read();
-    const take = all.filter((it) => it.kind === kind && it.status === "approved");
+    const take = cache.filter((it) => it.kind === kind && it.status === "approved");
     if (take.length === 0) return [];
-    const keep = all.filter((it) => !(it.kind === kind && it.status === "approved"));
-    write(keep);
+    const keep = cache.filter((it) => !(it.kind === kind && it.status === "approved"));
+    writeLocal(keep);
+    if (!isGuestSession()) {
+      void supabase.from("mcp_inbox").delete().in("id", take.map((t) => t.id));
+    }
     return take;
   };
   const pending = items.filter((it) => it.status === "pending");

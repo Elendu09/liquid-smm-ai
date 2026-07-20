@@ -19,6 +19,9 @@ import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useAccounts, ConnectedAccount } from "@/contexts/AccountContext";
 import { logRun } from "@/hooks/useRunHistory";
 
+import { supabase } from "@/integrations/supabase/client";
+import { isGuestSession, guardWrite } from "@/hooks/useGuest";
+
 interface ConnectAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -28,9 +31,34 @@ type Step = "platform" | "details" | "authorize";
 
 const REMINDER_KEY = "smmpilot:connect-later";
 
-// Platforms with real OAuth wired up. Keep empty until per-provider credentials
-// are configured — everything else uses the simulated handshake below.
-const REAL_OAUTH_PLATFORMS: string[] = [];
+// Platforms whose OAuth adapter has env credentials at build time. The client
+// probes the `oauth-start` edge function at runtime; when it responds with
+// `adapter_not_configured` we fall back to the manual handshake below.
+const REAL_OAUTH_PLATFORMS: string[] = [
+  "twitter", "linkedin", "facebook", "instagram", "tiktok", "youtube", "pinterest", "reddit",
+];
+
+async function startProviderOAuth(platform: string): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    const token = session.session?.access_token;
+    if (!token) return { ok: false, message: "Sign in first." };
+    const base = import.meta.env.VITE_SUPABASE_URL as string;
+    const res = await fetch(
+      `${base}/functions/v1/oauth-start?platform=${encodeURIComponent(platform)}&redirect_to=${encodeURIComponent(window.location.pathname)}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    const data = await res.json();
+    if (!res.ok) return { ok: false, message: data?.message ?? data?.error ?? "OAuth not configured" };
+    if (data?.authorize_url) {
+      window.location.href = data.authorize_url;
+      return { ok: true };
+    }
+    return { ok: false, message: "No authorize URL returned" };
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : String(err) };
+  }
+}
 
 export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialogProps) {
   const { addAccount, setActiveAccount } = useAccounts();
@@ -84,15 +112,29 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
   };
 
   const startAuthorize = async () => {
-    if (!platform || !handle.trim()) {
+    if (!platform) return;
+    const isRealNow = REAL_OAUTH_PLATFORMS.includes(platform.id);
+    if (isRealNow && !isGuestSession()) {
+      setAuthorizing(true);
+      setStep("authorize");
+      const res = await startProviderOAuth(platform.id);
+      if (!res.ok) {
+        toast.error(res.message ?? "OAuth is not configured yet — falling back to manual.");
+        setAuthorizing(false);
+        setStep("details");
+        return;
+      }
+      // Browser will redirect to provider; nothing else to do.
+      return;
+    }
+    if (!handle.trim()) {
       toast.error("Please enter a handle");
       return;
     }
+    if (!guardWrite("Sign in to connect real accounts")) return;
     setAuthorizing(true);
     setStep("authorize");
-    // Simulated OAuth handshake — replace per-platform with real OAuth
-    // (e.g. Meta Graph API, TikTok Login Kit, YouTube OAuth 2.0) as
-    // provider credentials are configured.
+    // Manual handshake fallback for platforms without configured credentials.
     await new Promise((r) => setTimeout(r, 1500));
 
     const cleanedHandle = handle.replace(/^@/, "").trim();
