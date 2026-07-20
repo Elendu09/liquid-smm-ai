@@ -209,6 +209,33 @@ export function NewPostDialog({
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Caption</label>
             <Textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={5} placeholder="Write your caption…" />
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                First comment <span className="text-muted-foreground/70">(auto-posts after publish)</span>
+              </label>
+              <Textarea
+                value={firstComment}
+                onChange={(e) => setFirstComment(e.target.value)}
+                rows={2}
+                placeholder="Drop hashtags or a link so they don't clutter the caption…"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Category</label>
+              <Select value={categoryId || "none"} onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="No category" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No category</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      <span className="mr-1.5">{c.emoji}</span> {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Platforms</label>
             <div className="flex gap-1.5 flex-wrap">
