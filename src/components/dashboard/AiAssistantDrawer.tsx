@@ -40,7 +40,7 @@ export function AiAssistantDrawer() {
     setPending(true);
     try {
       const res = await chatWithAI(text, "gpt-4.1-mini");
-      const reply = res.data?.response ?? res.error ?? "Sorry, I couldn't reach the AI right now.";
+      const reply = res.response ?? res.message ?? res.error ?? "Sorry, I couldn't reach the AI right now.";
       setMessages((m) => [...m, { role: "assistant", text: reply }]);
     } catch {
       setMessages((m) => [...m, { role: "assistant", text: "Something went wrong — please try again." }]);
