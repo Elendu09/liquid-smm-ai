@@ -139,6 +139,7 @@ const navItems: NavItem[] = [
       { label: "Notifications", href: "/dashboard/activity/notifications", icon: Bell },
     ],
   },
+  { label: "Team", href: "/dashboard/team", icon: Users, exact: true },
 ];
 
 type CommandResult = {
