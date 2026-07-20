@@ -69,6 +69,23 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
   const [avatar, setAvatar] = useState("");
   const [authorizing, setAuthorizing] = useState(false);
   const [query, setQuery] = useState("");
+  const [readyProviders, setReadyProviders] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!open) return;
+    const base = import.meta.env.VITE_SUPABASE_URL as string;
+    fetch(`${base}/functions/v1/oauth-status`)
+      .then((r) => r.json())
+      .then((data) => {
+        const ready = new Set<string>(
+          (data?.providers ?? []).filter((p: { enabled: boolean }) => p.enabled).map((p: { platform: string }) => p.platform),
+        );
+        setReadyProviders(ready);
+      })
+      .catch(() => setReadyProviders(new Set()));
+  }, [open]);
+
+  const isRealReady = (id: string) => readyProviders.has(id);
 
   const platform = platforms.find((p) => p.id === platformId);
 
