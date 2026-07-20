@@ -398,6 +398,7 @@ export function BillingPanel() {
   const [editing, setEditing] = useState<PaymentMethodRecord | null>(null);
 
   const savePm = (pm: PaymentMethodRecord) => {
+    if (!guardWrite("save payment methods")) return;
     setMethods((prev) => {
       const next = prev.filter((m) => m.id !== pm.id).map((m) =>
         pm.isDefault ? { ...m, isDefault: false } : m,
@@ -407,11 +408,13 @@ export function BillingPanel() {
   };
 
   const setDefault = (id: string) => {
+    if (!guardWrite("update payment methods")) return;
     setMethods((prev) => prev.map((m) => ({ ...m, isDefault: m.id === id })));
     toast.success("Default payment method updated");
   };
 
   const remove = (id: string) => {
+    if (!guardWrite("remove payment methods")) return;
     removeMethod(id);
     toast.success("Payment method removed");
     logAudit({ actor: "You", action: "Removed payment method", category: "billing" });
@@ -434,6 +437,16 @@ export function BillingPanel() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 flex items-start gap-3">
+        <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+        <div className="min-w-0 text-sm">
+          <p className="font-medium">Billing is running in preview mode</p>
+          <p className="text-muted-foreground">
+            Plan, usage, invoices, and payment methods below are placeholders. Connect a payment provider (Stripe or Paddle) to enable real subscriptions, invoices, and card management.
+          </p>
+        </div>
+      </div>
+
       <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent">
         <CardHeader>
           <div className="flex items-start justify-between">
@@ -638,6 +651,36 @@ export function BillingPanel() {
         onSaved={savePm}
         initial={editing}
       />
+    </div>
+  );
+}
+
+/* ============================== Session row ============================== */
+
+function CurrentSessionRow() {
+  const { user } = useAuthUser();
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  const device = /iPhone|iPad/.test(ua)
+    ? "iPhone / iPad"
+    : /Android/.test(ua)
+    ? "Android device"
+    : /Macintosh/.test(ua)
+    ? "Mac"
+    : /Windows/.test(ua)
+    ? "Windows PC"
+    : "This device";
+  const browser = /Chrome/.test(ua) ? "Chrome" : /Firefox/.test(ua) ? "Firefox" : /Safari/.test(ua) ? "Safari" : "Browser";
+  return (
+    <div className="flex items-center justify-between p-3 rounded-lg border">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <h4 className="font-medium truncate">{browser} on {device}</h4>
+          <Badge variant="secondary" className="bg-green-500/10 text-green-500">Current</Badge>
+        </div>
+        <p className="text-sm text-muted-foreground truncate">
+          {user?.email ?? "guest"} · signed in {user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : "just now"}
+        </p>
+      </div>
     </div>
   );
 }
@@ -884,30 +927,13 @@ export function SecurityPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Active sessions</CardTitle>
-          <CardDescription>Manage devices where you're logged in</CardDescription>
+          <CardTitle>Active session</CardTitle>
+          <CardDescription>
+            Your current sign-in on this device. Session listing across other devices requires an admin key not exposed to the browser — use <span className="font-medium">Sign out all devices</span> to revoke everything.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {[
-            { device: "MacBook Pro", location: "New York, US", current: true, lastActive: "Now" },
-            { device: "iPhone 14", location: "New York, US", current: false, lastActive: "2 hours ago" },
-            { device: "Chrome on Windows", location: "Boston, US", current: false, lastActive: "3 days ago" },
-          ].map((session, index) => (
-            <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-medium">{session.device}</h4>
-                  {session.current && (
-                    <Badge variant="secondary" className="bg-green-500/10 text-green-500">Current</Badge>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">{session.location} • {session.lastActive}</p>
-              </div>
-              {!session.current && (
-                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => toast.success(`${session.device} signed out`)}>Revoke</Button>
-              )}
-            </div>
-          ))}
+        <CardContent>
+          <CurrentSessionRow />
         </CardContent>
         <CardFooter className="border-t bg-muted/30">
           <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setSignOutAllOpen(true)}>

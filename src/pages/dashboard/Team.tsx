@@ -34,67 +34,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useLocalCollection } from "@/hooks/useLocalCollection";
-import { ChangeRoleDialog, type MemberRole } from "@/components/settings/ChangeRoleDialog";
+import { ChangeRoleDialog } from "@/components/settings/ChangeRoleDialog";
 import { InviteMemberDialog } from "@/components/settings/InviteMemberDialog";
 import { logAudit } from "@/components/settings/AuditPanel";
-
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  role: MemberRole;
-  status: "active" | "pending" | "inactive";
-  lastActiveAt?: string;
-  joinedAt: string;
-  inviteToken?: string;
-  inviteExpiresAt?: string;
-  note?: string;
-}
-
-const seedMembers: TeamMember[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john@company.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
-    role: "admin",
-    status: "active",
-    lastActiveAt: new Date().toISOString(),
-    joinedAt: new Date("2024-01-01").toISOString(),
-  },
-  {
-    id: "2",
-    name: "Sarah Smith",
-    email: "sarah@company.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
-    role: "editor",
-    status: "active",
-    lastActiveAt: new Date(Date.now() - 1_800_000).toISOString(),
-    joinedAt: new Date("2024-02-15").toISOString(),
-  },
-  {
-    id: "3",
-    name: "Mike Johnson",
-    email: "mike@company.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike",
-    role: "editor",
-    status: "active",
-    lastActiveAt: new Date(Date.now() - 7_200_000).toISOString(),
-    joinedAt: new Date("2024-03-01").toISOString(),
-  },
-  {
-    id: "4",
-    name: "Emily Chen",
-    email: "emily@company.com",
-    role: "viewer",
-    status: "pending",
-    joinedAt: new Date().toISOString(),
-    inviteToken: "seed-token-xyz",
-    inviteExpiresAt: new Date(Date.now() + 7 * 86_400_000).toISOString(),
-  },
-];
+import { useTeamMembers, type MemberRole, type TeamMember } from "@/hooks/useTeamMembers";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 const ROLE_BADGE: Record<MemberRole, string> = {
   admin: "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20",
@@ -123,11 +67,8 @@ function lastActiveLabel(iso?: string) {
 }
 
 export default function TeamPage() {
-  const { items: members, setItems, add, update, remove } = useLocalCollection<TeamMember>(
-    "settings",
-    "team",
-    seedMembers,
-  );
+  const { user } = useAuthUser();
+  const { members, invite, update, remove } = useTeamMembers();
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [roleTarget, setRoleTarget] = useState<TeamMember | null>(null);
@@ -155,56 +96,36 @@ export default function TeamPage() {
             : m.role === "editor"
             ? "Scheduled content across platforms"
             : "Viewed analytics dashboard",
-        time: lastActiveLabel(m.lastActiveAt),
+        time: lastActiveLabel(m.lastActiveAt ?? undefined),
       }));
   }, [members]);
 
-  const handleInvite = ({
-    email,
-    role,
-    expiresInDays,
-    note,
-  }: {
+  const handleInvite = async (input: {
     email: string;
     role: MemberRole;
     expiresInDays: number;
     note?: string;
   }) => {
-    if (members.some((m) => m.email.toLowerCase() === email.toLowerCase())) {
-      toast.error("That email is already invited");
-      return;
-    }
-    const token = crypto.randomUUID();
-    add({
-      id: crypto.randomUUID(),
-      name: email.split("@")[0],
-      email,
-      role,
-      status: "pending",
-      joinedAt: new Date().toISOString(),
-      inviteToken: token,
-      inviteExpiresAt: new Date(Date.now() + expiresInDays * 86_400_000).toISOString(),
-      note,
-    });
-    logAudit({ actor: "You", action: `Invited ${role}`, target: email, category: "member" });
-    toast.success(`Invite sent to ${email}`);
+    if (!user) return toast.error("Sign in to invite teammates");
+    await invite(input);
+    logAudit({ actor: "You", action: `Invited ${input.role}`, target: input.email, category: "member" });
   };
 
-  const handleRoleChange = (id: string, role: MemberRole) => {
+  const handleRoleChange = async (id: string, role: MemberRole) => {
     const m = members.find((x) => x.id === id);
-    update(id, { role });
+    await update(id, { role });
     if (m) logAudit({ actor: "You", action: `Changed role to ${role}`, target: m.email, category: "member" });
     toast.success("Role updated");
   };
 
-  const handleRemove = (m: TeamMember) => {
-    remove(m.id);
+  const handleRemove = async (m: TeamMember) => {
+    await remove(m.id);
     logAudit({ actor: "You", action: "Removed member", target: m.email, category: "member" });
     toast.success(`${m.name} removed`);
   };
 
-  const handleResend = (m: TeamMember) => {
-    update(m.id, {
+  const handleResend = async (m: TeamMember) => {
+    await update(m.id, {
       inviteExpiresAt: new Date(Date.now() + 7 * 86_400_000).toISOString(),
       inviteToken: crypto.randomUUID(),
     });
@@ -212,8 +133,8 @@ export default function TeamPage() {
     toast.success(`Invite resent to ${m.email}`);
   };
 
-  const handleActivate = (m: TeamMember) => {
-    update(m.id, { status: "active", lastActiveAt: new Date().toISOString() });
+  const handleActivate = async (m: TeamMember) => {
+    await update(m.id, { status: "active", lastActiveAt: new Date().toISOString() });
     logAudit({ actor: "You", action: "Marked invite accepted", target: m.email, category: "member" });
     toast.success(`${m.name} is now active`);
   };
@@ -227,6 +148,7 @@ export default function TeamPage() {
       toast.error("Copy failed");
     }
   };
+
 
   return (
     <div className="relative">
@@ -303,7 +225,7 @@ export default function TeamPage() {
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="relative shrink-0">
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={m.avatar} />
+                          <AvatarImage src={m.avatarUrl ?? undefined} />
                           <AvatarFallback>{m.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <span
@@ -506,8 +428,6 @@ export default function TeamPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-        {/* keep setItems used to silence lint if never invoked */}
-        <span hidden aria-hidden onClick={() => setItems(members)} />
       </div>
     </div>
   );
