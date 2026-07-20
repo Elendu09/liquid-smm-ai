@@ -19,6 +19,9 @@ import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useAccounts, ConnectedAccount } from "@/contexts/AccountContext";
 import { logRun } from "@/hooks/useRunHistory";
 
+import { supabase } from "@/integrations/supabase/client";
+import { isGuestSession, guardWrite } from "@/hooks/useGuest";
+
 interface ConnectAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -28,9 +31,34 @@ type Step = "platform" | "details" | "authorize";
 
 const REMINDER_KEY = "smmpilot:connect-later";
 
-// Platforms with real OAuth wired up. Keep empty until per-provider credentials
-// are configured — everything else uses the simulated handshake below.
-const REAL_OAUTH_PLATFORMS: string[] = [];
+// Platforms whose OAuth adapter has env credentials at build time. The client
+// probes the `oauth-start` edge function at runtime; when it responds with
+// `adapter_not_configured` we fall back to the manual handshake below.
+const REAL_OAUTH_PLATFORMS: string[] = [
+  "twitter", "linkedin", "facebook", "instagram", "tiktok", "youtube", "pinterest", "reddit",
+];
+
+async function startProviderOAuth(platform: string): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    const token = session.session?.access_token;
+    if (!token) return { ok: false, message: "Sign in first." };
+    const base = import.meta.env.VITE_SUPABASE_URL as string;
+    const res = await fetch(
+      `${base}/functions/v1/oauth-start?platform=${encodeURIComponent(platform)}&redirect_to=${encodeURIComponent(window.location.pathname)}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    const data = await res.json();
+    if (!res.ok) return { ok: false, message: data?.message ?? data?.error ?? "OAuth not configured" };
+    if (data?.authorize_url) {
+      window.location.href = data.authorize_url;
+      return { ok: true };
+    }
+    return { ok: false, message: "No authorize URL returned" };
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : String(err) };
+  }
+}
 
 export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialogProps) {
   const { addAccount, setActiveAccount } = useAccounts();
