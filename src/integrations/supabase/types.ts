@@ -43,6 +43,135 @@ export type Database = {
           },
         ]
       }
+      brand_voices: {
+        Row: {
+          audience: string
+          created_at: string
+          donts: string[]
+          dos: string[]
+          emojis: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          length: string
+          name: string
+          platform_overrides: Json
+          samples: string[]
+          tone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audience?: string
+          created_at?: string
+          donts?: string[]
+          dos?: string[]
+          emojis?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          length?: string
+          name: string
+          platform_overrides?: Json
+          samples?: string[]
+          tone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          donts?: string[]
+          dos?: string[]
+          emojis?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          length?: string
+          name?: string
+          platform_overrides?: Json
+          samples?: string[]
+          tone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      content_categories: {
+        Row: {
+          cadence: string
+          color: string
+          created_at: string
+          emoji: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+          weekly_budget: number
+        }
+        Insert: {
+          cadence?: string
+          color?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+          weekly_budget?: number
+        }
+        Update: {
+          cadence?: string
+          color?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+          weekly_budget?: number
+        }
+        Relationships: []
+      }
+      content_templates: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          name: string
+          platform: string
+          tags: string[]
+          tool_key: string
+          updated_at: string
+          usage_count: number
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          name: string
+          platform?: string
+          tags?: string[]
+          tool_key?: string
+          updated_at?: string
+          usage_count?: number
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          name?: string
+          platform?: string
+          tags?: string[]
+          tool_key?: string
+          updated_at?: string
+          usage_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       milestone_state: {
         Row: {
           account_id: string
@@ -343,6 +472,57 @@ export type Database = {
           onboarding_state?: Json
           timezone?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      recycling_rules: {
+        Row: {
+          cadence: string
+          caption: string
+          category_id: string | null
+          created_at: string
+          enabled: boolean
+          hashtags: string[] | null
+          hour: number
+          id: string
+          media_url: string | null
+          name: string
+          next_run_at: string
+          platform_ids: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cadence?: string
+          caption?: string
+          category_id?: string | null
+          created_at?: string
+          enabled?: boolean
+          hashtags?: string[] | null
+          hour?: number
+          id?: string
+          media_url?: string | null
+          name: string
+          next_run_at?: string
+          platform_ids?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cadence?: string
+          caption?: string
+          category_id?: string | null
+          created_at?: string
+          enabled?: boolean
+          hashtags?: string[] | null
+          hour?: number
+          id?: string
+          media_url?: string | null
+          name?: string
+          next_run_at?: string
+          platform_ids?: string[]
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
