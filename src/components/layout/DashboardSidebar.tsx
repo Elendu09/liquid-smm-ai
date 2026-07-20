@@ -37,6 +37,7 @@ import {
   Bell,
   CornerDownLeft,
   Palette,
+  Rss,
 } from "lucide-react";
 import { ConnectChannelsSection } from "./ConnectChannelsSection";
 import { cn } from "@/lib/utils";
