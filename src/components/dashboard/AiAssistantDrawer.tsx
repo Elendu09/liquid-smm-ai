@@ -39,7 +39,7 @@ export function AiAssistantDrawer() {
     setInput("");
     setPending(true);
     try {
-      const res = await skyrank.chatWithAI(text, "gpt-4.1-mini");
+      const res = await chatWithAI(text, "gpt-4.1-mini");
       const reply = res.data?.response ?? res.error ?? "Sorry, I couldn't reach the AI right now.";
       setMessages((m) => [...m, { role: "assistant", text: reply }]);
     } catch {
