@@ -26,7 +26,7 @@ function CopyChip({ value, className }: { value: string; className?: string }) {
         toast.success("Copied to clipboard");
         setTimeout(() => setCopied(false), 1600);
       }}
-      className={`group inline-flex items-center gap-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2 font-mono text-xs text-foreground/90 hover:bg-muted/70 transition ${className ?? ""}`}
+      className={`group inline-flex items-center gap-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2 font-mono text-xs text-foreground/90 hover:bg-muted/70 transition max-w-full min-w-0 ${className ?? ""}`}
     >
       <span className="truncate">{value}</span>
       {copied ? (
