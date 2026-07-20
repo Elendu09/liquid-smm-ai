@@ -156,7 +156,7 @@ export default function BioEditor() {
                     <Smartphone className="w-3.5 h-3.5" /> Preview
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="p-0 w-[92vw] sm:w-[420px]">
+                <SheetContent side="right" className="p-0 w-[92vw] sm:w-[420px] [&>button.absolute]:left-3 [&>button.absolute]:right-auto">
                   <BioPreview />
                 </SheetContent>
               </Sheet>
