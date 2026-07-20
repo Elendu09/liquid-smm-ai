@@ -100,7 +100,7 @@ export function useHubItems(hubKey: string, seed: HubItem[]) {
         }));
         const { data: seeded } = await supabase
           .from("hub_items")
-          .insert(inserts)
+          .insert(inserts as never)
           .select("*");
         setItems(((seeded as Row[] | null) ?? []).map(fromRow));
       } else {
