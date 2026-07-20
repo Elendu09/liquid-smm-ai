@@ -101,15 +101,12 @@ Deno.serve(async (req) => {
 
       let imported = 0;
       for (const item of parsed.items.slice(0, 20)) {
+        const hay = (item.title + " " + item.summary).toLowerCase();
         const kws: string[] = feed.filter_keywords ?? [];
-        if (
-          kws.length &&
-          !kws.some((k) =>
-            (item.title + " " + item.summary).toLowerCase().includes(k.toLowerCase()),
-          )
-        ) {
-          continue;
-        }
+        const excludes: string[] = feed.exclude_keywords ?? [];
+        if (kws.length && !kws.some((k) => hay.includes(k.toLowerCase()))) continue;
+        if (excludes.length && excludes.some((k) => k && hay.includes(k.toLowerCase()))) continue;
+
         const { data: existing } = await admin
           .from("rss_items")
           .select("id")
@@ -120,12 +117,35 @@ Deno.serve(async (req) => {
 
         let scheduledPostId: string | null = null;
         if (feed.auto_publish) {
-          const caption =
+          let caption =
             (feed.caption_template as string | null)
-              ?.replaceAll("{title}", item.title)
-              .replaceAll("{link}", item.link)
-              .replaceAll("{summary}", item.summary) ??
+              ?.split("{title}").join(item.title)
+              .split("{link}").join(item.link)
+              .split("{summary}").join(item.summary) ??
             `${item.title}\n\n${item.link}`;
+
+          if (feed.ai_rewrite) {
+            try {
+              const key = Deno.env.get("LOVABLE_API_KEY");
+              if (key) {
+                const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    model: "google/gemini-2.5-flash",
+                    messages: [
+                      { role: "system", content: "Rewrite the news headline as an engaging social post (max 220 chars). Keep 1-2 emojis, add a punchy hook. Return plain text only." },
+                      { role: "user", content: `${item.title}\n\n${item.summary}\n\n${item.link}` },
+                    ],
+                  }),
+                });
+                const j = await r.json();
+                const txt = j?.choices?.[0]?.message?.content?.trim();
+                if (txt) caption = `${txt}\n\n${item.link}`;
+              }
+            } catch { /* fallback to template */ }
+          }
+
           const platforms = (feed.target_platforms as string[]) ?? [];
           const { data: post } = await admin
             .from("scheduled_posts")
