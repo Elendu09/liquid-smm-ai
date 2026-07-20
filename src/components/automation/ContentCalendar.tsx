@@ -262,7 +262,7 @@ export const ContentCalendar = () => {
               />
             )}
             {dayPosts.length > 0 && (
-              <span className="text-[10px] text-muted-foreground tabular-nums">{dayPosts.length}</span>
+              <span className="hidden sm:inline text-[10px] text-muted-foreground tabular-nums">{dayPosts.length}</span>
             )}
           </div>
         </div>

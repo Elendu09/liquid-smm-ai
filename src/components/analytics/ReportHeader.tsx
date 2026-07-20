@@ -16,6 +16,7 @@ import {
   type CustomReport,
   type RangeKey,
   RANGE_DAYS,
+  REPORT_TEMPLATES,
 } from "@/hooks/useCustomReports";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ export function ReportHeader({
   activeId,
   onSelect,
   onCreate,
+  onCreateFromTemplate,
   onDuplicate,
   onDelete,
   onRename,
@@ -37,6 +39,7 @@ export function ReportHeader({
   activeId: string | null;
   onSelect: (id: string) => void;
   onCreate: (name: string) => void;
+  onCreateFromTemplate: (templateId: string) => void;
   onDuplicate: () => void;
   onDelete: () => void;
   onRename: (name: string) => void;
@@ -82,6 +85,20 @@ export function ReportHeader({
                 {r.name}
               </span>
               <span className="text-[10px] text-muted-foreground">{r.cards.length} cards</span>
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            Start from template
+          </DropdownMenuLabel>
+          {REPORT_TEMPLATES.map((t) => (
+            <DropdownMenuItem
+              key={t.id}
+              onSelect={() => onCreateFromTemplate(t.id)}
+              className="flex flex-col items-start gap-0.5 py-1.5"
+            >
+              <span className="text-xs font-medium">{t.name}</span>
+              <span className="text-[10px] text-muted-foreground leading-snug">{t.description}</span>
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />

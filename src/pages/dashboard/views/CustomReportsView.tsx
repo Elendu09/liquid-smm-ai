@@ -9,6 +9,7 @@ import { ChartInspector } from "@/components/analytics/ChartInspector";
 import { ReportHeader } from "@/components/analytics/ReportHeader";
 import {
   useCustomReports,
+  REPORT_TEMPLATES,
   type MetricId,
   type ChartCardConfig,
   type RangeKey,
@@ -17,7 +18,7 @@ import {
 import { useAccounts } from "@/contexts/AccountContext";
 
 export default function CustomReportsView() {
-  const { reports, add, update, remove, duplicate, upsertCard, removeCard } = useCustomReports();
+  const { reports, add, addFromTemplate, update, remove, duplicate, upsertCard, removeCard } = useCustomReports();
   const { accounts } = useAccounts();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeId, setActiveId] = useState<string | null>(() => {
@@ -127,6 +128,15 @@ export default function CustomReportsView() {
         activeId={active?.id ?? null}
         onSelect={(id) => { setActiveId(id); setSelectedCardId(null); }}
         onCreate={handleCreate}
+        onCreateFromTemplate={(tplId) => {
+          const r = addFromTemplate(tplId);
+          if (r) {
+            setActiveId(r.id);
+            setSelectedCardId(null);
+            const tpl = REPORT_TEMPLATES.find((t) => t.id === tplId);
+            toast.success(`Started "${tpl?.name ?? "report"}" from template`);
+          }
+        }}
         onDuplicate={handleDuplicate}
         onDelete={handleDelete}
         onRename={(name) => active && update(active.id, { name })}
