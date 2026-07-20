@@ -1,5 +1,9 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type ScheduledPostInsert = Database["public"]["Tables"]["scheduled_posts"]["Insert"];
+type ScheduledPostUpdate = Database["public"]["Tables"]["scheduled_posts"]["Update"];
 
 export type Recurrence = { freq: "daily" | "weekly" | "monthly"; count: number };
 export type SendStatus = "queued" | "paused" | "sending" | "completed" | "failed";
