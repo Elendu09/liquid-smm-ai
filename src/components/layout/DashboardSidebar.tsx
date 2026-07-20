@@ -78,6 +78,7 @@ const navItems: NavItem[] = [
       { label: "Queue", href: "/dashboard/publish/queue", icon: ListChecks },
       { label: "Calendar", href: "/dashboard/publish/calendar", icon: Calendar },
       { label: "Stories", href: "/dashboard/publish/stories", icon: Film },
+      { label: "RSS Feeds", href: "/dashboard/publish/rss", icon: Rss },
     ],
   },
   {
