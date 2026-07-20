@@ -32,7 +32,16 @@ import { toast } from "sonner";
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-type ViewMode = "month" | "week" | "list" | "feed";
+type ViewMode = "month" | "week" | "columns" | "feed";
+
+type ColumnStatus = "queued" | "sending" | "completed" | "failed" | "paused";
+const KANBAN_COLUMNS: KanbanColumnDef<ColumnStatus>[] = [
+  { id: "queued",    label: "Scheduled", emptyLabel: "Nothing queued" },
+  { id: "sending",   label: "Sending",   emptyLabel: "Nothing sending" },
+  { id: "completed", label: "Sent",      emptyLabel: "Nothing sent yet" },
+  { id: "paused",    label: "Paused",    emptyLabel: "Nothing paused" },
+  { id: "failed",    label: "Failed",    emptyLabel: "No failures" },
+];
 
 function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
