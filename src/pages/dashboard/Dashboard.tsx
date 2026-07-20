@@ -312,29 +312,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Quick access to hubs (desktop/tablet) */}
-      <div className="hidden md:block">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-          Jump to a hub
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          {quickLinks.map((l) => (
-            <Link
-              key={l.href}
-              to={l.href}
-              className="group rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-4 hover:border-primary/50 hover:-translate-y-0.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/15 transition-colors">
-                <l.icon className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-sm font-semibold">{l.title}</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {l.description}
-              </p>
-            </Link>
-          ))}
-        </div>
-      </div>
+      {/* Prompt-ready templates (desktop/tablet) */}
+      <TemplatesSection />
+
 
     </div>
   );
