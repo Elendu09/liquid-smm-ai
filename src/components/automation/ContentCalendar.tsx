@@ -86,6 +86,7 @@ export const ContentCalendar = () => {
   const [cursor, setCursor] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [view, setView] = useState<ViewMode>("month");
+  const [columnsLayout, setColumnsLayout] = useState<"kanban" | "list">("kanban");
   const [search, setSearch] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string[]>([]);
   const [dragId, setDragId] = useState<string | null>(null);
