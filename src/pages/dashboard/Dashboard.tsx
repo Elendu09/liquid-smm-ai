@@ -151,42 +151,41 @@ export default function Dashboard() {
 
       <AiCommandBar />
 
-      <PWAInstallBanner />
-
-      <OnboardingScoreCard />
-
-      {!onboarding.completed && <OnboardingChecklistCard onReopen={openTour} />}
-
-
-      {/* KPI strip — mobile: horizontal scroll snap, desktop: 4-col grid */}
+      {/* KPI strip — moved directly below AI command. Mobile: compact horizontal scroll, desktop: 4-col grid */}
       <div className="-mx-4 sm:mx-0">
-        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory px-4 sm:px-0 pb-2 sm:pb-0 scrollbar-hide">
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 overflow-x-auto snap-x snap-mandatory px-4 sm:px-0 pb-2 sm:pb-0 scrollbar-hide">
           <KpiTile
             label="Connected accounts"
             value={totalAccounts}
             icon={Users}
-            className="snap-start shrink-0 w-[42vw] sm:w-auto"
+            className="snap-start shrink-0 w-[34vw] sm:w-auto py-2 sm:py-4"
           />
           <KpiTile
             label="Total followers"
             value={totalFollowers.toLocaleString()}
             icon={TrendingUp}
-            className="snap-start shrink-0 w-[42vw] sm:w-auto"
+            className="snap-start shrink-0 w-[34vw] sm:w-auto py-2 sm:py-4"
           />
           <KpiTile
             label="Scheduled posts"
             value={posts.length}
             icon={Calendar}
-            className="snap-start shrink-0 w-[42vw] sm:w-auto"
+            className="snap-start shrink-0 w-[34vw] sm:w-auto py-2 sm:py-4"
           />
           <KpiTile
             label="Success rate"
             value={`${successRate.toFixed(0)}%`}
             icon={CircleCheck}
-            className="snap-start shrink-0 w-[42vw] sm:w-auto"
+            className="snap-start shrink-0 w-[34vw] sm:w-auto py-2 sm:py-4"
           />
         </div>
       </div>
+
+      <PWAInstallBanner />
+
+      <OnboardingScoreCard />
+
+      {!onboarding.completed && <OnboardingChecklistCard onReopen={openTour} />}
 
       {/* Kanban lanes: Upcoming · Health · Activity */}
       <div className="-mx-4 sm:mx-0 px-4 sm:px-0">
