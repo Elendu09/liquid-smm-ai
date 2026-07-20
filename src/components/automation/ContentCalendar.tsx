@@ -186,15 +186,53 @@ export const ContentCalendar = () => {
   const togglePlatformFilter = (p: string) =>
     setPlatformFilter((s) => (s.includes(p) ? s.filter((x) => x !== p) : [...s, p]));
 
-  const handleDrop = (target: Date) => {
+  const handleDrop = (target: Date, evt?: React.DragEvent) => {
     if (!dragId) return;
     const post = posts.find((p) => p.id === dragId);
     if (!post) return;
     const orig = new Date(post.scheduledAt);
-    const next = new Date(target);
-    next.setHours(orig.getHours(), orig.getMinutes(), 0, 0);
-    update(post.id, { scheduledAt: next.toISOString() });
-    toast.success(`Moved to ${next.toLocaleDateString()}`);
+    const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Per-platform timezone override:
+    // - Default: preserve the hour in the POST's saved timezone (e.g. an IG post
+    //   scheduled at 9am NYC stays at 9am NYC even if you're viewing in Tokyo).
+    // - Hold Shift while dropping to use the viewer's local clock instead.
+    const useLocalClock = !!evt?.shiftKey;
+    let nextIso: string;
+    if (useLocalClock || !post.timezone || post.timezone === localTz) {
+      const next = new Date(target);
+      next.setHours(orig.getHours(), orig.getMinutes(), 0, 0);
+      nextIso = next.toISOString();
+    } else {
+      // Extract wall-clock hour/minute in the post's timezone, apply to target date in that zone.
+      const fmt = new Intl.DateTimeFormat("en-US", {
+        timeZone: post.timezone,
+        hour: "2-digit", minute: "2-digit", hour12: false,
+        year: "numeric", month: "2-digit", day: "2-digit",
+      });
+      const parts = Object.fromEntries(fmt.formatToParts(orig).map((p) => [p.type, p.value]));
+      const targetParts = Object.fromEntries(
+        fmt.formatToParts(target).map((p) => [p.type, p.value]),
+      );
+      // Compose ISO-ish string in post's TZ then reparse as UTC-offset via probe.
+      const probe = new Date(
+        `${targetParts.year}-${targetParts.month}-${targetParts.day}T${parts.hour}:${parts.minute}:00Z`,
+      );
+      // Adjust for TZ offset difference between UTC and post.timezone.
+      const tzOffsetMin = (() => {
+        const utcDate = new Date(probe.toISOString());
+        const local = new Date(
+          utcDate.toLocaleString("en-US", { timeZone: post.timezone }),
+        );
+        return (utcDate.getTime() - local.getTime()) / 60000;
+      })();
+      nextIso = new Date(probe.getTime() + tzOffsetMin * 60000).toISOString();
+    }
+    update(post.id, { scheduledAt: nextIso });
+    const shownTz = useLocalClock ? localTz : (post.timezone || localTz);
+    toast.success(
+      `Moved to ${new Date(nextIso).toLocaleString([], { timeZone: shownTz, dateStyle: "medium", timeStyle: "short" })}`,
+      { description: `Kept ${shownTz} clock${useLocalClock ? " (Shift override)" : ""}. Hold Shift while dropping to use local time.` },
+    );
     setDragId(null);
     setDropTarget(null);
   };
