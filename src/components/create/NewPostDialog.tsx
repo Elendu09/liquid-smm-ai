@@ -13,7 +13,6 @@ import { aiCreate } from "@/hooks/useAiCreate";
 import { pushLocalCollection, useLocalCollection } from "@/hooks/useLocalCollection";
 import { useScheduledPosts, type Recurrence } from "@/hooks/useScheduledPosts";
 import { useAccounts } from "@/contexts/AccountContext";
-import { useContentCategories } from "@/hooks/useContentCategories";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
 
@@ -44,14 +43,11 @@ export function NewPostDialog({
 }) {
   const { accounts } = useAccounts();
   const { add: addScheduled } = useScheduledPosts();
-  const { categories } = useContentCategories();
   const { items: templates, add: addTemplate, remove: removeTemplate } =
     useLocalCollection<PostTemplate>("publish", "templates");
   const [title, setTitle] = useState(initial?.title ?? "");
   const [topic, setTopic] = useState("");
   const [caption, setCaption] = useState(initial?.caption ?? "");
-  const [firstComment, setFirstComment] = useState("");
-  const [categoryId, setCategoryId] = useState<string>("");
   const [selected, setSelected] = useState<string[]>(
     initial?.platformIds?.length ? initial.platformIds : [accounts[0]?.platformId ?? "instagram"],
   );
@@ -125,13 +121,7 @@ export function NewPostDialog({
     const recurrence: Recurrence | undefined =
       recFreq !== "none" ? { freq: recFreq, count: Math.max(1, recCount) } : undefined;
     addScheduled(
-      {
-        caption,
-        scheduledAt: new Date(scheduleAt).toISOString(),
-        platformIds: selected,
-        firstComment: firstComment.trim() || undefined,
-        categoryId: categoryId || undefined,
-      },
+      { caption, scheduledAt: new Date(scheduleAt).toISOString(), platformIds: selected },
       { recurrence },
     );
     persistTemplateIfRequested();
@@ -141,7 +131,6 @@ export function NewPostDialog({
 
   const reset = () => {
     setTitle(""); setTopic(""); setCaption(""); setScheduleAt("");
-    setFirstComment(""); setCategoryId("");
     setRecFreq("none"); setRecCount(4); setSaveTemplate(false); setTemplateName("");
   };
 
@@ -208,33 +197,6 @@ export function NewPostDialog({
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Caption</label>
             <Textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={5} placeholder="Write your caption…" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                First comment <span className="text-muted-foreground/70">(auto-posts after publish)</span>
-              </label>
-              <Textarea
-                value={firstComment}
-                onChange={(e) => setFirstComment(e.target.value)}
-                rows={2}
-                placeholder="Drop hashtags or a link so they don't clutter the caption…"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Category</label>
-              <Select value={categoryId || "none"} onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="No category" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No category</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      <span className="mr-1.5">{c.emoji}</span> {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Platforms</label>

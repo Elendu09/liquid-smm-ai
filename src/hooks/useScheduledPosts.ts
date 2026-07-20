@@ -29,8 +29,6 @@ export interface ScheduledPost {
   rejectionReason?: string;
   /** Link to a recycling rule (see useRecyclingRules). */
   recycleRuleId?: string;
-  /** Content category (see useContentCategories). */
-  categoryId?: string;
 }
 
 

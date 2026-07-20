@@ -16,8 +16,6 @@ export interface RecyclingRule {
   nextRunAt: string;
   enabled: boolean;
   createdAt: string;
-  /** Optional link to a content category (see useContentCategories). */
-  categoryId?: string;
 }
 
 const KEY = "smmpilot:recycling-rules";
