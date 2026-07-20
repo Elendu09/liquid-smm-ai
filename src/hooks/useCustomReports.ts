@@ -172,7 +172,7 @@ export function useCustomReports() {
 
   const reports = useMemo(() => col.items, [col.items]);
 
-  return { reports, add, addFromTemplate, update, remove, duplicate, upsertCard, removeCard };
+  return { reports, add, addFromTemplate, duplicateFromTemplate, update, remove, duplicate, upsertCard, removeCard };
 }
 
 export interface ReportTemplate {
