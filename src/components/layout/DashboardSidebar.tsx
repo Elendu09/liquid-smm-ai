@@ -501,6 +501,26 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                   <Cog className="w-4 h-4 flex-shrink-0" />
                   <span>Settings</span>
                 </NavLink>
+                {isAdmin && (
+                  <NavLink
+                    to="/dashboard/admin"
+                    onClick={onNavigate}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12.5px] font-medium min-h-[36px] transition-colors",
+                        isActive
+                          ? "bg-destructive text-destructive-foreground shadow-md shadow-destructive/25"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                      )
+                    }
+                  >
+                    <Shield className="w-4 h-4 flex-shrink-0" />
+                    <span className="flex-1">Admin</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-destructive/80">
+                      Restricted
+                    </span>
+                  </NavLink>
+                )}
                 <NavLink
                   to="/dashboard/support"
                   data-tour="support"
