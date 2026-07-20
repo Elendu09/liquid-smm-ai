@@ -434,6 +434,16 @@ export function BillingPanel() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 flex items-start gap-3">
+        <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+        <div className="min-w-0 text-sm">
+          <p className="font-medium">Billing is running in preview mode</p>
+          <p className="text-muted-foreground">
+            Plan, usage, invoices, and payment methods below are placeholders. Connect a payment provider (Stripe or Paddle) to enable real subscriptions, invoices, and card management.
+          </p>
+        </div>
+      </div>
+
       <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent">
         <CardHeader>
           <div className="flex items-start justify-between">
