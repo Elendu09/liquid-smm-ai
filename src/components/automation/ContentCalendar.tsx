@@ -290,7 +290,7 @@ export const ContentCalendar = () => {
         onClick={() => setSelectedDay(date)}
         onDragOver={(e) => { if (dragId) { e.preventDefault(); setDropTarget(key); } }}
         onDragLeave={() => setDropTarget((t) => (t === key ? null : t))}
-        onDrop={() => handleDrop(date)}
+        onDrop={(e) => handleDrop(date, e)}
         className={cn(
           "min-w-0 min-h-[70px] sm:min-h-[100px] md:min-h-[120px] p-1 sm:p-1.5 rounded-lg border transition-all cursor-pointer flex flex-col gap-1 overflow-hidden",
           "hover:border-primary/50",
