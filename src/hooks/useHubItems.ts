@@ -104,6 +104,13 @@ export function useHubItems(hubKey: string, seed: HubItem[]) {
   }, []);
 
   useEffect(() => {
+    if (uid) return;
+    const refresh = () => setItems(readLocal(hubKey, seed));
+    window.addEventListener(evtName(hubKey), refresh);
+    return () => window.removeEventListener(evtName(hubKey), refresh);
+  }, [uid, hubKey, seed]);
+
+  useEffect(() => {
     if (!uid) {
       setItems(readLocal(hubKey, seed));
       return;
