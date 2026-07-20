@@ -470,7 +470,6 @@ export default function RssFeedsPage() {
                     </div>
                   )}
                 </div>
-                )}
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <h4 className="font-semibold line-clamp-2 text-sm">{it.title}</h4>
