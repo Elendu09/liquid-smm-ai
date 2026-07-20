@@ -89,6 +89,25 @@ export function useCustomReports() {
     return report;
   }, [col]);
 
+  const addFromTemplate = useCallback((templateId: string) => {
+    const tpl = REPORT_TEMPLATES.find((t) => t.id === templateId);
+    if (!tpl) return null;
+    const now = new Date().toISOString();
+    const report: CustomReport = {
+      id: `report-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name: tpl.name,
+      range: tpl.range,
+      cards: tpl.cards.map((c, i) => ({
+        ...c,
+        id: `c-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+      })),
+      createdAt: now,
+      updatedAt: now,
+    };
+    col.setItems((prev) => [report, ...prev]);
+    return report;
+  }, [col]);
+
   const update = useCallback((id: string, patch: Partial<CustomReport>) => {
     col.setItems((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch, updatedAt: new Date().toISOString() } : r)));
   }, [col]);
