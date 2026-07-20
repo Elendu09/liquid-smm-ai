@@ -133,6 +133,55 @@ export const AICaptionGenerator = ({ defaultPlatformId }: AICaptionGeneratorProp
     }
   };
 
+  // Lightweight engagement predictor: rewards hooks, CTAs, balanced emojis, sane length.
+  const scoreCaption = (text: string, hashtags: string[]): number => {
+    let s = 55;
+    const firstLine = text.split("\n")[0] ?? "";
+    if (/[!?]/.test(firstLine)) s += 8;
+    if (firstLine.length > 0 && firstLine.length <= 90) s += 6;
+    if (text.length > 60 && text.length < 600) s += 12;
+    if (/\b(comment|dm|link in bio|tap|save|share|swipe|watch|learn|join|try)\b/i.test(text)) s += 10;
+    const emojiCount = (text.match(/\p{Extended_Pictographic}/gu) ?? []).length;
+    if (emojiCount >= 1 && emojiCount <= 4) s += 6;
+    if (hashtags.length >= 4 && hashtags.length <= 12) s += 5;
+    return Math.min(100, s);
+  };
+
+  const handleAutoAB = async () => {
+    if (!topic.trim()) {
+      toast({ title: "Please enter a topic", variant: "destructive" });
+      return;
+    }
+    setAbBusy(true);
+    setAbVariants([]);
+    const enriched = cta ? `${topic}\n\nCall to action: ${cta}` : topic;
+    const angles: { tone: string; label: string }[] = [
+      { tone: `${selectedTone} — hook-first, punchy opener`, label: "A · Hook-first" },
+      { tone: `${selectedTone} — story-driven with clear CTA`, label: "B · Story + CTA" },
+    ];
+    const runs = await Promise.all(
+      angles.map(async (a) => {
+        const [cap, tags] = await Promise.all([
+          generateCaption(enriched, a.tone),
+          generateHashtags(enriched),
+        ]);
+        const text = cap.success && cap.caption ? cap.caption : "";
+        const hashtags = tags.success && tags.hashtags ? tags.hashtags : [];
+        return { text, hashtags, tone: a.label, score: text ? scoreCaption(text, hashtags) : 0 };
+      }),
+    );
+    const valid = runs.filter((r) => r.text);
+    setAbBusy(false);
+    if (valid.length === 0) {
+      toast({ title: "AI unavailable — try single generate", variant: "destructive" });
+      return;
+    }
+    setAbVariants(valid);
+    const winner = valid.reduce((a, b) => (a.score >= b.score ? a : b));
+    toast({ title: `Winner: ${winner.tone}`, description: `Predicted engagement ${winner.score}/100` });
+  };
+
+
   return (
     <div className="glass-card p-6 md:p-8">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
