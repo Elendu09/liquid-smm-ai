@@ -1,4 +1,5 @@
-import { useSyncExternalStore, useCallback } from "react";
+import { useEffect, useSyncExternalStore, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface IntegrationSettings {
   enabled: boolean;
@@ -11,55 +12,93 @@ export interface IntegrationSettings {
 
 type Store = Record<string, IntegrationSettings>;
 const KEY = "smmpilot:integration-settings";
-
-function read(): Store {
-  if (typeof window === "undefined") return {};
-  try {
-    return JSON.parse(window.localStorage.getItem(KEY) ?? "{}") as Store;
-  } catch {
-    return {};
-  }
-}
-
-let cache: Store = read();
-const listeners = new Set<() => void>();
-function emit() {
-  cache = read();
-  listeners.forEach((l) => l());
-}
-function write(next: Store) {
-  window.localStorage.setItem(KEY, JSON.stringify(next));
-  emit();
-}
-if (typeof window !== "undefined") {
-  window.addEventListener("storage", (e) => e.key === KEY && emit());
-}
-
 const DEFAULT: IntegrationSettings = { enabled: true, disabledTools: [] };
 
-export function useIntegrationSettings(slug?: string) {
-  const store = useSyncExternalStore(
-    (cb) => (listeners.add(cb), () => listeners.delete(cb)),
-    () => cache,
-    () => cache,
+function readLocal(): Store {
+  if (typeof window === "undefined") return {};
+  try { return JSON.parse(window.localStorage.getItem(KEY) ?? "{}") as Store; } catch { return {}; }
+}
+function writeLocal(next: Store) {
+  window.localStorage.setItem(KEY, JSON.stringify(next));
+}
+
+let cache: Store = readLocal();
+let userId: string | null = null;
+let hydrated = false;
+const listeners = new Set<() => void>();
+function setCache(next: Store) {
+  cache = next;
+  writeLocal(next);
+  listeners.forEach((l) => l());
+}
+function subscribe(cb: () => void) {
+  listeners.add(cb);
+  return () => listeners.delete(cb);
+}
+
+async function hydrateFromRemote() {
+  const { data } = await supabase.auth.getUser();
+  userId = data.user?.id ?? null;
+  hydrated = true;
+  if (!userId) return;
+  const { data: rows } = await supabase.from("integration_settings").select("*").eq("user_id", userId);
+  if (!rows) return;
+  const next: Store = {};
+  for (const r of rows) {
+    next[r.slug] = {
+      enabled: r.enabled,
+      disabledTools: r.disabled_tools ?? [],
+      lastUsedAt: r.last_used_at ?? undefined,
+      lastStatus: (r.last_status as IntegrationSettings["lastStatus"]) ?? undefined,
+      lastError: r.last_error ?? undefined,
+      toolCount: r.tool_count ?? undefined,
+    };
+  }
+  setCache(next);
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => { if (e.key === KEY) setCache(readLocal()); });
+  supabase.auth.onAuthStateChange(() => { hydrated = false; void hydrateFromRemote(); });
+}
+
+async function pushRemote(slug: string, patch: Partial<IntegrationSettings>) {
+  if (!userId) return;
+  const merged = { ...DEFAULT, ...(cache[slug] ?? {}), ...patch };
+  await supabase.from("integration_settings").upsert(
+    {
+      user_id: userId,
+      slug,
+      enabled: merged.enabled,
+      disabled_tools: merged.disabledTools,
+      last_used_at: merged.lastUsedAt ?? null,
+      last_status: merged.lastStatus ?? null,
+      last_error: merged.lastError ?? null,
+      tool_count: merged.toolCount ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,slug" },
   );
+}
+
+export function useIntegrationSettings(slug?: string) {
+  const store = useSyncExternalStore(subscribe, () => cache, () => cache);
+  useEffect(() => { if (!hydrated) void hydrateFromRemote(); }, []);
 
   const get = useCallback(
     (s: string): IntegrationSettings => ({ ...DEFAULT, ...(store[s] ?? {}) }),
     [store],
   );
 
-  const update = useCallback(
-    (s: string, patch: Partial<IntegrationSettings>) => {
-      const next = { ...read() };
-      next[s] = { ...DEFAULT, ...(next[s] ?? {}), ...patch };
-      write(next);
-    },
-    [],
-  );
+  const update = useCallback((s: string, patch: Partial<IntegrationSettings>) => {
+    const next = { ...cache };
+    next[s] = { ...DEFAULT, ...(next[s] ?? {}), ...patch };
+    setCache(next);
+    void pushRemote(s, patch);
+  }, []);
 
   const toggleTool = useCallback((s: string, tool: string) => {
-    const cur = read()[s] ?? DEFAULT;
+    const cur = cache[s] ?? DEFAULT;
     const disabled = new Set(cur.disabledTools ?? []);
     disabled.has(tool) ? disabled.delete(tool) : disabled.add(tool);
     update(s, { disabledTools: [...disabled] });
