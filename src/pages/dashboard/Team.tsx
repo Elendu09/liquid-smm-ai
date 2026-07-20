@@ -370,9 +370,11 @@ export default function TeamPage() {
                     </DropdownMenu>
                   </div>
                 ))}
-                {members.length === 0 && (
+                {visibleMembers.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No members yet. Invite someone to collaborate.
+                    {members.length === 0
+                      ? "No members yet. Invite someone to collaborate."
+                      : "No members match your filters."}
                   </p>
                 )}
               </div>
