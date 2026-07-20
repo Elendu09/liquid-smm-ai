@@ -208,6 +208,12 @@ Deno.serve(async (req) => {
           scheduledPostId = post?.id ?? null;
         }
 
+        let finalImage = item.imageUrl ?? null;
+        if (!finalImage && item.link) {
+          finalImage = await scrapeOgImage(item.link);
+        }
+        const thumbnailUrl = toThumbnailUrl(finalImage);
+
         await admin.from("rss_items").insert({
           feed_id: feed.id,
           owner_id: userId,
@@ -215,7 +221,8 @@ Deno.serve(async (req) => {
           title: item.title,
           link: item.link,
           summary: item.summary,
-          image_url: item.imageUrl,
+          image_url: finalImage,
+          thumbnail_url: thumbnailUrl,
           published_at: item.publishedAt,
           imported: !!scheduledPostId,
           scheduled_post_id: scheduledPostId,
