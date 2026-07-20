@@ -1,4 +1,5 @@
-import { useSyncExternalStore } from "react";
+import { useCallback } from "react";
+import { createRemoteCollection } from "./_remoteCollection";
 
 export interface AiCommandToolCall {
   id: string;
@@ -19,42 +20,52 @@ export interface AiCommandEntry {
   error?: string;
 }
 
-const KEY = "smmpilot:ai-command-history";
+interface Row {
+  id: string;
+  user_id: string;
+  prompt: string;
+  text: string;
+  tool_calls: unknown;
+  status: string;
+  error: string | null;
+  created_at: string;
+}
+
 const LIMIT = 40;
 
-function read(): AiCommandEntry[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as AiCommandEntry[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-const listeners = new Set<() => void>();
-let cache: AiCommandEntry[] = read();
-
-function emit() {
-  cache = read();
-  listeners.forEach((l) => l());
-}
-
-function write(next: AiCommandEntry[]) {
-  window.localStorage.setItem(KEY, JSON.stringify(next.slice(0, LIMIT)));
-  emit();
-}
-
-if (typeof window !== "undefined") {
-  window.addEventListener("storage", (e) => {
-    if (e.key === KEY) emit();
-  });
-}
-
-function subscribe(cb: () => void) {
-  listeners.add(cb);
-  return () => listeners.delete(cb);
-}
+const collection = createRemoteCollection<AiCommandEntry, Row>({
+  table: "ai_command_history",
+  localKey: "smmpilot:ai-command-history",
+  orderBy: { column: "created_at", ascending: false },
+  fromRow: (r) => ({
+    id: r.id,
+    createdAt: r.created_at,
+    prompt: r.prompt,
+    text: r.text ?? "",
+    toolCalls: Array.isArray(r.tool_calls) ? (r.tool_calls as AiCommandToolCall[]) : [],
+    status: (r.status as AiCommandEntry["status"]) ?? "success",
+    error: r.error ?? undefined,
+  }),
+  toInsertRow: (item, user_id) => ({
+    id: item.id,
+    user_id,
+    prompt: item.prompt,
+    text: item.text,
+    tool_calls: item.toolCalls,
+    status: item.status,
+    error: item.error ?? null,
+    created_at: item.createdAt,
+  }),
+  toUpdateRow: (patch) => {
+    const row: Record<string, unknown> = {};
+    if (patch.prompt !== undefined) row.prompt = patch.prompt;
+    if (patch.text !== undefined) row.text = patch.text;
+    if (patch.toolCalls !== undefined) row.tool_calls = patch.toolCalls;
+    if (patch.status !== undefined) row.status = patch.status;
+    if (patch.error !== undefined) row.error = patch.error ?? null;
+    return row;
+  },
+});
 
 export function logAiCommand(entry: Omit<AiCommandEntry, "id" | "createdAt">) {
   const full: AiCommandEntry = {
@@ -62,29 +73,34 @@ export function logAiCommand(entry: Omit<AiCommandEntry, "id" | "createdAt">) {
     createdAt: new Date().toISOString(),
     ...entry,
   };
-  write([full, ...read()]);
+  void collection.add(full);
+  // trim local cache client-side; server keeps history
+  const rest = collection.read().slice(LIMIT);
+  rest.forEach((r) => void collection.remove(r.id));
   return full;
 }
 
 export function updateAiCommand(id: string, patch: Partial<AiCommandEntry>) {
-  write(read().map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  void collection.update(id, patch);
 }
 
 export function updateToolCall(entryId: string, callId: string, patch: Partial<AiCommandToolCall>) {
-  write(
-    read().map((e) =>
-      e.id === entryId
-        ? { ...e, toolCalls: e.toolCalls.map((c) => (c.id === callId ? { ...c, ...patch } : c)) }
-        : e,
-    ),
-  );
+  const entry = collection.read().find((e) => e.id === entryId);
+  if (!entry) return;
+  const toolCalls = entry.toolCalls.map((c) => (c.id === callId ? { ...c, ...patch } : c));
+  void collection.update(entryId, { toolCalls });
 }
 
 export function clearAiCommandHistory() {
-  write([]);
+  const all = collection.read();
+  all.forEach((r) => void collection.remove(r.id));
 }
 
 export function useAiCommandHistory() {
-  const items = useSyncExternalStore(subscribe, () => cache, () => cache);
-  return { items, log: logAiCommand, update: updateAiCommand, updateTool: updateToolCall, clear: clearAiCommandHistory };
+  const items = collection.useItems();
+  const log = useCallback(logAiCommand, []);
+  const update = useCallback(updateAiCommand, []);
+  const updateTool = useCallback(updateToolCall, []);
+  const clear = useCallback(clearAiCommandHistory, []);
+  return { items, log, update, updateTool, clear };
 }
