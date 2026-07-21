@@ -198,7 +198,7 @@ export default function BioEditor() {
                   toast.error(error.message);
                   return;
                 }
-                toast.success("Published", { description: `${window.location.origin}/bio/${slug}` });
+                toast.success("Published", { description: `smmsaas.com/@${slug}` });
               }}>
                 <Save className="w-3.5 h-3.5" /> Publish
               </Button>
