@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isGuestSession } from "@/hooks/useGuest";
 
 /**
  * Shared module-cache pattern for per-user tables that used to be
