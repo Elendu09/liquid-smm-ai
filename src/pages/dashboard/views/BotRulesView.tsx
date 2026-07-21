@@ -9,20 +9,12 @@ import {
 } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { useAutomationRules, type BotRule } from "@/hooks/useAutomationRules";
+import { isGuestSession } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
 import { NewRuleDialog, type RuleDraft } from "@/components/engage/NewRuleDialog";
 import { TestRuleDialog } from "@/components/engage/TestRuleDialog";
 import { RunAutomationDialog } from "@/components/engage/RunAutomationDialog";
-
-interface BotRule {
-  id: string;
-  name: string;
-  trigger: string;
-  action: string;
-  enabled: boolean;
-  runs: number;
-}
 
 const seed: BotRule[] = [
   { id: "r1", name: "Welcome new followers", trigger: "New follower", action: "Send welcome DM", enabled: true, runs: 128 },
@@ -32,7 +24,7 @@ const seed: BotRule[] = [
 
 export default function BotRulesView() {
   const [view, setView] = useViewMode("engage-bot", "grid");
-  const { items, setItems, add, update, remove } = useLocalCollection<BotRule>("engage", "bot-rules");
+  const { items, setItems, add, update, remove } = useAutomationRules();
   const [search, setSearch] = useState("");
   const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
   const [editing, setEditing] = useState<BotRule | null>(null);
@@ -40,7 +32,11 @@ export default function BotRulesView() {
   const [testing, setTesting] = useState<BotRule | null>(null);
   const [runOpen, setRunOpen] = useState(false);
 
-  useEffect(() => { if (items.length === 0) setItems(seed); }, [items.length, setItems]);
+  // Guests get a seeded demo so the board isn't blank; authenticated users start clean.
+  useEffect(() => {
+    if (items.length === 0 && isGuestSession()) setItems(seed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = useMemo(
     () => items.filter((r) => !search || r.name.toLowerCase().includes(search.toLowerCase())),
