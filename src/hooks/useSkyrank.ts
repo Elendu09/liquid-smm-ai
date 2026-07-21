@@ -95,6 +95,7 @@ export function useCaption() {
         setState({ data: generatedCaption, isLoading: false, error: null });
         return generatedCaption;
       } else if (isGuestSession()) {
+        // eslint-disable-next-line no-restricted-syntax -- synth-ok: guest-only demo fallback
         const fallback = mockCaptions[Math.floor(Math.random() * mockCaptions.length)];
         setState({ data: fallback, isLoading: false, error: null });
         toast({ title: "Demo content", description: "Showing example while AI service is unavailable." });
@@ -107,6 +108,7 @@ export function useCaption() {
     } catch (error) {
       console.error('Caption generation error:', error);
       if (isGuestSession()) {
+        // eslint-disable-next-line no-restricted-syntax -- synth-ok: guest-only demo fallback
         const fallback = mockCaptions[Math.floor(Math.random() * mockCaptions.length)];
         setState({ data: fallback, isLoading: false, error: 'API unavailable, using fallback' });
         return fallback;

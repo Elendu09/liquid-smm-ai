@@ -84,7 +84,7 @@ export function useRssFeeds() {
   useEffect(() => {
     if (!user) return;
     const ch = supabase
-      .channel(`rss:${user.id}:${Math.random().toString(36).slice(2)}`)
+      .channel(`rss:${user.id}:${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "rss_feeds", filter: `owner_id=eq.${user.id}` },

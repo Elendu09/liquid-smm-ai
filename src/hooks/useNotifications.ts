@@ -164,7 +164,7 @@ export function useNotifications() {
   // Realtime subscription
   useEffect(() => {
     if (!userId) return;
-    const channel = supabase.channel(`notifications:${userId}:${Math.random().toString(36).slice(2)}`);
+    const channel = supabase.channel(`notifications:${userId}:${crypto.randomUUID()}`);
     channel
       .on(
         "postgres_changes",

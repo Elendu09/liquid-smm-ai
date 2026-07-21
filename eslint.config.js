@@ -33,6 +33,7 @@ export default tseslint.config(
       "src/components/library/**/*.{ts,tsx}",
       "src/components/activity/**/*.{ts,tsx}",
       "src/components/settings/**/*.{ts,tsx}",
+      "src/hooks/**/*.{ts,tsx}",
     ],
     rules: {
       "no-restricted-syntax": [

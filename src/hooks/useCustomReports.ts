@@ -118,7 +118,7 @@ const store = createRemoteCollection<CustomReport, Row>({
 });
 
 function newId(prefix: string) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  return `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
 export function useCustomReports() {
@@ -147,7 +147,7 @@ export function useCustomReports() {
       name: nameOverride ?? tpl.name,
       range: tpl.range,
       templateId: tpl.id,
-      cards: tpl.cards.map((c, i) => ({ ...c, id: `c-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}` })),
+      cards: tpl.cards.map((c, i) => ({ ...c, id: `c-${crypto.randomUUID().slice(0, 8)}-${i}` })),
       createdAt: now,
       updatedAt: now,
     };
@@ -180,7 +180,7 @@ export function useCustomReports() {
       ...src,
       id: newId("report"),
       name: `${src.name} (copy)`,
-      cards: src.cards.map((c) => ({ ...c, id: `c-${Date.now()}-${Math.random().toString(36).slice(2, 5)}` })),
+      cards: src.cards.map((c) => ({ ...c, id: `c-${crypto.randomUUID().slice(0, 8)}` })),
       createdAt: now,
       updatedAt: now,
     };
