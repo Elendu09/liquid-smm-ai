@@ -71,8 +71,8 @@ export interface Segment {
   status: SegmentStatus;
   niche?: string;
   platforms: string[];
-  followerBucket: (typeof FOLLOWER_BUCKETS)[number]["id"];
-  engagementBucket: (typeof ENGAGEMENT_BUCKETS)[number]["id"];
+  followerBucket: string;
+  engagementBucket: string;
   keywords: string[];
   createdAt: string;
 }
