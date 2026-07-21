@@ -118,7 +118,7 @@ if (typeof window !== "undefined") {
         mode = "local"; remoteUserId = null;
         if (b.channel) { supabase.removeChannel(b.channel); b.channel = null; }
         b.hydration = null;
-        setCache(kind, readLocal(kind));
+        setCache(kind, isGuestSession() ? readLocal(kind) : []);
       }
     });
     if (!uid) { mode = "local"; remoteUserId = null; }
