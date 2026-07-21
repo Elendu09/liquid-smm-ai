@@ -165,10 +165,12 @@ export default function ContentLibraryPage() {
         <TabsContent value="media">
           {assets.length === 0 ? (
             <EmptyState
+              variant="upload-asset"
               icon={Image}
               title="No media assets yet"
               description="Upload your first image or video to start building your library."
               ctaLabel="Upload asset"
+              ctaHref="/dashboard/library/assets"
             />
           ) : (
           <div className={cn(
@@ -253,6 +255,7 @@ export default function ContentLibraryPage() {
               title="No caption templates yet"
               description="Create reusable caption templates to speed up publishing across platforms."
               ctaLabel="Add caption template"
+              ctaHref="/dashboard/create/captions"
             />
           ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -317,6 +320,7 @@ export default function ContentLibraryPage() {
               title="No hashtag sets yet"
               description="Group your best-performing hashtags into reusable sets for quick copy-paste."
               ctaLabel="Create hashtag set"
+              ctaHref="/dashboard/create/hashtags"
             />
           ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
