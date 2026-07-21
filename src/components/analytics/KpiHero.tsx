@@ -132,5 +132,6 @@ export function KpiHero({ range, onRangeChange }: KpiHeroProps) {
   );
 }
 
-export { RANGES, RANGE_DAYS };
+export { RANGES };
+export { RANGE_DAYS } from "@/hooks/useAnalyticsSeries";
 export type { RangeKey };
