@@ -1,13 +1,15 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
-import { Bot, MessageSquare, MessageCircle } from "lucide-react";
+import { Bot, Inbox, MessageSquare, MessageCircle } from "lucide-react";
 import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import BotRulesView from "../views/BotRulesView";
 import { InboxBoard } from "../views/InboxBoard";
+import { UnifiedInboxView } from "../views/UnifiedInboxView";
 
 const tabs: HubTab[] = [
-  { label: "Engagement Bot", href: "/dashboard/engage/bot", icon: Bot },
+  { label: "Inbox", href: "/dashboard/engage/inbox", icon: Inbox },
   { label: "Comments", href: "/dashboard/engage/comments", icon: MessageSquare },
   { label: "DMs", href: "/dashboard/engage/dms", icon: MessageCircle },
+  { label: "Bot rules", href: "/dashboard/engage/bot", icon: Bot },
 ];
 
 function EngageLayout() {
