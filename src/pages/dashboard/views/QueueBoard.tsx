@@ -31,6 +31,8 @@ import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { ScheduleDialog } from "@/components/publish/ScheduleDialog";
 import { RescheduleDialog } from "@/components/publish/RescheduleDialog";
 import { PauseAllDialog } from "@/components/publish/PauseAllDialog";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useAccounts } from "@/contexts/AccountContext";
 
 type Column = "queued" | "sending" | "completed" | "failed";
 
@@ -166,6 +168,7 @@ function PostCard({
 export default function QueueBoard() {
   const [view, setView] = useViewMode("publish-queue", "kanban");
   const { posts, add, remove, update } = useScheduledPosts();
+  const { accounts } = useAccounts();
   const { drain } = useMcpInbox();
   const [search, setSearch] = useState("");
   const [scheduleOpen, setScheduleOpen] = useState(false);
@@ -254,7 +257,19 @@ export default function QueueBoard() {
         }
       />
 
-      {view === "kanban" ? (
+      {posts.length === 0 ? (
+        accounts.length === 0 ? (
+          <EmptyState variant="connect-account" />
+        ) : (
+          <EmptyState
+            variant="create-first"
+            title="Your queue is empty"
+            description="Schedule your first post to see it flow through queued → sending → completed."
+            ctaLabel="Schedule post"
+            onCta={() => setScheduleOpen(true)}
+          />
+        )
+      ) : view === "kanban" ? (
         <KanbanBoard<ScheduledPost, Column>
           columns={columns}
           items={filtered}
