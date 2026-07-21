@@ -2,6 +2,8 @@ import { ArrowUp, ArrowDown, Users, Heart, Eye, MousePointerClick, MessageSquare
 import { AreaChart, Area, ResponsiveContainer, YAxis } from "recharts";
 import { cn } from "@/lib/utils";
 import { useAnalyticsSeries, RANGE_DAYS, type RangeKey } from "@/hooks/useAnalyticsSeries";
+import { useAccounts } from "@/contexts/AccountContext";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 const RANGES = ["7D", "30D", "90D", "1Y"] as const;
 
