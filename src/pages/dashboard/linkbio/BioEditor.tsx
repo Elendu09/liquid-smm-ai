@@ -1109,7 +1109,7 @@ function SeoPanel() {
       <div>
         <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Custom slug</Label>
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-muted-foreground">bio.smmsaas.com/</span>
+          <span className="text-xs text-muted-foreground">smmsaas.com/@</span>
           <Input value={cfg.slug} onChange={(e) => bioStore.set({ slug: e.target.value.replace(/[^a-z0-9-]/gi, "").toLowerCase() })} className="h-9 flex-1" />
         </div>
       </div>
