@@ -204,6 +204,51 @@ export type Database = {
         }
         Relationships: []
       }
+      audience_segments: {
+        Row: {
+          created_at: string
+          description: string
+          engagement_bucket: string
+          follower_bucket: string
+          id: string
+          keywords: string[]
+          niche: string | null
+          platforms: string[]
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          engagement_bucket?: string
+          follower_bucket?: string
+          id?: string
+          keywords?: string[]
+          niche?: string | null
+          platforms?: string[]
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          engagement_bucket?: string
+          follower_bucket?: string
+          id?: string
+          keywords?: string[]
+          niche?: string | null
+          platforms?: string[]
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
