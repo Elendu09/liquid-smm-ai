@@ -58,11 +58,20 @@ export function useAnalyticsOverview(rangeDays: RangeDays = 90): OverviewData {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => setTick((t) => t + 1), 750);
     };
-    const channel = supabase
-      .channel(`analytics-overview-${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "post_metrics", filter: `user_id=eq.${user.id}` }, bump)
-      .on("postgres_changes", { event: "*", schema: "public", table: "account_metrics_daily", filter: `user_id=eq.${user.id}` }, bump)
-      .subscribe();
+    const channel = supabase.channel(
+      `analytics-overview-${user.id}-${Math.random().toString(36).slice(2)}`,
+    );
+    channel.on(
+      "postgres_changes" as any,
+      { event: "*", schema: "public", table: "post_metrics", filter: `user_id=eq.${user.id}` },
+      bump,
+    );
+    channel.on(
+      "postgres_changes" as any,
+      { event: "*", schema: "public", table: "account_metrics_daily", filter: `user_id=eq.${user.id}` },
+      bump,
+    );
+    channel.subscribe();
     return () => {
       if (timer) clearTimeout(timer);
       supabase.removeChannel(channel);
