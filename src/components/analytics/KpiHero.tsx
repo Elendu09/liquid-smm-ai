@@ -5,7 +5,7 @@ import { useAnalyticsSeries, RANGE_DAYS, type RangeKey } from "@/hooks/useAnalyt
 import { useAccounts } from "@/contexts/AccountContext";
 import { EmptyState } from "@/components/shared/EmptyState";
 
-const RANGES = ["7D", "30D", "90D", "1Y"] as const;
+const RANGES = ["1D", "7D", "30D", "90D", "1Y"] as const;
 
 type KpiDef = {
   id: "followers" | "engagement" | "reach" | "replies" | "impressions" | "ctr";
