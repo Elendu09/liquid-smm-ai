@@ -44,6 +44,7 @@ export function ChartCard({
   const delta = first ? ((last - first) / first) * 100 : 0;
   const unit = METRIC_UNIT[card.metric];
   const color = card.color || "hsl(var(--primary))";
+  const noRealData = !isDemo && !loading && data.length === 0;
 
   const merged = compareData
     ? data.map((d, i) => ({ ...d, prev: compareData[i]?.value ?? 0 }))
