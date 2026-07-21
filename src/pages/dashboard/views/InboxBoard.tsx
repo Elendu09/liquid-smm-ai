@@ -16,6 +16,8 @@ import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
 import { ReplyDialog } from "@/components/engage/ReplyDialog";
 import { analyzeMessage, snippetFor, SENTIMENT_STYLE, INTENT_LABEL } from "@/hooks/useInboxAnalysis";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useAccounts } from "@/contexts/AccountContext";
 
 type InboxStatus = "new" | "replied" | "snoozed" | "resolved";
 
