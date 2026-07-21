@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isGuestSession } from "@/hooks/useGuest";
 import type { InboxItem } from "@/pages/dashboard/views/InboxBoard";
 
 /**
