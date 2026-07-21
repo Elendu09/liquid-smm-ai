@@ -1,13 +1,9 @@
-import { useMemo, useState } from "react";
-import { ArrowUp, ArrowDown, Users, Heart, Eye, MousePointerClick, MessageSquare, TrendingUp } from "lucide-react";
+import { ArrowUp, ArrowDown, Users, Heart, Eye, MousePointerClick, MessageSquare, TrendingUp, Sparkles } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, YAxis } from "recharts";
 import { cn } from "@/lib/utils";
-import { useAccounts } from "@/contexts/AccountContext";
-import { resolveMetric } from "@/hooks/useCustomReports";
+import { useAnalyticsSeries, RANGE_DAYS, type RangeKey } from "@/hooks/useAnalyticsSeries";
 
 const RANGES = ["7D", "30D", "90D", "1Y"] as const;
-type RangeKey = typeof RANGES[number];
-const RANGE_DAYS: Record<RangeKey, number> = { "7D": 7, "30D": 30, "90D": 90, "1Y": 365 };
 
 type KpiDef = {
   id: "followers" | "engagement" | "reach" | "replies" | "impressions" | "ctr";
@@ -39,33 +35,34 @@ interface KpiHeroProps {
 }
 
 export function KpiHero({ range, onRangeChange }: KpiHeroProps) {
-  const { accounts } = useAccounts();
-  const seed = useMemo(
-    () => Math.max(1000, accounts.reduce((s, a) => s + a.followers, 0) || 4200),
-    [accounts],
-  );
-  const days = RANGE_DAYS[range];
+  const followers = useAnalyticsSeries("followers", range);
+  const engagement = useAnalyticsSeries("engagement", range);
+  const reach = useAnalyticsSeries("reach", range);
+  const impressions = useAnalyticsSeries("impressions", range);
+  const replies = useAnalyticsSeries("replies", range);
+  const ctr = useAnalyticsSeries("ctr", range);
+  const byId: Record<KpiDef["id"], ReturnType<typeof useAnalyticsSeries>> = {
+    followers, engagement, reach, impressions, replies, ctr,
+  };
 
-  const cards = useMemo(() => {
-    return KPIS.map((k) => {
-      const data = resolveMetric(k.id, days, seed);
-      const first = data[0]?.value ?? 0;
-      const last = data[data.length - 1]?.value ?? 0;
-      const total = data.reduce((s, d) => s + d.value, 0);
-      const value = k.id === "engagement" || k.id === "ctr" || k.id === "followers"
-        ? last
-        : total;
-      const delta = first ? ((last - first) / first) * 100 : 0;
-      return { ...k, data, value, delta };
-    });
-  }, [days, seed]);
+  const loading = followers.loading;
+  const isDemo = followers.isDemo;
+  const cards = KPIS.map((k) => {
+    const s = byId[k.id];
+    const value = k.id === "engagement" || k.id === "ctr" || k.id === "followers" ? s.latest : s.total;
+    return { ...k, data: s.series, value, delta: s.delta };
+  });
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg sm:text-xl font-semibold">Performance snapshot</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground">Live signal across every connected account.</p>
+          <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5">
+            {isDemo ? (
+              <><Sparkles className="h-3 w-3" /> Demo data — connect an account to see your real signal.</>
+            ) : loading ? "Loading latest metrics…" : "Live signal across every connected account."}
+          </p>
         </div>
         <div className="flex gap-1 p-1 rounded-lg bg-muted/60 border border-border/40" role="tablist" aria-label="Range">
           {RANGES.map((r) => (
@@ -135,5 +132,6 @@ export function KpiHero({ range, onRangeChange }: KpiHeroProps) {
   );
 }
 
-export { RANGES, RANGE_DAYS };
+export { RANGES };
+export { RANGE_DAYS } from "@/hooks/useAnalyticsSeries";
 export type { RangeKey };
