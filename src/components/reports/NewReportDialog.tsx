@@ -24,10 +24,12 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { pushLocalCollection } from "@/hooks/useLocalCollection";
 import { useAccounts } from "@/contexts/AccountContext";
 import { buildReportData } from "@/lib/reportAnalytics";
 import { logRun } from "@/hooks/useRunHistory";
+import { useReportRuns } from "@/hooks/useReportRuns";
+import { useReportSchedules, CADENCE_LABEL } from "@/hooks/useReportSchedules";
+import { guardWrite } from "@/hooks/useGuest";
 
 interface ReportTemplate {
   id: string;
