@@ -11,7 +11,8 @@ import {
 } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { useStories } from "@/hooks/useStories";
+import { isGuestSession } from "@/hooks/useGuest";
 import { NewStoryDialog, type StoryItemFull, type StorySlide } from "@/components/publish/NewStoryDialog";
 import { PublishStoryDialog } from "@/components/publish/PublishStoryDialog";
 
@@ -37,15 +38,15 @@ const seed: StoryItemFull[] = [
 
 export default function StoryBoard() {
   const [view, setView] = useViewMode("publish-stories", "kanban");
-  const { items, setItems, add, update, remove } = useLocalCollection<StoryItemFull>("publish", "stories");
+  const { items, setItems, add, update, remove } = useStories();
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<StoryItemFull | null>(null);
   const [publishing, setPublishing] = useState<StoryItemFull | null>(null);
   const [newOpen, setNewOpen] = useState(false);
 
-  // Only seed if truly empty (never overwrite user data).
+  // Seed a friendly starter story ONLY for guests on first visit.
   useEffect(() => {
-    if (items.length === 0) setItems(seed);
+    if (items.length === 0 && isGuestSession()) setItems(seed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
