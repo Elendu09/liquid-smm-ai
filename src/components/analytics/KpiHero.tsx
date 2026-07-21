@@ -37,6 +37,7 @@ interface KpiHeroProps {
 }
 
 export function KpiHero({ range, onRangeChange }: KpiHeroProps) {
+  const { accounts } = useAccounts();
   const followers = useAnalyticsSeries("followers", range);
   const engagement = useAnalyticsSeries("engagement", range);
   const reach = useAnalyticsSeries("reach", range);
@@ -49,6 +50,9 @@ export function KpiHero({ range, onRangeChange }: KpiHeroProps) {
 
   const loading = followers.loading;
   const isDemo = followers.isDemo;
+  const noAccounts = !isDemo && accounts.length === 0;
+  const noData =
+    !isDemo && !loading && accounts.length > 0 && followers.series.every((p) => !p.value);
   const cards = KPIS.map((k) => {
     const s = byId[k.id];
     const value = k.id === "engagement" || k.id === "ctr" || k.id === "followers" ? s.latest : s.total;
@@ -63,6 +67,10 @@ export function KpiHero({ range, onRangeChange }: KpiHeroProps) {
           <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5">
             {isDemo ? (
               <><Sparkles className="h-3 w-3" /> Demo data — connect an account to see your real signal.</>
+            ) : noAccounts ? (
+              "Connect an account to start collecting metrics."
+            ) : noData ? (
+              "Collecting your first snapshot — check back shortly."
             ) : loading ? "Loading latest metrics…" : "Live signal across every connected account."}
           </p>
         </div>
