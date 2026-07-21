@@ -1268,6 +1268,48 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_rollup_daily: {
+        Row: {
+          accounts: number
+          day: string
+          engagement: number
+          followers: number
+          id: string
+          impressions: number
+          platform: string
+          posts: number
+          reach: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accounts?: number
+          day: string
+          engagement?: number
+          followers?: number
+          id?: string
+          impressions?: number
+          platform: string
+          posts?: number
+          reach?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accounts?: number
+          day?: string
+          engagement?: number
+          followers?: number
+          id?: string
+          impressions?: number
+          platform?: string
+          posts?: number
+          reach?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_drafts: {
         Row: {
           content: Json
@@ -2070,6 +2112,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      refresh_platform_rollup: {
+        Args: { _days?: number; _user_id: string }
+        Returns: number
       }
     }
     Enums: {
