@@ -101,6 +101,18 @@ export const FollowerAnalyzer = () => {
   const openGhost = (f: typeof ghostFollowers[number]) => setDetail({ id: f.id, username: f.username, avatar: f.avatar, lastActive: f.lastActive, posts: f.posts, engagement: f.engagement, kind: "ghost" });
   const openUnfollower = (f: typeof recentUnfollowers[number]) => setDetail({ id: f.id, username: f.username, avatar: f.avatar, unfollowedAt: f.unfollowedAt, wasFollowing: f.wasFollowing, kind: "unfollower" });
 
+  if (!isGuestSession()) {
+    return (
+      <EmptyState
+        icon={Users}
+        title="No follower data yet"
+        description="Connect a social account to analyze follower quality, ghost accounts, and unfollowers."
+        actionLabel="Connect account"
+        actionHref="/dashboard/settings?tab=connected"
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
