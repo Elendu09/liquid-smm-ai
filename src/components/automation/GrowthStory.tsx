@@ -15,9 +15,10 @@ import {
 import { cn } from "@/lib/utils";
 import { StoryTooltip, SceneCallout } from "./StoryTooltip";
 import { useGuest } from "@/hooks/useGuest";
+import { useAnalyticsOverview } from "@/hooks/useAnalyticsOverview";
 import { EmptyState } from "@/components/shared/EmptyState";
 
-const followerData = [
+const DEMO_DATA = [
   { month: "Jan", followers: 12400, engagement: 4.2 },
   { month: "Feb", followers: 14200, engagement: 4.8 },
   { month: "Mar", followers: 16800, engagement: 5.1 },
