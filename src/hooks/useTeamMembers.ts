@@ -98,7 +98,35 @@ export function useTeamMembers() {
         note: input.note ?? null,
       });
       if (error) return toast.error(error.message);
-      toast.success(`Invite sent to ${input.email}`);
+      // Fire-and-forget email delivery; falls back to copyable link in the UI.
+      const inviter_name =
+        (user.user_metadata as { full_name?: string; name?: string } | null)?.full_name ??
+        (user.user_metadata as { name?: string } | null)?.name ??
+        user.email ??
+        "Your teammate";
+      const { data: sendData, error: sendError } = await supabase.functions.invoke("send-team-invite", {
+        body: {
+          email: input.email,
+          token,
+          role: input.role,
+          inviter_name,
+          app_url: window.location.origin,
+        },
+      });
+      const invite_url = (sendData as { invite_url?: string } | null)?.invite_url
+        ?? `${window.location.origin}/invite/${token}`;
+      if (sendError) {
+        toast.success(`Invite created for ${input.email}`, {
+          description: "Copy the link from the member row to share it.",
+        });
+      } else if ((sendData as { delivered?: boolean } | null)?.delivered) {
+        toast.success(`Invite emailed to ${input.email}`);
+      } else {
+        toast.success(`Invite created for ${input.email}`, {
+          description: "Email delivery isn't configured — copy the link from the member row.",
+        });
+      }
+      return invite_url;
     },
     [user, members],
   );
