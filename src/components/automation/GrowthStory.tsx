@@ -15,9 +15,10 @@ import {
 import { cn } from "@/lib/utils";
 import { StoryTooltip, SceneCallout } from "./StoryTooltip";
 import { useGuest } from "@/hooks/useGuest";
+import { useAnalyticsOverview } from "@/hooks/useAnalyticsOverview";
 import { EmptyState } from "@/components/shared/EmptyState";
 
-const followerData = [
+const DEMO_DATA = [
   { month: "Jan", followers: 12400, engagement: 4.2 },
   { month: "Feb", followers: 14200, engagement: 4.8 },
   { month: "Mar", followers: 16800, engagement: 5.1 },
@@ -26,26 +27,29 @@ const followerData = [
   { month: "Jun", followers: 31200, engagement: 7.1 },
 ];
 
-function findBiggestJump() {
+type GrowthPoint = { month: string; followers: number; engagement: number };
+
+function findBiggestJump(data: GrowthPoint[]) {
   let best = { index: 1, delta: 0 };
-  for (let i = 1; i < followerData.length; i++) {
-    const d = followerData[i].followers - followerData[i - 1].followers;
+  for (let i = 1; i < data.length; i++) {
+    const d = data[i].followers - data[i - 1].followers;
     if (d > best.delta) best = { index: i, delta: d };
   }
   return best;
 }
 
-function project(months: number) {
-  const out = [...followerData.map((d) => ({ ...d, projected: null as number | null }))];
-  const last = followerData[followerData.length - 1];
-  const first = followerData[0];
-  const growth = (last.followers - first.followers) / (followerData.length - 1);
+function project(data: GrowthPoint[], months: number) {
+  const out = [...data.map((d) => ({ ...d, projected: null as number | null }))];
+  if (data.length < 2) return out;
+  const last = data[data.length - 1];
+  const first = data[0];
+  const growth = (last.followers - first.followers) / (data.length - 1);
   let current = last.followers;
-  const monthNames = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthNames = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"];
   for (let i = 0; i < months; i++) {
     current += growth;
     out.push({
-      month: monthNames[i],
+      month: monthNames[i % 12],
       followers: null as any,
       engagement: null as any,
       projected: Math.round(current),
@@ -142,14 +146,16 @@ const tooltipStyle = {
 
 export function GrowthStory() {
   const { isGuest } = useGuest();
-  const jump = useMemo(findBiggestJump, []);
-  const projected = useMemo(() => project(6), []);
-  const start = followerData[0];
-  const now = followerData[followerData.length - 1];
-  const growthPct = Math.round(((now.followers - start.followers) / start.followers) * 100);
-  const jumpPoint = followerData[jump.index];
+  const { monthly, loading } = useAnalyticsOverview(90);
 
-  if (!isGuest) {
+  const followerData: GrowthPoint[] = isGuest
+    ? DEMO_DATA
+    : monthly.map((m) => ({ month: m.month, followers: m.followers, engagement: m.engagement }));
+
+  const jump = useMemo(() => findBiggestJump(followerData), [followerData]);
+  const projected = useMemo(() => project(followerData, 6), [followerData]);
+
+  if (!isGuest && followerData.length < 2) {
     return (
       <div className="rounded-2xl border border-border/40 bg-gradient-to-b from-muted/20 via-background to-background overflow-hidden">
         <div className="p-6 md:p-10 border-b border-border/40">
@@ -162,7 +168,7 @@ export function GrowthStory() {
         <div className="p-6 md:p-10">
           <EmptyState
             icon={TrendingUp}
-            title="Not enough history yet"
+            title={loading ? "Loading your history…" : "Not enough history yet"}
             description="Connect an account and let a few weeks of follower and engagement data accumulate — we'll narrate the story here."
             ctaLabel="Connect account"
             ctaHref="/dashboard/settings/connected"
@@ -171,6 +177,14 @@ export function GrowthStory() {
       </div>
     );
   }
+
+  const start = followerData[0];
+  const now = followerData[followerData.length - 1];
+  const growthPct = start.followers > 0
+    ? Math.round(((now.followers - start.followers) / start.followers) * 100)
+    : 0;
+  const jumpPoint = followerData[jump.index] ?? followerData[followerData.length - 1];
+
 
 
   return (
