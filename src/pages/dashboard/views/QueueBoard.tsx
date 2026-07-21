@@ -31,6 +31,8 @@ import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { ScheduleDialog } from "@/components/publish/ScheduleDialog";
 import { RescheduleDialog } from "@/components/publish/RescheduleDialog";
 import { PauseAllDialog } from "@/components/publish/PauseAllDialog";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useAccounts } from "@/contexts/AccountContext";
 
 type Column = "queued" | "sending" | "completed" | "failed";
 
