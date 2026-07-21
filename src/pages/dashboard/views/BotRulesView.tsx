@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import { NewRuleDialog, type RuleDraft } from "@/components/engage/NewRuleDialog";
 import { TestRuleDialog } from "@/components/engage/TestRuleDialog";
 import { RunAutomationDialog } from "@/components/engage/RunAutomationDialog";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useAccounts } from "@/contexts/AccountContext";
 
 const seed: BotRule[] = [
   { id: "r1", name: "Welcome new followers", trigger: "New follower", action: "Send welcome DM", enabled: true, runs: 128 },
