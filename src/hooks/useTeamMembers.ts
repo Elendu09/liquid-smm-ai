@@ -66,7 +66,7 @@ export function useTeamMembers() {
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel(`team_members:${user.id}:${Math.random().toString(36).slice(2)}`)
+      .channel(`team_members:${user.id}:${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "team_members", filter: `owner_id=eq.${user.id}` },

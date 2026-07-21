@@ -59,7 +59,7 @@ export function useAnalyticsOverview(rangeDays: RangeDays = 90): OverviewData {
       timer = setTimeout(() => setTick((t) => t + 1), 750);
     };
     const channel = supabase.channel(
-      `analytics-overview-${user.id}-${Math.random().toString(36).slice(2)}`,
+      `analytics-overview-${user.id}-${crypto.randomUUID()}`,
     );
     channel.on(
       "postgres_changes" as any,
