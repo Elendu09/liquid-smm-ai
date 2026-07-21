@@ -43,6 +43,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { NewReportDialog } from "@/components/reports/NewReportDialog";
 import { ScheduleReportDialog } from "@/components/reports/ScheduleReportDialog";
