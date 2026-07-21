@@ -320,6 +320,7 @@ export default function ContentLibraryPage() {
               title="No hashtag sets yet"
               description="Group your best-performing hashtags into reusable sets for quick copy-paste."
               ctaLabel="Create hashtag set"
+              ctaHref="/dashboard/create/hashtags"
             />
           ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
