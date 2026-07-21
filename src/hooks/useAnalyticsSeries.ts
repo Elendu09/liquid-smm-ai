@@ -214,8 +214,10 @@ export function useAccountSeries(metric: MetricId, range: RangeKey) {
   return useMemo(() => {
     return accounts.map((a) => {
       let trend: SeriesPoint[];
-      if (guest || !rows) {
+      if (guest) {
         trend = resolveMetric(metric, days, Math.max(500, (a.followers || 500) / 10));
+      } else if (!rows) {
+        trend = [];
       } else {
         const mine = rows.filter((r) => r.account_id === a.id);
         const filled = fillGaps(mine, days);
