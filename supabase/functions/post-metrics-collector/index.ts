@@ -3,7 +3,8 @@
 // fetches metrics via each provider adapter, and appends a fresh row into
 // post_metrics so trend charts and baselines have real data to work with.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { requireCronOrService } from "../_shared/auth.ts";
 import { postMetricsFor } from "../_shared/oauth-post-metrics.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -11,6 +12,8 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const gate = requireCronOrService(req);
+  if (gate) return gate;
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
   // Only care about posts sent in the last 30 days — that's the useful window

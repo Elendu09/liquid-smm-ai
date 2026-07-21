@@ -1,13 +1,16 @@
 // Recomputes per-user, per-platform daily rollups into platform_rollup_daily.
 // Called by pg_cron every 2 hours; also invocable per-user for on-demand refresh.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { requireCronOrService } from "../_shared/auth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const gate = requireCronOrService(req);
+  if (gate) return gate;
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
   let targetUsers: string[] = [];

@@ -1,6 +1,7 @@
 // Speech-to-text proxy for the AI Command Bar voice call.
 // Accepts multipart audio and proxies to Lovable AI `openai/gpt-4o-mini-transcribe`.
 import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { requireUser } from "../_shared/auth.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -10,6 +11,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+  const authed = await requireUser(req);
+  if (authed instanceof Response) return authed;
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) {
     return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {

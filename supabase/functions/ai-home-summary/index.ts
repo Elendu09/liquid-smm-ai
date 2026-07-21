@@ -1,6 +1,7 @@
 // Home dashboard AI summary — turns aggregate app state into a concise brief.
 // deno-lint-ignore-file no-explicit-any
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { requireUser } from "../_shared/auth.ts";
 
 interface Aggregate {
   accounts: { total: number; followers: number; engagement: number };
@@ -34,6 +35,8 @@ function fallback(agg: Aggregate) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const authed = await requireUser(req);
+  if (authed instanceof Response) return authed;
   try {
     const agg = (await req.json()) as Aggregate;
     const apiKey = Deno.env.get("LOVABLE_API_KEY");

@@ -52,9 +52,9 @@ export function IncidentsTimeline() {
       const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
       const { data } = await supabase
         .from("notifications")
-        .select("id, title, body, severity, category, created_at")
+        .select("id, title, message, severity, type, created_at")
         .eq("user_id", user.id)
-        .in("category", ["health", "platform", "system"])
+        .in("type", ["health", "platform", "system"])
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(20);
@@ -62,7 +62,7 @@ export function IncidentsTimeline() {
       const mapped: Incident[] = (data ?? []).map((n) => ({
         id: n.id,
         title: n.title,
-        detail: n.body ?? "",
+        detail: n.message ?? "",
         when: relTime(n.created_at),
         severity: n.severity === "critical" ? "critical" : n.severity === "warning" ? "warning" : "resolved",
       }));

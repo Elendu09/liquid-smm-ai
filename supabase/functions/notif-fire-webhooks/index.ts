@@ -2,7 +2,8 @@
 // Called from emitNotification after a successful insert.
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { requireInternal } from "../_shared/auth.ts";
 
 async function sign(secret: string, body: string): Promise<string> {
   const key = await crypto.subtle.importKey(
@@ -20,6 +21,8 @@ async function sign(secret: string, body: string): Promise<string> {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const gate = requireInternal(req);
+  if (gate) return gate;
 
   try {
     const { userId, notification } = await req.json();

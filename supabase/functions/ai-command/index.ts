@@ -5,6 +5,7 @@
 import { streamText, tool, stepCountIs } from "npm:ai@5.0.60";
 import { z } from "npm:zod@3.25.76";
 import { createLovableAiGatewayProvider, corsHeaders } from "../_shared/ai-gateway.ts";
+import { requireUser } from "../_shared/auth.ts";
 
 const SYSTEM = `You are SMMSAAS's in-app command runner. The user types a short instruction and you must translate it into ONE OR MORE tool calls that the app will surface for their approval.
 
@@ -55,6 +56,11 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
+  const authed = await requireUser(req);
+  if (authed instanceof Response) return authed;
+
+
 
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) {

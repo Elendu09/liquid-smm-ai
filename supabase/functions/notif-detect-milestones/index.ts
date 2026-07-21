@@ -5,7 +5,8 @@
 
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { requireCronOrService } from "../_shared/auth.ts";
 import { emitNotification } from "../_shared/notifications.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -86,6 +87,8 @@ async function detectForUser(admin: any, userId: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const gate = requireCronOrService(req);
+  if (gate) return gate;
   try {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
     const { data: users } = await admin.from("notification_preferences").select("user_id").limit(1000);
