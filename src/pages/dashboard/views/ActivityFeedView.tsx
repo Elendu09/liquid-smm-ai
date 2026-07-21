@@ -274,7 +274,19 @@ export function ActivityFeedView() {
         }
       />
 
-      {view === "timeline" ? (
+      {filtered.length === 0 && !isGuestSession() ? (
+        <SharedEmptyState
+          variant={items.length === 0 ? "connect-account" : "create-first"}
+          title={items.length === 0 ? "No activity yet" : "No runs match your filters"}
+          description={
+            items.length === 0
+              ? "Connect a social account — automations, publishes, and system runs will stream here."
+              : "Try clearing filters or widening the date range."
+          }
+          ctaLabel={items.length === 0 ? "Connect account" : undefined}
+          ctaHref={items.length === 0 ? "/dashboard/settings/connected" : undefined}
+        />
+      ) : view === "timeline" ? (
         <TimelineView
           events={filtered}
           onSelect={(ev) => {
