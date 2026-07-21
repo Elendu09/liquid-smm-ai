@@ -182,14 +182,36 @@ export default function SegmentsBoard() {
     toast.success("Segment duplicated");
   };
 
+  const sel = useBulkSelection<string>(filtered.map((s) => s.id));
+
+  const bulkDuplicate = async () => {
+    const ids = sel.ids;
+    const map = new Map(items.map((x) => [x.id, x]));
+    for (const id of ids) {
+      const s = map.get(id);
+      if (s) await add({ ...s, id: crypto.randomUUID(), title: `${s.title} (copy)`, createdAt: new Date().toISOString() } as AudienceSegment);
+    }
+    toast.success(`Duplicated ${ids.length} segment${ids.length === 1 ? "" : "s"}`);
+    sel.clear();
+  };
+
+  const bulkDelete = async () => {
+    const ids = sel.ids;
+    for (const id of ids) await remove(id);
+    toast.success(`Deleted ${ids.length} segment${ids.length === 1 ? "" : "s"}`);
+    sel.clear();
+    setBulkDeleteOpen(false);
+  };
 
   const card = (s: Segment, dense = false) => {
     const size = estimatedSize(s);
     const fb = FOLLOWER_BUCKETS.find((f) => f.id === s.followerBucket)?.label ?? "Any";
     const eb = ENGAGEMENT_BUCKETS.find((f) => f.id === s.engagementBucket)?.label ?? "Any";
+    const checked = sel.isSelected(s.id);
     return (
-      <div className={cn(dense ? "p-3" : "p-3")}>
+      <div className={cn(dense ? "p-3" : "p-3", checked && "bg-primary/5 ring-1 ring-primary/30 rounded-lg")}>
         <div className="flex items-start gap-2">
+          <Checkbox checked={checked} onCheckedChange={() => sel.toggle(s.id)} aria-label={`Select ${s.title}`} className="mt-1" />
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <Target className="h-4 w-4 text-primary" />
           </div>
