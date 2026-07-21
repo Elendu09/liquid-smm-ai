@@ -2,11 +2,14 @@
 // Scheduled via pg_cron. Respects digest_mode preference.
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { requireCronOrService } from "../_shared/auth.ts";
 import { emitNotification } from "../_shared/notifications.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const gate = requireCronOrService(req);
+  if (gate) return gate;
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,

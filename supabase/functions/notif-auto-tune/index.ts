@@ -3,7 +3,8 @@
 // Cron: weekly.
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { requireCronOrService } from "../_shared/auth.ts";
 
 const RULE_TUNING: Record<string, { param: string; up: (v: number) => number; down: (v: number) => number; min: number; max: number }> = {
   "engagement.viral": { param: "multiplier", up: (v) => Math.min(20, v + 1), down: (v) => Math.max(2, v - 1), min: 2, max: 20 },
@@ -14,6 +15,8 @@ const RULE_TUNING: Record<string, { param: string; up: (v: number) => number; do
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const gate = requireCronOrService(req);
+  if (gate) return gate;
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,

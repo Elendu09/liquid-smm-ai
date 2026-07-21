@@ -2,7 +2,8 @@
 // token, updates social_accounts.followers/following/posts/engagement, and
 // records a daily row in account_metrics_daily for historical charts.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { requireCronOrService } from "../_shared/auth.ts";
 import { statsFor } from "../_shared/oauth-stats.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -10,6 +11,8 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const gate = requireCronOrService(req);
+  if (gate) return gate;
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
   const { data: tokens } = await admin

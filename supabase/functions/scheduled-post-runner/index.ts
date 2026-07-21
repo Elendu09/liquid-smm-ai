@@ -3,7 +3,8 @@
 // provider's OAuth adapter has no credentials configured yet so the pipeline
 // stays exercisable pre-launch.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { requireCronOrService } from "../_shared/auth.ts";
 import { OAUTH_ADAPTERS, isAdapterEnabled } from "../_shared/oauth-adapters.ts";
 import { publishFor } from "../_shared/oauth-publishers.ts";
 
@@ -12,6 +13,8 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const gate = requireCronOrService(req);
+  if (gate) return gate;
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
   const now = new Date().toISOString();
