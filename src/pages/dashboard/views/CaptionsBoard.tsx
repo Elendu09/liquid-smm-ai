@@ -31,6 +31,7 @@ import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { useMcpInbox } from "@/hooks/useMcpInbox";
 import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { isGuestSession } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
 
 type CaptionStatus = "draft" | "ready" | "archived";
