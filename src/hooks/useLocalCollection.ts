@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { isGuestSession } from "@/hooks/useGuest";
 
 /**
  * localStorage-backed collection hook with cross-mount sync.
