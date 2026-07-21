@@ -255,6 +255,7 @@ export default function ContentLibraryPage() {
               title="No caption templates yet"
               description="Create reusable caption templates to speed up publishing across platforms."
               ctaLabel="Add caption template"
+              ctaHref="/dashboard/create/captions"
             />
           ) : (
           <div className="grid gap-4 md:grid-cols-2">
