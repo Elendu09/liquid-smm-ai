@@ -162,7 +162,7 @@ export default function BioEditor() {
                   <BioPreview />
                 </SheetContent>
               </Sheet>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 hidden lg:inline-flex" onClick={() => window.open(`/bio/${cfg.slug}`, "_blank")}>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 hidden lg:inline-flex" onClick={() => window.open(`/@${cfg.slug}`, "_blank")}>
                 <Eye className="w-3.5 h-3.5" /> Visit
               </Button>
               <Button size="sm" className="h-8 gap-1.5" onClick={async () => {
