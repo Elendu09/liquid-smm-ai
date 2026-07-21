@@ -9,7 +9,8 @@ import {
 } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { useAutomationRules, type BotRule } from "@/hooks/useAutomationRules";
+import { isGuestSession } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
 import { NewRuleDialog, type RuleDraft } from "@/components/engage/NewRuleDialog";
 import { TestRuleDialog } from "@/components/engage/TestRuleDialog";
