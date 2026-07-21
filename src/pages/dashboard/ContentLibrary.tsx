@@ -355,12 +355,15 @@ export default function ContentLibraryPage() {
               </Card>
             ))}
           </div>
-          <div className="mt-4 flex justify-center">
-            <Button variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Hashtag Set
-            </Button>
-          </div>
+          )}
+          {hashtagSets.length > 0 && (
+            <div className="mt-4 flex justify-center">
+              <Button variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Hashtag Set
+              </Button>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
