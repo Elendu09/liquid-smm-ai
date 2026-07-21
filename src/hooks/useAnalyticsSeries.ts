@@ -225,3 +225,88 @@ export function useAccountSeries(metric: MetricId, range: RangeKey) {
     });
   }, [rows, guest, metric, days, accounts]);
 }
+
+/**
+ * Series for a single chart card. Accepts raw `days` (7/14/30/90) and an
+ * optional platform id (matches `social_accounts.platform`). Real data comes
+ * from `account_metrics_daily`; guests fall back to the local synth.
+ */
+export function useCardSeries(metric: MetricId, days: number, platformId?: string): SeriesResult {
+  const guest = useGuest();
+  const { accounts } = useAccounts();
+  const [rows, setRows] = useState<Row[] | null>(null);
+  const [loading, setLoading] = useState(!guest);
+
+  const accountIds = useMemo(() => {
+    if (!platformId) return null;
+    return accounts.filter((a) => a.platformId === platformId).map((a) => a.id);
+  }, [accounts, platformId]);
+  const scope = accountIds?.slice().sort().join(",") ?? "";
+
+  useEffect(() => {
+    if (guest) { setRows(null); setLoading(false); return; }
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      const since = new Date();
+      since.setDate(since.getDate() - (days - 1));
+      let q = supabase
+        .from("account_metrics_daily")
+        .select("day,account_id,followers,following,posts,engagement,reach,impressions,raw")
+        .gte("day", isoDay(since))
+        .order("day", { ascending: true });
+      if (accountIds && accountIds.length) q = q.in("account_id", accountIds);
+      const { data, error } = await q;
+      if (cancelled) return;
+      if (error) { setRows([]); setLoading(false); return; }
+      setRows((data ?? []) as unknown as Row[]);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [guest, days, scope]);
+
+  return useMemo<SeriesResult>(() => {
+    if (guest || !rows) {
+      const followerTotal = accounts.reduce((s, a) => s + (a.followers || 0), 0);
+      const series = resolveMetric(metric, days, guestSeed(followerTotal));
+      const first = series[0]?.value ?? 0;
+      const latest = series[series.length - 1]?.value ?? 0;
+      const total = series.reduce((s, p) => s + p.value, 0);
+      const delta = first ? ((latest - first) / first) * 100 : 0;
+      return { series, total, latest, first, delta, loading: !guest && loading, isDemo: true };
+    }
+    const byDay = new Map<string, Row[]>();
+    for (const r of rows) {
+      const list = byDay.get(r.day) ?? [];
+      list.push(r);
+      byDay.set(r.day, list);
+    }
+    const aggregated: Row[] = Array.from(byDay.entries()).map(([day, list]) => {
+      const sum = (fn: (x: Row) => number) => list.reduce((s, r) => s + (fn(r) || 0), 0);
+      const avg = (fn: (x: Row) => number) => {
+        const vals = list.map(fn).filter((v) => v > 0);
+        return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
+      };
+      return {
+        day,
+        account_id: "agg",
+        followers: sum((r) => r.followers ?? 0),
+        following: sum((r) => r.following ?? 0),
+        posts: sum((r) => r.posts ?? 0),
+        engagement: avg((r) => Number(r.engagement ?? 0)),
+        reach: sum((r) => r.reach ?? 0),
+        impressions: sum((r) => r.impressions ?? 0),
+      };
+    }).sort((a, b) => a.day.localeCompare(b.day));
+    const filled = fillGaps(aggregated, days);
+    const series: SeriesPoint[] = filled.map((r) => ({
+      date: r.day.slice(5),
+      value: +pickMetric(r, metric).toFixed(2),
+    }));
+    const first = series[0]?.value ?? 0;
+    const latest = series[series.length - 1]?.value ?? 0;
+    const total = series.reduce((s, p) => s + p.value, 0);
+    const delta = first ? ((latest - first) / first) * 100 : 0;
+    return { series, total, latest, first, delta, loading, isDemo: false };
+  }, [rows, guest, loading, metric, days, accounts]);
+}
