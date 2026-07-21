@@ -48,10 +48,17 @@ export const DEFAULT_RULES: NotificationRule[] = [
   { ruleKey: "engagement.viral", type: "engagement", enabled: true, params: { multiplier: 5, windowHours: 24 } },
   { ruleKey: "engagement.high", type: "engagement", enabled: true, params: { commentsThreshold: 100 } },
   { ruleKey: "health.followerDrop", type: "alert", enabled: true, params: { pct: 5 } },
+  { ruleKey: "health.followerSpike", type: "milestone", enabled: true, params: { pct: 10 } },
+  { ruleKey: "health.engagementDrop", type: "alert", enabled: true, params: { pct: 30 } },
   { ruleKey: "health.tokenExpiry", type: "alert", enabled: true, params: { warnHours: 48 } },
   { ruleKey: "health.quota", type: "alert", enabled: true, params: { pct: 85 } },
   { ruleKey: "health.syncGap", type: "alert", enabled: true, params: { hours: 24 } },
   { ruleKey: "reminder.draftAging", type: "reminder", enabled: true, params: { days: 7 } },
+  { ruleKey: "reminder.bestTimeHit", type: "reminder", enabled: true, params: {} },
+  { ruleKey: "reminder.rssNewItem", type: "reminder", enabled: true, params: {} },
+  { ruleKey: "alert.competitorOvertake", type: "alert", enabled: true, params: { pct: 5 } },
+  { ruleKey: "alert.scheduledFailure", type: "alert", enabled: true, params: {} },
+  { ruleKey: "alert.billingThreshold", type: "alert", enabled: true, params: { pct: 85, aiQuota: 500, postQuota: 200 } },
 ];
 
 export function useNotificationPreferences() {

@@ -10,6 +10,10 @@ import { cn } from "@/lib/utils";
 
 const EVENTS = [
   { id: "new_follower", label: "New follower", description: "Someone starts following one of your accounts" },
+  { id: "follower_spike", label: "Follower spike", description: "Unusually fast follower growth in 24h" },
+  { id: "post_viral", label: "Post went viral", description: "A post is outperforming your baseline" },
+  { id: "engagement_drop", label: "Engagement drop", description: "Engagement fell below your 7-day baseline" },
+  { id: "best_time_hit", label: "Best-time-to-post hit", description: "Your peak audience window opened with nothing queued" },
   { id: "post_published", label: "Post published", description: "A scheduled post goes live" },
   { id: "post_failed", label: "Post failed", description: "A scheduled post could not be delivered" },
   { id: "bot_action", label: "Bot action", description: "The engagement bot takes an action on your behalf" },
@@ -17,6 +21,9 @@ const EVENTS = [
   { id: "dm_received", label: "DM received", description: "New direct message in your inbox" },
   { id: "weekly_report", label: "Weekly report", description: "Weekly performance summary is ready" },
   { id: "milestone", label: "Milestone reached", description: "Follower / engagement milestone hit" },
+  { id: "competitor_overtake", label: "Competitor overtake", description: "A tracked competitor is outpacing your growth" },
+  { id: "rss_new_item", label: "RSS new item", description: "A tracked RSS feed published something new" },
+  { id: "billing_threshold", label: "Billing threshold", description: "Approaching or exceeding a plan quota" },
   { id: "account_health", label: "Account health", description: "Sync issue, auth expired, or platform warning" },
 ] as const;
 
