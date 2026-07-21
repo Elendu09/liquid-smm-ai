@@ -200,7 +200,7 @@ export function useAnalyticsOverview(rangeDays: RangeDays = 90): OverviewData {
     return () => {
       cancelled = true;
     };
-  }, [user, isGuest, rangeDays]);
+  }, [user, isGuest, rangeDays, tick]);
 
   return useMemo(
     () => ({ funnel, monthly, platformSlices, loading }),
