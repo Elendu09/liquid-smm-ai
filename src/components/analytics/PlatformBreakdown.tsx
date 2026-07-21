@@ -3,12 +3,10 @@ import { ArrowUp, ArrowDown, RefreshCw, Sparkles } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, YAxis } from "recharts";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
-import { useAccountSeries, type RangeKey } from "@/hooks/useAnalyticsSeries";
+import { useAccountSeries, RANGE_DAYS, type RangeKey } from "@/hooks/useAnalyticsSeries";
 import { usePlatformRollup } from "@/hooks/usePlatformRollup";
 import { useGuest } from "@/hooks/useGuest";
 import { toast } from "sonner";
-
-const RANGE_DAYS: Record<RangeKey, number> = { "7D": 7, "30D": 30, "90D": 90, "12M": 365 };
 
 export function PlatformBreakdown({ range }: { range: RangeKey }) {
   const rows = useAccountSeries("followers", range);
