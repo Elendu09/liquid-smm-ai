@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useGuest } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { 
   FileText, 
   Image, 
@@ -82,8 +84,12 @@ const mockHashtagSets: HashtagSet[] = [
 ];
 
 export default function ContentLibraryPage() {
+  const { isGuest } = useGuest();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
+  const assets = useMemo(() => (isGuest ? mockAssets : []), [isGuest]);
+  const captionTemplates = useMemo(() => (isGuest ? mockCaptionTemplates : []), [isGuest]);
+  const hashtagSets = useMemo(() => (isGuest ? mockHashtagSets : []), [isGuest]);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
@@ -157,11 +163,19 @@ export default function ContentLibraryPage() {
 
         {/* Media Assets Tab */}
         <TabsContent value="media">
+          {assets.length === 0 ? (
+            <EmptyState
+              icon={Image}
+              title="No media assets yet"
+              description="Upload your first image or video to start building your library."
+              ctaLabel="Upload asset"
+            />
+          ) : (
           <div className={cn(
             "grid gap-4",
             viewMode === "grid" ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"
           )}>
-            {mockAssets.map((asset) => (
+            {assets.map((asset) => (
               <Card key={asset.id} className={cn("overflow-hidden group", viewMode === "list" && "flex")}>
                 <div className={cn(
                   "relative bg-muted",
@@ -228,12 +242,21 @@ export default function ContentLibraryPage() {
               </Card>
             ))}
           </div>
+          )}
         </TabsContent>
 
         {/* Caption Templates Tab */}
         <TabsContent value="captions">
+          {captionTemplates.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title="No caption templates yet"
+              description="Create reusable caption templates to speed up publishing across platforms."
+              ctaLabel="Add caption template"
+            />
+          ) : (
           <div className="grid gap-4 md:grid-cols-2">
-            {mockCaptionTemplates.map((template) => (
+            {captionTemplates.map((template) => (
               <Card key={template.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
@@ -275,18 +298,29 @@ export default function ContentLibraryPage() {
               </Card>
             ))}
           </div>
-          <div className="mt-4 flex justify-center">
-            <Button variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Caption Template
-            </Button>
-          </div>
+          )}
+          {captionTemplates.length > 0 && (
+            <div className="mt-4 flex justify-center">
+              <Button variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Caption Template
+              </Button>
+            </div>
+          )}
         </TabsContent>
 
         {/* Hashtag Sets Tab */}
         <TabsContent value="hashtags">
+          {hashtagSets.length === 0 ? (
+            <EmptyState
+              icon={Hash}
+              title="No hashtag sets yet"
+              description="Group your best-performing hashtags into reusable sets for quick copy-paste."
+              ctaLabel="Create hashtag set"
+            />
+          ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {mockHashtagSets.map((set) => (
+            {hashtagSets.map((set) => (
               <Card key={set.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
@@ -321,12 +355,15 @@ export default function ContentLibraryPage() {
               </Card>
             ))}
           </div>
-          <div className="mt-4 flex justify-center">
-            <Button variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Hashtag Set
-            </Button>
-          </div>
+          )}
+          {hashtagSets.length > 0 && (
+            <div className="mt-4 flex justify-center">
+              <Button variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Hashtag Set
+              </Button>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

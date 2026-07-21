@@ -40,10 +40,13 @@ function readLocal(hubKey: string, seed: HubItem[]): HubItem[] {
   try {
     const raw = localStorage.getItem(localKey(hubKey));
     if (raw) return JSON.parse(raw);
+    // Only seed synthetic demo rows for guest sessions. Signed-in users
+    // must always start empty and populate from their real Supabase data.
+    if (!isGuestSession()) return [];
     localStorage.setItem(localKey(hubKey), JSON.stringify(seed));
     return seed;
   } catch {
-    return seed;
+    return isGuestSession() ? seed : [];
   }
 }
 function writeLocal(hubKey: string, items: HubItem[]) {
@@ -125,26 +128,9 @@ export function useHubItems(hubKey: string, seed: HubItem[]) {
         .order("created_at", { ascending: false });
       if (cancelled) return;
       const rows = ((data as Row[] | null) ?? []).map(fromRow);
-      if (rows.length === 0 && !seededRef.current && seed.length) {
-        seededRef.current = true;
-        const inserts = seed.map((s, i) => ({
-          user_id: uid,
-          hub_key: hubKey,
-          title: s.title,
-          subtitle: s.subtitle ?? null,
-          status: s.status,
-          meta: s.meta ?? null,
-          metadata: s.metadata ?? {},
-          order_index: i,
-        }));
-        const { data: seeded } = await supabase
-          .from("hub_items")
-          .insert(inserts as never)
-          .select("*");
-        setItems(((seeded as Row[] | null) ?? []).map(fromRow));
-      } else {
-        setItems(rows);
-      }
+      // Never auto-seed synthetic demo rows into a real user's database.
+      // Signed-in users see their real rows or an empty state.
+      setItems(rows);
     })();
 
     const channel = supabase

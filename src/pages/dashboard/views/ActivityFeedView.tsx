@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { isGuestSession } from "@/hooks/useGuest";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { cn } from "@/lib/utils";
 import { RunDetailsDrawer } from "@/components/activity/RunDetailsDrawer";
@@ -76,7 +77,7 @@ export function ActivityFeedView() {
     (advancedFilters.to ? 1 : 0);
 
   useEffect(() => {
-    if (items.length === 0) setItems(runSeed);
+    if (items.length === 0 && isGuestSession()) setItems(runSeed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { Heart, MessageCircle, Share2, Eye, Trophy } from "lucide-react";
 import { useAccounts } from "@/contexts/AccountContext";
+import { useGuest } from "@/hooks/useGuest";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { cn } from "@/lib/utils";
 
 const TITLES = [
@@ -19,9 +21,11 @@ type Sort = "engagement" | "reach" | "likes";
 
 export function TopPostsLeaderboard() {
   const { accounts } = useAccounts();
+  const { isGuest } = useGuest();
   const [sort, setSort] = useState<Sort>("engagement");
 
   const posts = useMemo(() => {
+    if (!isGuest) return [];
     return TITLES.map((title, i) => {
       const acc = accounts[i % Math.max(accounts.length, 1)];
       const seed = (i + 1) * 7919;
@@ -32,7 +36,7 @@ export function TopPostsLeaderboard() {
       const er = ((likes + comments * 2 + shares * 3) / Math.max(reach, 1)) * 100;
       return { id: `p-${i}`, title, account: acc, likes, comments, shares, reach, engagement: er };
     });
-  }, [accounts]);
+  }, [accounts, isGuest]);
 
   const sorted = useMemo(() => {
     const key = sort === "likes" ? "likes" : sort;
@@ -61,6 +65,18 @@ export function TopPostsLeaderboard() {
           ))}
         </div>
       </header>
+      {sorted.length === 0 ? (
+        <div className="p-4">
+          <EmptyState
+            icon={Trophy}
+            title="No post metrics yet"
+            description="Connect an account and publish a few posts — top performers will appear here."
+            ctaHref="/dashboard/settings"
+            ctaLabel="Connect account"
+            compact
+          />
+        </div>
+      ) : (
       <ol className="divide-y divide-border/50">
         {sorted.map((p, i) => (
           <li key={p.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
@@ -97,6 +113,7 @@ export function TopPostsLeaderboard() {
           </li>
         ))}
       </ol>
+      )}
     </section>
   );
 }

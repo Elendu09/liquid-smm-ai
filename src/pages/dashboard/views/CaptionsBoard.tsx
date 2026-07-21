@@ -31,6 +31,7 @@ import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { useMcpInbox } from "@/hooks/useMcpInbox";
 import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { isGuestSession } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
 
 type CaptionStatus = "draft" | "ready" | "archived";
@@ -107,7 +108,7 @@ export default function CaptionsBoard() {
   const [queueIntervalMin, setQueueIntervalMin] = useState<number>(15);
 
   useEffect(() => {
-    if (items.length === 0) setItems(seed);
+    if (items.length === 0 && isGuestSession()) setItems(seed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
