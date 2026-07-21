@@ -6,17 +6,18 @@ interface HubSeed {
   key: string;
   title: string;
   status: string;
-  data?: Record<string, unknown>;
+  subtitle?: string;
+  metadata?: Record<string, unknown>;
 }
 
 const HUB_ITEMS: HubSeed[] = [
-  { key: "audience-followers", title: "@jordan.creates", status: "engaged", data: { subtitle: "34k · Instagram · engages weekly" } },
-  { key: "audience-followers", title: "@marta.design", status: "watching", data: { subtitle: "8k · Instagram · new this week" } },
-  { key: "audience-followers", title: "@kenf", status: "churned", data: { subtitle: "22k · Twitter · quiet 30d" } },
-  { key: "audience-competitors", title: "@rivalstudio", status: "priority", data: { subtitle: "120k · posts 4x/wk" } },
-  { key: "audience-competitors", title: "@nichequeen", status: "tracking", data: { subtitle: "45k · posts 2x/wk" } },
-  { key: "create-briefs", title: "Product-hunt launch teaser", status: "draft", data: { body: "3-post series announcing launch day, with countdown reels." } },
-  { key: "create-briefs", title: "Weekly customer spotlight", status: "ready", data: { body: "Interview snippet + carousel testimonial." } },
+  { key: "audience-followers", title: "@jordan.creates", status: "engaged", subtitle: "34k · Instagram · engages weekly" },
+  { key: "audience-followers", title: "@marta.design", status: "watching", subtitle: "8k · Instagram · new this week" },
+  { key: "audience-followers", title: "@kenf", status: "churned", subtitle: "22k · Twitter · quiet 30d" },
+  { key: "audience-competitors", title: "@rivalstudio", status: "priority", subtitle: "120k · posts 4x/wk" },
+  { key: "audience-competitors", title: "@nichequeen", status: "tracking", subtitle: "45k · posts 2x/wk" },
+  { key: "create-briefs", title: "Product-hunt launch teaser", status: "draft", subtitle: "3-post series announcing launch day" },
+  { key: "create-briefs", title: "Weekly customer spotlight", status: "ready", subtitle: "Interview snippet + carousel testimonial" },
 ];
 
 const SEGMENTS = [
@@ -48,7 +49,8 @@ export async function loadDemoData(userId: string): Promise<{ inserted: number }
     hub_key: h.key,
     title: h.title,
     status: h.status,
-    data: h.data ?? {},
+    subtitle: h.subtitle,
+    metadata: (h.metadata ?? {}) as never,
   }));
   const { error: hubErr } = await supabase.from("hub_items").insert(rows);
   if (hubErr) throw hubErr;
