@@ -46,21 +46,28 @@ export function createRemoteCollection<TItem extends { id: string }, TRow>(
   type Mode = "local" | "remote";
   let mode: Mode = "local";
   let userId: string | null = null;
-  let cache: TItem[] = readLocal();
+  let cache: TItem[] = initialCache();
   const listeners = new Set<() => void>();
 
+  function initialCache(): TItem[] {
+    // Never auto-seed mock rows for real users. Only guests get the demo seed.
+    if (typeof window === "undefined") return [];
+    if (!isGuestSession()) return [];
+    return readLocal();
+  }
+
   function readLocal(): TItem[] {
-    if (typeof window === "undefined") return opts.seed ?? [];
+    if (typeof window === "undefined") return [];
     try {
       const raw = window.localStorage.getItem(opts.localKey);
       if (raw) return JSON.parse(raw) as TItem[];
-      if (opts.seed) {
+      if (opts.seed && isGuestSession()) {
         window.localStorage.setItem(opts.localKey, JSON.stringify(opts.seed));
         return opts.seed;
       }
       return [];
     } catch {
-      return opts.seed ?? [];
+      return isGuestSession() ? (opts.seed ?? []) : [];
     }
   }
   function writeLocal(next: TItem[]) {
