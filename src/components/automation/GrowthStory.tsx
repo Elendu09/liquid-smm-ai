@@ -146,14 +146,16 @@ const tooltipStyle = {
 
 export function GrowthStory() {
   const { isGuest } = useGuest();
-  const jump = useMemo(findBiggestJump, []);
-  const projected = useMemo(() => project(6), []);
-  const start = followerData[0];
-  const now = followerData[followerData.length - 1];
-  const growthPct = Math.round(((now.followers - start.followers) / start.followers) * 100);
-  const jumpPoint = followerData[jump.index];
+  const { monthly, loading } = useAnalyticsOverview(90);
 
-  if (!isGuest) {
+  const followerData: GrowthPoint[] = isGuest
+    ? DEMO_DATA
+    : monthly.map((m) => ({ month: m.month, followers: m.followers, engagement: m.engagement }));
+
+  const jump = useMemo(() => findBiggestJump(followerData), [followerData]);
+  const projected = useMemo(() => project(followerData, 6), [followerData]);
+
+  if (!isGuest && followerData.length < 2) {
     return (
       <div className="rounded-2xl border border-border/40 bg-gradient-to-b from-muted/20 via-background to-background overflow-hidden">
         <div className="p-6 md:p-10 border-b border-border/40">
@@ -166,7 +168,7 @@ export function GrowthStory() {
         <div className="p-6 md:p-10">
           <EmptyState
             icon={TrendingUp}
-            title="Not enough history yet"
+            title={loading ? "Loading your history…" : "Not enough history yet"}
             description="Connect an account and let a few weeks of follower and engagement data accumulate — we'll narrate the story here."
             ctaLabel="Connect account"
             ctaHref="/dashboard/settings/connected"
@@ -175,6 +177,14 @@ export function GrowthStory() {
       </div>
     );
   }
+
+  const start = followerData[0];
+  const now = followerData[followerData.length - 1];
+  const growthPct = start.followers > 0
+    ? Math.round(((now.followers - start.followers) / start.followers) * 100)
+    : 0;
+  const jumpPoint = followerData[jump.index] ?? followerData[followerData.length - 1];
+
 
 
   return (
