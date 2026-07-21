@@ -1,13 +1,9 @@
-import { useMemo, useState } from "react";
-import { ArrowUp, ArrowDown, Users, Heart, Eye, MousePointerClick, MessageSquare, TrendingUp } from "lucide-react";
+import { ArrowUp, ArrowDown, Users, Heart, Eye, MousePointerClick, MessageSquare, TrendingUp, Sparkles } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, YAxis } from "recharts";
 import { cn } from "@/lib/utils";
-import { useAccounts } from "@/contexts/AccountContext";
-import { resolveMetric } from "@/hooks/useCustomReports";
+import { useAnalyticsSeries, RANGE_DAYS, type RangeKey } from "@/hooks/useAnalyticsSeries";
 
 const RANGES = ["7D", "30D", "90D", "1Y"] as const;
-type RangeKey = typeof RANGES[number];
-const RANGE_DAYS: Record<RangeKey, number> = { "7D": 7, "30D": 30, "90D": 90, "1Y": 365 };
 
 type KpiDef = {
   id: "followers" | "engagement" | "reach" | "replies" | "impressions" | "ctr";
