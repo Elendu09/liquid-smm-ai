@@ -32,7 +32,8 @@ export default function EngageHub() {
   return (
     <Routes>
       <Route element={<EngageLayout />}>
-        <Route index element={<Navigate to="bot" replace />} />
+        <Route index element={<Navigate to="inbox" replace />} />
+        <Route path="inbox" element={<UnifiedInboxView />} />
         <Route path="bot" element={<BotRulesView />} />
         <Route
           path="comments"
