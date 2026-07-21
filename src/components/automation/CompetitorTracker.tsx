@@ -35,7 +35,11 @@ import {
 import { AddCompetitorDialog, type NewCompetitorInput } from "@/components/audience/AddCompetitorDialog";
 import { CompareCompetitorDialog, type CompareStats } from "@/components/audience/CompareCompetitorDialog";
 
+import { useGuest } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
+
 const CompetitorTracker = () => {
+  const { isGuest } = useGuest();
   const [addOpen, setAddOpen] = useState(false);
   const [compareTarget, setCompareTarget] = useState<CompareStats | null>(null);
   const [removeTarget, setRemoveTarget] = useState<{ id: number; username: string } | null>(null);
