@@ -93,13 +93,11 @@ export function useAnalyticsOverview(rangeDays: RangeDays = 90): OverviewData {
       const since = new Date(Date.now() - rangeDays * 24 * 3600_000).toISOString();
       const sinceDate = since.slice(0, 10);
 
-      const [pm, prd, amd] = await Promise.all([
-        supabase
-          .from("post_metrics")
-          .select("impressions, reach, likes, comments, shares, saves, clicks")
-          .eq("user_id", user.id)
-          .gte("captured_at", since)
-          .limit(5000),
+      const [totalsRes, prd, amd] = await Promise.all([
+        supabase.rpc("analytics_overview_totals", {
+          _user_id: user.id,
+          _since: since,
+        }),
         supabase
           .from("platform_rollup_daily")
           .select("platform, day, followers, engagement, posts, accounts")
@@ -116,25 +114,21 @@ export function useAnalyticsOverview(rangeDays: RangeDays = 90): OverviewData {
 
       if (cancelled) return;
 
-      // FUNNEL
-      const rows = pm.data ?? [];
-      if (rows.length === 0) {
+      // FUNNEL — server-side aggregate; no row cap.
+      const t = totalsRes.data?.[0];
+      if (!t || Number(t.post_count ?? 0) === 0) {
         setFunnel(null);
       } else {
-        const totals = rows.reduce(
-          (acc, r) => {
-            acc.impressions += r.impressions ?? 0;
-            acc.reach += r.reach ?? 0;
-            acc.engaged +=
-              (r.likes ?? 0) + (r.comments ?? 0) + (r.shares ?? 0) + (r.saves ?? 0);
-            acc.clicks += r.clicks ?? 0;
-            return acc;
-          },
-          { impressions: 0, reach: 0, engaged: 0, clicks: 0 },
-        );
+        const impressions = Number(t.impressions ?? 0);
+        const reach = Number(t.reach ?? 0);
+        const engaged = Number(t.engaged ?? 0);
+        const clicks = Number(t.clicks ?? 0);
         setFunnel({
-          ...totals,
-          converted: Math.round(totals.clicks * 0.18), // conservative click→conv proxy
+          impressions,
+          reach,
+          engaged,
+          clicks,
+          converted: Math.round(clicks * 0.18),
         });
       }
 
