@@ -1,5 +1,6 @@
 // Text-to-speech proxy — returns MP3 audio playable by a standard <audio>.
 import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { requireUser } from "../_shared/auth.ts";
 
 interface Body { text?: string; voice?: string }
 
@@ -11,6 +12,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+  const authed = await requireUser(req);
+  if (authed instanceof Response) return authed;
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) {
     return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
