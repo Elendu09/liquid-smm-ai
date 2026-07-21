@@ -103,6 +103,7 @@ export function AudienceMix() {
           </div>
         </div>
       </div>
+      )}
     </section>
   );
 }
