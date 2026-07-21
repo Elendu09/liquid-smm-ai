@@ -19,6 +19,7 @@ import {
   Search,
   Send,
   Copy,
+  PlayCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +45,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { NewReportDialog } from "@/components/reports/NewReportDialog";
 import { ScheduleReportDialog } from "@/components/reports/ScheduleReportDialog";
 import {
@@ -53,8 +53,8 @@ import {
 } from "@/components/reports/ReportPreviewDialog";
 import { toast } from "@/hooks/use-toast";
 import { useRunHistory } from "@/hooks/useRunHistory";
-import { useAccounts } from "@/contexts/AccountContext";
-import { buildReportData } from "@/lib/reportAnalytics";
+import { useReportRuns, type ReportRun } from "@/hooks/useReportRuns";
+import { useReportSchedules } from "@/hooks/useReportSchedules";
 
 interface ReportTemplate {
   id: string;
@@ -63,20 +63,6 @@ interface ReportTemplate {
   icon: React.ComponentType<{ className?: string }>;
   color: string;
   sections: string[];
-}
-
-interface GeneratedReport extends ReportPreviewData {
-  createdAt: string;
-  whitelabel?: boolean;
-}
-
-interface ScheduledReport {
-  id: string;
-  name: string;
-  cadence: string;
-  email: string;
-  active: boolean;
-  createdAt: string;
 }
 
 const reportTemplates: ReportTemplate[] = [
@@ -114,60 +100,32 @@ const reportTemplates: ReportTemplate[] = [
   },
 ];
 
-const seedReports: GeneratedReport[] = [
-  {
-    id: "seed-1",
-    name: "Weekly Summary · Dec 2024",
-    template: "Weekly Summary",
-    period: "Dec 1-7, 2024",
-    format: "pdf",
-    size: "2.4 MB",
-    sections: ["Follower Growth", "Engagement Rate", "Top Posts", "Reach & Impressions"],
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "seed-2",
-    name: "Monthly Growth · November",
-    template: "Monthly Growth",
-    period: "November 2024",
-    format: "pdf",
-    size: "4.8 MB",
-    sections: ["Growth Metrics", "Audience Demographics", "Content Performance"],
-    createdAt: new Date(Date.now() - 86400000 * 7).toISOString(),
-  },
-];
-
-const seedSchedules: ScheduledReport[] = [
-  {
-    id: "seed-sch-1",
-    name: "Weekly Summary",
-    cadence: "Every Monday at 9:00 AM",
-    email: "john@company.com",
-    active: true,
-    createdAt: new Date().toISOString(),
-  },
-];
+function runToPreview(run: ReportRun): ReportPreviewData {
+  return {
+    id: run.id,
+    name: run.name,
+    template: run.template,
+    period: run.period,
+    format: run.format,
+    size: run.size,
+    sections: run.sections,
+    data: run.data ?? undefined,
+    whitelabel: run.whitelabel,
+  };
+}
 
 export default function ReportsPage() {
-  const { accounts } = useAccounts();
   const { rows: runRows } = useRunHistory();
-  const {
-    items: reports,
-    add: addReport,
-    remove: removeReport,
-  } = useLocalCollection<GeneratedReport>("reports", "generated", seedReports);
-  const {
-    items: schedules,
-    update: updateSchedule,
-    remove: removeSchedule,
-  } = useLocalCollection<ScheduledReport>("reports", "scheduled", seedSchedules);
+  const { items: reports, add: addReport, remove: removeReport } = useReportRuns();
+  const { items: schedules, update: updateSchedule, remove: removeSchedule } = useReportSchedules();
 
   const [newOpen, setNewOpen] = useState(false);
   const [newTemplateId, setNewTemplateId] = useState<string | undefined>();
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleTemplateName, setScheduleTemplateName] = useState<string | undefined>();
-  const [previewReport, setPreviewReport] = useState<GeneratedReport | null>(null);
-  const [toDelete, setToDelete] = useState<GeneratedReport | null>(null);
+  const [scheduleTemplateId, setScheduleTemplateId] = useState<string | undefined>();
+  const [previewReport, setPreviewReport] = useState<ReportPreviewData | null>(null);
+  const [toDelete, setToDelete] = useState<ReportRun | null>(null);
   const [reportSearch, setReportSearch] = useState("");
   const [scheduleFilter, setScheduleFilter] = useState<"all" | "active" | "paused">("all");
 
@@ -176,17 +134,10 @@ export default function ReportsPage() {
     setNewOpen(true);
   };
 
-  const openPreview = (report: GeneratedReport) => {
-    if (!report.data) {
-      const filled = { ...report, data: buildReportData(accounts, report.sections ?? [], "last30") };
-      setPreviewReport(filled);
-    } else {
-      setPreviewReport(report);
-    }
-  };
+  const openPreview = (report: ReportRun) => setPreviewReport(runToPreview(report));
 
   const templateRuns = (templateId: string) =>
-    runRows.filter((r) => r.toolKey === "reports" && r.action === `generate:${templateId}`);
+    reports.filter((r) => r.templateId === templateId);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
@@ -196,13 +147,14 @@ export default function ReportsPage() {
             <FileBarChart className="h-8 w-8 text-primary" />
             Reports Center
           </h1>
-          <p className="text-muted-foreground mt-1">Generate and schedule custom reports</p>
+          <p className="text-muted-foreground mt-1">Generate and schedule custom reports from live analytics data.</p>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
             onClick={() => {
               setScheduleTemplateName(undefined);
+              setScheduleTemplateId(undefined);
               setScheduleOpen(true);
             }}
           >
@@ -254,9 +206,7 @@ export default function ReportsPage() {
                         <span
                           className={cn(
                             "flex items-center gap-1",
-                            last.status === "success"
-                              ? "text-emerald-500"
-                              : "text-destructive",
+                            last.status === "success" ? "text-emerald-500" : "text-destructive",
                           )}
                         >
                           {last.status === "success" ? (
@@ -276,23 +226,24 @@ export default function ReportsPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => openTemplate(template.id)}
-                    >
-                      Use Template
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => openTemplate(template.id)}>
+                      <PlayCircle className="mr-1.5 h-3.5 w-3.5" />
+                      Run
                     </Button>
-                    {last && last.status === "success" && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          const match = reports.find((r) => r.template === template.name);
-                          if (match) openPreview(match);
-                        }}
-                      >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setScheduleTemplateName(template.name);
+                        setScheduleTemplateId(template.id);
+                        setScheduleOpen(true);
+                      }}
+                      title="Schedule this template"
+                    >
+                      <Clock className="h-4 w-4" />
+                    </Button>
+                    {last && (
+                      <Button variant="ghost" size="sm" onClick={() => openPreview(last)}>
                         <Eye className="h-4 w-4" />
                       </Button>
                     )}
@@ -309,7 +260,7 @@ export default function ReportsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <CardTitle>Recent Reports</CardTitle>
-              <CardDescription>View and download your generated reports</CardDescription>
+              <CardDescription>Reports you've generated, stored in your workspace database.</CardDescription>
             </div>
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -334,7 +285,7 @@ export default function ReportsPage() {
                 <EmptyState
                   icon={FileText}
                   title="No reports yet"
-                  description="Generate your first report from a template or build a custom one."
+                  description="Generate your first report from a template or build a custom one from live analytics."
                   ctaLabel="Create report"
                   onCta={() => { setNewTemplateId(undefined); setNewOpen(true); }}
                 />
@@ -348,92 +299,90 @@ export default function ReportsPage() {
               );
             }
             return (
-            <div className="space-y-3">
-              {filtered.map((report) => (
-                <div
-                  key={report.id}
-                  className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <FileText className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-medium truncate">{report.name}</p>
-                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                        <Badge variant="secondary" className="text-xs">
-                          {report.template}
-                        </Badge>
-                        <span>·</span>
-                        <span>{report.period}</span>
-                        <span>·</span>
-                        <span>{report.size}</span>
+              <div className="space-y-3">
+                {filtered.map((report) => (
+                  <div
+                    key={report.id}
+                    className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <FileText className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{report.name}</p>
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                          <Badge variant="secondary" className="text-xs">
+                            {report.template}
+                          </Badge>
+                          <span>·</span>
+                          <span>{report.period}</span>
+                          <span>·</span>
+                          <span>{report.size}</span>
+                        </div>
                       </div>
                     </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant="outline" className="uppercase">
+                        {report.format}
+                      </Badge>
+                      <Button variant="outline" size="sm" onClick={() => openPreview(report)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Preview
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openPreview(report)}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              const copy: ReportRun = {
+                                ...report,
+                                id: `rep-${Date.now()}`,
+                                name: `${report.name} (copy)`,
+                                createdAt: new Date().toISOString(),
+                              };
+                              void addReport(copy);
+                              toast({ title: "Report duplicated" });
+                            }}
+                          >
+                            <Copy className="mr-2 h-4 w-4" />
+                            Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setScheduleTemplateName(report.template);
+                              setScheduleTemplateId(report.templateId ?? undefined);
+                              setScheduleOpen(true);
+                            }}
+                          >
+                            <Mail className="mr-2 h-4 w-4" />
+                            Email Report
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => toast({ title: "Report sent", description: "Delivered to configured recipients." })}
+                          >
+                            <Send className="mr-2 h-4 w-4" />
+                            Send now
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive" onClick={() => setToDelete(report)}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant="outline" className="uppercase">
-                      {report.format}
-                    </Badge>
-                    <Button variant="outline" size="sm" onClick={() => openPreview(report)}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      Preview
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openPreview(report)}>
-                          <Download className="mr-2 h-4 w-4" />
-                          Download
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            const copy: GeneratedReport = {
-                              ...report,
-                              id: `rep-${Date.now()}`,
-                              name: `${report.name} (copy)`,
-                              createdAt: new Date().toISOString(),
-                            };
-                            addReport(copy);
-                            toast({ title: "Report duplicated" });
-                          }}
-                        >
-                          <Copy className="mr-2 h-4 w-4" />
-                          Duplicate
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setScheduleTemplateName(report.template);
-                            setScheduleOpen(true);
-                          }}
-                        >
-                          <Mail className="mr-2 h-4 w-4" />
-                          Email Report
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => toast({ title: "Report sent", description: "Delivered to configured recipients." })}
-                        >
-                          <Send className="mr-2 h-4 w-4" />
-                          Send now
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => setToDelete(report)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
             );
           })()}
         </CardContent>
@@ -447,7 +396,7 @@ export default function ReportsPage() {
                 <Clock className="h-5 w-5" />
                 Scheduled Reports
               </CardTitle>
-              <CardDescription>Automatically generate and deliver reports</CardDescription>
+              <CardDescription>Automated delivery — persisted per user in your workspace.</CardDescription>
             </div>
             <div className="flex gap-1 p-1 rounded-lg bg-muted/60 text-xs">
               {(["all", "active", "paused"] as const).map((f) => (
@@ -456,9 +405,7 @@ export default function ReportsPage() {
                   onClick={() => setScheduleFilter(f)}
                   className={cn(
                     "px-2.5 py-1 rounded-md font-medium capitalize transition-colors",
-                    scheduleFilter === f
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground",
+                    scheduleFilter === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {f}
@@ -474,9 +421,13 @@ export default function ReportsPage() {
             );
             if (schedules.length === 0) {
               return (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No scheduled reports. Set one up to get regular updates.
-                </p>
+                <EmptyState
+                  icon={Clock}
+                  title="No scheduled reports"
+                  description="Automate delivery so stakeholders get insights on cadence — daily, weekly, or monthly."
+                  ctaLabel="Schedule report"
+                  onCta={() => { setScheduleTemplateName(undefined); setScheduleTemplateId(undefined); setScheduleOpen(true); }}
+                />
               );
             }
             if (filteredSchedules.length === 0) {
@@ -487,69 +438,43 @@ export default function ReportsPage() {
               );
             }
             return (
-            <div className="space-y-3">
-              {filteredSchedules.map((s) => (
-                <div
-                  key={s.id}
-                  className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 rounded-lg border"
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div
-                      className={cn(
-                        "h-10 w-10 rounded-lg flex items-center justify-center shrink-0",
-                        s.active ? "bg-green-500/10" : "bg-muted",
-                      )}
-                    >
-                      <Check
-                        className={cn(
-                          "h-5 w-5",
-                          s.active ? "text-green-500" : "text-muted-foreground",
-                        )}
-                      />
-                    </div>
+              <div className="space-y-3">
+                {filteredSchedules.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 rounded-lg border bg-card"
+                  >
                     <div className="min-w-0">
                       <p className="font-medium truncate">{s.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {s.cadence} · {s.email}
+                      <p className="text-xs text-muted-foreground">
+                        {s.cadenceLabel} · {s.recipients.join(", ") || "no recipients"} · {s.timezone}
                       </p>
+                      {s.nextRunAt && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Next run: {new Date(s.nextRunAt).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <Badge variant={s.active ? "default" : "secondary"}>{s.active ? "Active" : "Paused"}</Badge>
+                      <Switch
+                        checked={s.active}
+                        onCheckedChange={(v) => void updateSchedule(s.id, { active: v })}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          void removeSchedule(s.id);
+                          toast({ title: "Schedule removed" });
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <Badge
-                      className={cn(
-                        s.active
-                          ? "bg-green-500/10 text-green-500"
-                          : "bg-muted text-muted-foreground",
-                      )}
-                    >
-                      {s.active ? "Active" : "Paused"}
-                    </Badge>
-                    <Switch
-                      checked={s.active}
-                      onCheckedChange={(v) => updateSchedule(s.id, { active: v })}
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toast({ title: "Sent now", description: `${s.name} delivered to ${s.email}` })}
-                    >
-                      <Send className="mr-1.5 h-3.5 w-3.5" />
-                      Send now
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        removeSchedule(s.id);
-                        toast({ title: "Schedule removed" });
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
             );
           })()}
         </CardContent>
@@ -564,6 +489,7 @@ export default function ReportsPage() {
         open={scheduleOpen}
         onOpenChange={setScheduleOpen}
         templateName={scheduleTemplateName}
+        templateId={scheduleTemplateId}
       />
       <ReportPreviewDialog
         open={!!previewReport}
@@ -575,7 +501,7 @@ export default function ReportsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this report?</AlertDialogTitle>
             <AlertDialogDescription>
-              {toDelete?.name} will be permanently removed.
+              "{toDelete?.name}" will be permanently removed from your workspace.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -583,7 +509,7 @@ export default function ReportsPage() {
             <AlertDialogAction
               onClick={() => {
                 if (toDelete) {
-                  removeReport(toDelete.id);
+                  void removeReport(toDelete.id);
                   toast({ title: "Report deleted" });
                 }
                 setToDelete(null);
