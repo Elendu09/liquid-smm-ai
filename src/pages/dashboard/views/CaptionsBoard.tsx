@@ -107,7 +107,7 @@ export default function CaptionsBoard() {
   const [queueIntervalMin, setQueueIntervalMin] = useState<number>(15);
 
   useEffect(() => {
-    if (items.length === 0) setItems(seed);
+    if (items.length === 0 && isGuestSession()) setItems(seed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
