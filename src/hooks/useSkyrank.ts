@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { isGuestSession } from '@/hooks/useGuest';
 import {
   generateCaption,
   generateHashtags,
