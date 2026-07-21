@@ -53,6 +53,8 @@ import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { isGuestSession } from "@/hooks/useGuest";
 import BioPreview from "./BioPreview";
 import { bioStore, useBioConfig, useSyncLegacyTheme } from "./state/bioConfig";
 import type { BioConfig, FontPairId } from "./state/bioConfig";
@@ -160,11 +162,45 @@ export default function BioEditor() {
                   <BioPreview />
                 </SheetContent>
               </Sheet>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 hidden lg:inline-flex" onClick={() => window.open(`https://bio.smmsaas.com/${cfg.slug}`, "_blank")}>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 hidden lg:inline-flex" onClick={() => window.open(`/bio/${cfg.slug}`, "_blank")}>
                 <Eye className="w-3.5 h-3.5" /> Visit
               </Button>
-              <Button size="sm" className="h-8 gap-1.5" onClick={() => toast.success("Bio saved")}>
-                <Save className="w-3.5 h-3.5" /> Save
+              <Button size="sm" className="h-8 gap-1.5" onClick={async () => {
+                if (isGuestSession()) {
+                  toast.info("Sign in to publish your bio page");
+                  return;
+                }
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                  toast.error("Sign in required");
+                  return;
+                }
+                const slug = (cfg.slug || cfg.handle || "").toString().trim().replace(/^@/, "").toLowerCase().replace(/[^a-z0-9-]/g, "-");
+                if (!slug) {
+                  toast.error("Choose a slug in Profile first");
+                  return;
+                }
+                const { error } = await supabase.from("linkbio_pages").upsert({
+                  user_id: user.id,
+                  slug,
+                  handle: cfg.handle ?? null,
+                  headline: cfg.headline ?? null,
+                  bio: cfg.bio ?? null,
+                  avatar_url: cfg.avatarUrl ?? null,
+                  theme_id: cfg.themeId ?? null,
+                  overrides: cfg.overrides as any,
+                  links: cfg.links as any,
+                  socials: cfg.socials as any,
+                  blocks: cfg.blocks as any,
+                  published: true,
+                }, { onConflict: "slug" });
+                if (error) {
+                  toast.error(error.message);
+                  return;
+                }
+                toast.success("Published", { description: `${window.location.origin}/bio/${slug}` });
+              }}>
+                <Save className="w-3.5 h-3.5" /> Publish
               </Button>
             </div>
           </div>

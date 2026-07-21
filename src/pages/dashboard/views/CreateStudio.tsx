@@ -31,6 +31,7 @@ import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useAccounts } from "@/contexts/AccountContext";
 import { NewPostDialog } from "@/components/create/NewPostDialog";
 import { cn } from "@/lib/utils";
+import { isGuestSession } from "@/hooks/useGuest";
 
 
 type DraftStatus = "draft" | "review" | "scheduled";
@@ -220,7 +221,7 @@ export default function CreateStudio() {
 
 
   useMemo(() => {
-    if (drafts.length === 0) setItems(seed);
+    if (drafts.length === 0 && isGuestSession()) setItems(seed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

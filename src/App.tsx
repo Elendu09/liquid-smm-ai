@@ -18,6 +18,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Pricing from "./pages/Pricing";
 import Solutions from "./pages/Solutions";
 import PublicCalendar from "./pages/PublicCalendar";
+import PublicBio from "./pages/PublicBio";
 
 
 // Dashboard shell
@@ -83,6 +84,9 @@ const App = () => (
               <Route path="/solutions" element={<Solutions />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/public/calendar/:token" element={<PublicCalendar />} />
+              <Route path="/bio/:slug" element={<PublicBio />} />
+              <Route path="/b/:slug" element={<PublicBio />} />
+              <Route path="/@:slug" element={<PublicBio />} />
 
               
 

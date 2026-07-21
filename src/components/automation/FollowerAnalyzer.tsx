@@ -8,6 +8,8 @@ import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { AnalyzeAccountDialog, type AnalysisResult } from "@/components/audience/AnalyzeAccountDialog";
 import { ExportDialog, type ExportRow } from "@/components/audience/ExportDialog";
 import { FollowerDetailsDrawer, type FollowerDetail } from "@/components/audience/FollowerDetailsDrawer";
+import { isGuestSession } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 const followerQualityData = [
   { name: "High Quality", value: 62, color: "hsl(142, 70%, 45%)" },
@@ -98,6 +100,18 @@ export const FollowerAnalyzer = () => {
   const openTop = (f: typeof topFollowers[number]) => setDetail({ id: f.id, username: f.username, avatar: f.avatar, followers: f.followers, engagement: f.engagement, quality: f.quality as FollowerDetail["quality"], kind: "top" });
   const openGhost = (f: typeof ghostFollowers[number]) => setDetail({ id: f.id, username: f.username, avatar: f.avatar, lastActive: f.lastActive, posts: f.posts, engagement: f.engagement, kind: "ghost" });
   const openUnfollower = (f: typeof recentUnfollowers[number]) => setDetail({ id: f.id, username: f.username, avatar: f.avatar, unfollowedAt: f.unfollowedAt, wasFollowing: f.wasFollowing, kind: "unfollower" });
+
+  if (!isGuestSession()) {
+    return (
+      <EmptyState
+        icon={Users}
+        title="No follower data yet"
+        description="Connect a social account to analyze follower quality, ghost accounts, and unfollowers."
+        ctaLabel="Connect account"
+        ctaHref="/dashboard/settings?tab=connected"
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
