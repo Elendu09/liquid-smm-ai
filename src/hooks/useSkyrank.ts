@@ -141,14 +141,21 @@ export function useHashtags() {
       if (result.success && result.hashtags) {
         setState({ data: result.hashtags, isLoading: false, error: null });
         return result.hashtags;
-      } else {
+      } else if (isGuestSession()) {
         setState({ data: mockHashtags, isLoading: false, error: null });
         return mockHashtags;
+      } else {
+        setState({ data: null, isLoading: false, error: 'AI service unavailable' });
+        return null;
       }
     } catch (error) {
       console.error('Hashtag generation error:', error);
-      setState({ data: mockHashtags, isLoading: false, error: 'API unavailable' });
-      return mockHashtags;
+      if (isGuestSession()) {
+        setState({ data: mockHashtags, isLoading: false, error: 'API unavailable' });
+        return mockHashtags;
+      }
+      setState({ data: null, isLoading: false, error: 'API unavailable' });
+      return null;
     }
   }, []);
 
