@@ -72,7 +72,7 @@ function loadJSON<T>(key: string, fallback: T): T {
 }
 
 export const CommentManager = () => {
-  const [comments, setComments] = useState(mockComments);
+  const [comments, setComments] = useState(() => (isGuestSession() ? mockComments : [] as typeof mockComments));
   const [selectedComments, setSelectedComments] = useState<number[]>([]);
   const [priority, setPriority] = useState<number[]>([]);
   const [replyOpen, setReplyOpen] = useState(false);
