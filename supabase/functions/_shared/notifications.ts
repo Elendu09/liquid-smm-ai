@@ -123,6 +123,7 @@ export async function emitNotification(admin: any, p: EmitParams) {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          "x-internal-secret": Deno.env.get("INTERNAL_FN_SECRET") ?? "",
         },
         body: JSON.stringify({
           userId: p.userId,
