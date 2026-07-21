@@ -27,6 +27,7 @@ const seed: BotRule[] = [
 export default function BotRulesView() {
   const [view, setView] = useViewMode("engage-bot", "grid");
   const { items, setItems, add, update, remove } = useAutomationRules();
+  const { accounts } = useAccounts();
   const [search, setSearch] = useState("");
   const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
   const [editing, setEditing] = useState<BotRule | null>(null);
