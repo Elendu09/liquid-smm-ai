@@ -140,7 +140,19 @@ export default function BotRulesView() {
         }
       />
 
-      {view === "grid" ? (
+      {items.length === 0 && !isGuestSession() ? (
+        accounts.length === 0 ? (
+          <EmptyState variant="connect-account" description="Connect an account so automations have somewhere to run." />
+        ) : (
+          <EmptyState
+            variant="create-first"
+            title="No automation rules yet"
+            description="Automate welcome DMs, keyword replies, and more. Create your first rule to start saving hours every week."
+            ctaLabel="New rule"
+            onCta={() => { setEditing(null); setRuleDialogOpen(true); }}
+          />
+        )
+      ) : view === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           {filtered.map((r) => (
             <div key={r.id} className="rounded-xl border border-border/60 bg-card hover:shadow-md transition-shadow">
@@ -149,7 +161,7 @@ export default function BotRulesView() {
           ))}
           {filtered.length === 0 && (
             <div className="col-span-full text-center py-12 text-sm text-muted-foreground border border-dashed border-border/60 rounded-xl">
-              No rules yet — add your first above.
+              No rules match your search.
             </div>
           )}
         </div>
