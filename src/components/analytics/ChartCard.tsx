@@ -70,6 +70,7 @@ export function ChartCard({
               </span>
             )}
             {loading && <span className="text-[9px] text-muted-foreground/60">…</span>}
+            {noRealData && <span className="text-[9px] text-muted-foreground/60">collecting…</span>}
           </div>
           <p className="text-[10px] text-muted-foreground truncate">
             {METRIC_LABEL[card.metric]}
