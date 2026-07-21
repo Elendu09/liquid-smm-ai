@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { AreaChart, Area, LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { X, GripVertical, TrendingUp, TrendingDown } from "lucide-react";
+import { X, GripVertical, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   type ChartCardConfig,
@@ -8,14 +8,14 @@ import {
   METRIC_UNIT,
   RANGE_DAYS,
   type RangeKey,
-  resolveMetric,
 } from "@/hooks/useCustomReports";
+import { useCardSeries } from "@/hooks/useAnalyticsSeries";
 import { cn } from "@/lib/utils";
 
 export function ChartCard({
   card,
   range,
-  seedBase,
+  seedBase: _seedBase,
   selected,
   onSelect,
   onRemove,
@@ -28,11 +28,14 @@ export function ChartCard({
   onRemove: () => void;
 }) {
   const days = RANGE_DAYS[range];
-  const data = useMemo(() => resolveMetric(card.metric, days, seedBase), [card.metric, days, seedBase]);
-  const compareData = useMemo(
-    () => (card.compare ? resolveMetric(card.metric, days, Math.round(seedBase * 0.85)) : null),
-    [card.compare, card.metric, days, seedBase],
-  );
+  const { series: data, isDemo, loading } = useCardSeries(card.metric, days, card.platformId);
+  const compareDays = days;
+  const { series: compareRaw } = useCardSeries(card.metric, compareDays * 2, card.platformId);
+  const compareData = useMemo(() => {
+    if (!card.compare) return null;
+    // Prior period = the first half of a double-length window.
+    return compareRaw.slice(0, days).map((p, i) => ({ ...p, date: data[i]?.date ?? p.date }));
+  }, [card.compare, compareRaw, days, data]);
 
   const total = data.reduce((s, d) => s + d.value, 0);
   const avg = data.length ? total / data.length : 0;
