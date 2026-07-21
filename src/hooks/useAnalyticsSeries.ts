@@ -239,7 +239,7 @@ export function useCardSeries(metric: MetricId, days: number, platformId?: strin
 
   const accountIds = useMemo(() => {
     if (!platformId) return null;
-    return accounts.filter((a) => a.platform === platformId).map((a) => a.id);
+    return accounts.filter((a) => a.platformId === platformId).map((a) => a.id);
   }, [accounts, platformId]);
   const scope = accountIds?.slice().sort().join(",") ?? "";
 
