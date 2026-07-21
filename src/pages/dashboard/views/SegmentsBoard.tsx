@@ -30,6 +30,9 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { useAudienceSegments, type AudienceSegment } from "@/hooks/useAudienceSegments";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkActionBar } from "@/components/shared/BulkActionBar";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { cn } from "@/lib/utils";
 
 type SegmentStatus = "active" | "testing" | "paused";
@@ -145,6 +148,7 @@ export default function SegmentsBoard() {
   const [runSegmentId, setRunSegmentId] = useState<string | null>(null);
   const [runMulti, setRunMulti] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Segment | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
 
   const filtered = useMemo(
@@ -178,14 +182,36 @@ export default function SegmentsBoard() {
     toast.success("Segment duplicated");
   };
 
+  const sel = useBulkSelection<string>(filtered.map((s) => s.id));
+
+  const bulkDuplicate = async () => {
+    const ids = sel.ids;
+    const map = new Map(items.map((x) => [x.id, x]));
+    for (const id of ids) {
+      const s = map.get(id);
+      if (s) await add({ ...s, id: crypto.randomUUID(), title: `${s.title} (copy)`, createdAt: new Date().toISOString() } as AudienceSegment);
+    }
+    toast.success(`Duplicated ${ids.length} segment${ids.length === 1 ? "" : "s"}`);
+    sel.clear();
+  };
+
+  const bulkDelete = async () => {
+    const ids = sel.ids;
+    for (const id of ids) await remove(id);
+    toast.success(`Deleted ${ids.length} segment${ids.length === 1 ? "" : "s"}`);
+    sel.clear();
+    setBulkDeleteOpen(false);
+  };
 
   const card = (s: Segment, dense = false) => {
     const size = estimatedSize(s);
     const fb = FOLLOWER_BUCKETS.find((f) => f.id === s.followerBucket)?.label ?? "Any";
     const eb = ENGAGEMENT_BUCKETS.find((f) => f.id === s.engagementBucket)?.label ?? "Any";
+    const checked = sel.isSelected(s.id);
     return (
-      <div className={cn(dense ? "p-3" : "p-3")}>
+      <div className={cn(dense ? "p-3" : "p-3", checked && "bg-primary/5 ring-1 ring-primary/30 rounded-lg")}>
         <div className="flex items-start gap-2">
+          <Checkbox checked={checked} onCheckedChange={() => sel.toggle(s.id)} aria-label={`Select ${s.title}`} className="mt-1" />
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <Target className="h-4 w-4 text-primary" />
           </div>
@@ -496,6 +522,30 @@ export default function SegmentsBoard() {
           setEditing(s);
         }}
       />
+
+      <BulkActionBar
+        count={sel.count}
+        onClear={sel.clear}
+        actions={[
+          { id: "duplicate", label: "Duplicate", icon: Copy, onClick: bulkDuplicate },
+          { id: "delete", label: "Delete", icon: Trash2, variant: "destructive", onClick: () => setBulkDeleteOpen(true) },
+        ]}
+      />
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {sel.count} segment{sel.count === 1 ? "" : "s"}?</AlertDialogTitle>
+            <AlertDialogDescription>This can't be undone. Automations pointing to these segments will need to be updated.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={bulkDelete}>
+              Delete {sel.count}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -128,6 +128,12 @@ export function createRemoteCollection<TItem extends { id: string }, TRow>(
         setCache(readLocal());
       }
     });
+    // Refresh on tab focus so realtime misses (backgrounded tab) still recover.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && mode === "remote" && userId) {
+        void hydrate(userId);
+      }
+    });
   }
 
   return {
