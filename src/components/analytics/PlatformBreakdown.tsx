@@ -1,22 +1,99 @@
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowUp, ArrowDown, RefreshCw, Sparkles } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, YAxis } from "recharts";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
 import { useAccountSeries, type RangeKey } from "@/hooks/useAnalyticsSeries";
+import { usePlatformRollup } from "@/hooks/usePlatformRollup";
+import { useGuest } from "@/hooks/useGuest";
+import { toast } from "sonner";
+
+const RANGE_DAYS: Record<RangeKey, number> = { "7D": 7, "30D": 30, "90D": 90, "12M": 365 };
 
 export function PlatformBreakdown({ range }: { range: RangeKey }) {
   const rows = useAccountSeries("followers", range);
   const accounts = rows.map((r) => r.account);
+  const { isGuest } = useGuest();
+  const days = RANGE_DAYS[range] ?? 30;
+  const { rows: rollupRows, loading: rollupLoading, refresh } = usePlatformRollup(days);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const platformTotals = useMemo(() => {
+    const map = new Map<string, { platform: string; followers: number; engagement: number; posts: number; reach: number; accounts: number; sample: number }>();
+    for (const r of rollupRows) {
+      const cur = map.get(r.platform) ?? { platform: r.platform, followers: 0, engagement: 0, posts: 0, reach: 0, accounts: 0, sample: 0 };
+      cur.followers = Math.max(cur.followers, r.followers);
+      cur.engagement += Number(r.engagement) || 0;
+      cur.posts += r.posts;
+      cur.reach += r.reach;
+      cur.accounts = Math.max(cur.accounts, r.accounts);
+      cur.sample += 1;
+      map.set(r.platform, cur);
+    }
+    return Array.from(map.values())
+      .map((p) => ({ ...p, engagement: p.sample ? p.engagement / p.sample : 0 }))
+      .sort((a, b) => b.followers - a.followers);
+  }, [rollupRows]);
+
+  async function handleRefresh() {
+    if (isGuest) return;
+    setRefreshing(true);
+    try {
+      await refresh();
+      toast.success("Platform rollups refreshed");
+    } catch {
+      toast.error("Refresh failed");
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   return (
     <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm">
       <header className="flex items-center justify-between p-4 border-b border-border/50">
         <div>
-          <h3 className="text-base font-semibold">Platform breakdown</h3>
+          <h3 className="text-base font-semibold flex items-center gap-2">
+            Platform breakdown
+            {isGuest && <Sparkles className="h-3 w-3 text-amber-500" />}
+          </h3>
           <p className="text-xs text-muted-foreground">Followers, engagement & health per connected channel.</p>
         </div>
-        <span className="text-xs text-muted-foreground tabular-nums">{accounts.length} accounts</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground tabular-nums">{accounts.length} accounts</span>
+          {!isGuest && (
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing || rollupLoading}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border/60 bg-background/60 hover:bg-muted transition-colors disabled:opacity-50"
+              title="Refresh rollups"
+            >
+              <RefreshCw className={cn("h-3.5 w-3.5", (refreshing || rollupLoading) && "animate-spin")} />
+            </button>
+          )}
+        </div>
       </header>
+
+      {platformTotals.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto px-4 py-3 border-b border-border/40 bg-muted/20">
+          {platformTotals.map((p) => (
+            <div
+              key={p.platform}
+              className="flex items-center gap-2 shrink-0 rounded-lg border border-border/60 bg-background/60 px-3 py-2 min-w-[180px]"
+            >
+              <PlatformIcon platform={p.platform as any} size="sm" showBackground />
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] text-muted-foreground capitalize truncate">{p.platform}</p>
+                <p className="text-sm font-semibold tabular-nums">{p.followers.toLocaleString()}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground">ER</p>
+                <p className="text-xs font-semibold tabular-nums text-primary">{p.engagement.toFixed(1)}%</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="divide-y divide-border/50">
         {rows.map(({ account, trend, delta }) => {
           const positive = delta >= 0;
