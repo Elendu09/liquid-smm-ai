@@ -75,7 +75,7 @@ export function useSavedViews<F = Record<string, unknown>>(scopeKey: string) {
         return;
       }
       const view: SavedView = {
-        id: `view_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        id: `view_${crypto.randomUUID().slice(0, 8)}`,
         scope: scopeKey,
         name,
         filters: filters as Record<string, unknown>,
