@@ -40,10 +40,13 @@ function readLocal(hubKey: string, seed: HubItem[]): HubItem[] {
   try {
     const raw = localStorage.getItem(localKey(hubKey));
     if (raw) return JSON.parse(raw);
+    // Only seed synthetic demo rows for guest sessions. Signed-in users
+    // must always start empty and populate from their real Supabase data.
+    if (!isGuestSession()) return [];
     localStorage.setItem(localKey(hubKey), JSON.stringify(seed));
     return seed;
   } catch {
-    return seed;
+    return isGuestSession() ? seed : [];
   }
 }
 function writeLocal(hubKey: string, items: HubItem[]) {
