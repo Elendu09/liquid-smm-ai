@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax -- synth-ok: guest-only send progress simulator */
 import { useEffect } from "react";
 import { readPosts, writePosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
 
