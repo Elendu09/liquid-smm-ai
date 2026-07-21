@@ -35,6 +35,7 @@ export function InviteMemberDialog({ open, onOpenChange, onInvite }: InviteMembe
   const [note, setNote] = useState("");
 
   const inviteToken = useMemo(
+    // eslint-disable-next-line no-restricted-syntax -- synth-ok: invite token
     () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36),
     [open],
   );
