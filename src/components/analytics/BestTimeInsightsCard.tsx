@@ -1,48 +1,18 @@
-import { useMemo } from "react";
-import { Sparkles, Clock } from "lucide-react";
-import { useBestTimes } from "@/hooks/useBestTimes";
-import { useScheduledPosts } from "@/hooks/useScheduledPosts";
+import { Sparkles, Clock, TrendingUp } from "lucide-react";
+import { useBestTimeScoring } from "@/hooks/useBestTimeScoring";
+import { useGuest } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 /**
- * ML-style best-time-to-post insights.
- * Blends observed send history with baseline defaults to score every
- * weekday × hour slot on a 0–100 scale.
+ * ML-lite best-time-to-post insights. Blends real engagement data from
+ * post_metrics with baseline defaults; every slot flags whether the score
+ * came from observed posts ("learned") or baseline research.
  */
 export function BestTimeInsightsCard() {
-  const { byDow, topHoursFor } = useBestTimes();
-  const { posts } = useScheduledPosts();
-
-  const scoreGrid = useMemo(() => {
-    // Build a 7x24 score grid: count of completed posts + baseline weight.
-    const grid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
-    for (const p of posts) {
-      if (p.status !== "completed") continue;
-      const dt = new Date(p.sentAt ?? p.scheduledAt);
-      grid[dt.getDay()][dt.getHours()] += 1;
-    }
-    // Overlay best hours from useBestTimes with a floor weight.
-    for (let d = 0; d < 7; d++) {
-      const hours = byDow[d] ?? [];
-      hours.forEach((h, i) => {
-        grid[d][h] += 3 - i; // 3, 2, 1 falloff
-      });
-    }
-    const max = Math.max(1, ...grid.flat());
-    return grid.map((row) => row.map((v) => Math.round((v / max) * 100)));
-  }, [posts, byDow]);
-
-  const topSlots = useMemo(() => {
-    const slots: { dow: number; hour: number; score: number }[] = [];
-    scoreGrid.forEach((row, d) =>
-      row.forEach((score, h) => {
-        if (score > 0) slots.push({ dow: d, hour: h, score });
-      }),
-    );
-    return slots.sort((a, b) => b.score - a.score).slice(0, 5);
-  }, [scoreGrid]);
+  const { isGuest } = useGuest();
+  const { grid, topSlots, meta, hasRealData, loading } = useBestTimeScoring(90);
 
   const fmtHour = (h: number) => {
     const period = h >= 12 ? "PM" : "AM";
@@ -58,7 +28,15 @@ export function BestTimeInsightsCard() {
         </div>
         <div className="flex-1">
           <h3 className="text-sm font-semibold">Best times to post</h3>
-          <p className="text-[11px] text-muted-foreground">Blends your send history with baseline engagement patterns.</p>
+          <p className="text-[11px] text-muted-foreground">
+            {isGuest
+              ? "Demo signal — sign in to unlock learned recommendations."
+              : hasRealData
+                ? "Learned from your real post engagement, filled in with baseline research."
+                : loading
+                  ? "Loading scoring…"
+                  : "Baseline research shown — scores will refine as posts collect metrics."}
+          </p>
         </div>
       </header>
 
@@ -72,10 +50,11 @@ export function BestTimeInsightsCard() {
             </div>
           ))}
           {DAYS.map((d, dow) => (
-            <>
-              <div key={`l-${dow}`} className="pr-1 text-right self-center">{d}</div>
+            <div key={`row-${dow}`} className="contents">
+              <div className="pr-1 text-right self-center">{d}</div>
               {Array.from({ length: 24 }).map((_, h) => {
-                const score = scoreGrid[dow][h];
+                const score = grid[dow][h];
+                const info = meta[dow][h];
                 return (
                   <div
                     key={`c-${dow}-${h}`}
@@ -88,14 +67,18 @@ export function BestTimeInsightsCard() {
                           : score < 60
                             ? "bg-primary/40"
                             : "bg-primary/80",
+                      info.source === "baseline" && "border-dashed",
                     )}
-                    title={`${d} ${fmtHour(h)} · score ${score}`}
+                    title={`${d} ${fmtHour(h)} · score ${score}${info.samples ? ` · ${info.samples} posts · ${info.avgEngagement}% ER` : " · baseline"}`}
                   />
                 );
               })}
-            </>
+            </div>
           ))}
         </div>
+        <p className="text-[10px] text-muted-foreground mt-2">
+          Solid = learned from your posts · dashed = baseline pattern.
+        </p>
       </div>
 
       {/* Top slots list */}
@@ -104,7 +87,7 @@ export function BestTimeInsightsCard() {
         {topSlots.length === 0 ? (
           <p className="text-xs text-muted-foreground">Publish more posts to unlock personalised insights.</p>
         ) : (
-          topSlots.map((s) => (
+          topSlots.slice(0, 5).map((s) => (
             <div key={`${s.dow}-${s.hour}`} className="flex items-center gap-2 text-xs">
               <Clock className="h-3 w-3 text-primary" />
               <span className="font-medium w-24">{DAYS[s.dow]} · {fmtHour(s.hour)}</span>
@@ -112,6 +95,14 @@ export function BestTimeInsightsCard() {
                 <div className="h-full bg-primary" style={{ width: `${s.score}%` }} />
               </div>
               <span className="tabular-nums text-muted-foreground w-8 text-right">{s.score}</span>
+              {s.source === "learned" ? (
+                <span className="text-[10px] text-emerald-500 inline-flex items-center gap-0.5">
+                  <TrendingUp className="h-2.5 w-2.5" />
+                  {s.samples}p
+                </span>
+              ) : (
+                <span className="text-[10px] text-muted-foreground/70 w-10 text-right">baseline</span>
+              )}
             </div>
           ))
         )}

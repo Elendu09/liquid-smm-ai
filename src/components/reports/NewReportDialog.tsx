@@ -24,10 +24,12 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { pushLocalCollection } from "@/hooks/useLocalCollection";
 import { useAccounts } from "@/contexts/AccountContext";
 import { buildReportData } from "@/lib/reportAnalytics";
 import { logRun } from "@/hooks/useRunHistory";
+import { useReportRuns } from "@/hooks/useReportRuns";
+import { useReportSchedules, CADENCE_LABEL } from "@/hooks/useReportSchedules";
+import { guardWrite } from "@/hooks/useGuest";
 
 interface ReportTemplate {
   id: string;
@@ -83,6 +85,8 @@ type GenStatus = "idle" | "queued" | "running" | "success" | "failed";
 
 export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewReportDialogProps) {
   const { accounts } = useAccounts();
+  const { add: addRun } = useReportRuns();
+  const { add: addSchedule } = useReportSchedules();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [templateId, setTemplateId] = useState<string>(initialTemplateId ?? "");
   const [name, setName] = useState("");
@@ -150,38 +154,48 @@ export function NewReportDialog({ open, onOpenChange, initialTemplateId }: NewRe
     setProgress(65);
 
     try {
-      // Simulated transient failure on very first attempt when connected accounts are missing.
-      if (!isRetry && accounts.length === 0 && attempt === 0) {
-        throw new Error("No connected accounts available for this range. Retry after reconnecting.");
-      }
+      if (!guardWrite("generate reports")) throw new Error("Sign in to generate reports.");
       const data = buildReportData(accounts, sections, range);
       const reportName = name || `${template.name} · ${new Date().toLocaleDateString()}`;
-      const sizeMb = 0.6 + sections.length * 0.4 + (format === "pdf" ? 1 : 0);
-      pushLocalCollection("reports", "generated", [
-        {
-          id: `rpt-${Date.now()}`,
-          name: reportName,
-          template: template.name,
-          period: periodLabel,
-          format,
-          size: `${sizeMb.toFixed(1)} MB`,
-          sections,
-          whitelabel,
-          data,
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+      const sizeBytes = Math.round((0.6 + sections.length * 0.4 + (format === "pdf" ? 1 : 0)) * 1_000_000);
+      const now = new Date().toISOString();
+      const periodStart = new Date(Date.now() - (range === "last7" ? 7 : range === "last30" ? 30 : 90) * 86_400_000)
+        .toISOString().slice(0, 10);
+      const periodEnd = new Date().toISOString().slice(0, 10);
+      await addRun({
+        id: `rpt-${Date.now()}`,
+        name: reportName,
+        templateId: template.id,
+        template: template.name,
+        period: periodLabel,
+        periodStart,
+        periodEnd,
+        format,
+        size: `${(sizeBytes / 1_000_000).toFixed(1)} MB`,
+        sizeBytes,
+        sections,
+        data,
+        status: "success",
+        whitelabel,
+        createdAt: now,
+      });
       if (schedule && email) {
-        pushLocalCollection("reports", "scheduled", [
-          {
-            id: `sch-${Date.now()}`,
-            name: template.name,
-            cadence: "Every Monday at 9:00 AM",
-            email,
-            active: true,
-            createdAt: new Date().toISOString(),
-          },
-        ]);
+        await addSchedule({
+          id: `sch-${Date.now()}`,
+          name: template.name,
+          templateId: template.id,
+          cadence: "weekly-mon",
+          cadenceLabel: CADENCE_LABEL["weekly-mon"],
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          recipients: [email],
+          format,
+          sections,
+          active: true,
+          nextRunAt: null,
+          lastRunAt: null,
+          sharePublic: false,
+          createdAt: now,
+        });
       }
       logRun({
         toolKey: "reports",

@@ -1573,6 +1573,123 @@ export type Database = {
         }
         Relationships: []
       }
+      report_runs: {
+        Row: {
+          created_at: string
+          data: Json | null
+          format: string
+          id: string
+          name: string
+          period_end: string | null
+          period_label: string | null
+          period_start: string | null
+          sections: Json
+          share_token: string | null
+          size_bytes: number | null
+          status: string
+          storage_path: string | null
+          template_id: string | null
+          updated_at: string
+          user_id: string
+          whitelabel: boolean
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          format?: string
+          id?: string
+          name: string
+          period_end?: string | null
+          period_label?: string | null
+          period_start?: string | null
+          sections?: Json
+          share_token?: string | null
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string | null
+          template_id?: string | null
+          updated_at?: string
+          user_id: string
+          whitelabel?: boolean
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          format?: string
+          id?: string
+          name?: string
+          period_end?: string | null
+          period_label?: string | null
+          period_start?: string | null
+          sections?: Json
+          share_token?: string | null
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string | null
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+          whitelabel?: boolean
+        }
+        Relationships: []
+      }
+      report_schedules: {
+        Row: {
+          active: boolean
+          cadence: string
+          created_at: string
+          filters: Json
+          format: string
+          id: string
+          last_run_at: string | null
+          name: string
+          next_run_at: string | null
+          recipients: string[]
+          sections: Json
+          share_public: boolean
+          template_id: string | null
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          cadence?: string
+          created_at?: string
+          filters?: Json
+          format?: string
+          id?: string
+          last_run_at?: string | null
+          name: string
+          next_run_at?: string | null
+          recipients?: string[]
+          sections?: Json
+          share_public?: boolean
+          template_id?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          cadence?: string
+          created_at?: string
+          filters?: Json
+          format?: string
+          id?: string
+          last_run_at?: string | null
+          name?: string
+          next_run_at?: string | null
+          recipients?: string[]
+          sections?: Json
+          share_public?: boolean
+          template_id?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       rss_feeds: {
         Row: {
           active: boolean
