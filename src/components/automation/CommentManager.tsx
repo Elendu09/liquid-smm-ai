@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { isGuestSession } from "@/hooks/useGuest";
 import { ReplyDialog } from "@/components/engage/ReplyDialog";
 import { BulkReplyDialog } from "@/components/engage/BulkReplyDialog";
 import { FilterDialog, DEFAULT_FILTERS, type CommentFilters } from "@/components/engage/FilterDialog";
