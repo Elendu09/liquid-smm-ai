@@ -1,11 +1,33 @@
 import { useMemo } from "react";
 import { Filter } from "lucide-react";
 import { useAccounts } from "@/contexts/AccountContext";
+import { useGuest } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { cn } from "@/lib/utils";
 
 export function FunnelCard() {
   const { accounts } = useAccounts();
+  const { isGuest } = useGuest();
   const base = useMemo(() => Math.max(50_000, accounts.reduce((s, a) => s + a.followers, 0) * 6), [accounts]);
+
+  if (!isGuest) {
+    return (
+      <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm p-4">
+        <header className="flex items-center gap-2 mb-4">
+          <Filter className="h-4 w-4 text-primary" />
+          <h3 className="text-base font-semibold">Conversion funnel</h3>
+        </header>
+        <EmptyState
+          icon={Filter}
+          title="No funnel data yet"
+          description="Connect an account and publish a few posts. Impressions, reach, and click data will appear here."
+          ctaLabel="Connect account"
+          ctaHref="/dashboard/settings/connected"
+          compact
+        />
+      </section>
+    );
+  }
 
   const stages = [
     { label: "Impressions", value: base, color: "hsl(var(--primary))" },
