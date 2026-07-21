@@ -522,6 +522,30 @@ export default function SegmentsBoard() {
           setEditing(s);
         }}
       />
+
+      <BulkActionBar
+        count={sel.count}
+        onClear={sel.clear}
+        actions={[
+          { id: "duplicate", label: "Duplicate", icon: Copy, onClick: bulkDuplicate },
+          { id: "delete", label: "Delete", icon: Trash2, variant: "destructive", onClick: () => setBulkDeleteOpen(true) },
+        ]}
+      />
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {sel.count} segment{sel.count === 1 ? "" : "s"}?</AlertDialogTitle>
+            <AlertDialogDescription>This can't be undone. Automations pointing to these segments will need to be updated.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={bulkDelete}>
+              Delete {sel.count}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
