@@ -165,10 +165,12 @@ export default function ContentLibraryPage() {
         <TabsContent value="media">
           {assets.length === 0 ? (
             <EmptyState
+              variant="upload-asset"
               icon={Image}
               title="No media assets yet"
               description="Upload your first image or video to start building your library."
               ctaLabel="Upload asset"
+              ctaHref="/dashboard/library/assets"
             />
           ) : (
           <div className={cn(
