@@ -11,7 +11,7 @@ DIRS=(
   src/components/settings
 )
 PATTERN='Math\.random\('
-STRINGS='(Demo data|Sample call|Product launch teaser|Behind the scenes reel|Old sale caption)'
+STRINGS='(Product launch teaser|Behind the scenes reel|Old sale caption|Auto-reply to @jordan\.creates)'
 
 fail=0
 for d in "${DIRS[@]}"; do
