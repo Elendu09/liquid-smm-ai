@@ -18,6 +18,7 @@ import { EmptyState } from "@/components/dashboard/shell";
 import { useMcpActivity, type McpActivityEntry, type McpActivityStatus } from "@/hooks/useMcpActivity";
 import { ApprovalPanel } from "@/components/dashboard/mcp/ApprovalPanel";
 import { McpCallDetailsDrawer } from "@/components/activity/McpCallDetailsDrawer";
+import { isGuestSession } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
 
 const STATUS_META: Record<McpActivityStatus, { label: string; icon: typeof CheckCircle2; className: string }> = {
