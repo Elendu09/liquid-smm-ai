@@ -53,6 +53,8 @@ import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { isGuestSession } from "@/hooks/useGuest";
 import BioPreview from "./BioPreview";
 import { bioStore, useBioConfig, useSyncLegacyTheme } from "./state/bioConfig";
 import type { BioConfig, FontPairId } from "./state/bioConfig";
