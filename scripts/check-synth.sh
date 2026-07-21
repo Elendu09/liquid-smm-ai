@@ -13,7 +13,7 @@ DIRS=(
 FILES=(
   src/pages/dashboard/Reports.tsx
 )
-STRINGS='(Product launch teaser|Behind the scenes reel|Old sale caption|Auto-reply to @jordan\.creates|TITLES = \[)'
+STRINGS='(Product launch teaser|Behind the scenes reel|Old sale caption|Auto-reply to @jordan\.creates|\bconst TITLES = \[)'
 
 fail=0
 scan_random() {
