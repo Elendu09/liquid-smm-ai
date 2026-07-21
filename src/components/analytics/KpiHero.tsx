@@ -141,6 +141,8 @@ export function KpiHero({ range, onRangeChange }: KpiHeroProps) {
           );
         })}
       </div>
+      )}
+    </div>
     </div>
   );
 }
