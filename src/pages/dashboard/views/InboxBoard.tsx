@@ -16,6 +16,8 @@ import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
 import { ReplyDialog } from "@/components/engage/ReplyDialog";
 import { analyzeMessage, snippetFor, SENTIMENT_STYLE, INTENT_LABEL } from "@/hooks/useInboxAnalysis";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useAccounts } from "@/contexts/AccountContext";
 
 type InboxStatus = "new" | "replied" | "snoozed" | "resolved";
 
@@ -176,6 +178,7 @@ interface InboxBoardProps {
 export function InboxBoard({ kind, title, description }: InboxBoardProps) {
   const [view, setView] = useViewMode(`engage-${kind}`, "kanban");
   const { items, setItems, update } = useInboxMessages(kind);
+  const { accounts } = useAccounts();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InboxStatus | "all">("all");
   const [variants, setVariants] = useState<Record<string, number>>({});
@@ -270,7 +273,21 @@ export function InboxBoard({ kind, title, description }: InboxBoardProps) {
         }
       />
 
-      {view === "kanban" ? (
+      {items.length === 0 && !isGuestSession() ? (
+        accounts.length === 0 ? (
+          <EmptyState variant="connect-account" description={`Connect an account to receive ${kind === "comment" ? "comments" : "direct messages"} in your inbox.`} />
+        ) : (
+          <EmptyState
+            variant="create-first"
+            title={kind === "comment" ? "No comments yet" : "No messages yet"}
+            description={kind === "comment"
+              ? "New comments across your connected channels will appear here in real time."
+              : "New DMs across your connected channels will appear here in real time."}
+            ctaLabel="Refresh"
+            onCta={() => toast("Waiting for new activity…")}
+          />
+        )
+      ) : view === "kanban" ? (
         <KanbanBoard
           columns={columns}
           items={filtered}
