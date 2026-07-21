@@ -23,4 +23,26 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    // Phase 10 kill-switch: block new Math.random() in gated hubs.
+    // Legitimate uses (crypto seeds, jitter, tokens) must be annotated with `// synth-ok: <reason>`.
+    files: [
+      "src/components/analytics/**/*.{ts,tsx}",
+      "src/components/create/**/*.{ts,tsx}",
+      "src/components/engage/**/*.{ts,tsx}",
+      "src/components/library/**/*.{ts,tsx}",
+      "src/components/activity/**/*.{ts,tsx}",
+      "src/components/settings/**/*.{ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "CallExpression[callee.object.name='Math'][callee.property.name='random']",
+          message:
+            "Math.random() is banned in gated hubs (synth-data leak risk). If genuinely needed (jitter, crypto, tokens), append `// eslint-disable-next-line no-restricted-syntax` with a `// synth-ok:` note.",
+        },
+      ],
+    },
+  },
 );
