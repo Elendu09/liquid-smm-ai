@@ -84,6 +84,9 @@ const App = () => (
               <Route path="/solutions" element={<Solutions />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/public/calendar/:token" element={<PublicCalendar />} />
+              <Route path="/bio/:slug" element={<PublicBio />} />
+              <Route path="/b/:slug" element={<PublicBio />} />
+              <Route path="/@:slug" element={<PublicBio />} />
 
               
 
