@@ -2236,6 +2236,28 @@ export type Database = {
           role: string
         }[]
       }
+      analytics_overview_top_posts: {
+        Args: { _limit?: number; _since: string; _user_id: string }
+        Returns: {
+          comments: number
+          impressions: number
+          likes: number
+          post_id: string
+          reach: number
+          saves: number
+          shares: number
+        }[]
+      }
+      analytics_overview_totals: {
+        Args: { _since: string; _user_id: string }
+        Returns: {
+          clicks: number
+          engaged: number
+          impressions: number
+          post_count: number
+          reach: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -41,37 +41,32 @@ Deno.serve(async (req) => {
 
   const service = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-  const [pm, amd, topPosts] = await Promise.all([
-    service
-      .from("post_metrics")
-      .select("impressions, reach, likes, comments, shares, saves, clicks")
-      .eq("user_id", userId)
-      .gte("captured_at", periodStart.toISOString())
-      .limit(5000),
+  const [totalsRes, amd, topPostsRes] = await Promise.all([
+    service.rpc("analytics_overview_totals", {
+      _user_id: userId,
+      _since: periodStart.toISOString(),
+    }),
     service
       .from("account_metrics_daily")
       .select("day, followers, engagement, posts, reach")
       .eq("user_id", userId)
       .gte("day", periodStart.toISOString().slice(0, 10))
       .order("day", { ascending: true }),
-    service
-      .from("post_metrics")
-      .select("post_id, likes, comments, shares, saves, reach, impressions")
-      .eq("user_id", userId)
-      .gte("captured_at", periodStart.toISOString())
-      .order("reach", { ascending: false })
-      .limit(10),
+    service.rpc("analytics_overview_top_posts", {
+      _user_id: userId,
+      _since: periodStart.toISOString(),
+      _limit: 10,
+    }),
   ]);
 
-  const totals = (pm.data ?? []).reduce(
-    (acc, r) => ({
-      impressions: acc.impressions + (r.impressions ?? 0),
-      reach: acc.reach + (r.reach ?? 0),
-      engaged: acc.engaged + (r.likes ?? 0) + (r.comments ?? 0) + (r.shares ?? 0) + (r.saves ?? 0),
-      clicks: acc.clicks + (r.clicks ?? 0),
-    }),
-    { impressions: 0, reach: 0, engaged: 0, clicks: 0 },
-  );
+  const t = totalsRes.data?.[0];
+  const totals = {
+    impressions: Number(t?.impressions ?? 0),
+    reach: Number(t?.reach ?? 0),
+    engaged: Number(t?.engaged ?? 0),
+    clicks: Number(t?.clicks ?? 0),
+  };
+  const postCount = Number(t?.post_count ?? 0);
 
   const followerSeries = (amd.data ?? []).map((r) => ({
     day: r.day,
@@ -79,11 +74,11 @@ Deno.serve(async (req) => {
     engagement: Number(r.engagement ?? 0),
   }));
 
-  const status = (pm.data ?? []).length === 0 && followerSeries.length === 0 ? "no-data" : "success";
+  const status = postCount === 0 && followerSeries.length === 0 ? "no-data" : "success";
   const reportData = {
     totals,
     followerSeries,
-    topPosts: topPosts.data ?? [],
+    topPosts: topPostsRes.data ?? [],
     generatedAt: new Date().toISOString(),
     range,
   };
