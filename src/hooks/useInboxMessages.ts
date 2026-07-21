@@ -42,9 +42,16 @@ type Bucket = {
   hydration: Promise<void> | null;
 };
 const buckets: Record<"comment" | "dm", Bucket> = {
-  comment: { cache: readLocal("comment"), listeners: new Set(), channel: null, hydration: null },
-  dm: { cache: readLocal("dm"), listeners: new Set(), channel: null, hydration: null },
+  comment: { cache: initialCache("comment"), listeners: new Set(), channel: null, hydration: null },
+  dm: { cache: initialCache("dm"), listeners: new Set(), channel: null, hydration: null },
 };
+
+function initialCache(kind: "comment" | "dm"): InboxItem[] {
+  // Real users must never see the demo seed / stale guest localStorage.
+  if (typeof window === "undefined") return [];
+  if (!isGuestSession()) return [];
+  return readLocal(kind);
+}
 
 let mode: "local" | "remote" = "local";
 let remoteUserId: string | null = null;
