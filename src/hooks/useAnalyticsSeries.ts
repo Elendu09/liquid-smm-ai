@@ -271,14 +271,17 @@ export function useCardSeries(metric: MetricId, days: number, platformId?: strin
   }, [guest, days, scope]);
 
   return useMemo<SeriesResult>(() => {
-    if (guest || !rows) {
+    if (guest) {
       const followerTotal = accounts.reduce((s, a) => s + (a.followers || 0), 0);
       const series = resolveMetric(metric, days, guestSeed(followerTotal));
       const first = series[0]?.value ?? 0;
       const latest = series[series.length - 1]?.value ?? 0;
       const total = series.reduce((s, p) => s + p.value, 0);
       const delta = first ? ((latest - first) / first) * 100 : 0;
-      return { series, total, latest, first, delta, loading: !guest && loading, isDemo: true };
+      return { series, total, latest, first, delta, loading: false, isDemo: true };
+    }
+    if (!rows) {
+      return { series: [], total: 0, latest: 0, first: 0, delta: 0, loading, isDemo: false };
     }
     const byDay = new Map<string, Row[]>();
     for (const r of rows) {
