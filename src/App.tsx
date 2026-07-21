@@ -19,6 +19,8 @@ import Pricing from "./pages/Pricing";
 import Solutions from "./pages/Solutions";
 import PublicCalendar from "./pages/PublicCalendar";
 import PublicBio from "./pages/PublicBio";
+import AcceptInvite from "./pages/AcceptInvite";
+
 
 
 // Dashboard shell
