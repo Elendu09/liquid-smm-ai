@@ -19,6 +19,8 @@ import Pricing from "./pages/Pricing";
 import Solutions from "./pages/Solutions";
 import PublicCalendar from "./pages/PublicCalendar";
 import PublicBio from "./pages/PublicBio";
+import AcceptInvite from "./pages/AcceptInvite";
+
 
 
 // Dashboard shell
@@ -87,6 +89,8 @@ const App = () => (
               <Route path="/bio/:slug" element={<PublicBio />} />
               <Route path="/b/:slug" element={<PublicBio />} />
               <Route path="/@:slug" element={<PublicBio />} />
+              <Route path="/invite/:token" element={<AcceptInvite />} />
+
 
               
 

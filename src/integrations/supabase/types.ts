@@ -1995,6 +1995,7 @@ export type Database = {
       }
       team_members: {
         Row: {
+          accepted_at: string | null
           avatar_url: string | null
           created_at: string
           email: string
@@ -2003,6 +2004,7 @@ export type Database = {
           invite_token: string | null
           joined_at: string
           last_active_at: string | null
+          member_user_id: string | null
           name: string
           note: string | null
           owner_id: string
@@ -2011,6 +2013,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
           avatar_url?: string | null
           created_at?: string
           email: string
@@ -2019,6 +2022,7 @@ export type Database = {
           invite_token?: string | null
           joined_at?: string
           last_active_at?: string | null
+          member_user_id?: string | null
           name: string
           note?: string | null
           owner_id: string
@@ -2027,6 +2031,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string
@@ -2035,6 +2040,7 @@ export type Database = {
           invite_token?: string | null
           joined_at?: string
           last_active_at?: string | null
+          member_user_id?: string | null
           name?: string
           note?: string | null
           owner_id?: string
@@ -2106,6 +2112,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_team_invite: {
+        Args: { _token: string }
+        Returns: {
+          owner_id: string
+          role: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
