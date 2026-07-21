@@ -58,7 +58,11 @@ export function KpiHero({ range, onRangeChange }: KpiHeroProps) {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg sm:text-xl font-semibold">Performance snapshot</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground">Live signal across every connected account.</p>
+          <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5">
+            {isDemo ? (
+              <><Sparkles className="h-3 w-3" /> Demo data — connect an account to see your real signal.</>
+            ) : loading ? "Loading latest metrics…" : "Live signal across every connected account."}
+          </p>
         </div>
         <div className="flex gap-1 p-1 rounded-lg bg-muted/60 border border-border/40" role="tablist" aria-label="Range">
           {RANGES.map((r) => (
