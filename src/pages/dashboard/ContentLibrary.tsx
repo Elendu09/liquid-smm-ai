@@ -242,12 +242,21 @@ export default function ContentLibraryPage() {
               </Card>
             ))}
           </div>
+          )}
         </TabsContent>
 
         {/* Caption Templates Tab */}
         <TabsContent value="captions">
+          {captionTemplates.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title="No caption templates yet"
+              description="Create reusable caption templates to speed up publishing across platforms."
+              ctaLabel="Add caption template"
+            />
+          ) : (
           <div className="grid gap-4 md:grid-cols-2">
-            {mockCaptionTemplates.map((template) => (
+            {captionTemplates.map((template) => (
               <Card key={template.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
