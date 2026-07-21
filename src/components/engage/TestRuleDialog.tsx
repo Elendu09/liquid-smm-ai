@@ -37,7 +37,8 @@ function buildSamples(rule: Rule): Sample[] {
       matched = /@/.test(p.content);
       reason = matched ? "mention detected" : "no mention";
     } else {
-      matched = Math.random() > 0.4; // synth-ok: rule-test simulator
+      // eslint-disable-next-line no-restricted-syntax -- synth-ok: rule-test simulator
+      matched = Math.random() > 0.4;
       reason = matched ? "generic trigger match" : "trigger conditions not met";
     }
     return { ...p, matched, reason };

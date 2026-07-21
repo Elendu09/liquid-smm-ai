@@ -55,7 +55,8 @@ export function BulkAutomationProgressDialog({ open, onOpenChange, targets, rate
           const delay = Math.max(120, nextDelayMs(rateLimit) / 6); // compressed sim
           await new Promise((res) => setTimeout(res, delay));
           if (cancelledRef.current || stopped) break;
-          const ok = Math.random() > 0.08; // synth-ok: bulk-run success simulator
+          // eslint-disable-next-line no-restricted-syntax -- synth-ok: bulk-run success simulator
+          const ok = Math.random() > 0.08;
           if (ok) recordAction();
           setRuns((prev) =>
             prev.map((r, i) =>

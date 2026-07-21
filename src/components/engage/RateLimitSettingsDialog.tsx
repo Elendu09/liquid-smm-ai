@@ -166,7 +166,8 @@ export function checkRateLimit(s: RateLimitSettings): { allowed: boolean; reason
   const last = history[history.length - 1];
   if (last) {
     const gap = now - last;
-    const required = (s.minDelaySec + Math.random() * s.jitterSec) * 1000; // synth-ok: rate-limit jitter
+    // eslint-disable-next-line no-restricted-syntax -- synth-ok: rate-limit jitter
+    const required = (s.minDelaySec + Math.random() * s.jitterSec) * 1000;
     if (gap < required) {
       return { allowed: false, reason: `Wait ${Math.ceil((required - gap) / 1000)}s (rate limit).`, waitMs: required - gap };
     }
@@ -188,5 +189,6 @@ export function recordAction() {
 /** Compute per-action delay with jitter for scheduling batch runs. */
 export function nextDelayMs(s: RateLimitSettings): number {
   if (!s.enabled) return 0;
-  return (s.minDelaySec + Math.random() * s.jitterSec) * 1000; // synth-ok: rate-limit jitter
+  // eslint-disable-next-line no-restricted-syntax -- synth-ok: rate-limit jitter
+  return (s.minDelaySec + Math.random() * s.jitterSec) * 1000;
 }

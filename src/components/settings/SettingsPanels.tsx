@@ -732,7 +732,8 @@ export function SecurityPanel() {
 
   const regenerateCodes = () => {
     const codes = Array.from({ length: 8 }, () =>
-      Array.from({ length: 4 }, () => Math.random().toString(36).slice(2, 6).toUpperCase()).join("-"), // synth-ok: recovery code
+      // eslint-disable-next-line no-restricted-syntax -- synth-ok: recovery code
+      Array.from({ length: 4 }, () => Math.random().toString(36).slice(2, 6).toUpperCase()).join("-"),
     );
     setRecovery([{ id: crypto.randomUUID(), codes, createdAt: new Date().toISOString() }]);
     logAudit({ actor: "You", action: "Regenerated recovery codes", category: "security" });

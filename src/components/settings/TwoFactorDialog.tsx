@@ -23,13 +23,15 @@ interface Props {
 
 const genSecret = () =>
   Array.from({ length: 16 }, () =>
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"[Math.floor(Math.random() * 32)], // synth-ok: TOTP seed
+    // eslint-disable-next-line no-restricted-syntax -- synth-ok: TOTP seed
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"[Math.floor(Math.random() * 32)],
   ).join("");
 
 const genCodes = () =>
   Array.from({ length: 8 }, () =>
     Array.from({ length: 4 }, () =>
-      Math.random().toString(36).slice(2, 6).toUpperCase(), // synth-ok: recovery code
+      // eslint-disable-next-line no-restricted-syntax -- synth-ok: recovery code
+      Math.random().toString(36).slice(2, 6).toUpperCase(),
     ).join("-"),
   );
 
