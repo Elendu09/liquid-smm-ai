@@ -11,7 +11,8 @@ import {
 } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { useStories } from "@/hooks/useStories";
+import { isGuestSession } from "@/hooks/useGuest";
 import { NewStoryDialog, type StoryItemFull, type StorySlide } from "@/components/publish/NewStoryDialog";
 import { PublishStoryDialog } from "@/components/publish/PublishStoryDialog";
 
