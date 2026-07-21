@@ -107,8 +107,8 @@ export const FollowerAnalyzer = () => {
         icon={Users}
         title="No follower data yet"
         description="Connect a social account to analyze follower quality, ghost accounts, and unfollowers."
-        actionLabel="Connect account"
-        actionHref="/dashboard/settings?tab=connected"
+        ctaLabel="Connect account"
+        ctaHref="/dashboard/settings?tab=connected"
       />
     );
   }
