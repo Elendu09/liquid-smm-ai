@@ -47,6 +47,27 @@ export function useAnalyticsOverview(rangeDays: RangeDays = 90): OverviewData {
   const [monthly, setMonthly] = useState<MonthlyGrowthPoint[]>([]);
   const [platformSlices, setPlatformSlices] = useState<PlatformSlice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tick, setTick] = useState(0);
+
+  // Live invalidation: refetch when post_metrics or account_metrics_daily
+  // change for this user. Debounced via a bumped tick to avoid thrash.
+  useEffect(() => {
+    if (isGuest || !user) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const bump = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => setTick((t) => t + 1), 750);
+    };
+    const channel = supabase
+      .channel(`analytics-overview-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "post_metrics", filter: `user_id=eq.${user.id}` }, bump)
+      .on("postgres_changes", { event: "*", schema: "public", table: "account_metrics_daily", filter: `user_id=eq.${user.id}` }, bump)
+      .subscribe();
+    return () => {
+      if (timer) clearTimeout(timer);
+      supabase.removeChannel(channel);
+    };
+  }, [user, isGuest]);
 
   useEffect(() => {
     if (isGuest || !user) {
