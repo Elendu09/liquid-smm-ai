@@ -10,10 +10,14 @@ DIRS=(
   src/components/activity
   src/components/settings
 )
-STRINGS='(Product launch teaser|Behind the scenes reel|Old sale caption|Auto-reply to @jordan\.creates)'
+FILES=(
+  src/pages/dashboard/Reports.tsx
+)
+STRINGS='(Product launch teaser|Behind the scenes reel|Old sale caption|Auto-reply to @jordan\.creates|TITLES = \[)'
 
 fail=0
-for d in "${DIRS[@]}"; do
+scan_random() {
+  local target="$1"
   while IFS=: read -r file line _; do
     [ -z "$file" ] && continue
     cur=$(sed -n "${line}p" "$file")
@@ -22,11 +26,14 @@ for d in "${DIRS[@]}"; do
       echo "❌ Math.random in $file:$line (add // eslint-disable-next-line no-restricted-syntax -- synth-ok: <reason>)"
       fail=1
     fi
-  done < <(rg -n 'Math\.random\(' "$d" 2>/dev/null || true)
+  done < <(rg -n 'Math\.random\(' "$target" 2>/dev/null || true)
 
-  if rg -n "$STRINGS" "$d" 2>/dev/null | rg . ; then
-    echo "❌ Hard-coded synth string found in $d"
+  if rg -n "$STRINGS" "$target" 2>/dev/null | rg . ; then
+    echo "❌ Hard-coded synth string found in $target"
     fail=1
   fi
-done
+}
+
+for d in "${DIRS[@]}"; do scan_random "$d"; done
+for f in "${FILES[@]}"; do [ -f "$f" ] && scan_random "$f"; done
 exit $fail
