@@ -17,6 +17,7 @@ import { UploadAssetDialog } from "@/components/library/UploadAssetDialog";
 import { EditAssetDialog } from "@/components/library/EditAssetDialog";
 import { AssetVersionsDialog } from "@/components/library/AssetVersionsDialog";
 import { assetVersionsApi, getVersionCount } from "@/hooks/useAssetVersions";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { cn } from "@/lib/utils";
 
 interface Asset {
