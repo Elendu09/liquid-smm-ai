@@ -193,7 +193,7 @@ const LinkInBioBuilder = () => {
     name: "Sarah Johnson",
     bio: "Digital Creator · Marketing Expert\nHelping brands grow with proven strategies.",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
-    bioUrl: "bio.smmsaas.com/sarah",
+    bioUrl: "smmsaas.com/@sarah",
   });
 
   const socialLinks = [
@@ -409,11 +409,11 @@ const LinkInBioBuilder = () => {
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">Custom URL</label>
                     <div className="flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-1">
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">bio.smmsaas.com/</span>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">smmsaas.com/@</span>
                       <Input
-                        value={profileData.bioUrl.split("/").pop()}
+                        value={profileData.bioUrl.split("@").pop()}
                         onChange={(e) =>
-                          setProfileData({ ...profileData, bioUrl: `bio.smmsaas.com/${e.target.value}` })
+                          setProfileData({ ...profileData, bioUrl: `smmsaas.com/@${e.target.value.replace(/^@/, "")}` })
                         }
                         className="flex-1 border-0 px-0 focus-visible:ring-0"
                       />

@@ -30,7 +30,7 @@ export default function BioPreview() {
         </div>
         <div className="flex-1 flex items-center gap-2 px-3 py-1 rounded-md bg-background/80 border border-border/50 text-[11px] text-muted-foreground max-w-md mx-auto">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span className="truncate">bio.smmsaas.com/{cfg.slug}</span>
+          <span className="truncate">smmsaas.com/@{cfg.slug}</span>
         </div>
         <div className="flex items-center gap-1">
           <Button

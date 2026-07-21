@@ -87,7 +87,7 @@ export default function BioEditor() {
       <aside className="w-16 md:w-52 shrink-0 border-r border-border/50 bg-card/40 flex flex-col">
         <div className="p-3 border-b border-border/50 hidden md:block">
           <p className="text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Bio Editor</p>
-          <p className="text-xs font-semibold truncate mt-0.5">bio.smmsaas.com/{cfg.slug}</p>
+          <p className="text-xs font-semibold truncate mt-0.5">smmsaas.com/@{cfg.slug}</p>
         </div>
         <nav className="flex-1 p-2 space-y-0.5">
           {railItems.map((r) => {
@@ -162,7 +162,7 @@ export default function BioEditor() {
                   <BioPreview />
                 </SheetContent>
               </Sheet>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 hidden lg:inline-flex" onClick={() => window.open(`/bio/${cfg.slug}`, "_blank")}>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 hidden lg:inline-flex" onClick={() => window.open(`/@${cfg.slug}`, "_blank")}>
                 <Eye className="w-3.5 h-3.5" /> Visit
               </Button>
               <Button size="sm" className="h-8 gap-1.5" onClick={async () => {
@@ -198,7 +198,7 @@ export default function BioEditor() {
                   toast.error(error.message);
                   return;
                 }
-                toast.success("Published", { description: `${window.location.origin}/bio/${slug}` });
+                toast.success("Published", { description: `smmsaas.com/@${slug}` });
               }}>
                 <Save className="w-3.5 h-3.5" /> Publish
               </Button>
@@ -1109,7 +1109,7 @@ function SeoPanel() {
       <div>
         <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Custom slug</Label>
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-muted-foreground">bio.smmsaas.com/</span>
+          <span className="text-xs text-muted-foreground">smmsaas.com/@</span>
           <Input value={cfg.slug} onChange={(e) => bioStore.set({ slug: e.target.value.replace(/[^a-z0-9-]/gi, "").toLowerCase() })} className="h-9 flex-1" />
         </div>
       </div>
