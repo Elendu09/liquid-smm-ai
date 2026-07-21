@@ -35,26 +35,23 @@ interface KpiHeroProps {
 }
 
 export function KpiHero({ range, onRangeChange }: KpiHeroProps) {
-  const { accounts } = useAccounts();
-  const seed = useMemo(
-    () => Math.max(1000, accounts.reduce((s, a) => s + a.followers, 0) || 4200),
-    [accounts],
-  );
-  const days = RANGE_DAYS[range];
+  const followers = useAnalyticsSeries("followers", range);
+  const engagement = useAnalyticsSeries("engagement", range);
+  const reach = useAnalyticsSeries("reach", range);
+  const impressions = useAnalyticsSeries("impressions", range);
+  const replies = useAnalyticsSeries("replies", range);
+  const ctr = useAnalyticsSeries("ctr", range);
+  const byId: Record<KpiDef["id"], ReturnType<typeof useAnalyticsSeries>> = {
+    followers, engagement, reach, impressions, replies, ctr,
+  };
 
-  const cards = useMemo(() => {
-    return KPIS.map((k) => {
-      const data = resolveMetric(k.id, days, seed);
-      const first = data[0]?.value ?? 0;
-      const last = data[data.length - 1]?.value ?? 0;
-      const total = data.reduce((s, d) => s + d.value, 0);
-      const value = k.id === "engagement" || k.id === "ctr" || k.id === "followers"
-        ? last
-        : total;
-      const delta = first ? ((last - first) / first) * 100 : 0;
-      return { ...k, data, value, delta };
-    });
-  }, [days, seed]);
+  const loading = followers.loading;
+  const isDemo = followers.isDemo;
+  const cards = KPIS.map((k) => {
+    const s = byId[k.id];
+    const value = k.id === "engagement" || k.id === "ctr" || k.id === "followers" ? s.latest : s.total;
+    return { ...k, data: s.series, value, delta: s.delta };
+  });
 
   return (
     <div className="space-y-4">
