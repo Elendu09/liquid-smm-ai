@@ -27,26 +27,29 @@ const DEMO_DATA = [
   { month: "Jun", followers: 31200, engagement: 7.1 },
 ];
 
-function findBiggestJump() {
+type GrowthPoint = { month: string; followers: number; engagement: number };
+
+function findBiggestJump(data: GrowthPoint[]) {
   let best = { index: 1, delta: 0 };
-  for (let i = 1; i < followerData.length; i++) {
-    const d = followerData[i].followers - followerData[i - 1].followers;
+  for (let i = 1; i < data.length; i++) {
+    const d = data[i].followers - data[i - 1].followers;
     if (d > best.delta) best = { index: i, delta: d };
   }
   return best;
 }
 
-function project(months: number) {
-  const out = [...followerData.map((d) => ({ ...d, projected: null as number | null }))];
-  const last = followerData[followerData.length - 1];
-  const first = followerData[0];
-  const growth = (last.followers - first.followers) / (followerData.length - 1);
+function project(data: GrowthPoint[], months: number) {
+  const out = [...data.map((d) => ({ ...d, projected: null as number | null }))];
+  if (data.length < 2) return out;
+  const last = data[data.length - 1];
+  const first = data[0];
+  const growth = (last.followers - first.followers) / (data.length - 1);
   let current = last.followers;
-  const monthNames = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthNames = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"];
   for (let i = 0; i < months; i++) {
     current += growth;
     out.push({
-      month: monthNames[i],
+      month: monthNames[i % 12],
       followers: null as any,
       engagement: null as any,
       projected: Math.round(current),
