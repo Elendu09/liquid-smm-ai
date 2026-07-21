@@ -175,15 +175,16 @@ interface InboxBoardProps {
 
 export function InboxBoard({ kind, title, description }: InboxBoardProps) {
   const [view, setView] = useViewMode(`engage-${kind}`, "kanban");
-  const { items, setItems, update } = useLocalCollection<InboxItem>("engage", kind);
+  const { items, setItems, update } = useInboxMessages(kind);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InboxStatus | "all">("all");
   const [variants, setVariants] = useState<Record<string, number>>({});
   const [replyTarget, setReplyTarget] = useState<InboxItem | null>(null);
 
   useEffect(() => {
-    if (items.length === 0) setItems(seed(kind));
-  }, [items.length, setItems, kind]);
+    if (items.length === 0 && isGuestSession()) setItems(seed(kind));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind]);
 
   const filtered = useMemo(() => {
     let out = items;
