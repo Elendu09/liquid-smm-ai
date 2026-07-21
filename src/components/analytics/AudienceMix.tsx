@@ -1,5 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Users } from "lucide-react";
+import { useGuest } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 const AGE_DATA = [
   { name: "18-24", value: 28, color: "hsl(var(--primary))" },
