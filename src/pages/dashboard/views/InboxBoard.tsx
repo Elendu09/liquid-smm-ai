@@ -273,7 +273,21 @@ export function InboxBoard({ kind, title, description }: InboxBoardProps) {
         }
       />
 
-      {view === "kanban" ? (
+      {items.length === 0 && !isGuestSession() ? (
+        accounts.length === 0 ? (
+          <EmptyState variant="connect-account" description={`Connect an account to receive ${kind === "comment" ? "comments" : "direct messages"} in your inbox.`} />
+        ) : (
+          <EmptyState
+            variant="create-first"
+            title={kind === "comment" ? "No comments yet" : "No messages yet"}
+            description={kind === "comment"
+              ? "New comments across your connected channels will appear here in real time."
+              : "New DMs across your connected channels will appear here in real time."}
+            ctaLabel="Refresh"
+            onCta={() => toast("Waiting for new activity…")}
+          />
+        )
+      ) : view === "kanban" ? (
         <KanbanBoard
           columns={columns}
           items={filtered}
