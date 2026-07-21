@@ -89,26 +89,30 @@ export function useCaption() {
           text: captionResult.caption,
           hashtags: hashtagResult.success && hashtagResult.hashtags 
             ? hashtagResult.hashtags 
-            : mockHashtags.slice(0, 5),
+            : [],
           isAI: true,
         };
         setState({ data: generatedCaption, isLoading: false, error: null });
         return generatedCaption;
-      } else {
-        // Fallback to mock data
+      } else if (isGuestSession()) {
         const fallback = mockCaptions[Math.floor(Math.random() * mockCaptions.length)];
         setState({ data: fallback, isLoading: false, error: null });
-        toast({ 
-          title: "Using cached content", 
-          description: "AI service is busy. Showing example content.",
-        });
+        toast({ title: "Demo content", description: "Showing example while AI service is unavailable." });
         return fallback;
+      } else {
+        setState({ data: null, isLoading: false, error: 'AI service unavailable' });
+        toast({ title: "AI unavailable", description: "Please try again shortly.", variant: "destructive" });
+        return null;
       }
     } catch (error) {
       console.error('Caption generation error:', error);
-      const fallback = mockCaptions[Math.floor(Math.random() * mockCaptions.length)];
-      setState({ data: fallback, isLoading: false, error: 'API unavailable, using fallback' });
-      return fallback;
+      if (isGuestSession()) {
+        const fallback = mockCaptions[Math.floor(Math.random() * mockCaptions.length)];
+        setState({ data: fallback, isLoading: false, error: 'API unavailable, using fallback' });
+        return fallback;
+      }
+      setState({ data: null, isLoading: false, error: 'AI service unavailable' });
+      return null;
     }
   }, []);
 
