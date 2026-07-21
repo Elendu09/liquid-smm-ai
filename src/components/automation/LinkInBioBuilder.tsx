@@ -193,7 +193,7 @@ const LinkInBioBuilder = () => {
     name: "Sarah Johnson",
     bio: "Digital Creator · Marketing Expert\nHelping brands grow with proven strategies.",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
-    bioUrl: "bio.smmsaas.com/sarah",
+    bioUrl: "smmsaas.com/@sarah",
   });
 
   const socialLinks = [
