@@ -92,8 +92,10 @@ export function useLocalCollection<T extends { id: string | number }>(
   );
   const reset = useCallback(() => setItems(initial), [setItems, initial]);
 
-  // Keep initial default only when there was nothing yet on first mount.
+  // Seed the initial demo array ONLY for guest sessions. Signed-in users
+  // must never see synthetic demo rows leak into their real workspace.
   useEffect(() => {
+    if (!isGuestSession()) return;
     if ((store.cache as T[]).length === 0 && initial.length > 0) {
       writeStore(storageKey, initial);
     }
