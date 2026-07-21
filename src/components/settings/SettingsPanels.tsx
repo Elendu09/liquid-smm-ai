@@ -443,15 +443,27 @@ export function BillingPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 flex items-start gap-3">
-        <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-        <div className="min-w-0 text-sm">
-          <p className="font-medium">Billing is running in preview mode</p>
-          <p className="text-muted-foreground">
-            Plan, usage, invoices, and payment methods below are placeholders. Connect a payment provider (Stripe or Paddle) to enable real subscriptions, invoices, and card management.
-          </p>
+      {isGuest ? (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 flex items-start gap-3">
+          <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+          <div className="min-w-0 text-sm">
+            <p className="font-medium">Billing preview (demo mode)</p>
+            <p className="text-muted-foreground">
+              Plan, usage, invoices, and payment methods below are demo data so you can explore the UI. Sign up to activate real billing.
+            </p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
+          <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+          <div className="min-w-0 text-sm">
+            <p className="font-medium">You're on the Free plan</p>
+            <p className="text-muted-foreground">
+              Billing hasn't been enabled for your workspace yet. Upgrade to unlock higher limits, team seats, and priority publishing.
+            </p>
+          </div>
+        </div>
+      )}
 
       <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent">
         <CardHeader>
@@ -459,34 +471,38 @@ export function BillingPanel() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Crown className="w-5 h-5 text-primary" />
-                Professional plan
+                {isGuest ? "Professional plan" : "Free plan"}
               </CardTitle>
-              <CardDescription>Your current subscription</CardDescription>
+              <CardDescription>{isGuest ? "Your current subscription" : "Your current workspace tier"}</CardDescription>
             </div>
-            <Badge variant="secondary" className="bg-green-500/10 text-green-500">Active</Badge>
+            <Badge variant="secondary" className={isGuest ? "bg-green-500/10 text-green-500" : "bg-muted text-muted-foreground"}>
+              {isGuest ? "Active" : "Free"}
+            </Badge>
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex items-baseline gap-1 mb-4">
-            <span className="text-4xl font-bold">$39</span>
+            <span className="text-4xl font-bold">{isGuest ? "$39" : "$0"}</span>
             <span className="text-muted-foreground">/month</span>
-            <Badge variant="outline" className="ml-2">Billed annually</Badge>
+            {isGuest && <Badge variant="outline" className="ml-2">Billed annually</Badge>}
           </div>
-          <p className="text-sm text-muted-foreground mb-4">Next billing date: February 15, 2024</p>
+          {isGuest && <p className="text-sm text-muted-foreground mb-4">Next billing date: February 15, 2024</p>}
           <div className="flex flex-wrap gap-3">
             <Button variant="outline" asChild>
               <Link to="/pricing">
                 <Sparkles className="h-4 w-4 mr-2" />
-                Change plan
+                {isGuest ? "Change plan" : "Upgrade plan"}
               </Link>
             </Button>
-            <Button
-              variant="ghost"
-              className="text-destructive hover:text-destructive"
-              onClick={() => confirm("Cancel your subscription?") && toast.success("Subscription cancelled")}
-            >
-              Cancel subscription
-            </Button>
+            {isGuest && (
+              <Button
+                variant="ghost"
+                className="text-destructive hover:text-destructive"
+                onClick={() => confirm("Cancel your subscription?") && toast.success("Subscription cancelled")}
+              >
+                Cancel subscription
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
