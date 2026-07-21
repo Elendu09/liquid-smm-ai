@@ -298,18 +298,29 @@ export default function ContentLibraryPage() {
               </Card>
             ))}
           </div>
-          <div className="mt-4 flex justify-center">
-            <Button variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Caption Template
-            </Button>
-          </div>
+          )}
+          {captionTemplates.length > 0 && (
+            <div className="mt-4 flex justify-center">
+              <Button variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Caption Template
+              </Button>
+            </div>
+          )}
         </TabsContent>
 
         {/* Hashtag Sets Tab */}
         <TabsContent value="hashtags">
+          {hashtagSets.length === 0 ? (
+            <EmptyState
+              icon={Hash}
+              title="No hashtag sets yet"
+              description="Group your best-performing hashtags into reusable sets for quick copy-paste."
+              ctaLabel="Create hashtag set"
+            />
+          ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {mockHashtagSets.map((set) => (
+            {hashtagSets.map((set) => (
               <Card key={set.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
