@@ -14,6 +14,8 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 import { StoryTooltip, SceneCallout } from "./StoryTooltip";
+import { useGuest } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 const followerData = [
   { month: "Jan", followers: 12400, engagement: 4.2 },
