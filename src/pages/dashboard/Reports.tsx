@@ -43,6 +43,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { NewReportDialog } from "@/components/reports/NewReportDialog";
 import { ScheduleReportDialog } from "@/components/reports/ScheduleReportDialog";
@@ -330,9 +331,13 @@ export default function ReportsPage() {
             });
             if (reports.length === 0) {
               return (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No reports yet. Create your first report to get started.
-                </p>
+                <EmptyState
+                  icon={FileText}
+                  title="No reports yet"
+                  description="Generate your first report from a template or build a custom one."
+                  ctaLabel="Create report"
+                  onCta={() => { setNewTemplateId(undefined); setNewOpen(true); }}
+                />
               );
             }
             if (filtered.length === 0) {

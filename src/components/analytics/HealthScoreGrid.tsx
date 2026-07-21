@@ -2,6 +2,8 @@ import { useAccounts } from "@/contexts/AccountContext";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { CheckCircle2, AlertTriangle, XCircle, Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useGuest } from "@/hooks/useGuest";
 
 const STATUS_META = {
   active: { label: "Healthy", tone: "text-emerald-500 bg-emerald-500/10", Icon: CheckCircle2 },
@@ -12,6 +14,10 @@ const STATUS_META = {
 
 export function HealthScoreGrid() {
   const { accounts } = useAccounts();
+  const { isGuest } = useGuest();
+  if (!isGuest && accounts.length === 0) {
+    return <EmptyState variant="connect-account" />;
+  }
   const avg = accounts.length
     ? Math.round(accounts.reduce((s, a) => s + a.healthScore, 0) / accounts.length)
     : 0;
