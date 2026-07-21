@@ -8,6 +8,8 @@ import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { AnalyzeAccountDialog, type AnalysisResult } from "@/components/audience/AnalyzeAccountDialog";
 import { ExportDialog, type ExportRow } from "@/components/audience/ExportDialog";
 import { FollowerDetailsDrawer, type FollowerDetail } from "@/components/audience/FollowerDetailsDrawer";
+import { isGuestSession } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 const followerQualityData = [
   { name: "High Quality", value: 62, color: "hsl(142, 70%, 45%)" },
