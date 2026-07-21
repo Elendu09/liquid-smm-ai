@@ -80,21 +80,36 @@ export default function PublicBio() {
   const title = `${config.handle} · SMMSAAS`;
   const desc = config.bio || config.headline || "Link in bio";
 
+  useEffect(() => {
+    document.title = title;
+    const ensure = (selector: string, create: () => HTMLElement) => {
+      let el = document.head.querySelector(selector) as HTMLElement | null;
+      if (!el) {
+        el = create();
+        document.head.appendChild(el);
+      }
+      return el;
+    };
+    const setMeta = (name: string, attr: "name" | "property", content: string) => {
+      const el = ensure(`meta[${attr}="${name}"]`, () => {
+        const m = document.createElement("meta");
+        m.setAttribute(attr, name);
+        return m;
+      });
+      el.setAttribute("content", content);
+    };
+    setMeta("description", "name", desc.slice(0, 155));
+    setMeta("og:title", "property", title);
+    setMeta("og:description", "property", desc.slice(0, 155));
+    setMeta("og:type", "property", "profile");
+    if (config.avatarUrl) setMeta("og:image", "property", config.avatarUrl);
+    setMeta("twitter:card", "name", "summary");
+  }, [title, desc, config.avatarUrl]);
+
   return (
-    <>
-      <Helmet>
-        <title>{title}</title>
-        <meta name="description" content={desc.slice(0, 155)} />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={desc.slice(0, 155)} />
-        <meta property="og:type" content="profile" />
-        {config.avatarUrl && <meta property="og:image" content={config.avatarUrl} />}
-        <meta name="twitter:card" content="summary" />
-        <link rel="canonical" href={typeof window !== "undefined" ? window.location.href : ""} />
-      </Helmet>
-      <div className="min-h-screen w-full">
-        <BioPage config={config} />
-      </div>
-    </>
+    <div className="min-h-screen w-full">
+      <BioPage config={config} />
+    </div>
   );
 }
+
