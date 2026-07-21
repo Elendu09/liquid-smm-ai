@@ -101,7 +101,7 @@ async function ensureAuthMode(kind: "comment" | "dm") {
     const { data } = await supabase.auth.getSession();
     const uid = data.session?.user?.id ?? null;
     if (uid) { mode = "remote"; remoteUserId = uid; await hydrateRemote(kind, uid); }
-    else { mode = "local"; remoteUserId = null; setCache(kind, readLocal(kind)); }
+    else { mode = "local"; remoteUserId = null; setCache(kind, isGuestSession() ? readLocal(kind) : []); }
   })();
   return b.hydration;
 }
