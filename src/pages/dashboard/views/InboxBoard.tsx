@@ -10,7 +10,8 @@ import {
   type KanbanColumnDef,
 } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
-import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { useInboxMessages } from "@/hooks/useInboxMessages";
+import { isGuestSession } from "@/hooks/useGuest";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
 import { ReplyDialog } from "@/components/engage/ReplyDialog";
