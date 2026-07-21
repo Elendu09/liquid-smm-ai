@@ -63,6 +63,12 @@ export function ChartCard({
           <div className="flex items-center gap-1.5">
             <h4 className="text-xs font-semibold truncate">{card.name || METRIC_LABEL[card.metric]}</h4>
             <span className="text-[9px] uppercase tracking-wide text-muted-foreground/70">{card.viz}</span>
+            {isDemo && (
+              <span title="Demo data" className="inline-flex items-center gap-0.5 text-[9px] text-primary/70">
+                <Sparkles className="h-2.5 w-2.5" />
+              </span>
+            )}
+            {loading && <span className="text-[9px] text-muted-foreground/60">…</span>}
           </div>
           <p className="text-[10px] text-muted-foreground truncate">
             {METRIC_LABEL[card.metric]}
