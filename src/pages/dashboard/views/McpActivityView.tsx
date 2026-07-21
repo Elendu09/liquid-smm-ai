@@ -93,9 +93,11 @@ export function McpActivityView() {
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={simulate} aria-label="Log a sample MCP call">
-            <PlayCircle className="h-4 w-4 mr-1.5" /> Sample call
-          </Button>
+          {isGuestSession() && (
+            <Button variant="outline" size="sm" onClick={simulate} aria-label="Log a sample MCP call">
+              <PlayCircle className="h-4 w-4 mr-1.5" /> Sample call
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
