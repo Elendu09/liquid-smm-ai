@@ -193,7 +193,7 @@ export default function BioEditor() {
                   socials: cfg.socials as any,
                   blocks: cfg.blocks as any,
                   published: true,
-                }, { onConflict: "user_id,slug" });
+                }, { onConflict: "slug" });
                 if (error) {
                   toast.error(error.message);
                   return;
