@@ -168,6 +168,7 @@ function PostCard({
 export default function QueueBoard() {
   const [view, setView] = useViewMode("publish-queue", "kanban");
   const { posts, add, remove, update } = useScheduledPosts();
+  const { accounts } = useAccounts();
   const { drain } = useMcpInbox();
   const [search, setSearch] = useState("");
   const [scheduleOpen, setScheduleOpen] = useState(false);
