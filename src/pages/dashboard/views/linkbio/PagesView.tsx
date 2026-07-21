@@ -11,7 +11,7 @@ export default function PagesView() {
   const [copied, setCopied] = useState(false);
   const [themeId] = useState(loadActiveThemeId());
   const theme = linkBioThemes.find((t) => t.id === themeId) ?? linkBioThemes[0];
-  const bioUrl = "bio.smmsaas.com/yourhandle";
+  const bioUrl = "smmsaas.com/@yourhandle";
 
   const copy = () => {
     navigator.clipboard.writeText(`https://${bioUrl}`);
