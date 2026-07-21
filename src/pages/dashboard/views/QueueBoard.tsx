@@ -257,7 +257,19 @@ export default function QueueBoard() {
         }
       />
 
-      {view === "kanban" ? (
+      {posts.length === 0 ? (
+        accounts.length === 0 ? (
+          <EmptyState variant="connect-account" />
+        ) : (
+          <EmptyState
+            variant="create-first"
+            title="Your queue is empty"
+            description="Schedule your first post to see it flow through queued → sending → completed."
+            ctaLabel="Schedule post"
+            onCta={() => setScheduleOpen(true)}
+          />
+        )
+      ) : view === "kanban" ? (
         <KanbanBoard<ScheduledPost, Column>
           columns={columns}
           items={filtered}
