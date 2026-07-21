@@ -1,5 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Users } from "lucide-react";
+import { useGuest } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 const AGE_DATA = [
   { name: "18-24", value: 28, color: "hsl(var(--primary))" },
@@ -24,12 +26,23 @@ const GEO = [
 ];
 
 export function AudienceMix() {
+  const { isGuest } = useGuest();
   return (
     <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm p-4">
       <header className="flex items-center gap-2 mb-3">
         <Users className="h-4 w-4 text-primary" />
         <h3 className="text-base font-semibold">Audience mix</h3>
       </header>
+      {!isGuest ? (
+        <EmptyState
+          icon={Users}
+          title="Audience demographics coming soon"
+          description="Age, gender, and geography insights appear once your connected platforms return audience data."
+          ctaLabel="Connect account"
+          ctaHref="/dashboard/settings/connected"
+          compact
+        />
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <p className="text-xs text-muted-foreground mb-2">Age distribution</p>
@@ -90,6 +103,7 @@ export function AudienceMix() {
           </div>
         </div>
       </div>
+      )}
     </section>
   );
 }

@@ -32,7 +32,7 @@ export function CompetitorBenchmarkCard() {
       .slice(0, 5)
       .map((c) => {
         const match = c.subtitle?.match(/(\d+(?:\.\d+)?)\s*x?\s*\/?\s*wk/i);
-        const weekly = match ? parseFloat(match[1]) : Math.max(1, Math.round(Math.random() * 5) + 1);
+        const weekly = match ? parseFloat(match[1]) : 0;
         return { id: c.id, name: c.title, weekly };
       });
 

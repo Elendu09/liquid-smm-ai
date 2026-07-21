@@ -14,6 +14,8 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 import { StoryTooltip, SceneCallout } from "./StoryTooltip";
+import { useGuest } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 const followerData = [
   { month: "Jan", followers: 12400, engagement: 4.2 },
@@ -139,12 +141,37 @@ const tooltipStyle = {
 };
 
 export function GrowthStory() {
+  const { isGuest } = useGuest();
   const jump = useMemo(findBiggestJump, []);
   const projected = useMemo(() => project(6), []);
   const start = followerData[0];
   const now = followerData[followerData.length - 1];
   const growthPct = Math.round(((now.followers - start.followers) / start.followers) * 100);
   const jumpPoint = followerData[jump.index];
+
+  if (!isGuest) {
+    return (
+      <div className="rounded-2xl border border-border/40 bg-gradient-to-b from-muted/20 via-background to-background overflow-hidden">
+        <div className="p-6 md:p-10 border-b border-border/40">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Your growth story</h2>
+          <p className="text-muted-foreground mt-2 max-w-2xl">
+            A scroll-through of how your presence evolves once you have at least a few months of follower and
+            engagement history to look back on.
+          </p>
+        </div>
+        <div className="p-6 md:p-10">
+          <EmptyState
+            icon={TrendingUp}
+            title="Not enough history yet"
+            description="Connect an account and let a few weeks of follower and engagement data accumulate — we'll narrate the story here."
+            ctaLabel="Connect account"
+            ctaHref="/dashboard/settings/connected"
+          />
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="rounded-2xl border border-border/40 bg-gradient-to-b from-muted/20 via-background to-background overflow-hidden">

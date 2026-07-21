@@ -35,7 +35,11 @@ import {
 import { AddCompetitorDialog, type NewCompetitorInput } from "@/components/audience/AddCompetitorDialog";
 import { CompareCompetitorDialog, type CompareStats } from "@/components/audience/CompareCompetitorDialog";
 
+import { useGuest } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
+
 const CompetitorTracker = () => {
+  const { isGuest } = useGuest();
   const [addOpen, setAddOpen] = useState(false);
   const [compareTarget, setCompareTarget] = useState<CompareStats | null>(null);
   const [removeTarget, setRemoveTarget] = useState<{ id: number; username: string } | null>(null);
@@ -155,6 +159,20 @@ const CompetitorTracker = () => {
     URL.revokeObjectURL(url);
     toast.success("CSV exported");
   };
+
+  if (!isGuest) {
+    return (
+      <div className="p-4 md:p-6">
+        <EmptyState
+          icon={Users}
+          title="Competitor tracking is on the way"
+          description="Add competitor handles from the Audience hub to start benchmarking followers, engagement, and posting cadence with live data."
+          ctaLabel="Go to Audience"
+          ctaHref="/dashboard/audience"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

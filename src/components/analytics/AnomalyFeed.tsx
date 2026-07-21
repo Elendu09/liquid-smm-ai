@@ -1,7 +1,11 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Zap, TrendingDown, TrendingUp, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAccounts } from "@/contexts/AccountContext";
+import { useGuest } from "@/hooks/useGuest";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { supabase } from "@/integrations/supabase/client";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 type Severity = "info" | "warning" | "critical" | "success";
 
@@ -29,10 +33,62 @@ const TONE: Record<Severity, string> = {
   success: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
 };
 
+function relTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60_000);
+  if (m < 1) return "Just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
+}
+
 export function AnomalyFeed() {
   const { accounts } = useAccounts();
+  const { isGuest } = useGuest();
+  const { user } = useAuthUser();
+  const [remote, setRemote] = useState<Anomaly[] | null>(null);
+
+  useEffect(() => {
+    if (isGuest || !user) { setRemote(null); return; }
+    let cancelled = false;
+    (async () => {
+      const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+      const { data } = await supabase
+        .from("notifications")
+        .select("id, title, message, severity, type, created_at, metric")
+        .eq("user_id", user.id)
+        .in("type", ["engagement", "viral", "health", "milestone", "system"])
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(8);
+      if (cancelled) return;
+      const mapped: Anomaly[] = (data ?? []).map((n) => {
+        const sev: Severity =
+          n.severity === "critical" ? "critical" :
+          n.severity === "warning" ? "warning" :
+          n.type === "viral" ? "success" : "info";
+        const metricObj = (n.metric ?? {}) as Record<string, unknown>;
+        const delta = typeof metricObj.delta === "number" ? metricObj.delta : undefined;
+        return {
+          id: n.id,
+          severity: sev,
+          title: n.title,
+          detail: n.message ?? "",
+          when: relTime(n.created_at),
+          metric: typeof metricObj.metric === "string" ? metricObj.metric : undefined,
+          delta,
+        };
+      });
+      setRemote(mapped);
+    })();
+    return () => { cancelled = true; };
+  }, [isGuest, user]);
 
   const anomalies = useMemo<Anomaly[]>(() => {
+    if (!isGuest) return remote ?? [];
+    // Guest / demo synth only.
     const out: Anomaly[] = [];
     accounts.forEach((a, i) => {
       if (a.status === "error") {
@@ -75,7 +131,7 @@ export function AnomalyFeed() {
       when: "18m ago",
     });
     return out.slice(0, 8);
-  }, [accounts]);
+  }, [isGuest, remote, accounts]);
 
   return (
     <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm">
@@ -86,33 +142,41 @@ export function AnomalyFeed() {
         </div>
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground">last 24h</span>
       </header>
-      <ul className="divide-y divide-border/50">
-        {anomalies.map((a) => {
-          const Icon = ICONS[a.severity];
-          return (
-            <li key={a.id} className="flex items-start gap-3 px-4 py-3">
-              <span className={cn("mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-lg border shrink-0", TONE[a.severity])}>
-                <Icon className="h-3.5 w-3.5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{a.title}</p>
-                <p className="text-[11px] text-muted-foreground line-clamp-2">{a.detail}</p>
-              </div>
-              <div className="text-right shrink-0">
-                {a.delta != null && (
-                  <span className={cn("text-xs font-semibold tabular-nums", a.delta >= 0 ? "text-emerald-500" : "text-rose-500")}>
-                    {a.delta >= 0 ? "+" : ""}{a.delta}%
-                  </span>
-                )}
-                <p className="text-[10px] text-muted-foreground">{a.when}</p>
-              </div>
-            </li>
-          );
-        })}
-        {anomalies.length === 0 && (
-          <li className="p-6 text-center text-xs text-muted-foreground">All quiet — no anomalies detected.</li>
-        )}
-      </ul>
+      {anomalies.length === 0 ? (
+        <div className="p-4">
+          <EmptyState
+            icon={ShieldAlert}
+            title="No anomalies detected"
+            description="Viral spikes, engagement dips, and platform incidents from the last 24 hours will show up here."
+            compact
+          />
+        </div>
+      ) : (
+        <ul className="divide-y divide-border/50">
+          {anomalies.map((a) => {
+            const Icon = ICONS[a.severity];
+            return (
+              <li key={a.id} className="flex items-start gap-3 px-4 py-3">
+                <span className={cn("mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-lg border shrink-0", TONE[a.severity])}>
+                  <Icon className="h-3.5 w-3.5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">{a.title}</p>
+                  <p className="text-[11px] text-muted-foreground line-clamp-2">{a.detail}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  {a.delta != null && (
+                    <span className={cn("text-xs font-semibold tabular-nums", a.delta >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                      {a.delta >= 0 ? "+" : ""}{a.delta}%
+                    </span>
+                  )}
+                  <p className="text-[10px] text-muted-foreground">{a.when}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </section>
   );
 }
