@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Target, Plus, Copy, Zap, Trash2, X, Eye } from "lucide-react";
