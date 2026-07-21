@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isGuestSession } from "@/hooks/useGuest";
 import type { InboxItem } from "@/pages/dashboard/views/InboxBoard";
 
 /**
@@ -41,9 +42,16 @@ type Bucket = {
   hydration: Promise<void> | null;
 };
 const buckets: Record<"comment" | "dm", Bucket> = {
-  comment: { cache: readLocal("comment"), listeners: new Set(), channel: null, hydration: null },
-  dm: { cache: readLocal("dm"), listeners: new Set(), channel: null, hydration: null },
+  comment: { cache: initialCache("comment"), listeners: new Set(), channel: null, hydration: null },
+  dm: { cache: initialCache("dm"), listeners: new Set(), channel: null, hydration: null },
 };
+
+function initialCache(kind: "comment" | "dm"): InboxItem[] {
+  // Real users must never see the demo seed / stale guest localStorage.
+  if (typeof window === "undefined") return [];
+  if (!isGuestSession()) return [];
+  return readLocal(kind);
+}
 
 let mode: "local" | "remote" = "local";
 let remoteUserId: string | null = null;
@@ -93,7 +101,7 @@ async function ensureAuthMode(kind: "comment" | "dm") {
     const { data } = await supabase.auth.getSession();
     const uid = data.session?.user?.id ?? null;
     if (uid) { mode = "remote"; remoteUserId = uid; await hydrateRemote(kind, uid); }
-    else { mode = "local"; remoteUserId = null; setCache(kind, readLocal(kind)); }
+    else { mode = "local"; remoteUserId = null; setCache(kind, isGuestSession() ? readLocal(kind) : []); }
   })();
   return b.hydration;
 }
@@ -110,7 +118,7 @@ if (typeof window !== "undefined") {
         mode = "local"; remoteUserId = null;
         if (b.channel) { supabase.removeChannel(b.channel); b.channel = null; }
         b.hydration = null;
-        setCache(kind, readLocal(kind));
+        setCache(kind, isGuestSession() ? readLocal(kind) : []);
       }
     });
     if (!uid) { mode = "local"; remoteUserId = null; }
