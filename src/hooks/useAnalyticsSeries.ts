@@ -4,8 +4,16 @@ import { useGuest } from "@/hooks/useGuest";
 import { useAccounts } from "@/contexts/AccountContext";
 import { resolveMetric, type MetricId } from "@/hooks/useCustomReports";
 
-export type RangeKey = "7D" | "30D" | "90D" | "1Y";
-export const RANGE_DAYS: Record<RangeKey, number> = { "7D": 7, "30D": 30, "90D": 90, "1Y": 365 };
+export type RangeKey = "1D" | "7D" | "30D" | "90D" | "1Y";
+export const RANGE_DAYS: Record<RangeKey, number> = { "1D": 1, "7D": 7, "30D": 30, "90D": 90, "1Y": 365 };
+export type Granularity = "hour" | "day" | "week";
+export const RANGE_GRANULARITY: Record<RangeKey, Granularity> = {
+  "1D": "hour",
+  "7D": "day",
+  "30D": "day",
+  "90D": "day",
+  "1Y": "week",
+};
 
 export type SeriesPoint = { date: string; value: number };
 export type SeriesResult = {
