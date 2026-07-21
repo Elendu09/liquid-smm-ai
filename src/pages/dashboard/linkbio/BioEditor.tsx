@@ -87,7 +87,7 @@ export default function BioEditor() {
       <aside className="w-16 md:w-52 shrink-0 border-r border-border/50 bg-card/40 flex flex-col">
         <div className="p-3 border-b border-border/50 hidden md:block">
           <p className="text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Bio Editor</p>
-          <p className="text-xs font-semibold truncate mt-0.5">bio.smmsaas.com/{cfg.slug}</p>
+          <p className="text-xs font-semibold truncate mt-0.5">smmsaas.com/@{cfg.slug}</p>
         </div>
         <nav className="flex-1 p-2 space-y-0.5">
           {railItems.map((r) => {
