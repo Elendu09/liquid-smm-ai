@@ -14,6 +14,10 @@ const STATUS_META = {
 
 export function HealthScoreGrid() {
   const { accounts } = useAccounts();
+  const { isGuest } = useGuest();
+  if (!isGuest && accounts.length === 0) {
+    return <EmptyState variant="connect-account" />;
+  }
   const avg = accounts.length
     ? Math.round(accounts.reduce((s, a) => s + a.healthScore, 0) / accounts.length)
     : 0;
