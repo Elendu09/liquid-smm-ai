@@ -1,26 +1,12 @@
-import { useMemo } from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, YAxis } from "recharts";
-import { useAccounts } from "@/contexts/AccountContext";
-import { resolveMetric } from "@/hooks/useCustomReports";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
-import type { RangeKey } from "./KpiHero";
-import { RANGE_DAYS } from "./KpiHero";
+import { useAccountSeries, type RangeKey } from "@/hooks/useAnalyticsSeries";
 
 export function PlatformBreakdown({ range }: { range: RangeKey }) {
-  const { accounts } = useAccounts();
-  const days = RANGE_DAYS[range];
-
-  const rows = useMemo(() => {
-    return accounts.map((a) => {
-      const trend = resolveMetric("followers", days, Math.max(500, a.followers / 10));
-      const first = trend[0]?.value ?? 0;
-      const last = trend[trend.length - 1]?.value ?? 0;
-      const delta = first ? ((last - first) / first) * 100 : 0;
-      return { account: a, trend, delta };
-    });
-  }, [accounts, days]);
+  const rows = useAccountSeries("followers", range);
+  const accounts = rows.map((r) => r.account);
 
   return (
     <section className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm">
