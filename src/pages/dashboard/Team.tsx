@@ -165,7 +165,11 @@ export default function TeamPage() {
   };
 
   const copyLink = async (m: TeamMember) => {
-    const link = `${window.location.origin}/join?t=${m.inviteToken ?? m.id}`;
+    if (!m.inviteToken) {
+      toast.error("Invite token missing — resend the invite to generate a new one");
+      return;
+    }
+    const link = `${window.location.origin}/invite/${m.inviteToken}`;
     try {
       await navigator.clipboard.writeText(link);
       toast.success("Invite link copied");
