@@ -37,7 +37,7 @@ function buildSamples(rule: Rule): Sample[] {
       matched = /@/.test(p.content);
       reason = matched ? "mention detected" : "no mention";
     } else {
-      matched = Math.random() > 0.4;
+      matched = Math.random() > 0.4; // synth-ok: rule-test simulator
       reason = matched ? "generic trigger match" : "trigger conditions not met";
     }
     return { ...p, matched, reason };
