@@ -17,6 +17,7 @@ import { UploadAssetDialog } from "@/components/library/UploadAssetDialog";
 import { EditAssetDialog } from "@/components/library/EditAssetDialog";
 import { AssetVersionsDialog } from "@/components/library/AssetVersionsDialog";
 import { assetVersionsApi, getVersionCount } from "@/hooks/useAssetVersions";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { cn } from "@/lib/utils";
 
 interface Asset {
@@ -212,13 +213,10 @@ export default function AssetsBoard() {
       )}
 
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border/60 p-10 text-center">
-          <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" strokeWidth={1.5} />
-          <p className="text-sm font-medium">No assets yet</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Drag & drop files anywhere, upload, or paste URLs to build your library.
-          </p>
-        </div>
+        <EmptyState
+          variant="upload-asset"
+          onCta={() => { setDroppedFile(null); setUpload(true); }}
+        />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {filtered.map((a) => {
