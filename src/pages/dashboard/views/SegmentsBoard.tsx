@@ -30,6 +30,9 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { useAudienceSegments, type AudienceSegment } from "@/hooks/useAudienceSegments";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkActionBar } from "@/components/shared/BulkActionBar";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { cn } from "@/lib/utils";
 
 type SegmentStatus = "active" | "testing" | "paused";
@@ -145,6 +148,7 @@ export default function SegmentsBoard() {
   const [runSegmentId, setRunSegmentId] = useState<string | null>(null);
   const [runMulti, setRunMulti] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Segment | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
 
   const filtered = useMemo(
