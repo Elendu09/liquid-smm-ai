@@ -31,6 +31,7 @@ import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useAccounts } from "@/contexts/AccountContext";
 import { NewPostDialog } from "@/components/create/NewPostDialog";
 import { cn } from "@/lib/utils";
+import { isGuestSession } from "@/hooks/useGuest";
 
 
 type DraftStatus = "draft" | "review" | "scheduled";
