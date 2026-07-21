@@ -163,11 +163,19 @@ export default function ContentLibraryPage() {
 
         {/* Media Assets Tab */}
         <TabsContent value="media">
+          {assets.length === 0 ? (
+            <EmptyState
+              icon={Image}
+              title="No media assets yet"
+              description="Upload your first image or video to start building your library."
+              ctaLabel="Upload asset"
+            />
+          ) : (
           <div className={cn(
             "grid gap-4",
             viewMode === "grid" ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"
           )}>
-            {mockAssets.map((asset) => (
+            {assets.map((asset) => (
               <Card key={asset.id} className={cn("overflow-hidden group", viewMode === "list" && "flex")}>
                 <div className={cn(
                   "relative bg-muted",
