@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Target, Plus, Copy, Zap, Trash2, X, Eye } from "lucide-react";
@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
-import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { useAudienceSegments, type AudienceSegment } from "@/hooks/useAudienceSegments";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
 
@@ -71,8 +71,8 @@ export interface Segment {
   status: SegmentStatus;
   niche?: string;
   platforms: string[];
-  followerBucket: (typeof FOLLOWER_BUCKETS)[number]["id"];
-  engagementBucket: (typeof ENGAGEMENT_BUCKETS)[number]["id"];
+  followerBucket: string;
+  engagementBucket: string;
   keywords: string[];
   createdAt: string;
 }
@@ -137,9 +137,8 @@ function estimatedSize(s: Segment): string {
 }
 
 export default function SegmentsBoard() {
-  
   const [view, setView] = useViewMode("audience-segments", "kanban");
-  const { items, setItems, add, update, remove } = useLocalCollection<Segment>("audience", "segments");
+  const { items, add, update, remove } = useAudienceSegments();
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Segment | null>(null);
   const [previewing, setPreviewing] = useState<Segment | null>(null);
@@ -147,11 +146,6 @@ export default function SegmentsBoard() {
   const [runMulti, setRunMulti] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Segment | null>(null);
   const [newOpen, setNewOpen] = useState(false);
-
-  useEffect(() => {
-    if (items.length === 0) setItems(seed);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const filtered = useMemo(
     () =>
