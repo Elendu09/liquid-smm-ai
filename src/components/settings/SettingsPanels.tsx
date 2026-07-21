@@ -380,19 +380,25 @@ function download(name: string, contents: string, type = "text/plain") {
 }
 
 export function BillingPanel() {
-  const usage = [
+  const { isGuest } = useGuest();
+  const usage = isGuest ? [
     { label: "Scheduled posts", used: 148, cap: 200, unit: "posts / mo" },
     { label: "AI credits", used: 720, cap: 1000, unit: "credits / mo" },
     { label: "Connected accounts", used: 3, cap: 5, unit: "accounts" },
     { label: "Team seats", used: 4, cap: 10, unit: "seats" },
+  ] : [
+    { label: "Scheduled posts", used: 0, cap: 0, unit: "posts / mo" },
+    { label: "AI credits", used: 0, cap: 0, unit: "credits / mo" },
+    { label: "Connected accounts", used: 0, cap: 0, unit: "accounts" },
+    { label: "Team seats", used: 0, cap: 0, unit: "seats" },
   ];
 
   const { items: methods, setItems: setMethods, remove: removeMethod } = useLocalCollection<PaymentMethodRecord>(
     "settings",
     "payment-methods",
-    seedMethods,
+    isGuest ? seedMethods : [],
   );
-  const { items: invoices } = useLocalCollection<Invoice>("settings", "invoices", seedInvoices);
+  const { items: invoices } = useLocalCollection<Invoice>("settings", "invoices", isGuest ? seedInvoices : []);
 
   const [pmOpen, setPmOpen] = useState(false);
   const [editing, setEditing] = useState<PaymentMethodRecord | null>(null);
