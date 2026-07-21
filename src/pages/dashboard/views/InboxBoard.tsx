@@ -178,6 +178,7 @@ interface InboxBoardProps {
 export function InboxBoard({ kind, title, description }: InboxBoardProps) {
   const [view, setView] = useViewMode(`engage-${kind}`, "kanban");
   const { items, setItems, update } = useInboxMessages(kind);
+  const { accounts } = useAccounts();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InboxStatus | "all">("all");
   const [variants, setVariants] = useState<Record<string, number>>({});
