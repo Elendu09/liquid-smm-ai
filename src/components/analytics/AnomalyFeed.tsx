@@ -1,7 +1,11 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Zap, TrendingDown, TrendingUp, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAccounts } from "@/contexts/AccountContext";
+import { useGuest } from "@/hooks/useGuest";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { supabase } from "@/integrations/supabase/client";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 type Severity = "info" | "warning" | "critical" | "success";
 
