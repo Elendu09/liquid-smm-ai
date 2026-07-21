@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useGuest } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { 
   FileText, 
   Image, 
@@ -82,8 +84,12 @@ const mockHashtagSets: HashtagSet[] = [
 ];
 
 export default function ContentLibraryPage() {
+  const { isGuest } = useGuest();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
+  const assets = useMemo(() => (isGuest ? mockAssets : []), [isGuest]);
+  const captionTemplates = useMemo(() => (isGuest ? mockCaptionTemplates : []), [isGuest]);
+  const hashtagSets = useMemo(() => (isGuest ? mockHashtagSets : []), [isGuest]);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
