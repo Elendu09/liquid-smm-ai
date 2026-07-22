@@ -156,10 +156,10 @@ export function Hero() {
             id="hero-heading"
             className="font-['Instrument_Serif'] font-normal leading-[0.92] tracking-tight text-foreground text-[clamp(3rem,9vw,7.5rem)]"
           >
-            Automate <span className="italic text-primary">80%</span>
+            Automate <span className="italic text-rainbow">80%</span>
             <br />
-            of your social <span className="italic">media</span> work
-            <span className="text-primary">.</span>
+            of your social <span className="italic text-rainbow">media</span> work
+            <span className="text-rainbow">.</span>
           </h1>
 
           <p className="mx-auto mt-8 mb-10 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
