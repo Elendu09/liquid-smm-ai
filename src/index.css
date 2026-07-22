@@ -202,14 +202,14 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-brand-purple to-brand-pink;
   }
 
-  /* Rainbow accent for italic serif words (pink → purple → cyan) */
+  /* Rainbow accent for italic serif words (cyan → purple → pink) */
   .text-rainbow {
     background-image: linear-gradient(
       100deg,
-      hsl(var(--brand-pink)) 0%,
-      hsl(var(--brand-purple)) 45%,
-      hsl(var(--brand-blue-glow)) 75%,
-      hsl(var(--brand-cyan)) 100%
+      hsl(var(--brand-cyan)) 0%,
+      hsl(var(--brand-blue-glow)) 25%,
+      hsl(var(--brand-purple)) 55%,
+      hsl(var(--brand-pink)) 100%
     );
     -webkit-background-clip: text;
     background-clip: text;
@@ -222,9 +222,9 @@
   .btn-rainbow {
     background-image: linear-gradient(
       100deg,
-      hsl(var(--brand-pink)) 0%,
+      hsl(var(--brand-cyan)) 0%,
       hsl(var(--brand-purple)) 50%,
-      hsl(var(--brand-cyan)) 100%
+      hsl(var(--brand-pink)) 100%
     );
     background-size: 200% 100%;
     color: hsl(0 0% 100%);
@@ -233,8 +233,9 @@
   }
   .btn-rainbow:hover {
     background-position: 100% 0;
-    box-shadow: 0 14px 40px -8px hsl(var(--brand-pink) / 0.6);
+    box-shadow: 0 14px 40px -8px hsl(var(--brand-cyan) / 0.6);
   }
+
 
   /* Background patterns */
   .bg-dots {
@@ -439,6 +440,12 @@
   .animate-bounce-subtle {
     animation: bounce-subtle 2s ease-in-out infinite;
   }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-33.3333%); }
+  }
+
 }
 
 @layer utilities {
