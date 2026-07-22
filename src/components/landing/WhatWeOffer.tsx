@@ -49,7 +49,7 @@ export function WhatWeOffer() {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— What we offer</p>
           <h2 className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
-            Tailored solutions for <span className="italic text-primary">every</span> need.
+            Tailored solutions for <span className="italic text-rainbow">every</span> need.
           </h2>
           <p className="mt-6 text-base sm:text-lg text-muted-foreground">
             Whether you're a solo creator or a large agency, we have the tools to accelerate your growth.

@@ -18,7 +18,7 @@ export function ServicesSection() {
           <div className="lg:col-span-7">
             <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— Our services</p>
             <h2 className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight text-foreground">
-              Everything you need to <span className="italic text-primary">dominate</span> social media.
+              Everything you need to <span className="italic text-rainbow">dominate</span> social media.
             </h2>
           </div>
           <div className="lg:col-span-5 lg:pl-8 lg:border-l lg:border-white/10">

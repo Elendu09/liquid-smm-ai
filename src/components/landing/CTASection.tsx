@@ -38,7 +38,7 @@ export function CTASection() {
               className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl xl:text-8xl leading-[0.92] tracking-tight"
             >
               Ready to automate your
-              <span className="italic text-primary"> social media growth</span>?
+              <span className="italic text-rainbow"> social media growth</span>?
             </h2>
           </div>
 
