@@ -264,14 +264,21 @@ export function Hero() {
               >
                 <defs>
                   <linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-                    <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="0.9" />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                    <stop offset="0%" stopColor="hsl(var(--brand-pink))" stopOpacity="0" />
+                    <stop offset="30%" stopColor="hsl(var(--brand-pink))" stopOpacity="0.9" />
+                    <stop offset="60%" stopColor="hsl(var(--brand-purple))" stopOpacity="0.9" />
+                    <stop offset="100%" stopColor="hsl(var(--brand-cyan))" stopOpacity="0" />
                   </linearGradient>
                   <radialGradient id="orbGrad" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.55" />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                    <stop offset="0%" stopColor="hsl(var(--brand-purple))" stopOpacity="0.55" />
+                    <stop offset="60%" stopColor="hsl(var(--brand-pink))" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="hsl(var(--brand-cyan))" stopOpacity="0" />
                   </radialGradient>
+                  <linearGradient id="tickGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="hsl(var(--brand-pink))" />
+                    <stop offset="50%" stopColor="hsl(var(--brand-purple))" />
+                    <stop offset="100%" stopColor="hsl(var(--brand-cyan))" />
+                  </linearGradient>
                 </defs>
                 <circle cx="400" cy="225" r="220" fill="url(#orbGrad)" />
                 {[0, 1, 2].map((i) => (
