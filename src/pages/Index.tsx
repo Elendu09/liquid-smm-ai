@@ -10,6 +10,7 @@ import { FAQSection } from "@/components/landing/FAQSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { PillarsSection } from "@/components/landing/PillarsSection";
 import { SolutionsGrid } from "@/components/landing/SolutionsGrid";
+import { AnimatedStatsBanner } from "@/components/landing/AnimatedStatsBanner";
 
 const Index = () => {
   return (
@@ -19,11 +20,15 @@ const Index = () => {
       <main>
         {/* Hero Section */}
         <Hero />
-        
+
+        {/* Animated Stats Banner */}
+        <AnimatedStatsBanner />
+
         {/* Services Section */}
         <section id="services">
           <ServicesSection />
         </section>
+
         
         {/* Tools Showcase */}
         <section id="tools">
