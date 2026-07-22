@@ -331,7 +331,7 @@ export function Hero() {
               {/* Bottom caption strip */}
               <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 bg-black/40 px-5 py-3 backdrop-blur">
                 <div className="font-['Instrument_Serif'] text-xl leading-none text-foreground">
-                  See the panel in <span className="italic text-primary">motion</span>
+                  See the panel in <span className="italic text-rainbow">motion</span>
                 </div>
                 <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                   <span>AI Captions</span>
