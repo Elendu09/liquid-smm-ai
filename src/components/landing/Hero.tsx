@@ -309,8 +309,8 @@ export function Hero() {
                     y1={410}
                     x2={i * 20}
                     y2={410 - ((i * 37) % 40) - 6}
-                    stroke="hsl(var(--primary))"
-                    strokeOpacity={0.35}
+                    stroke="url(#tickGrad)"
+                    strokeOpacity={0.7}
                     strokeWidth={2}
                   />
                 ))}
