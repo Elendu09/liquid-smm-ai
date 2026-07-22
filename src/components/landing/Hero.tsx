@@ -171,7 +171,7 @@ export function Hero() {
             <Link to="/dashboard" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="h-12 w-full min-h-11 rounded-full px-8 text-sm font-semibold uppercase tracking-[0.15em] shadow-[0_0_24px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_32px_hsl(var(--primary)/0.55)] sm:w-auto"
+                className="btn-rainbow h-12 w-full min-h-11 rounded-full px-8 text-sm font-semibold uppercase tracking-[0.15em] border-0 sm:w-auto"
               >
                 Start free trial
                 <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
