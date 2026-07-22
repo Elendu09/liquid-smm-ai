@@ -248,7 +248,7 @@ export function Hero() {
                 <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
               </div>
               <div className="font-['Instrument_Serif'] text-lg leading-none text-muted-foreground">
-                smmsaas<span className="italic text-primary">.</span>studio
+                smmsaas<span className="italic text-rainbow">.</span>studio
               </div>
               <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Live</span>
             </div>
