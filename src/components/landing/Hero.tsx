@@ -357,23 +357,30 @@ export function Hero() {
         </div>
 
 
-        <div className="mt-16 flex flex-col items-center gap-4">
+        <div className="mt-16 flex w-full flex-col items-center gap-6">
           <span className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
             Works with all major platforms
           </span>
-          <ul className="flex flex-wrap items-center justify-center gap-6">
-            {platforms.map((p) => (
-              <li
-                key={p.name}
-                className="text-muted-foreground opacity-70 transition-all hover:scale-110 hover:opacity-100 hover:text-foreground"
-                title={p.name}
-              >
-                <span className="sr-only">{p.name}</span>
-                <p.Icon />
-              </li>
-            ))}
-          </ul>
+          <div
+            className="group relative w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
+            aria-hidden="true"
+          >
+            <div className="flex w-max animate-[marquee_35s_linear_infinite] gap-10 pr-10 group-hover:[animation-play-state:paused]">
+              {[...platforms, ...platforms, ...platforms].map((p, i) => (
+                <div
+                  key={`${p.name}-${i}`}
+                  className="flex shrink-0 items-center gap-3 rounded-full border border-white/10 bg-white/[0.03] px-5 py-2.5 text-muted-foreground backdrop-blur-sm transition-colors hover:border-white/20 hover:text-foreground"
+                >
+                  <p.Icon />
+                  <span className="font-['Instrument_Serif'] text-xl leading-none">
+                    {p.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
+
       </div>
     </section>
   );
