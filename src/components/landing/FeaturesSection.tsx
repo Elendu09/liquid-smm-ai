@@ -19,7 +19,7 @@ export function FeaturesSection() {
           <div className="lg:col-span-7">
             <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— Key features</p>
             <h2 className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
-              Built for <span className="italic text-primary">modern</span> marketers.
+              Built for <span className="italic text-rainbow">modern</span> marketers.
             </h2>
           </div>
           <div className="lg:col-span-5 lg:pl-8 lg:border-l lg:border-white/10">

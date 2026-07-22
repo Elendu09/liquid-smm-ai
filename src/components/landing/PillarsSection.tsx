@@ -17,7 +17,7 @@ export function PillarsSection() {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— Why teams pick SMMSAAS</p>
           <h2 className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
-            Six pillars. <span className="italic text-primary">One</span> unfair advantage.
+            Six pillars. <span className="italic text-rainbow">One</span> unfair advantage.
           </h2>
           <p className="mt-6 text-base sm:text-lg text-muted-foreground">
             Every promise below is wired to a real surface in the app — click through to see it live.

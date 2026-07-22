@@ -19,7 +19,7 @@ export function ToolsShowcase() {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— Powerful tools</p>
           <h2 className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
-            Your complete <span className="italic text-primary">SMM toolkit.</span>
+            Your complete <span className="italic text-rainbow">SMM toolkit.</span>
           </h2>
           <p className="mt-6 text-base sm:text-lg text-muted-foreground">
             Everything you need to manage, grow, and analyze your social media presence — all in one place.

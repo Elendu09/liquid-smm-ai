@@ -156,10 +156,10 @@ export function Hero() {
             id="hero-heading"
             className="font-['Instrument_Serif'] font-normal leading-[0.92] tracking-tight text-foreground text-[clamp(3rem,9vw,7.5rem)]"
           >
-            Automate <span className="italic text-primary">80%</span>
+            Automate <span className="italic text-rainbow">80%</span>
             <br />
-            of your social <span className="italic">media</span> work
-            <span className="text-primary">.</span>
+            of your social <span className="italic text-rainbow">media</span> work
+            <span className="text-rainbow">.</span>
           </h1>
 
           <p className="mx-auto mt-8 mb-10 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
@@ -171,7 +171,7 @@ export function Hero() {
             <Link to="/dashboard" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="h-12 w-full min-h-11 rounded-full px-8 text-sm font-semibold uppercase tracking-[0.15em] shadow-[0_0_24px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_32px_hsl(var(--primary)/0.55)] sm:w-auto"
+                className="btn-rainbow h-12 w-full min-h-11 rounded-full px-8 text-sm font-semibold uppercase tracking-[0.15em] border-0 sm:w-auto"
               >
                 Start free trial
                 <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
@@ -248,7 +248,7 @@ export function Hero() {
                 <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
               </div>
               <div className="font-['Instrument_Serif'] text-lg leading-none text-muted-foreground">
-                smmsaas<span className="italic text-primary">.</span>studio
+                smmsaas<span className="italic text-rainbow">.</span>studio
               </div>
               <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Live</span>
             </div>
@@ -264,14 +264,21 @@ export function Hero() {
               >
                 <defs>
                   <linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-                    <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="0.9" />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                    <stop offset="0%" stopColor="hsl(var(--brand-pink))" stopOpacity="0" />
+                    <stop offset="30%" stopColor="hsl(var(--brand-pink))" stopOpacity="0.9" />
+                    <stop offset="60%" stopColor="hsl(var(--brand-purple))" stopOpacity="0.9" />
+                    <stop offset="100%" stopColor="hsl(var(--brand-cyan))" stopOpacity="0" />
                   </linearGradient>
                   <radialGradient id="orbGrad" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.55" />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                    <stop offset="0%" stopColor="hsl(var(--brand-purple))" stopOpacity="0.55" />
+                    <stop offset="60%" stopColor="hsl(var(--brand-pink))" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="hsl(var(--brand-cyan))" stopOpacity="0" />
                   </radialGradient>
+                  <linearGradient id="tickGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="hsl(var(--brand-pink))" />
+                    <stop offset="50%" stopColor="hsl(var(--brand-purple))" />
+                    <stop offset="100%" stopColor="hsl(var(--brand-cyan))" />
+                  </linearGradient>
                 </defs>
                 <circle cx="400" cy="225" r="220" fill="url(#orbGrad)" />
                 {[0, 1, 2].map((i) => (
@@ -302,8 +309,8 @@ export function Hero() {
                     y1={410}
                     x2={i * 20}
                     y2={410 - ((i * 37) % 40) - 6}
-                    stroke="hsl(var(--primary))"
-                    strokeOpacity={0.35}
+                    stroke="url(#tickGrad)"
+                    strokeOpacity={0.7}
                     strokeWidth={2}
                   />
                 ))}
@@ -331,7 +338,7 @@ export function Hero() {
               {/* Bottom caption strip */}
               <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 bg-black/40 px-5 py-3 backdrop-blur">
                 <div className="font-['Instrument_Serif'] text-xl leading-none text-foreground">
-                  See the panel in <span className="italic text-primary">motion</span>
+                  See the panel in <span className="italic text-rainbow">motion</span>
                 </div>
                 <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                   <span>AI Captions</span>

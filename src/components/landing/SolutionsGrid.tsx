@@ -18,7 +18,7 @@ export function SolutionsGrid({ heading = true, limit }: SolutionsGridProps) {
             <div className="lg:col-span-7">
               <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— Solutions</p>
               <h2 className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
-                Solutions for your <span className="italic text-primary">social media.</span>
+                Solutions for your <span className="italic text-rainbow">social media.</span>
               </h2>
             </div>
             <div className="lg:col-span-5 lg:pl-8 lg:border-l lg:border-white/10">

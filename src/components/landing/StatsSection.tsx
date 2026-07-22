@@ -37,7 +37,7 @@ export function StatsSection() {
         <div className="text-center max-w-3xl mx-auto mb-14">
           <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— Testimonials</p>
           <h2 className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
-            Loved by <span className="italic text-primary">thousands.</span>
+            Loved by <span className="italic text-rainbow">thousands.</span>
           </h2>
         </div>
 

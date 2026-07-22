@@ -19,7 +19,7 @@ export function FAQSection() {
           <div className="lg:col-span-5 lg:sticky lg:top-24">
             <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— FAQ</p>
             <h2 className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
-              Frequently asked <span className="italic text-primary">questions.</span>
+              Frequently asked <span className="italic text-rainbow">questions.</span>
             </h2>
             <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-md">
               Everything you need to know about SMMSAAS. Can't find your answer? Reach our support team from the Help widget.
