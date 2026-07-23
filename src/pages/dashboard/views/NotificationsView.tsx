@@ -59,6 +59,9 @@ export function NotificationsView() {
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    bulkMarkRead: bulkMarkReadFn,
+    bulkMarkUnread: bulkMarkUnreadFn,
+    bulkDelete: bulkDeleteFn,
   } = useNotifications();
   const prefs = useNotificationPrefs();
   const [filter, setFilter] = useState<FilterId>("all");
@@ -135,17 +138,26 @@ export function NotificationsView() {
   };
 
   const bulkMarkRead = () => {
-    selected.forEach((id) => markAsRead(id));
-    toast.success(`Marked ${selected.size} as read`);
+    const ids = Array.from(selected);
+    bulkMarkReadFn(ids);
+    toast.success(`Marked ${ids.length} as read`);
+    setSelected(new Set());
+  };
+
+  const bulkMarkUnread = () => {
+    const ids = Array.from(selected);
+    bulkMarkUnreadFn(ids);
+    toast.success(`Marked ${ids.length} as unread`);
     setSelected(new Set());
   };
 
   const bulkDelete = () => {
-    const count = selected.size;
-    selected.forEach((id) => deleteNotification(id));
-    toast.success(`Deleted ${count}`);
+    const ids = Array.from(selected);
+    bulkDeleteFn(ids);
+    toast.success(`Deleted ${ids.length}`);
     setSelected(new Set());
   };
+
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pb-8 space-y-4">
@@ -235,6 +247,9 @@ export function NotificationsView() {
             <div className="flex gap-2">
               <Button size="sm" variant="outline" onClick={bulkMarkRead}>
                 <Check className="h-3.5 w-3.5 mr-1.5" /> Read
+              </Button>
+              <Button size="sm" variant="outline" onClick={bulkMarkUnread}>
+                <BellOff className="h-3.5 w-3.5 mr-1.5" /> Unread
               </Button>
               <Button
                 size="sm"

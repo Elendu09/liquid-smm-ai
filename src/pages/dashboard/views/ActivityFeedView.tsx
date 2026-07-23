@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Clock, Plus, Trash2, GitCommitVertical, LayoutGrid, List, Filter } from "lucide-react";
 import {
@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { isGuestSession } from "@/hooks/useGuest";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
+import { useRunHistory, type RunRecord } from "@/hooks/useRunHistory";
 import { cn } from "@/lib/utils";
 import { RunDetailsDrawer } from "@/components/activity/RunDetailsDrawer";
 import {
@@ -59,9 +60,23 @@ function categoryOf(item: StatusItem): TimelineCategory {
   return "delivery";
 }
 
+function runRecordToStatusItem(r: RunRecord): StatusItem {
+  const subtitleBits = [r.action, r.platform].filter(Boolean).join(" · ");
+  return {
+    id: r.id,
+    title: r.action || r.toolKey,
+    subtitle: subtitleBits || r.toolKey,
+    status: r.status,
+    meta: r.error ?? undefined,
+    createdAt: r.createdAt,
+  };
+}
+
 export function ActivityFeedView() {
+  const isGuest = isGuestSession();
   const [view, setView] = useViewMode("activity-runs", "timeline");
-  const { items, setItems, add, update, remove } = useLocalCollection<StatusItem>("activity", "runs");
+  const local = useLocalCollection<StatusItem>("activity", "runs");
+  const runHistory = useRunHistory();
   const { posts } = useScheduledPosts();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | TimelineCategory>("all");
@@ -71,6 +86,22 @@ export function ActivityFeedView() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [detailsFor, setDetailsFor] = useState<StatusItem | null>(null);
 
+  // Authenticated: drive from real run_history (with realtime). Guest: local seed.
+  const items: StatusItem[] = useMemo(
+    () => (isGuest ? local.items : runHistory.rows.map(runRecordToStatusItem)),
+    [isGuest, local.items, runHistory.rows],
+  );
+  const setItems = local.setItems;
+  const add = local.add;
+  const update = local.update;
+  const remove = useCallback(
+    async (id: string) => {
+      if (isGuest) local.remove(id);
+      else await runHistory.remove(id);
+    },
+    [isGuest, local, runHistory],
+  );
+
   const activeAdvancedCount =
     (advancedFilters.category !== "all" ? 1 : 0) +
     (advancedFilters.status !== "all" ? 1 : 0) +
@@ -78,9 +109,10 @@ export function ActivityFeedView() {
     (advancedFilters.to ? 1 : 0);
 
   useEffect(() => {
-    if (items.length === 0 && isGuestSession()) setItems(runSeed);
+    if (isGuest && local.items.length === 0) local.setItems(runSeed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isGuest]);
+
 
   const merged: TimelineEvent[] = useMemo(() => {
     const fromRuns: TimelineEvent[] = items.map((i) => ({
@@ -160,17 +192,21 @@ export function ActivityFeedView() {
     toast.success("Re-run queued");
   };
 
-  const handleBulkClear = (scope: "all" | "success" | "failed" | "old") => {
+  const handleBulkClear = async (scope: "all" | "success" | "failed" | "old") => {
     const cutoff = Date.now() - 7 * 24 * 3_600_000;
-    setItems((prev) =>
-      prev.filter((i) => {
-        if (scope === "all") return false;
-        if (scope === "success") return i.status !== "success";
-        if (scope === "failed") return i.status !== "failed";
-        if (scope === "old") return new Date(i.createdAt).getTime() >= cutoff;
-        return true;
-      }),
-    );
+    const keep = (i: StatusItem) => {
+      if (scope === "all") return false;
+      if (scope === "success") return i.status !== "success";
+      if (scope === "failed") return i.status !== "failed";
+      if (scope === "old") return new Date(i.createdAt).getTime() >= cutoff;
+      return true;
+    };
+    if (isGuest) {
+      setItems((prev) => prev.filter(keep));
+    } else {
+      const toRemove = items.filter((i) => !keep(i));
+      await Promise.all(toRemove.map((i) => runHistory.remove(i.id)));
+    }
     toast.success(`Cleared ${scope === "all" ? "all runs" : scope + " runs"}`);
   };
 

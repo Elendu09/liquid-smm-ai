@@ -110,6 +110,7 @@ export async function withRunLog<T>(
 
 export function useRunHistory() {
   const [rows, setRows] = useState<RunRecord[]>(readLocal);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const sync = () => setRows(readLocal());
@@ -118,7 +119,10 @@ export function useRunHistory() {
     let cancelled = false;
     (async () => {
       const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return;
+      const uid = auth.user?.id ?? null;
+      if (cancelled) return;
+      setUserId(uid);
+      if (!uid) return;
       const { data } = await supabase
         .from("run_history")
         .select("*")
@@ -136,6 +140,38 @@ export function useRunHistory() {
       window.removeEventListener("storage", sync);
     };
   }, []);
+
+  // Realtime subscription — stream new runs into the feed instantly for logged-in users.
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase.channel(`run-history:${userId}:${crypto.randomUUID()}`);
+    channel
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "run_history", filter: `user_id=eq.${userId}` },
+        (payload) => {
+          setRows((prev) => {
+            let next = prev;
+            if (payload.eventType === "INSERT") {
+              const rec = rowToRecord(payload.new);
+              if (!prev.find((r) => r.id === rec.id)) next = [rec, ...prev].slice(0, MAX);
+            } else if (payload.eventType === "UPDATE") {
+              const rec = rowToRecord(payload.new);
+              next = prev.map((r) => (r.id === rec.id ? rec : r));
+            } else if (payload.eventType === "DELETE") {
+              const id = (payload.old as { id: string }).id;
+              next = prev.filter((r) => r.id !== id);
+            }
+            writeLocal(next);
+            return next;
+          });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
 
   const clear = useCallback(async () => {
     writeLocal([]);
