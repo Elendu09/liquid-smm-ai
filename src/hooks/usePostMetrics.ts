@@ -22,7 +22,7 @@ export interface PostMetricRow {
  * empty list — the Analytics page synthesises demo trends separately.
  */
 export function usePostMetrics(postId?: string) {
-  const guest = useGuest();
+  const { isGuest: guest } = useGuest();
   const [rows, setRows] = useState<PostMetricRow[]>([]);
   const [loading, setLoading] = useState(!guest);
 

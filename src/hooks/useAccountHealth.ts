@@ -18,7 +18,7 @@ export interface BaselineRow {
  * still renders trends.
  */
 export function useAccountHealth() {
-  const guest = useGuest();
+  const { isGuest: guest } = useGuest();
   const { accounts } = useAccounts();
   const [baselines, setBaselines] = useState<BaselineRow[]>([]);
   const [loading, setLoading] = useState(!guest);

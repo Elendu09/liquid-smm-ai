@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
+import { isGuestSession } from "@/hooks/useGuest";
+
 
 export type NotificationType = "engagement" | "system" | "milestone" | "alert" | "reminder";
 export type NotificationSeverity = "info" | "success" | "warning" | "critical";
@@ -128,12 +130,19 @@ export function useNotifications() {
       if (cancelled) return;
       setUserId(uid);
 
+      // Guest / anonymous → show demo notifications for the marketing preview.
       if (!uid) {
-        setDemoMode(true);
-        setNotifications(demoNotifications);
+        if (isGuestSession()) {
+          setDemoMode(true);
+          setNotifications(demoNotifications);
+        } else {
+          setDemoMode(false);
+          setNotifications([]);
+        }
         return;
       }
 
+      // Authenticated: strictly real data. Empty state until backend emits.
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -141,13 +150,9 @@ export function useNotifications() {
         .limit(100);
 
       if (cancelled) return;
-      if (error || !data || data.length === 0) {
-        setDemoMode(true);
-        setNotifications(demoNotifications);
-      } else {
-        setDemoMode(false);
-        setNotifications(data.map(fromRow));
-      }
+      setDemoMode(false);
+      setNotifications(error || !data ? [] : data.map(fromRow));
+
     })();
 
     return () => {
