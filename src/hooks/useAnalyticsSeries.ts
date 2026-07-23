@@ -106,7 +106,7 @@ function pickMetric(row: Row, metric: MetricId): number {
  * Falls back to the local synth in guest mode so the marketing demo stays lively.
  */
 export function useAnalyticsSeries(metric: MetricId, range: RangeKey, accountIds?: string[]): SeriesResult {
-  const guest = useGuest();
+  const { isGuest: guest } = useGuest();
   const { accounts } = useAccounts();
   const days = RANGE_DAYS[range];
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -193,7 +193,7 @@ export function useAnalyticsSeries(metric: MetricId, range: RangeKey, accountIds
  * Per-account daily series for a metric (used by PlatformBreakdown).
  */
 export function useAccountSeries(metric: MetricId, range: RangeKey) {
-  const guest = useGuest();
+  const { isGuest: guest } = useGuest();
   const { accounts } = useAccounts();
   const days = RANGE_DAYS[range];
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -245,7 +245,7 @@ export function useAccountSeries(metric: MetricId, range: RangeKey) {
  * from `account_metrics_daily`; guests fall back to the local synth.
  */
 export function useCardSeries(metric: MetricId, days: number, platformId?: string): SeriesResult {
-  const guest = useGuest();
+  const { isGuest: guest } = useGuest();
   const { accounts } = useAccounts();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [loading, setLoading] = useState(!guest);
