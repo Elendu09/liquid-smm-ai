@@ -143,7 +143,7 @@ export default function Dashboard() {
                 <Clock className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" /> Activity
               </Link>
             </Button>
-            <LoadDemoDataButton />
+            
           </div>
         }
       />
