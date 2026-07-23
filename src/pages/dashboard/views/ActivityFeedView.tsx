@@ -192,17 +192,21 @@ export function ActivityFeedView() {
     toast.success("Re-run queued");
   };
 
-  const handleBulkClear = (scope: "all" | "success" | "failed" | "old") => {
+  const handleBulkClear = async (scope: "all" | "success" | "failed" | "old") => {
     const cutoff = Date.now() - 7 * 24 * 3_600_000;
-    setItems((prev) =>
-      prev.filter((i) => {
-        if (scope === "all") return false;
-        if (scope === "success") return i.status !== "success";
-        if (scope === "failed") return i.status !== "failed";
-        if (scope === "old") return new Date(i.createdAt).getTime() >= cutoff;
-        return true;
-      }),
-    );
+    const keep = (i: StatusItem) => {
+      if (scope === "all") return false;
+      if (scope === "success") return i.status !== "success";
+      if (scope === "failed") return i.status !== "failed";
+      if (scope === "old") return new Date(i.createdAt).getTime() >= cutoff;
+      return true;
+    };
+    if (isGuest) {
+      setItems((prev) => prev.filter(keep));
+    } else {
+      const toRemove = items.filter((i) => !keep(i));
+      await Promise.all(toRemove.map((i) => runHistory.remove(i.id)));
+    }
     toast.success(`Cleared ${scope === "all" ? "all runs" : scope + " runs"}`);
   };
 
