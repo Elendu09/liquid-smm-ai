@@ -29,7 +29,6 @@ import { PWAInstallBanner } from "@/components/dashboard/PWAInstallBanner";
 import { AiCommandBar } from "@/components/dashboard/AiCommandBar";
 import { HomeSummaryCard } from "@/components/dashboard/HomeSummaryCard";
 import { TemplatesSection } from "@/components/dashboard/TemplatesSection";
-import { LoadDemoDataButton } from "@/components/dashboard/LoadDemoDataButton";
 import { useOnboarding } from "@/hooks/useOnboarding";
 
 
