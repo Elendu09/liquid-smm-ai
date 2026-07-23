@@ -93,11 +93,21 @@ export function useLocalCollection<T extends { id: string | number }>(
   const reset = useCallback(() => setItems(initial), [setItems, initial]);
 
   // Seed the initial demo array ONLY for guest sessions. Signed-in users
-  // must never see synthetic demo rows leak into their real workspace.
+  // must never see synthetic demo rows leak into their real workspace —
+  // if a prior guest session left seed rows behind, purge them now.
   useEffect(() => {
-    if (!isGuestSession()) return;
-    if ((store.cache as T[]).length === 0 && initial.length > 0) {
-      writeStore(storageKey, initial);
+    if (isGuestSession()) {
+      if ((store.cache as T[]).length === 0 && initial.length > 0) {
+        writeStore(storageKey, initial);
+      }
+      return;
+    }
+    if (initial.length === 0) return;
+    const seedIds = new Set(initial.map((i) => String(i.id)));
+    const current = store.cache as T[];
+    const cleaned = current.filter((i) => !seedIds.has(String(i.id)));
+    if (cleaned.length !== current.length) {
+      writeStore(storageKey, cleaned);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
