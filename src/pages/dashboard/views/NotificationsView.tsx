@@ -248,6 +248,9 @@ export function NotificationsView() {
               <Button size="sm" variant="outline" onClick={bulkMarkRead}>
                 <Check className="h-3.5 w-3.5 mr-1.5" /> Read
               </Button>
+              <Button size="sm" variant="outline" onClick={bulkMarkUnread}>
+                <BellOff className="h-3.5 w-3.5 mr-1.5" /> Unread
+              </Button>
               <Button
                 size="sm"
                 variant="outline"
