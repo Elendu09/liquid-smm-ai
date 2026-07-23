@@ -60,9 +60,23 @@ function categoryOf(item: StatusItem): TimelineCategory {
   return "delivery";
 }
 
+function runRecordToStatusItem(r: RunRecord): StatusItem {
+  const subtitleBits = [r.action, r.platform].filter(Boolean).join(" · ");
+  return {
+    id: r.id,
+    title: r.action || r.toolKey,
+    subtitle: subtitleBits || r.toolKey,
+    status: r.status,
+    meta: r.error ?? undefined,
+    createdAt: r.createdAt,
+  };
+}
+
 export function ActivityFeedView() {
+  const isGuest = isGuestSession();
   const [view, setView] = useViewMode("activity-runs", "timeline");
-  const { items, setItems, add, update, remove } = useLocalCollection<StatusItem>("activity", "runs");
+  const local = useLocalCollection<StatusItem>("activity", "runs");
+  const runHistory = useRunHistory();
   const { posts } = useScheduledPosts();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | TimelineCategory>("all");
@@ -72,6 +86,22 @@ export function ActivityFeedView() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [detailsFor, setDetailsFor] = useState<StatusItem | null>(null);
 
+  // Authenticated: drive from real run_history (with realtime). Guest: local seed.
+  const items: StatusItem[] = useMemo(
+    () => (isGuest ? local.items : runHistory.rows.map(runRecordToStatusItem)),
+    [isGuest, local.items, runHistory.rows],
+  );
+  const setItems = local.setItems;
+  const add = local.add;
+  const update = local.update;
+  const remove = useCallback(
+    async (id: string) => {
+      if (isGuest) local.remove(id);
+      else await runHistory.remove(id);
+    },
+    [isGuest, local, runHistory],
+  );
+
   const activeAdvancedCount =
     (advancedFilters.category !== "all" ? 1 : 0) +
     (advancedFilters.status !== "all" ? 1 : 0) +
@@ -79,9 +109,10 @@ export function ActivityFeedView() {
     (advancedFilters.to ? 1 : 0);
 
   useEffect(() => {
-    if (items.length === 0 && isGuestSession()) setItems(runSeed);
+    if (isGuest && local.items.length === 0) local.setItems(runSeed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isGuest]);
+
 
   const merged: TimelineEvent[] = useMemo(() => {
     const fromRuns: TimelineEvent[] = items.map((i) => ({
