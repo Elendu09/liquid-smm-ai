@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { isGuestSession } from "@/hooks/useGuest";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
+import { useRunHistory, type RunRecord } from "@/hooks/useRunHistory";
 import { cn } from "@/lib/utils";
 import { RunDetailsDrawer } from "@/components/activity/RunDetailsDrawer";
 import {
