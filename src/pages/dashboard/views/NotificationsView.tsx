@@ -59,6 +59,9 @@ export function NotificationsView() {
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    bulkMarkRead: bulkMarkReadFn,
+    bulkMarkUnread: bulkMarkUnreadFn,
+    bulkDelete: bulkDeleteFn,
   } = useNotifications();
   const prefs = useNotificationPrefs();
   const [filter, setFilter] = useState<FilterId>("all");
