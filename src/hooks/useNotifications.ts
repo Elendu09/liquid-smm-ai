@@ -242,6 +242,47 @@ export function useNotifications() {
     [demoMode, userId, notifications, trackEvent],
   );
 
+  const markAsUnread = useCallback(
+    async (id: string) => {
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: false } : n)));
+      if (demoMode || !userId || id.startsWith("demo-")) return;
+      await supabase.from("notifications").update({ read_at: null }).eq("id", id);
+    },
+    [demoMode, userId],
+  );
+
+  const bulkMarkRead = useCallback(
+    async (ids: string[]) => {
+      const now = new Date().toISOString();
+      setNotifications((prev) => prev.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n)));
+      if (demoMode || !userId) return;
+      const real = ids.filter((id) => !id.startsWith("demo-"));
+      if (real.length) await supabase.from("notifications").update({ read_at: now }).in("id", real);
+    },
+    [demoMode, userId],
+  );
+
+  const bulkMarkUnread = useCallback(
+    async (ids: string[]) => {
+      setNotifications((prev) => prev.map((n) => (ids.includes(n.id) ? { ...n, read: false } : n)));
+      if (demoMode || !userId) return;
+      const real = ids.filter((id) => !id.startsWith("demo-"));
+      if (real.length) await supabase.from("notifications").update({ read_at: null }).in("id", real);
+    },
+    [demoMode, userId],
+  );
+
+  const bulkDelete = useCallback(
+    async (ids: string[]) => {
+      const set = new Set(ids);
+      setNotifications((prev) => prev.filter((n) => !set.has(n.id)));
+      if (demoMode || !userId) return;
+      const real = ids.filter((id) => !id.startsWith("demo-"));
+      if (real.length) await supabase.from("notifications").delete().in("id", real);
+    },
+    [demoMode, userId],
+  );
+
   const markAllAsRead = useCallback(async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     if (demoMode || !userId) return;
