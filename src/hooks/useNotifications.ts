@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
+import { isGuestSession } from "@/hooks/useGuest";
+
 
 export type NotificationType = "engagement" | "system" | "milestone" | "alert" | "reminder";
 export type NotificationSeverity = "info" | "success" | "warning" | "critical";
