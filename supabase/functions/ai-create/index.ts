@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
   }
 
   const gateway = createLovableAiGatewayProvider(key);
-  const model = gateway("google/gemini-3-flash-preview");
+  const model = gateway("google/gemini-2.5-flash");
 
   try {
     let result: unknown;

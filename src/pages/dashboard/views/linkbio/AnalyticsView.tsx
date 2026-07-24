@@ -40,6 +40,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useBioConfig } from "@/pages/dashboard/linkbio/state/bioConfig";
+import { useGuest } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 type RangeKey = "7d" | "30d" | "90d";
 
@@ -178,6 +180,7 @@ function KpiCard({
 
 export default function AnalyticsView() {
   const cfg = useBioConfig();
+  const { isGuest } = useGuest();
   const [range, setRange] = useState<RangeKey>("30d");
   const enabledLinks = cfg.links.filter((l) => l.enabled);
   const data = useAnalytics(range, enabledLinks.length);
@@ -217,6 +220,24 @@ export default function AnalyticsView() {
   const sparkVisitors = data.trend.map((d) => d.visitors);
   const sparkCtr = data.trend.map((d) => d.ctr);
   const sparkViews = data.trend.map((d) => Math.round(d.visitors * 1.4));
+
+  // Signed-in users see real-only analytics. Until click-tracking events are
+  // captured for their bio, show a contextual empty state instead of demo data.
+  if (!isGuest) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <EmptyState
+          icon={BarChart3}
+          title="No bio analytics yet"
+          description={
+            enabledLinks.length === 0
+              ? "Add and publish links in your bio to start tracking clicks, visitors, and referrers."
+              : "We haven't recorded any visits to your bio yet. Share your link to start collecting real analytics."
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">

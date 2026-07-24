@@ -2265,6 +2265,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_team_member_of: {
+        Args: { _owner_id: string; _user_id: string }
+        Returns: boolean
+      }
       refresh_platform_rollup: {
         Args: { _days?: number; _user_id: string }
         Returns: number

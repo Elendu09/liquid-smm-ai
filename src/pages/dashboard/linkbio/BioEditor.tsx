@@ -12,7 +12,7 @@ import {
   Wand2,
   BarChart3,
   Globe,
-  Cog,
+  
   Save,
   Eye,
   Undo2,
@@ -114,13 +114,6 @@ export default function BioEditor() {
           >
             <BarChart3 className="w-4 h-4 shrink-0" />
             <span className="hidden md:inline">Analytics</span>
-          </button>
-          <button
-            onClick={() => navigate("/dashboard/settings")}
-            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60"
-          >
-            <Cog className="w-4 h-4 shrink-0" />
-            <span className="hidden md:inline">Settings</span>
           </button>
         </nav>
       </aside>
