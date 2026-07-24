@@ -221,6 +221,24 @@ export default function AnalyticsView() {
   const sparkCtr = data.trend.map((d) => d.ctr);
   const sparkViews = data.trend.map((d) => Math.round(d.visitors * 1.4));
 
+  // Signed-in users see real-only analytics. Until click-tracking events are
+  // captured for their bio, show a contextual empty state instead of demo data.
+  if (!isGuest) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <EmptyState
+          icon={BarChart3}
+          title="No bio analytics yet"
+          description={
+            enabledLinks.length === 0
+              ? "Add and publish links in your bio to start tracking clicks, visitors, and referrers."
+              : "We haven't recorded any visits to your bio yet. Share your link to start collecting real analytics."
+          }
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Toolbar */}
