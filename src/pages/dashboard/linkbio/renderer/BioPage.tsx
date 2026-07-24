@@ -1,5 +1,4 @@
 import {
-import { safeUrl } from "@/lib/safeUrl";
   Instagram,
   Facebook,
   Linkedin,
