@@ -6,6 +6,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CALLBACK = `${SUPABASE_URL}/functions/v1/oauth-callback`;
 
+const STATE_COOKIE = "sb_oauth_state";
+
 function b64url(bytes: Uint8Array) {
   return btoa(String.fromCharCode(...bytes))
     .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -15,13 +17,26 @@ async function sha256(input: string) {
   return b64url(new Uint8Array(buf));
 }
 
+/**
+ * Only allow same-origin, relative paths starting with a single "/" — never
+ * "//host" (protocol-relative) or full URLs which could be used for phishing.
+ */
+function safeRedirectPath(input: string | null): string {
+  const fallback = "/dashboard/settings/connected";
+  if (!input) return fallback;
+  if (!input.startsWith("/") || input.startsWith("//")) return fallback;
+  // Disallow control chars / whitespace / backslashes.
+  if (/[\s\\]/.test(input)) return fallback;
+  return input;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
     const url = new URL(req.url);
     const platform = (url.searchParams.get("platform") ?? "").toLowerCase();
-    const redirectTo = url.searchParams.get("redirect_to") ?? "/dashboard/settings/connected";
+    const redirectTo = safeRedirectPath(url.searchParams.get("redirect_to"));
 
     const authHeader = req.headers.get("Authorization") ?? "";
     const jwt = authHeader.replace(/^Bearer\s+/i, "");
@@ -44,13 +59,18 @@ Deno.serve(async (req) => {
     const code_verifier = adapter.pkce ? b64url(crypto.getRandomValues(new Uint8Array(48))) : null;
     const code_challenge = code_verifier ? await sha256(code_verifier) : null;
 
+    // Bind the state to this browser via a signed hash stored in an httpOnly
+    // cookie. The callback must present a cookie whose hash matches the state
+    // recorded in the database, defeating OAuth CSRF / login-fixation.
+    const stateHash = await sha256(state);
+
     await admin.from("oauth_states").insert({
       state,
       user_id: userData.user.id,
       platform,
       code_verifier,
       redirect_to: redirectTo,
-      extra: {},
+      extra: { state_hash: stateHash },
     });
 
     const params = new URLSearchParams({
@@ -66,15 +86,18 @@ Deno.serve(async (req) => {
       params.set("code_challenge_method", "S256");
     }
     const authorizeUrl = `${adapter.authorizeUrl}?${params.toString()}`;
-    return json({ authorize_url: authorizeUrl, state });
+
+    // 10 min lifetime — enough for the consent hop, short enough to limit reuse.
+    const cookie = `${STATE_COOKIE}=${state}; Path=/; Max-Age=600; HttpOnly; Secure; SameSite=Lax`;
+    return json({ authorize_url: authorizeUrl, state }, 200, { "Set-Cookie": cookie });
   } catch (err) {
     return json({ error: "server_error", detail: String(err) }, 500);
   }
 });
 
-function json(body: unknown, status = 200) {
+function json(body: unknown, status = 200, extraHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json", ...extraHeaders },
   });
 }

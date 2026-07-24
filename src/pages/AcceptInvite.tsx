@@ -6,11 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Users, CheckCircle2 } from "lucide-react";
 
-/**
- * Public invite acceptance page. Handles both flows:
- *  1. Signed-in user → immediately calls `accept_team_invite` RPC.
- *  2. Signed-out user → routes to /login?next=/invite/:token, returns here.
- */
 export default function AcceptInvite() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
@@ -32,10 +27,12 @@ export default function AcceptInvite() {
   const accept = async () => {
     if (!token) return;
     setStatus("accepting");
-    const { error } = await supabase.rpc("accept_team_invite", { _token: token });
-    if (error) {
+    const { data, error } = await supabase.functions.invoke("accept-team-invite", {
+      body: { token },
+    });
+    if (error || (data as { error?: string } | null)?.error) {
       setStatus("error");
-      setMessage(error.message);
+      setMessage(error?.message ?? (data as { error?: string })?.error ?? "Invite invalid or expired.");
       return;
     }
     setStatus("done");
