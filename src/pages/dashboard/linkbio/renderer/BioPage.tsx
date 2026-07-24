@@ -16,6 +16,7 @@ import { createContext, useContext } from "react";
 import { cn } from "@/lib/utils";
 import { BioConfig, resolveTheme } from "../state/bioConfig";
 import type { LinkBioTheme, ThemeLayout } from "@/pages/dashboard/views/linkbio/themePresets";
+import { safeUrl } from "@/lib/safeUrl";
 
 const BioCtx = createContext<{ avatarScale: number; avatarShape: "circle" | "squircle" | "square"; avatarBorder: number }>({
   avatarScale: 1,
