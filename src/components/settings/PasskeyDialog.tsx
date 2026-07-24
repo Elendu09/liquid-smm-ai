@@ -20,6 +20,7 @@ export interface Passkey {
   label: string;
   device: string;
   createdAt: string;
+  credentialId: string;
 }
 
 interface Props {
@@ -38,35 +39,89 @@ const detectDevice = () => {
   return "This browser";
 };
 
+function b64url(bytes: ArrayBuffer | Uint8Array) {
+  const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  return btoa(String.fromCharCode(...arr))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 export function PasskeyDialog({ open, onOpenChange, onEnrolled }: Props) {
   const [label, setLabel] = useState("My primary passkey");
-  const [step, setStep] = useState<"intro" | "enrolling" | "done">("intro");
+  const [step, setStep] = useState<"intro" | "enrolling" | "done" | "error">("intro");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const supported =
+    typeof window !== "undefined" &&
+    !!window.PublicKeyCredential &&
+    !!navigator.credentials?.create;
 
   const enroll = async () => {
+    if (!supported) {
+      setErrorMsg("This browser does not support passkeys / WebAuthn.");
+      setStep("error");
+      return;
+    }
     setStep("enrolling");
-    // Simulated WebAuthn ceremony.
-    await new Promise((r) => setTimeout(r, 1400));
-    const pk: Passkey = {
-      id: crypto.randomUUID(),
-      label: label.trim() || "Passkey",
-      device: detectDevice(),
-      createdAt: new Date().toISOString(),
-    };
-    pushLocalCollection<Passkey>("settings", "passkeys", [pk]);
-    logAudit({
-      actor: "You",
-      action: "Enrolled passkey",
-      target: pk.label,
-      category: "security",
-    });
-    setStep("done");
-    onEnrolled?.(pk);
-    toast.success("Passkey enrolled");
+    try {
+      // Real WebAuthn ceremony. The public key would normally be sent to the
+      // server for storage + used at sign-in via `navigator.credentials.get`.
+      // We surface a clear notice that server-side verification is required to
+      // actually gate login — no silent “fake enabled” state.
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+      const userId = crypto.getRandomValues(new Uint8Array(16));
+      const cred = (await navigator.credentials.create({
+        publicKey: {
+          challenge,
+          rp: { name: "SMMSAAS", id: window.location.hostname },
+          user: {
+            id: userId,
+            name: label || "user",
+            displayName: label || "SMMSAAS user",
+          },
+          pubKeyCredParams: [
+            { type: "public-key", alg: -7 },  // ES256
+            { type: "public-key", alg: -257 }, // RS256
+          ],
+          authenticatorSelection: {
+            userVerification: "required",
+            residentKey: "preferred",
+          },
+          timeout: 60_000,
+          attestation: "none",
+        },
+      })) as PublicKeyCredential | null;
+
+      if (!cred) throw new Error("Enrollment was cancelled");
+
+      const pk: Passkey = {
+        id: crypto.randomUUID(),
+        label: label.trim() || "Passkey",
+        device: detectDevice(),
+        createdAt: new Date().toISOString(),
+        credentialId: b64url(cred.rawId),
+      };
+      pushLocalCollection<Passkey>("settings", "passkeys", [pk]);
+      logAudit({
+        actor: "You",
+        action: "Enrolled passkey (client-side)",
+        target: pk.label,
+        category: "security",
+      });
+      setStep("done");
+      onEnrolled?.(pk);
+      toast.success("Passkey created on this device");
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : "Enrollment failed");
+      setStep("error");
+    }
   };
 
   const close = () => {
     onOpenChange(false);
-    setTimeout(() => setStep("intro"), 200);
+    setTimeout(() => {
+      setStep("intro");
+      setErrorMsg("");
+    }, 200);
   };
 
   return (
@@ -79,7 +134,7 @@ export function PasskeyDialog({ open, onOpenChange, onEnrolled }: Props) {
           </DialogTitle>
           <DialogDescription>
             Passkeys let you sign in with Face ID, Touch ID, Windows Hello, or a
-            security key — no password required.
+            security key.
           </DialogDescription>
         </DialogHeader>
 
@@ -102,6 +157,11 @@ export function PasskeyDialog({ open, onOpenChange, onEnrolled }: Props) {
                 placeholder="Work laptop, iPhone…"
               />
             </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Note: Enable two-factor authentication above to protect sign-in.
+              Passkey sign-in is enforced by your identity provider — this
+              screen creates the device credential itself.
+            </p>
           </div>
         )}
 
@@ -115,7 +175,14 @@ export function PasskeyDialog({ open, onOpenChange, onEnrolled }: Props) {
         {step === "done" && (
           <div className="py-6 flex flex-col items-center gap-3 text-center">
             <ShieldCheck className="h-10 w-10 text-emerald-500" />
-            <p className="text-sm">Passkey ready. You can now sign in without a password.</p>
+            <p className="text-sm">Passkey created on this device.</p>
+          </div>
+        )}
+
+        {step === "error" && (
+          <div className="py-6 space-y-3 text-center">
+            <p className="text-sm text-destructive">{errorMsg}</p>
+            <Button variant="outline" onClick={close}>Close</Button>
           </div>
         )}
 
@@ -125,7 +192,7 @@ export function PasskeyDialog({ open, onOpenChange, onEnrolled }: Props) {
               <Button variant="ghost" onClick={close}>
                 Cancel
               </Button>
-              <Button onClick={enroll}>
+              <Button onClick={enroll} disabled={!supported}>
                 <Fingerprint className="h-4 w-4 mr-2" />
                 Enroll passkey
               </Button>
