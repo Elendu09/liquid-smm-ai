@@ -12,7 +12,7 @@ import {
   Wand2,
   BarChart3,
   Globe,
-  Cog,
+  
   Save,
   Eye,
   Undo2,

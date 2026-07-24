@@ -40,6 +40,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useBioConfig } from "@/pages/dashboard/linkbio/state/bioConfig";
+import { useGuest } from "@/hooks/useGuest";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 type RangeKey = "7d" | "30d" | "90d";
 
@@ -178,6 +180,7 @@ function KpiCard({
 
 export default function AnalyticsView() {
   const cfg = useBioConfig();
+  const { isGuest } = useGuest();
   const [range, setRange] = useState<RangeKey>("30d");
   const enabledLinks = cfg.links.filter((l) => l.enabled);
   const data = useAnalytics(range, enabledLinks.length);
