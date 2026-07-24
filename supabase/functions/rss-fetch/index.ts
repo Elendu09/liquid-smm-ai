@@ -52,31 +52,88 @@ function parseFeed(xml: string) {
   return { title: feedTitle, items };
 }
 
-/**
- * Route an image URL through wsrv.nl for consistent 1200x675 (16:9) center-cropped,
- * CDN-cached JPEG thumbnails. Falls back to raw URL if input isn't http(s).
- */
 function toThumbnailUrl(src: string | undefined | null): string | null {
   if (!src) return null;
   const clean = src.trim();
-  if (!/^https?:\/\//i.test(clean)) return clean || null;
+  if (!/^https?:\/\//i.test(clean)) return null;
   const noProto = clean.replace(/^https?:\/\//i, "");
   return `https://wsrv.nl/?url=${encodeURIComponent(noProto)}&w=1200&h=675&fit=cover&a=attention&output=jpg&q=82&il`;
 }
 
 /**
- * Scrape an article page for og:image / twitter:image when the RSS item has no media.
- * Best-effort: 4s timeout, ignore failures.
+ * SSRF guard: only allow http(s) URLs that resolve to public, routable IPs.
+ * Blocks localhost, RFC1918, link-local (169.254.0.0/16 incl. cloud metadata),
+ * loopback, CGNAT (100.64/10), unique-local IPv6 (fc00::/7), and IPv6 loopback.
  */
+function isPrivateIp(ip: string): boolean {
+  if (ip.includes(":")) {
+    const lower = ip.toLowerCase();
+    if (lower === "::1" || lower === "::") return true;
+    if (lower.startsWith("fe80:") || lower.startsWith("fc") || lower.startsWith("fd")) return true;
+    // IPv4-mapped IPv6 like ::ffff:169.254.169.254
+    const m = lower.match(/::ffff:(\d+\.\d+\.\d+\.\d+)/);
+    if (m) return isPrivateIp(m[1]);
+    return false;
+  }
+  const parts = ip.split(".").map(Number);
+  if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n) || n < 0 || n > 255)) return true;
+  const [a, b] = parts;
+  if (a === 10) return true;
+  if (a === 127) return true;
+  if (a === 0) return true;
+  if (a === 169 && b === 254) return true; // link-local incl. 169.254.169.254 metadata
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+  if (a >= 224) return true; // multicast + reserved
+  return false;
+}
+
+async function assertPublicUrl(raw: string): Promise<URL> {
+  let u: URL;
+  try { u = new URL(raw); } catch { throw new Error("invalid_url"); }
+  if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error("scheme_not_allowed");
+  const host = u.hostname.replace(/^\[|\]$/g, "");
+  // Reject bare IPs in private ranges outright.
+  if (/^[\d.]+$/.test(host) || host.includes(":")) {
+    if (isPrivateIp(host)) throw new Error("private_address_blocked");
+  }
+  // Reject obvious localhost aliases without needing DNS.
+  const lower = host.toLowerCase();
+  if (lower === "localhost" || lower.endsWith(".localhost") || lower.endsWith(".internal") || lower.endsWith(".local")) {
+    throw new Error("private_address_blocked");
+  }
+  try {
+    const a = await Deno.resolveDns(host, "A").catch(() => [] as string[]);
+    const aaaa = await Deno.resolveDns(host, "AAAA").catch(() => [] as string[]);
+    const all = [...a, ...aaaa];
+    if (all.length === 0) throw new Error("dns_unresolved");
+    if (all.some((ip) => isPrivateIp(ip))) throw new Error("private_address_blocked");
+  } catch (e) {
+    if (e instanceof Error && (e.message === "private_address_blocked" || e.message === "dns_unresolved")) throw e;
+    // If DNS lookup isn't permitted in this runtime, fail closed.
+    throw new Error("dns_check_failed");
+  }
+  return u;
+}
+
+async function safeFetch(rawUrl: string, init: RequestInit & { timeoutMs?: number } = {}): Promise<Response> {
+  const u = await assertPublicUrl(rawUrl);
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), init.timeoutMs ?? 8000);
+  try {
+    return await fetch(u.toString(), { ...init, signal: ctrl.signal, redirect: "manual" });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 async function scrapeOgImage(articleUrl: string): Promise<string | null> {
   try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 4000);
-    const res = await fetch(articleUrl, {
-      signal: ctrl.signal,
+    const res = await safeFetch(articleUrl, {
+      timeoutMs: 4000,
       headers: { "User-Agent": "SMMSAAS-RSS/1.0 (+thumbnail)" },
     });
-    clearTimeout(t);
     if (!res.ok) return null;
     const html = (await res.text()).slice(0, 200_000);
     const m =
@@ -92,6 +149,8 @@ async function scrapeOgImage(articleUrl: string): Promise<string | null> {
         url = `${base.origin}${url}`;
       } catch { /* noop */ }
     }
+    // Validate the resolved image URL is public too before returning it.
+    try { await assertPublicUrl(url); } catch { return null; }
     return url;
   } catch {
     return null;
@@ -140,7 +199,9 @@ Deno.serve(async (req) => {
   const results: Record<string, unknown>[] = [];
   for (const feed of feedRows ?? []) {
     try {
-      const res = await fetch(feed.url, { headers: { "User-Agent": "SMMSAAS-RSS/1.0" } });
+      const res = await safeFetch(feed.url, {
+        headers: { "User-Agent": "SMMSAAS-RSS/1.0" },
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const xml = await res.text();
       const parsed = parseFeed(xml);
@@ -161,9 +222,10 @@ Deno.serve(async (req) => {
           .maybeSingle();
         if (existing) continue;
 
-        // Resolve a consistent, cached thumbnail up-front so both the scheduled
-        // post's media_url and the rss_items row use the same processed image.
         let finalImage = item.imageUrl ?? null;
+        if (finalImage) {
+          try { await assertPublicUrl(finalImage); } catch { finalImage = null; }
+        }
         if (!finalImage && item.link) {
           finalImage = await scrapeOgImage(item.link);
         }
