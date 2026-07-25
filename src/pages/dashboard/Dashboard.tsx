@@ -114,9 +114,10 @@ export default function Dashboard() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       <PageHeader
-        title="Welcome back"
+        title={greeting}
         description="Everything you scheduled, ran, and grew — at a glance."
         breadcrumbs={[{ label: "Dashboard" }]}
+
         actions={
           <div className="grid grid-cols-3 gap-2 w-full md:w-auto md:flex md:items-center">
             {/* Unified glass button style: translucent surface, gradient sheen on top edge, primary hover */}
