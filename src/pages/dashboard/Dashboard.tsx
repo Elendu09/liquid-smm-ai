@@ -90,9 +90,12 @@ function accountStatusDot(status: string) {
 export default function Dashboard() {
   const { accounts, totalAccounts } = useAccounts();
   const { state: onboarding } = useOnboarding();
-  const openTour = () => window.dispatchEvent(new Event("smmpilot:open-onboarding"));
+  const { greeting, laneOrder } = useOnboardingContext();
+  const openTour = () => window.dispatchEvent(new Event("smmpilot:open-onboarding-tour"));
   const { rows: runs } = useRunHistory();
   const { posts } = useScheduledPosts();
+  const laneOrderOf = (k: "upcoming" | "health" | "recent") => laneOrder.indexOf(k);
+
 
   const upcoming = [...posts]
     .filter((p) => new Date(p.scheduledAt).getTime() >= Date.now() - 60_000)
