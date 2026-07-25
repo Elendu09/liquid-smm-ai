@@ -110,12 +110,14 @@ export function useOnboarding() {
       const merged: OnboardingState = {
         completed: !!(remote?.completed ?? local.completed),
         completedAt: remote?.completedAt ?? local.completedAt,
+        seen: !!(remote?.seen ?? local.seen),
         profile: {
           ...defaultProfile,
           ...local.profile,
           ...(remote?.profile ?? {}),
         },
       };
+
       setState(merged);
       // Push local-only progress up on first login.
       if (!remote || (!remote.completed && local.completed) || Object.keys(remote?.profile ?? {}).length === 0) {
