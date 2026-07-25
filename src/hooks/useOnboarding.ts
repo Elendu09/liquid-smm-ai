@@ -147,7 +147,9 @@ export function useOnboarding() {
     updateProfile: (patch: Partial<OnboardingProfile>) =>
       persist({ ...state, profile: { ...state.profile, ...patch } }),
     complete: () =>
-      persist({ ...state, completed: true, completedAt: new Date().toISOString() }),
-    reset: () => persist({ completed: false, profile: defaultProfile }),
+      persist({ ...state, completed: true, seen: true, completedAt: new Date().toISOString() }),
+    markSeen: () => persist({ ...state, seen: true }),
+    reset: () => persist({ completed: false, seen: false, profile: defaultProfile }),
+
   };
 }
