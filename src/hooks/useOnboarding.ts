@@ -20,6 +20,7 @@ export interface OnboardingProfile {
 export interface OnboardingState {
   completed: boolean;
   completedAt?: string;
+  seen?: boolean;
   profile: OnboardingProfile;
 }
 
@@ -38,7 +39,8 @@ export const defaultProfile: OnboardingProfile = {
   autonomy: "suggest",
 };
 
-const defaultState: OnboardingState = { completed: false, profile: defaultProfile };
+const defaultState: OnboardingState = { completed: false, seen: false, profile: defaultProfile };
+
 
 function readLocal(): OnboardingState {
   if (typeof window === "undefined") return defaultState;
