@@ -59,6 +59,32 @@ const TONES: { value: OnboardingProfile["tone"]; label: string }[] = [
 
 const TIMES = ["Early morning", "Morning", "Midday", "Afternoon", "Evening", "Late night"];
 
+// Buffer-style connect order + subtype hints (Step 2).
+const CONNECT_ORDER = [
+  "instagram", "threads", "linkedin", "facebook", "bluesky",
+  "youtube", "tiktok", "pinterest", "twitter", "google-business",
+  "snapchat", "reddit", "telegram", "discord", "whatsapp",
+];
+const CONNECT_HINTS: Record<string, string> = {
+  instagram: "Business, Creator, or Personal",
+  facebook: "Page or Group",
+  linkedin: "Page or Profile",
+  youtube: "Channel",
+  tiktok: "Profile",
+  threads: "Profile",
+  bluesky: "Profile",
+  mastodon: "Profile",
+  pinterest: "Profile",
+  twitter: "Profile",
+  "google-business": "Location",
+  snapchat: "Profile",
+  reddit: "Profile",
+  telegram: "Channel or Group",
+  discord: "Server",
+  whatsapp: "Business number",
+};
+
+
 const AUTONOMY: { value: Autonomy; label: string; desc: string }[] = [
   { value: "manual", label: "Manual", desc: "I approve every action." },
   { value: "suggest", label: "Suggest", desc: "AI drafts; I approve before publish." },
