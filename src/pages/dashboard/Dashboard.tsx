@@ -291,7 +291,7 @@ export default function Dashboard() {
           </div>
 
           {/* Recent activity lane */}
-          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1">
+          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1" style={{ order: laneOrderOf("recent") }}>
             <SectionCard
               title="Recent activity"
               description={`Last ${recent.length} runs`}
