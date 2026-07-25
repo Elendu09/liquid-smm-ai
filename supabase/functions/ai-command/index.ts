@@ -41,12 +41,16 @@ interface Body {
     activeAccountHandle?: string | null;
     tone?: string;
     niches?: string[];
+    goals?: string[];
+    brandDescription?: string;
+    autonomy?: "manual" | "suggest" | "auto-approval";
     currentRoute?: string;
   };
   history?: HistoryTurn[];
   attachments?: Attachment[];
   mode?: "text" | "voice";
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
