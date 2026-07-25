@@ -50,7 +50,7 @@ export function DashboardLayout() {
         <div className="h-20 lg:hidden" aria-hidden />
       </main>
       <MobileHubNav />
-      <OnboardingWizard open={tourOpen} onOpenChange={setTourOpen} />
+      <OnboardingWizard open={tourOpen} onOpenChange={handleWizardOpenChange} />
       <OnboardingTour />
       <HelpWidget />
       <AiAssistantDrawer />
