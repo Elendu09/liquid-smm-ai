@@ -59,6 +59,32 @@ const TONES: { value: OnboardingProfile["tone"]; label: string }[] = [
 
 const TIMES = ["Early morning", "Morning", "Midday", "Afternoon", "Evening", "Late night"];
 
+// Buffer-style connect order + subtype hints (Step 2).
+const CONNECT_ORDER = [
+  "instagram", "threads", "linkedin", "facebook", "bluesky",
+  "youtube", "tiktok", "pinterest", "twitter", "google-business",
+  "snapchat", "reddit", "telegram", "discord", "whatsapp",
+];
+const CONNECT_HINTS: Record<string, string> = {
+  instagram: "Business, Creator, or Personal",
+  facebook: "Page or Group",
+  linkedin: "Page or Profile",
+  youtube: "Channel",
+  tiktok: "Profile",
+  threads: "Profile",
+  bluesky: "Profile",
+  mastodon: "Profile",
+  pinterest: "Profile",
+  twitter: "Profile",
+  "google-business": "Location",
+  snapchat: "Profile",
+  reddit: "Profile",
+  telegram: "Channel or Group",
+  discord: "Server",
+  whatsapp: "Business number",
+};
+
+
 const AUTONOMY: { value: Autonomy; label: string; desc: string }[] = [
   { value: "manual", label: "Manual", desc: "I approve every action." },
   { value: "suggest", label: "Suggest", desc: "AI drafts; I approve before publish." },
@@ -181,32 +207,54 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
         </div>
       </div>
     </div>,
-    // 1 — Connect
+    // 1 — Connect (Buffer-style channel picker)
     <div key="1" className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {platforms.map((p) => {
-          const active = draft.connectedPlatformIds.includes(p.id);
-          return (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => toggle("connectedPlatformIds", p.id)}
-              className={cn(
-                "flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors",
-                active ? "border-primary bg-primary/10" : "border-border hover:border-primary/50",
-              )}
-            >
-              <PlatformIcon platform={p.id} size="xs" />
-              {p.shortName}
-              {active && <Check className="h-3.5 w-3.5 text-primary" />}
-            </button>
-          );
-        })}
+      <div className="max-h-[520px] overflow-y-auto pr-1 -mr-1 [mask-image:linear-gradient(180deg,#000_0,#000_calc(100%-32px),transparent)]">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {CONNECT_ORDER.map((pid) => {
+            const p = platforms.find((x) => x.id === pid);
+            if (!p) return null;
+            const active = draft.connectedPlatformIds.includes(p.id);
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => toggle("connectedPlatformIds", p.id)}
+                aria-pressed={active}
+                className={cn(
+                  "group relative flex flex-col items-center justify-start gap-2.5 rounded-2xl border bg-card/70 backdrop-blur p-4 sm:p-5 text-center transition-all",
+                  "hover:border-primary/60 hover:bg-card hover:shadow-md",
+                  active
+                    ? "border-primary ring-2 ring-primary/30 bg-primary/5"
+                    : "border-border/70",
+                )}
+              >
+                {active && (
+                  <span
+                    className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow"
+                    aria-hidden
+                  >
+                    <Check className="h-3 w-3" />
+                  </span>
+                )}
+                <PlatformIcon platform={p.id} size="lg" showBackground />
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold truncate">{p.name}</div>
+                  <div className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+                    {CONNECT_HINTS[p.id] ?? "Profile"}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
-      <p className="text-xs text-muted-foreground">
-        You can skip and connect real accounts anytime from Settings → Connected.
-      </p>
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>{draft.connectedPlatformIds.length} selected</span>
+        <span>You can add real accounts later from Settings → Connected.</span>
+      </div>
     </div>,
+
     // 2 — Niches
     <div key="2" className="flex flex-wrap gap-2">
       {NICHES.map((n) => {

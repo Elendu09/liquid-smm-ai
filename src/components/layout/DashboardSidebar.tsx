@@ -204,10 +204,6 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const openOnboardingSetup = () => {
-    window.dispatchEvent(new CustomEvent("smmpilot:open-onboarding"));
-    onNavigate?.();
-  };
   const openOnboardingTour = () => {
     window.dispatchEvent(new CustomEvent("smmpilot:open-onboarding-tour"));
     onNavigate?.();
@@ -219,11 +215,11 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
   const commands: CommandResult[] = useMemo(() => {
     const cmds: CommandResult[] = [
       { id: "cmd-tour", label: "Start product tour", icon: HelpCircle, group: "Commands", action: openOnboardingTour, hint: "Guided walkthrough" },
-      { id: "cmd-setup", label: "Re-run onboarding setup", icon: Sparkles, group: "Commands", action: openOnboardingSetup, hint: "Profile wizard" },
       { id: "cmd-settings", label: "Open Settings", icon: Cog, group: "Commands", href: "/dashboard/settings", hint: "Preferences" },
       { id: "cmd-notifications", label: "Open Notifications", icon: Bell, group: "Commands", href: "/dashboard/activity/notifications" },
       { id: "cmd-signout", label: "Sign out", icon: LogOut, group: "Commands", action: () => setSignOutOpen(true) },
     ];
+
     const pages: CommandResult[] = [];
     for (const it of navItems) {
       pages.push({ id: `p-${it.href}`, label: it.label, icon: it.icon, href: it.href, group: "Pages", hint: it.href });

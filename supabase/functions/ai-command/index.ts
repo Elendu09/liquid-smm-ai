@@ -41,12 +41,16 @@ interface Body {
     activeAccountHandle?: string | null;
     tone?: string;
     niches?: string[];
+    goals?: string[];
+    brandDescription?: string;
+    autonomy?: "manual" | "suggest" | "auto-approval";
     currentRoute?: string;
   };
   history?: HistoryTurn[];
   attachments?: Attachment[];
   mode?: "text" | "voice";
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -206,8 +210,12 @@ Deno.serve(async (req) => {
 - Active handle: ${context.activeAccountHandle ?? "(none)"}
 - Brand tone: ${context.tone ?? "(unset)"}
 - Niches: ${(context.niches ?? []).join(", ") || "(unset)"}
+- Goals: ${(context.goals ?? []).join(", ") || "(unset)"}
+- Brand description: ${context.brandDescription ?? "(unset)"}
+- Autonomy: ${context.autonomy ?? "suggest"} (manual = draft only, suggest = propose tools for approval, auto-approval = safe to auto-run non-destructive tools)
 
 ${historyBlock}`;
+
 
   // Phase 4 — intent routing: bias the system prompt for images/voice.
   const attachments = (body.attachments ?? []).filter(

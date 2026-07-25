@@ -30,6 +30,8 @@ import { AiCommandBar } from "@/components/dashboard/AiCommandBar";
 import { HomeSummaryCard } from "@/components/dashboard/HomeSummaryCard";
 import { TemplatesSection } from "@/components/dashboard/TemplatesSection";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useOnboardingContext } from "@/hooks/useOnboardingContext";
+
 
 
 import { useAccounts } from "@/contexts/AccountContext";
@@ -88,9 +90,12 @@ function accountStatusDot(status: string) {
 export default function Dashboard() {
   const { accounts, totalAccounts } = useAccounts();
   const { state: onboarding } = useOnboarding();
-  const openTour = () => window.dispatchEvent(new Event("smmpilot:open-onboarding"));
+  const { greeting, laneOrder } = useOnboardingContext();
+  const openTour = () => window.dispatchEvent(new Event("smmpilot:open-onboarding-tour"));
   const { rows: runs } = useRunHistory();
   const { posts } = useScheduledPosts();
+  const laneOrderOf = (k: "upcoming" | "health" | "recent") => laneOrder.indexOf(k);
+
 
   const upcoming = [...posts]
     .filter((p) => new Date(p.scheduledAt).getTime() >= Date.now() - 60_000)
@@ -109,9 +114,10 @@ export default function Dashboard() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       <PageHeader
-        title="Welcome back"
+        title={greeting}
         description="Everything you scheduled, ran, and grew — at a glance."
         breadcrumbs={[{ label: "Dashboard" }]}
+
         actions={
           <div className="grid grid-cols-3 gap-2 w-full md:w-auto md:flex md:items-center">
             {/* Unified glass button style: translucent surface, gradient sheen on top edge, primary hover */}
@@ -191,7 +197,8 @@ export default function Dashboard() {
       <div className="-mx-4 sm:mx-0 px-4 sm:px-0">
         <div className="flex lg:grid lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 overflow-x-auto snap-x snap-mandatory pb-3 lg:overflow-visible lg:pb-0">
           {/* Upcoming posts lane */}
-          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1">
+          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1" style={{ order: laneOrderOf("upcoming") }}>
+
             <SectionCard
               title="Upcoming posts"
               description={`Next ${upcoming.length} scheduled`}
@@ -244,7 +251,8 @@ export default function Dashboard() {
           </div>
 
           {/* Account health lane */}
-          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1">
+          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1" style={{ order: laneOrderOf("health") }}>
+
             <SectionCard
               title="Account health"
               description={`${accounts.length} connected`}
@@ -283,7 +291,7 @@ export default function Dashboard() {
           </div>
 
           {/* Recent activity lane */}
-          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1">
+          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1" style={{ order: laneOrderOf("recent") }}>
             <SectionCard
               title="Recent activity"
               description={`Last ${recent.length} runs`}

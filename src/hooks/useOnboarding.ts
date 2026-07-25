@@ -20,6 +20,7 @@ export interface OnboardingProfile {
 export interface OnboardingState {
   completed: boolean;
   completedAt?: string;
+  seen?: boolean;
   profile: OnboardingProfile;
 }
 
@@ -38,7 +39,8 @@ export const defaultProfile: OnboardingProfile = {
   autonomy: "suggest",
 };
 
-const defaultState: OnboardingState = { completed: false, profile: defaultProfile };
+const defaultState: OnboardingState = { completed: false, seen: false, profile: defaultProfile };
+
 
 function readLocal(): OnboardingState {
   if (typeof window === "undefined") return defaultState;
@@ -49,12 +51,14 @@ function readLocal(): OnboardingState {
     return {
       completed: !!parsed.completed,
       completedAt: parsed.completedAt,
+      seen: !!parsed.seen,
       profile: { ...defaultProfile, ...(parsed.profile ?? {}) },
     };
   } catch {
     return defaultState;
   }
 }
+
 
 function writeLocal(next: OnboardingState) {
   if (typeof window === "undefined") return;
@@ -106,12 +110,14 @@ export function useOnboarding() {
       const merged: OnboardingState = {
         completed: !!(remote?.completed ?? local.completed),
         completedAt: remote?.completedAt ?? local.completedAt,
+        seen: !!(remote?.seen ?? local.seen),
         profile: {
           ...defaultProfile,
           ...local.profile,
           ...(remote?.profile ?? {}),
         },
       };
+
       setState(merged);
       // Push local-only progress up on first login.
       if (!remote || (!remote.completed && local.completed) || Object.keys(remote?.profile ?? {}).length === 0) {
@@ -141,7 +147,9 @@ export function useOnboarding() {
     updateProfile: (patch: Partial<OnboardingProfile>) =>
       persist({ ...state, profile: { ...state.profile, ...patch } }),
     complete: () =>
-      persist({ ...state, completed: true, completedAt: new Date().toISOString() }),
-    reset: () => persist({ completed: false, profile: defaultProfile }),
+      persist({ ...state, completed: true, seen: true, completedAt: new Date().toISOString() }),
+    markSeen: () => persist({ ...state, seen: true }),
+    reset: () => persist({ completed: false, seen: false, profile: defaultProfile }),
+
   };
 }

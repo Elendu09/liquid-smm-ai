@@ -275,13 +275,14 @@ export function AccountPanel() {
           <Separator />
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <p className="font-medium">Restart onboarding tour</p>
-              <p className="text-sm text-muted-foreground">Rerun the setup wizard to update your profile, tone, and cadence.</p>
+              <p className="font-medium">Replay the product tour</p>
+              <p className="text-sm text-muted-foreground">Walk through the dashboard highlights again. Your setup answers stay saved.</p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => window.dispatchEvent(new Event("smmpilot:open-onboarding"))}>
+            <Button variant="outline" size="sm" onClick={() => window.dispatchEvent(new Event("smmpilot:open-onboarding-tour"))}>
               Take the tour
             </Button>
           </div>
+
         </CardContent>
       </Card>
 
