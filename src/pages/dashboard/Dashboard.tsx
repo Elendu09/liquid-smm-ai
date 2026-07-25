@@ -30,6 +30,8 @@ import { AiCommandBar } from "@/components/dashboard/AiCommandBar";
 import { HomeSummaryCard } from "@/components/dashboard/HomeSummaryCard";
 import { TemplatesSection } from "@/components/dashboard/TemplatesSection";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useOnboardingContext } from "@/hooks/useOnboardingContext";
+
 
 
 import { useAccounts } from "@/contexts/AccountContext";
