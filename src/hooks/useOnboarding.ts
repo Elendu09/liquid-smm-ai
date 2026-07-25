@@ -51,12 +51,14 @@ function readLocal(): OnboardingState {
     return {
       completed: !!parsed.completed,
       completedAt: parsed.completedAt,
+      seen: !!parsed.seen,
       profile: { ...defaultProfile, ...(parsed.profile ?? {}) },
     };
   } catch {
     return defaultState;
   }
 }
+
 
 function writeLocal(next: OnboardingState) {
   if (typeof window === "undefined") return;
