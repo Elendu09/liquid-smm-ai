@@ -13,22 +13,25 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { useSendSimulator } from "@/hooks/useSendSimulator";
 
 export function DashboardLayout() {
-  const { state } = useOnboarding();
+  const { state, markSeen } = useOnboarding();
   const [tourOpen, setTourOpen] = useState(false);
   useSendSimulator();
 
+  // One-shot: open the setup wizard exactly once, on first dashboard visit for
+  // a user who has neither completed nor previously dismissed it. After it
+  // closes we never auto-open again — the guided tour is the only re-entry.
   useEffect(() => {
-    if (!state.completed) {
+    if (!state.completed && !state.seen) {
       const t = setTimeout(() => setTourOpen(true), 400);
       return () => clearTimeout(t);
     }
-  }, [state.completed]);
+  }, [state.completed, state.seen]);
 
-  useEffect(() => {
-    const handler = () => setTourOpen(true);
-    window.addEventListener("smmpilot:open-onboarding", handler);
-    return () => window.removeEventListener("smmpilot:open-onboarding", handler);
-  }, []);
+  const handleWizardOpenChange = (open: boolean) => {
+    setTourOpen(open);
+    if (!open && !state.seen) void markSeen();
+  };
+
 
   return (
     <div className="flex min-h-dvh w-full bg-background">
