@@ -456,8 +456,12 @@ export function AiCommandBar() {
             activeAccountHandle: activeAccount?.username ?? null,
             tone: onboarding.profile.tone || undefined,
             niches: onboarding.profile.niches,
+            goals: onboarding.profile.goals,
+            brandDescription: onboarding.profile.brandDescription || undefined,
+            autonomy: onboarding.profile.autonomy,
             currentRoute: location.pathname,
           },
+
           history: conversationMemory,
         }),
       });
