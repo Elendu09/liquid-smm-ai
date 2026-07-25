@@ -251,7 +251,8 @@ export default function Dashboard() {
           </div>
 
           {/* Account health lane */}
-          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1">
+          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1" style={{ order: laneOrderOf("health") }}>
+
             <SectionCard
               title="Account health"
               description={`${accounts.length} connected`}
