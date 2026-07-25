@@ -197,7 +197,8 @@ export default function Dashboard() {
       <div className="-mx-4 sm:mx-0 px-4 sm:px-0">
         <div className="flex lg:grid lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 overflow-x-auto snap-x snap-mandatory pb-3 lg:overflow-visible lg:pb-0">
           {/* Upcoming posts lane */}
-          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1">
+          <div className="snap-start shrink-0 w-[85vw] sm:w-80 lg:w-auto lg:col-span-1" style={{ order: laneOrderOf("upcoming") }}>
+
             <SectionCard
               title="Upcoming posts"
               description={`Next ${upcoming.length} scheduled`}
