@@ -1,90 +1,76 @@
-## Goal
+## Scope
 
-Make the 8-step Onboarding Setup a **one-time, first-run only** experience that meaningfully shapes the dashboard afterward, and rebuild its Step 2 (Connect accounts) to look like the Buffer channel picker screenshot.
-
----
-
-## Part 1 — Show setup once, tour is the only re-entry
-
-Today `DashboardLayout` auto-opens the wizard whenever `state.completed === false`, and buttons in `Dashboard.tsx`, `DashboardSidebar.tsx`, and `SettingsPanels.tsx` re-dispatch `smmpilot:open-onboarding` to reopen it.
-
-Changes:
-- Add a `smmpilot:onboarding-seen` flag (localStorage + `profiles.onboarding_state.seen`) set on first close/complete of the wizard.
-- `DashboardLayout`: only auto-open when `!state.completed && !seen`. Remove the `open-onboarding` window-event listener entirely so nothing else can pop the setup back up.
-- Remove/repoint every "open setup" trigger to the **tour** instead:
-  - `Dashboard.tsx` "Take the tour" already fires tour — leave it. Any leftover setup buttons removed.
-  - `DashboardSidebar.tsx`: the setup entry becomes "Take the tour" firing `smmpilot:open-onboarding-tour`.
-  - `SettingsPanels.tsx` line 281: replace "Re-run setup" with "Replay tour".
-- Keep a hidden dev-only reset in Settings → Advanced ("Reset onboarding") that clears the flags — not surfaced as a primary action.
-
-Result: users see the setup exactly once; afterwards only the guided tour is reachable.
+Four focused improvements: onboarding name prefill + account sync, mobile-responsive Webhooks page, and a premium light-mode visual hierarchy across the dashboard.
 
 ---
 
-## Part 2 — Each step actually configures the dashboard
+### 1. Prefill full name from signup into Onboarding Step 1
 
-Right now the wizard writes to `profiles.onboarding_state` but the dashboard barely reads it. Wire every step to a concrete dashboard effect:
+- **`src/pages/Signup.tsx`**: on successful sign-up, persist the entered full name into Supabase auth `user_metadata.full_name` (via `signUp({ options: { data: { full_name } } })`) and also write it to `smmpilot:onboarding` profile.name immediately so Step 1 renders it.
+- **`src/hooks/useOnboarding.ts`**: on first load, if `profile.name` is empty, hydrate from `supabase.auth.getUser()` → `user_metadata.full_name` or fall back to email local-part.
+- **`src/components/onboarding/OnboardingWizard.tsx`**: Step 1 name input already binds to `profile.name`, so prefill will render automatically; add a subtle "from your account" helper hint under the field when prefilled.
 
-| Step | Field | Dashboard effect |
-|---|---|---|
-| 1 Welcome | `name` | Replace "Welcome back" in `PageHeader` with "Welcome, {name}". |
-| 2 Connect | `connectedPlatformIds` | Pre-seed `AccountContext` selected filters; hide `ConnectChannelsSection` platforms already picked; KPI strip filters to these platforms. |
-| 3 Niches | `niches` | Passed as context to `ai-command`, `ai-create`, caption/hashtag generators; drives Templates filter in `TemplatesSection`. |
-| 4 Goals | `goals` | Reorders Dashboard Kanban lanes + `HomeSummaryCard` KPIs: `grow`→followers first, `sales`→conversions/link clicks, `community`→engagement/DMs, `time`→automation runs. Also filters "What's next" suggestions in `OnboardingScoreCard`. |
-| 5 Brand voice | `tone`, `brandDescription` | Default tone in `GenerateCaptionsDialog`, `ComposeVariantsDialog`, `AiBriefDialog`; injected into all AI edge-function system prompts. |
-| 6 Cadence | `postsPerWeek`, `preferredTimes` | Seeds `useBestTimes` overlay; scheduler defaults new posts to next preferred slot; publish queue shows target vs actual per week. |
-| 7 Autonomy | `autonomy` | Sets default in Engagement Bot, DM Automation, Scheduled Post Runner (`manual`/`suggest`/`auto-approval` gate on `guardWrite`-like check). |
-| 8 Finish | `completed` | Unlocks `HomeSummaryCard` expand (already gated), marks `seen`, fires a one-time toast "Your dashboard is tuned for {goals[0]}". |
+### 2. Two-way sync: Onboarding profile ↔ Account settings
 
-Implementation:
-- New selector hook `useOnboardingContext()` in `src/hooks/useOnboardingContext.ts` exposing memoized derived values (goal-ordered lanes, tone, cadence, preferred platforms, ai-system-context string).
-- `PageHeader` accepts optional `greetingName`; `Dashboard.tsx` passes it.
-- `Dashboard.tsx` reorders `upcoming/health/recent` lanes and KPI tiles based on `goals[0]`.
-- `TemplatesSection` filters by niches when present.
-- `ai-command` and `ai-create` edge functions accept an `onboarding` block in the request body (niches, tone, goals, brandDescription) and prepend it to the system prompt. Frontend hooks (`useAiCreate`, `useAiCommandHistory`) attach it automatically.
-- `Scheduler` / `NewPostDialog` read `preferredTimes` + `postsPerWeek` for default slot + weekly cap warning.
-- Automation surfaces read `autonomy` for default toggle values on first mount.
+Keep both surfaces truthful so editing one updates the other.
 
----
+- **New hook `src/hooks/useProfileSync.ts`**: single source of truth combining `auth.user_metadata` + onboarding profile. Exposes `{ fullName, role, brandDescription, tone, timezone, updateProfile() }`. On `updateProfile`, writes to both `supabase.auth.updateUser({ data })` and `useOnboarding.updateProfile()` atomically.
+- **`src/components/settings/SettingsPanels.tsx` (Profile panel)**: switch from local state → `useProfileSync`. Any edit here reflects in onboarding profile immediately.
+- **`OnboardingWizard.tsx`**: on `finish()` route the save through `useProfileSync` so name/role/brand also land in `auth.user_metadata`.
+- **Realtime**: subscribe to `auth.onAuthStateChange` so metadata edits from another tab propagate.
 
-## Part 3 — Buffer-style Connect Accounts (Step 2)
+### 3. Webhooks settings page — mobile responsiveness
 
-Rebuild the Step 2 UI in `OnboardingWizard.tsx` (and reuse in `ConnectAccountDialog.tsx` for consistency) to match the uploaded reference:
+Bring `src/pages/dashboard/settings/Webhooks.tsx` (and its table/list) in line with other settings pages.
 
-- Centered modal-card look with soft off-white surface (in dark mode: elevated `bg-card` with subtle border).
-- Title "Connect a New Channel" centered, circular close top-right.
-- **3-column responsive grid** (2 cols on mobile) of platform tiles. Each tile:
-  - Rounded square (14–16px radius) with the platform's brand-color square logo badge on top (56×56, brand gradient, white glyph — reuse `PlatformIcon` with a new `variant="badge"`).
-  - Platform name in semibold below.
-  - One-line subtype/hint under the name (e.g. Instagram → "Business, Creator, or Personal"; Facebook → "Page or Group"; LinkedIn → "Page or Profile"; YouTube → "Channel"; TikTok/Threads/Bluesky/Mastodon → "Profile"; Pinterest → "Profile"; Google Business → "Location").
-  - Whole tile clickable; selected state = ring in `--primary` + check pill in top-right corner.
-- Order matches reference: Instagram, Threads, LinkedIn, Facebook, Bluesky, YouTube, TikTok, Mastodon, Pinterest, then remaining supported platforms.
-- Scrollable inner grid capped at ~520px height with fade mask.
-- Footer stays: Back / Continue, with counter "{n} selected" left-aligned.
+- Replace the fixed-width table with a responsive pattern: `<table>` on `md+`, stacked card list on mobile (`sm:hidden` cards showing URL, event chips, status, actions in a menu).
+- Header actions collapse: primary "New webhook" button becomes full-width on mobile; secondary actions move into a `DropdownMenu`.
+- Long URLs use `truncate` + tooltip; event badges wrap.
+- Dialogs (`NewWebhookDialog`, delete confirm) already use shadcn `Dialog` — verify padding, add `max-h-[90vh] overflow-y-auto` for small screens.
+- Match `p-4 sm:p-6 lg:p-8` container spacing used by sibling settings pages.
 
-Subtype hints come from a new `platforms.ts` field `connectHint: string`.
+### 4. Premium light-mode visual hierarchy (dashboard-wide)
 
----
+Reference direction from the uploaded image: crisp off-white background, tight uppercase kicker (`DISCOVER`), large serif headline, subtle helper line, prominent gradient CTA banner, softer secondary info banner, then content cards with generous whitespace and hairline separators.
 
-## Technical notes
+Implementation across the design system (light mode only — dark mode untouched):
 
-- No schema change required — `onboarding_state` JSON already stores everything; add optional `seen: boolean`.
-- All new logic is client-side except the two AI edge-function prompt tweaks.
-- Guest mode: setup still shows once per browser (localStorage `smmpilot:onboarding-seen`), no DB write.
-- Preserves existing tour (`OnboardingTour.tsx`) untouched.
+- **`src/index.css` light tokens**:
+  - `--background: 220 20% 98%` (cool off-white), `--card: 0 0% 100%`, `--muted: 220 15% 96%`.
+  - `--border: 220 14% 91%` (hairline), `--ring` softened.
+  - New semantic tokens: `--kicker` (primary at reduced opacity), `--surface-elevated`, `--banner-gradient: linear-gradient(90deg, hsl(230 90% 55%), hsl(265 85% 55%))`, `--banner-soft: linear-gradient(90deg, hsl(220 100% 97%), hsl(220 100% 94%))`, `--shadow-premium: 0 1px 2px hsl(220 40% 20% / 0.04), 0 8px 24px -12px hsl(220 40% 20% / 0.08)`.
+  - Typography scale bump: h1 tighter tracking, more line-height contrast between kicker/title/subtitle.
 
-## Files touched
+- **`PageHeader.tsx`**:
+  - Add optional `kicker` prop rendered as `text-[11px] font-semibold uppercase tracking-[0.24em] text-primary` above the title (mirrors "DISCOVER").
+  - Title stays `Instrument Serif`; description becomes standard sentence-case sans body text (not uppercase caps), matching the reference's "352 influencers on the platform." style.
+  - Remove bottom border in light mode; rely on spacing + subtle divider only when actions row wraps.
 
-- `src/hooks/useOnboarding.ts` — add `seen` + `markSeen()`.
-- `src/hooks/useOnboardingContext.ts` — **new**, derived selectors.
-- `src/components/layout/DashboardLayout.tsx` — one-shot open, drop event listener.
-- `src/components/layout/DashboardSidebar.tsx` — repoint setup CTA to tour.
-- `src/components/settings/SettingsPanels.tsx` — "Replay tour" + hidden reset.
-- `src/components/onboarding/OnboardingWizard.tsx` — Buffer-style Step 2, mark seen on close.
-- `src/components/accounts/ConnectAccountDialog.tsx` — share the same tile grid.
-- `src/config/platforms.ts` — add `connectHint`.
-- `src/components/shared/PlatformIcon.tsx` — add `variant="badge"`.
-- `src/pages/dashboard/Dashboard.tsx` + `src/components/dashboard/{HomeSummaryCard,TemplatesSection,OnboardingScoreCard,shell/PageHeader}.tsx` — consume `useOnboardingContext`.
-- `src/hooks/{useAiCreate,useAiCommandHistory}.ts` — attach onboarding context to AI calls.
-- `supabase/functions/ai-command/index.ts` + `supabase/functions/ai-create/index.ts` — accept and prepend onboarding block to system prompt.
-- `src/pages/dashboard/Scheduler.tsx` + `src/components/create/NewPostDialog.tsx` — default preferred slot / cadence warning.
+- **New component `src/components/dashboard/shell/PromoBanner.tsx`**:
+  - Two variants: `gradient` (spotlight CTA — indigo→violet with white text, rounded-2xl, right-aligned pill CTA) and `soft` (pale-blue info strip with chevron). Reused for onboarding tips, upgrade prompts, and announcements on dashboard/home/hub pages.
+
+- **`Dashboard.tsx`**:
+  - Wrap greeting in new `kicker="Overview"` prop.
+  - Replace the current 3-button actions cluster in light mode with a single primary gradient CTA + icon-only secondaries (keeps the reference's clean top bar).
+  - Insert `PromoBanner` above KPI strip when relevant (tour reminder, connect-account nudge).
+  - KPI tiles: white cards, `shadow-premium`, hairline borders, larger numeric with serif italic accent color.
+  - Kanban lanes: remove heavy borders, use `bg-card` + `shadow-premium`, section titles gain kicker treatment.
+
+- **Cards / SectionCard**: unify to `rounded-2xl border border-border/60 bg-card shadow-premium` in light mode; increase internal padding on desktop.
+
+- **Buttons**: Primary uses the new gradient token in light mode for hero CTAs; ghost/outline stays neutral gray.
+
+- Apply the same header + banner pattern to hub pages (Create/Publish/Engage/Audience/Analytics/Library/Activity/Settings/Help) so the hierarchy is consistent, not just Home.
+
+### Technical notes
+
+- All colors remain HSL semantic tokens; no hex in components.
+- Dark mode tokens unchanged — light-mode-only visual pass.
+- No schema changes. `auth.updateUser` is client-side; no migration.
+- Webhooks changes are pure presentational (Tailwind responsive classes + conditional render).
+
+### Out of scope
+
+- Dark mode restyle.
+- New backend fields.
+- Redesign of dialogs beyond mobile scroll fix.

@@ -72,6 +72,17 @@ const Signup = () => {
       toast.error(error.message);
       return;
     }
+    // Prefill onboarding Step 1 with the signup name so the wizard opens pre-filled.
+    try {
+      const KEY = "smmpilot:onboarding";
+      const existing = JSON.parse(window.localStorage.getItem(KEY) ?? "{}");
+      const nextState = {
+        completed: !!existing.completed,
+        seen: !!existing.seen,
+        profile: { ...(existing.profile ?? {}), name: name.trim() || existing?.profile?.name || "" },
+      };
+      window.localStorage.setItem(KEY, JSON.stringify(nextState));
+    } catch { /* ignore */ }
     if (data.session) {
       navigate(next, { replace: true });
     } else {

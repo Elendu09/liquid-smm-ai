@@ -67,12 +67,14 @@ import { PasskeyDialog, type Passkey } from "./PasskeyDialog";
 import { TwoFactorDialog } from "./TwoFactorDialog";
 import { PaymentMethodDialog, type PaymentMethodRecord } from "./PaymentMethodDialog";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import { logAudit } from "./AuditPanel";
 
 /* ============================== Account =============================== */
 
 export function AccountPanel() {
   const { user, isGuest } = useAuthUser();
+  const { updateProfile: updateOnboardingProfile } = useOnboarding();
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -143,6 +145,11 @@ export function AccountPanel() {
         timezone: profile.timezone,
       })
       .eq("id", user.id);
+    if (!error) {
+      // Keep onboarding profile and auth metadata in sync with the account name.
+      await supabase.auth.updateUser({ data: { full_name: profile.name } }).catch(() => {});
+      updateOnboardingProfile({ name: profile.name });
+    }
     if (!error && profile.email && profile.email !== user.email) {
       const { error: eErr } = await supabase.auth.updateUser({ email: profile.email });
       if (eErr) toast.error(eErr.message);
