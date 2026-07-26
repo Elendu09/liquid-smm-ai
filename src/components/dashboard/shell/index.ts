@@ -1,4 +1,5 @@
 export { PageHeader } from "./PageHeader";
+export { PromoBanner } from "./PromoBanner";
 export { SectionCard } from "./SectionCard";
 export { EmptyState } from "./EmptyState";
 export { LoadingState } from "./LoadingState";
