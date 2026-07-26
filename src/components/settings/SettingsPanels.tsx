@@ -67,6 +67,7 @@ import { PasskeyDialog, type Passkey } from "./PasskeyDialog";
 import { TwoFactorDialog } from "./TwoFactorDialog";
 import { PaymentMethodDialog, type PaymentMethodRecord } from "./PaymentMethodDialog";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import { logAudit } from "./AuditPanel";
 
 /* ============================== Account =============================== */
