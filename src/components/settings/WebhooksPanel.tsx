@@ -70,8 +70,8 @@ export function WebhooksPanel() {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="flex flex-row items-start justify-between gap-4">
-          <div>
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
             <CardTitle className="flex items-center gap-2">
               <Webhook className="h-4 w-4 text-primary" /> Webhooks & Zapier
             </CardTitle>
@@ -79,17 +79,17 @@ export function WebhooksPanel() {
               Fire real-time events to Zapier, Make, n8n, or any HTTPS endpoint.
             </CardDescription>
           </div>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={copyPayload}>
+          <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
+            <Button size="sm" variant="outline" onClick={copyPayload} className="w-full sm:w-auto">
               <Copy className="h-3.5 w-3.5 mr-1.5" /> Sample payload
             </Button>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button size="sm">
+                <Button size="sm" className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-1.5" /> New webhook
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg">
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create webhook</DialogTitle>
                   <DialogDescription>Events selected here will POST JSON to your endpoint.</DialogDescription>
@@ -163,8 +163,8 @@ export function WebhooksPanel() {
             </div>
           ) : (
             hooks.map((h) => (
-              <div key={h.id} className="rounded-xl border border-border/60 p-3 space-y-2">
-                <div className="flex items-start justify-between gap-2">
+              <div key={h.id} className="rounded-xl border border-border/60 p-3 space-y-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-semibold truncate">{h.name}</p>
@@ -189,8 +189,8 @@ export function WebhooksPanel() {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-[11px] text-muted-foreground truncate font-mono mt-0.5">{h.url}</p>
-                    <div className="flex items-center gap-1 flex-wrap mt-1">
+                    <p className="text-[11px] text-muted-foreground truncate font-mono mt-1 max-w-full" title={h.url}>{h.url}</p>
+                    <div className="flex items-center gap-1 flex-wrap mt-1.5">
                       {h.events.slice(0, 4).map((e) => (
                         <span key={e} className="text-[10px] px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground">{e}</span>
                       ))}
@@ -199,7 +199,7 @@ export function WebhooksPanel() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center justify-end gap-1 shrink-0 border-t border-border/60 pt-2 sm:border-0 sm:pt-0">
                     <Switch checked={h.active} onCheckedChange={(v) => update(h.id, { active: v })} />
                     <Button size="icon" variant="ghost" onClick={() => handleTest(h.id)} disabled={testing === h.id} title="Send test payload">
                       <Play className={cn("h-3.5 w-3.5", testing === h.id && "animate-pulse")} />

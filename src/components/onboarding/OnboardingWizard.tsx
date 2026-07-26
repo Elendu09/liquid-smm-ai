@@ -186,6 +186,9 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
       <div className="space-y-2">
         <Label htmlFor="ob-name">Your name</Label>
         <Input id="ob-name" value={draft.name} onChange={(e) => commit({ name: e.target.value })} placeholder="e.g. Alex" />
+        {draft.name && (
+          <p className="text-[11px] text-muted-foreground">Prefilled from your account — edit anytime.</p>
+        )}
       </div>
       <div className="space-y-3">
         <Label>You are…</Label>

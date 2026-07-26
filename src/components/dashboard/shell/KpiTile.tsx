@@ -21,7 +21,7 @@ export function KpiTile({
   return (
     <div
       className={cn(
-        "rounded-xl sm:rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-3 sm:p-4 lg:p-5 hover:border-primary/40 transition-colors",
+        "rounded-xl sm:rounded-2xl border border-border/60 bg-card dark:bg-card/70 dark:backdrop-blur-sm p-3 sm:p-4 lg:p-5 shadow-[var(--shadow-premium)] hover:border-primary/40 hover:shadow-[var(--shadow-premium-lg)] transition-all",
         className,
       )}
     >
@@ -48,10 +48,10 @@ export function KpiTile({
         )}
       </div>
       <div className="mt-2 sm:mt-3 lg:mt-4">
-        <div className="text-lg sm:text-2xl lg:text-3xl font-bold tracking-tight leading-tight">
+        <div className="font-['Instrument_Serif'] text-2xl sm:text-3xl lg:text-4xl font-normal tracking-tight leading-none text-foreground">
           {value}
         </div>
-        <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 leading-snug">
+        <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.14em] text-muted-foreground mt-1.5 leading-snug">
           {label}
         </div>
       </div>
