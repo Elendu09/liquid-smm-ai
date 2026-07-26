@@ -100,27 +100,37 @@ export function useOnboarding() {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("onboarding_state")
+        .select("onboarding_state, display_name")
         .eq("id", user.id)
         .maybeSingle();
       if (cancelled) return;
       const remote = (data?.onboarding_state as Partial<OnboardingState> | null) ?? null;
       const local = readLocal();
+      // Prefill: full name from auth metadata / profile row / email fallback.
+      const accountName =
+        (user.user_metadata?.full_name as string | undefined) ??
+        (user.user_metadata?.name as string | undefined) ??
+        data?.display_name ??
+        user.email?.split("@")[0] ??
+        "";
+      const remoteProfile = remote?.profile ?? {};
+      const mergedProfile: OnboardingProfile = {
+        ...defaultProfile,
+        ...local.profile,
+        ...remoteProfile,
+      };
+      if (!mergedProfile.name && accountName) mergedProfile.name = accountName;
       // Merge: remote wins on `completed`; profile fields prefer remote when present.
       const merged: OnboardingState = {
         completed: !!(remote?.completed ?? local.completed),
         completedAt: remote?.completedAt ?? local.completedAt,
         seen: !!(remote?.seen ?? local.seen),
-        profile: {
-          ...defaultProfile,
-          ...local.profile,
-          ...(remote?.profile ?? {}),
-        },
+        profile: mergedProfile,
       };
 
       setState(merged);
       // Push local-only progress up on first login.
-      if (!remote || (!remote.completed && local.completed) || Object.keys(remote?.profile ?? {}).length === 0) {
+      if (!remote || (!remote.completed && local.completed) || Object.keys(remoteProfile).length === 0) {
         await supabase.from("profiles").update({ onboarding_state: merged as never }).eq("id", user.id);
       }
     })();
