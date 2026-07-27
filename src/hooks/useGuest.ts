@@ -1,10 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const KEY = "smmpilot:guest";
 const EVT = "smmpilot:guest-changed";
 
-export function enableGuest() {
+/**
+ * Enable demo/guest mode. Signs out any active Supabase session first so
+ * demo and authenticated sessions can never coexist.
+ */
+export async function enableGuest() {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) await supabase.auth.signOut();
+  } catch { /* ignore */ }
   localStorage.setItem(KEY, "1");
   window.dispatchEvent(new Event(EVT));
 }

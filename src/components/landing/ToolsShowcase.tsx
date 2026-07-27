@@ -65,7 +65,7 @@ export function ToolsShowcase() {
         </div>
 
         <div className="text-center mt-16">
-          <Link to="/dashboard">
+          <Link to="/signup">
             <Button
               size="lg"
               variant="outline"

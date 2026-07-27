@@ -288,13 +288,15 @@ export default function TeamPage() {
                 {visibleMembers.map((m) => (
                   <div
                     key={m.id}
-                    className="flex items-center justify-between gap-3 p-3 sm:p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl border border-border/60 bg-card hover:border-primary/40 hover:shadow-sm transition-all"
                   >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                       <div className="relative shrink-0">
-                        <Avatar className="h-10 w-10">
+                        <Avatar className="h-11 w-11 ring-1 ring-border/60">
                           <AvatarImage src={m.avatarUrl ?? undefined} />
-                          <AvatarFallback>{m.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20 text-primary font-semibold">
+                            {m.name.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
                         </Avatar>
                         <span
                           className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background ${statusDot(m.status)}`}
@@ -302,7 +304,7 @@ export default function TeamPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium truncate">{m.name}</span>
+                          <span className="font-semibold truncate">{m.name}</span>
                           <Badge className={`capitalize ${ROLE_BADGE[m.role]}`}>{m.role}</Badge>
                           {m.status === "pending" && (
                             <Badge variant="outline" className="border-yellow-500/40 text-yellow-500 text-[10px]">
@@ -310,19 +312,19 @@ export default function TeamPage() {
                             </Badge>
                           )}
                         </div>
-                        <div className="text-xs sm:text-sm text-muted-foreground truncate">
+                        <div className="text-xs sm:text-sm text-primary/90 truncate">
                           {m.email}
-                          {m.status === "active" && (
-                            <span className="ml-2">· active {lastActiveLabel(m.lastActiveAt)}</span>
-                          )}
-                          {m.status === "pending" && m.inviteExpiresAt && (
-                            <span className="ml-2">
-                              · expires {new Date(m.inviteExpiresAt).toLocaleDateString()}
-                            </span>
-                          )}
                         </div>
+                        {(m.status === "active" || (m.status === "pending" && m.inviteExpiresAt)) && (
+                          <div className="text-[11px] text-muted-foreground mt-0.5">
+                            {m.status === "active"
+                              ? `Active ${lastActiveLabel(m.lastActiveAt)}`
+                              : `Expires ${new Date(m.inviteExpiresAt!).toLocaleDateString()}`}
+                          </div>
+                        )}
                       </div>
                     </div>
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="shrink-0" aria-label={`Actions for ${m.name}`}>

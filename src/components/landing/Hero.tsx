@@ -168,7 +168,7 @@ export function Hero() {
           </p>
 
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-            <Link to="/dashboard" className="w-full sm:w-auto">
+            <Link to="/signup" className="w-full sm:w-auto">
               <Button
                 size="lg"
                 className="btn-rainbow h-12 w-full min-h-11 rounded-full px-8 text-sm font-semibold uppercase tracking-[0.15em] border-0 sm:w-auto"

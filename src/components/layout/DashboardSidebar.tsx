@@ -49,6 +49,7 @@ import { Input } from "@/components/ui/input";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SignOutDialog } from "@/components/auth/SignOutDialog";
+import { CreditsPill } from "@/components/shared/CreditsPill";
 
 type SubItem = { label: string; href: string; icon: React.ComponentType<{ className?: string }> };
 type NavItem = {
@@ -553,6 +554,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
             showLabels ? "justify-between" : "flex-col justify-center gap-1",
           )}
         >
+          {showLabels && <CreditsPill variant="compact" />}
           <Tooltip>
             <TooltipTrigger asChild>
               <div><NotificationBell collapsed /></div>
@@ -641,7 +643,7 @@ export function DashboardSidebar() {
           </div>
           <span className="font-['Instrument_Serif'] text-2xl leading-none tracking-tight text-foreground">SMMSAAS<span className="italic text-primary">.</span></span>
         </Link>
-        <div className="w-9" />
+        <CreditsPill variant="compact" />
       </div>
 
       <aside
