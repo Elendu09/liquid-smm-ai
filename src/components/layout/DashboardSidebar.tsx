@@ -49,6 +49,7 @@ import { Input } from "@/components/ui/input";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SignOutDialog } from "@/components/auth/SignOutDialog";
+import { CreditsPill } from "@/components/shared/CreditsPill";
 
 type SubItem = { label: string; href: string; icon: React.ComponentType<{ className?: string }> };
 type NavItem = {
