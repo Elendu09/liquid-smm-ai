@@ -1,76 +1,67 @@
-## Scope
+## 1. Strict auth ↔ demo separation
 
-Four focused improvements: onboarding name prefill + account sync, mobile-responsive Webhooks page, and a premium light-mode visual hierarchy across the dashboard.
+**Rule:** demo (guest) and authenticated sessions can never coexist, and trial CTAs never enter demo mode.
 
----
+- `src/hooks/useGuest.ts`
+  - `enableGuest()`: if a Supabase session exists, sign out first (`supabase.auth.signOut()`) before setting the guest flag.
+- `src/hooks/useAuthUser.ts` + `src/components/auth/RequireAuth.tsx`
+  - When an authenticated `user` is detected, force-clear the guest flag (`disableGuest()`). Guest branch only renders when `!user`.
+- `src/pages/Login.tsx` / `src/pages/Signup.tsx`
+  - On mount, call `disableGuest()` so opening auth always exits demo.
+  - After successful sign-in/sign-up, ensure `disableGuest()` runs before navigating.
+- `src/components/landing/Hero.tsx`
+  - "Start free trial" (line 171–179) → change `<Link to="/dashboard">` to `/signup` and add `onClick={disableGuest}`.
+  - "Get started for free" email form (line 197–218) already routes to `/signup`; add `disableGuest()` in `handleEmailStart` before navigation.
+  - "Try live demo" stays as the only demo entry, calls `enableGuest()` (which now signs out first).
+- `src/components/landing/CTASection.tsx` and `ToolsShowcase.tsx`
+  - Point "Start free trial" / "Start your free trial" buttons to `/signup` (not `/dashboard`).
 
-### 1. Prefill full name from signup into Onboarding Step 1
+## 2. Credits UI in dashboard header
 
-- **`src/pages/Signup.tsx`**: on successful sign-up, persist the entered full name into Supabase auth `user_metadata.full_name` (via `signUp({ options: { data: { full_name } } })`) and also write it to `smmpilot:onboarding` profile.name immediately so Step 1 renders it.
-- **`src/hooks/useOnboarding.ts`**: on first load, if `profile.name` is empty, hydrate from `supabase.auth.getUser()` → `user_metadata.full_name` or fall back to email local-part.
-- **`src/components/onboarding/OnboardingWizard.tsx`**: Step 1 name input already binds to `profile.name`, so prefill will render automatically; add a subtle "from your account" helper hint under the field when prefilled.
+- New hook `src/hooks/useCredits.ts`
+  - Returns `{ included, used, purchased, cap, renewsAt, history, loading }`.
+  - Signed-in: reads from a new `public.credit_balances` (single row per user) + `public.credit_events` (ledger). Realtime subscribe for live updates.
+  - Guest: returns local seed matching current Settings demo numbers so the header always renders.
+- Migration
+  - `credit_balances(user_id pk, included int, used int, purchased int, cap int, renews_at timestamptz)`.
+  - `credit_events(id, user_id, kind, delta int, label, created_at)`.
+  - GRANTs to `authenticated` + `service_role`; RLS: user can select own rows; inserts via service role only.
+  - `handle_new_user` trigger extended to seed a `credit_balances` row (cap=500 free tier).
+- New component `src/components/dashboard/shell/CreditsPill.tsx`
+  - Compact pill: `✦ 494 / 500` with primary progress bar; hover popover shows Included / Purchased / Renews with a "Purchase credits" button linking to `/dashboard/settings/billing`.
+- Mount in `DashboardLayout` header (desktop + mobile top bar), placed next to the notification bell.
 
-### 2. Two-way sync: Onboarding profile ↔ Account settings
+## 3. Credits usage UI in Settings (synced with billing)
 
-Keep both surfaces truthful so editing one updates the other.
+Rebuild the top of `BillingPanel` (`src/components/settings/SettingsPanels.tsx`) to match the reference:
 
-- **New hook `src/hooks/useProfileSync.ts`**: single source of truth combining `auth.user_metadata` + onboarding profile. Exposes `{ fullName, role, brandDescription, tone, timezone, updateProfile() }`. On `updateProfile`, writes to both `supabase.auth.updateUser({ data })` and `useOnboarding.updateProfile()` atomically.
-- **`src/components/settings/SettingsPanels.tsx` (Profile panel)**: switch from local state → `useProfileSync`. Any edit here reflects in onboarding profile immediately.
-- **`OnboardingWizard.tsx`**: on `finish()` route the save through `useProfileSync` so name/role/brand also land in `auth.user_metadata`.
-- **Realtime**: subscribe to `auth.onAuthStateChange` so metadata edits from another tab propagate.
+- **Creative Credits card**
+  - Header row: `✦ Creative Credits` + description + `+ Purchase Credits` primary CTA (gradient).
+  - Huge numeric `credits remaining` from `useCredits`.
+  - Full-width progress bar (`used/cap`).
+  - Three-column stat row: **Included** `used/cap`, **Purchased** `n`, **Renews** `date`.
+  - "HOW CREDITS WORK" — two pill rows: AI Writing / Content Adaptation with sparkle badges.
+  - "CREDIT HISTORY" — list from `credit_events` (icon + label + timestamp + signed delta). Empty state for real users with no events.
+- Keep existing Plan / Payment methods / Invoices sections below.
+- Data source is the same `useCredits` hook so header pill and settings always stay in sync (realtime + on-focus refetch).
 
-### 3. Webhooks settings page — mobile responsiveness
+## 4. Team collaboration UI polish (matches reference)
 
-Bring `src/pages/dashboard/settings/Webhooks.tsx` (and its table/list) in line with other settings pages.
+Update `src/pages/dashboard/Team.tsx`:
 
-- Replace the fixed-width table with a responsive pattern: `<table>` on `md+`, stacked card list on mobile (`sm:hidden` cards showing URL, event chips, status, actions in a menu).
-- Header actions collapse: primary "New webhook" button becomes full-width on mobile; secondary actions move into a `DropdownMenu`.
-- Long URLs use `truncate` + tooltip; event badges wrap.
-- Dialogs (`NewWebhookDialog`, delete confirm) already use shadcn `Dialog` — verify padding, add `max-h-[90vh] overflow-y-auto` for small screens.
-- Match `p-4 sm:p-6 lg:p-8` container spacing used by sibling settings pages.
+- **Members section**: header `Members` left, `N person/people` counter right. Owner card becomes a rounded panel with large gradient avatar circle, "YOU" muted tag beside the name, email in primary/blue, and role/status chips (`♛ Owner`, `● Active`) beneath.
+- **Invite a teammate panel**: single rounded card, description under title, right-aligned `N / N seats used` counter, single row with email input (pill-shaped, full width), Role select, and gradient `Send invite` button.
+- Show `⚠ Seat limit reached. Upgrade to add more teammates.` when member count ≥ plan cap; disable submit and link to Billing.
+- Keep existing invite/role dialogs and hooks; only markup + tokens change.
 
-### 4. Premium light-mode visual hierarchy (dashboard-wide)
+## Technical details
 
-Reference direction from the uploaded image: crisp off-white background, tight uppercase kicker (`DISCOVER`), large serif headline, subtle helper line, prominent gradient CTA banner, softer secondary info banner, then content cards with generous whitespace and hairline separators.
+- Realtime channels use unique suffixes (`crypto.randomUUID()`) to avoid the "cannot add callbacks after subscribe()" regression.
+- No new secrets; no third-party billing yet — credits are workspace-local until Stripe/Paddle is wired.
+- All new tables in `public` include `GRANT` + RLS per project rules.
+- Guest mode continues to see seed numbers; every write path already goes through `guardWrite`.
 
-Implementation across the design system (light mode only — dark mode untouched):
+## Files touched
 
-- **`src/index.css` light tokens**:
-  - `--background: 220 20% 98%` (cool off-white), `--card: 0 0% 100%`, `--muted: 220 15% 96%`.
-  - `--border: 220 14% 91%` (hairline), `--ring` softened.
-  - New semantic tokens: `--kicker` (primary at reduced opacity), `--surface-elevated`, `--banner-gradient: linear-gradient(90deg, hsl(230 90% 55%), hsl(265 85% 55%))`, `--banner-soft: linear-gradient(90deg, hsl(220 100% 97%), hsl(220 100% 94%))`, `--shadow-premium: 0 1px 2px hsl(220 40% 20% / 0.04), 0 8px 24px -12px hsl(220 40% 20% / 0.08)`.
-  - Typography scale bump: h1 tighter tracking, more line-height contrast between kicker/title/subtitle.
-
-- **`PageHeader.tsx`**:
-  - Add optional `kicker` prop rendered as `text-[11px] font-semibold uppercase tracking-[0.24em] text-primary` above the title (mirrors "DISCOVER").
-  - Title stays `Instrument Serif`; description becomes standard sentence-case sans body text (not uppercase caps), matching the reference's "352 influencers on the platform." style.
-  - Remove bottom border in light mode; rely on spacing + subtle divider only when actions row wraps.
-
-- **New component `src/components/dashboard/shell/PromoBanner.tsx`**:
-  - Two variants: `gradient` (spotlight CTA — indigo→violet with white text, rounded-2xl, right-aligned pill CTA) and `soft` (pale-blue info strip with chevron). Reused for onboarding tips, upgrade prompts, and announcements on dashboard/home/hub pages.
-
-- **`Dashboard.tsx`**:
-  - Wrap greeting in new `kicker="Overview"` prop.
-  - Replace the current 3-button actions cluster in light mode with a single primary gradient CTA + icon-only secondaries (keeps the reference's clean top bar).
-  - Insert `PromoBanner` above KPI strip when relevant (tour reminder, connect-account nudge).
-  - KPI tiles: white cards, `shadow-premium`, hairline borders, larger numeric with serif italic accent color.
-  - Kanban lanes: remove heavy borders, use `bg-card` + `shadow-premium`, section titles gain kicker treatment.
-
-- **Cards / SectionCard**: unify to `rounded-2xl border border-border/60 bg-card shadow-premium` in light mode; increase internal padding on desktop.
-
-- **Buttons**: Primary uses the new gradient token in light mode for hero CTAs; ghost/outline stays neutral gray.
-
-- Apply the same header + banner pattern to hub pages (Create/Publish/Engage/Audience/Analytics/Library/Activity/Settings/Help) so the hierarchy is consistent, not just Home.
-
-### Technical notes
-
-- All colors remain HSL semantic tokens; no hex in components.
-- Dark mode tokens unchanged — light-mode-only visual pass.
-- No schema changes. `auth.updateUser` is client-side; no migration.
-- Webhooks changes are pure presentational (Tailwind responsive classes + conditional render).
-
-### Out of scope
-
-- Dark mode restyle.
-- New backend fields.
-- Redesign of dialogs beyond mobile scroll fix.
+Edit: `useGuest.ts`, `useAuthUser.ts`, `RequireAuth.tsx`, `Login.tsx`, `Signup.tsx`, `Hero.tsx`, `CTASection.tsx`, `ToolsShowcase.tsx`, `DashboardLayout.tsx`, `SettingsPanels.tsx` (BillingPanel), `Team.tsx`.
+Create: `useCredits.ts`, `CreditsPill.tsx`, migration for `credit_balances` + `credit_events`.
