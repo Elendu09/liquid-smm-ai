@@ -643,7 +643,7 @@ export function DashboardSidebar() {
           </div>
           <span className="font-['Instrument_Serif'] text-2xl leading-none tracking-tight text-foreground">SMMSAAS<span className="italic text-primary">.</span></span>
         </Link>
-        <div className="w-9" />
+        <CreditsPill variant="compact" />
       </div>
 
       <aside
