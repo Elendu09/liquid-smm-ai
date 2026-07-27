@@ -49,7 +49,7 @@ export function CTASection() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
-              <Link to="/dashboard" className="w-full sm:w-auto">
+              <Link to="/signup" className="w-full sm:w-auto">
                 <Button
                   size="lg"
                   className="w-full sm:w-auto h-12 px-8 rounded-full text-[11px] uppercase tracking-[0.2em] font-semibold shadow-[0_0_24px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_32px_hsl(var(--primary)/0.55)]"
