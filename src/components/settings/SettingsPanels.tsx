@@ -68,6 +68,8 @@ import { TwoFactorDialog } from "./TwoFactorDialog";
 import { PaymentMethodDialog, type PaymentMethodRecord } from "./PaymentMethodDialog";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useCredits } from "@/hooks/useCredits";
+import { Progress } from "@/components/ui/progress";
 import { logAudit } from "./AuditPanel";
 
 /* ============================== Account =============================== */
