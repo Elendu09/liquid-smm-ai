@@ -454,6 +454,64 @@ export function BillingPanel() {
 
   return (
     <div className="space-y-6">
+      {!isGuest && (
+        <Card className="overflow-hidden border-primary/30 bg-gradient-to-br from-primary/10 via-accent/[0.06] to-transparent">
+          <CardHeader className="flex flex-row items-start justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                Creative Credits
+              </CardTitle>
+              <CardDescription>
+                Credits fuel every AI feature — captions, hashtags, remix, translations and voice.
+              </CardDescription>
+            </div>
+            <Button size="sm" className="btn-rainbow rounded-full h-9 px-4 border-0">Purchase Credits</Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold tabular-nums">{credits.balance.toLocaleString()}</span>
+              <span className="text-sm text-muted-foreground">credits remaining</span>
+            </div>
+            <div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+                <span>Monthly usage</span>
+                <span className="tabular-nums">
+                  {credits.usedThisMonth.toLocaleString()} / {credits.monthlyAllowance.toLocaleString()}
+                </span>
+              </div>
+              <Progress value={creditsUsedPct} className="h-2" />
+            </div>
+            <div className="pt-2">
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">
+                Recent activity
+              </div>
+              {creditEvents.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No credit activity yet.</p>
+              ) : (
+                <ul className="divide-y divide-border/60 rounded-lg border border-border/60 bg-card/40">
+                  {creditEvents.slice(0, 6).map((e) => (
+                    <li key={e.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">{e.reason}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(e.created_at).toLocaleString()}
+                        </div>
+                      </div>
+                      <span
+                        className={`shrink-0 tabular-nums font-semibold ${e.delta >= 0 ? "text-green-500" : "text-muted-foreground"}`}
+                      >
+                        {e.delta >= 0 ? "+" : ""}{e.delta}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {isGuest ? (
         <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 flex items-start gap-3">
           <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
