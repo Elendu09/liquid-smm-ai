@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { isGuestSession } from "@/hooks/useGuest";
+import { isGuestSession, disableGuest } from "@/hooks/useGuest";
 
 export function useAuthUser() {
   const [user, setUser] = useState<User | null>(null);
@@ -11,19 +11,20 @@ export function useAuthUser() {
   useEffect(() => {
     let mounted = true;
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const applyUser = (u: User | null) => {
       if (!mounted) return;
-      setUser(session?.user ?? null);
+      // Strict isolation: a real user can never coexist with guest mode.
+      if (u && isGuestSession()) disableGuest();
+      setUser(u);
       setIsGuest(isGuestSession());
       setLoading(false);
+    };
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      applyUser(session?.user ?? null);
     });
 
-    supabase.auth.getUser().then(({ data }) => {
-      if (!mounted) return;
-      setUser(data.user ?? null);
-      setIsGuest(isGuestSession());
-      setLoading(false);
-    });
+    supabase.auth.getUser().then(({ data }) => applyUser(data.user ?? null));
 
     const sync = () => setIsGuest(isGuestSession());
     window.addEventListener("smmpilot:guest-changed", sync);
