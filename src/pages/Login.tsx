@@ -178,8 +178,8 @@ const Login = () => {
         <div className="text-center">
           <button
             type="button"
-            onClick={() => {
-              enableGuest();
+            onClick={async () => {
+              await enableGuest();
               toast.info("Demo mode enabled — read-only preview");
               navigate("/dashboard", { replace: true });
             }}
