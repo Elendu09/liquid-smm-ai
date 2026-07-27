@@ -529,6 +529,69 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_balances: {
+        Row: {
+          cap: number
+          created_at: string
+          included: number
+          purchased: number
+          renews_at: string
+          updated_at: string
+          used: number
+          user_id: string
+        }
+        Insert: {
+          cap?: number
+          created_at?: string
+          included?: number
+          purchased?: number
+          renews_at?: string
+          updated_at?: string
+          used?: number
+          user_id: string
+        }
+        Update: {
+          cap?: number
+          created_at?: string
+          included?: number
+          purchased?: number
+          renews_at?: string
+          updated_at?: string
+          used?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_events: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          kind: string
+          label: string
+          meta: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          kind: string
+          label: string
+          meta?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          kind?: string
+          label?: string
+          meta?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       custom_reports: {
         Row: {
           cards: Json
