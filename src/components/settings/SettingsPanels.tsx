@@ -391,6 +391,7 @@ function download(name: string, contents: string, type = "text/plain") {
 
 export function BillingPanel() {
   const { isGuest } = useGuest();
+  const { balance: credits, events: creditEvents, usedPct: creditsUsedPct } = useCredits();
   const usage = isGuest ? [
     { label: "Scheduled posts", used: 148, cap: 200, unit: "posts / mo" },
     { label: "AI credits", used: 720, cap: 1000, unit: "credits / mo" },
@@ -398,7 +399,7 @@ export function BillingPanel() {
     { label: "Team seats", used: 4, cap: 10, unit: "seats" },
   ] : [
     { label: "Scheduled posts", used: 0, cap: 0, unit: "posts / mo" },
-    { label: "AI credits", used: 0, cap: 0, unit: "credits / mo" },
+    { label: "AI credits", used: credits.usedThisMonth, cap: credits.monthlyAllowance, unit: "credits / mo" },
     { label: "Connected accounts", used: 0, cap: 0, unit: "accounts" },
     { label: "Team seats", used: 0, cap: 0, unit: "seats" },
   ];
