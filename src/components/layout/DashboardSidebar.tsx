@@ -554,6 +554,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
             showLabels ? "justify-between" : "flex-col justify-center gap-1",
           )}
         >
+          {showLabels && <CreditsPill variant="compact" />}
           <Tooltip>
             <TooltipTrigger asChild>
               <div><NotificationBell collapsed /></div>
