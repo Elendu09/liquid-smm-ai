@@ -649,6 +649,8 @@ export function DashboardSidebar() {
           <CreditsPill variant="compact" />
           <NotificationBell collapsed />
         </div>
+      </div>
+
 
       <aside
         className={cn(
