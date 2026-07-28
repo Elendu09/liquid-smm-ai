@@ -45,7 +45,6 @@ export function DashboardLayout() {
             "calc(var(--demo-banner-h, 0px) + var(--mobile-header-h, 0px))",
         }}
       >
-        <DashboardHeader variant="mobile" />
         <DashboardHeader variant="desktop" />
         <DemoBannerInline />
         <PresetLandingBanner />
