@@ -637,14 +637,18 @@ export function DashboardSidebar() {
             />
           </SheetContent>
         </Sheet>
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
+        <Link to="/" className="flex items-center gap-2 min-w-0">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary via-primary to-primary/70 flex items-center justify-center shadow-sm shadow-primary/30 ring-1 ring-primary/20">
             <Zap className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-['Instrument_Serif'] text-2xl leading-none tracking-tight text-foreground">SMMSAAS<span className="italic text-primary">.</span></span>
+          <span className="font-['Instrument_Serif'] text-xl leading-none tracking-tight text-foreground truncate">
+            SMMSAAS<span className="italic text-primary">.</span>
+          </span>
         </Link>
-        <CreditsPill variant="compact" />
-      </div>
+        <div className="flex items-center gap-1.5">
+          <CreditsPill variant="compact" />
+          <NotificationBell collapsed />
+        </div>
 
       <aside
         className={cn(
