@@ -114,8 +114,23 @@ const App = () => (
                 <Route path="library/*" element={<LibraryHub />} />
                 <Route path="link-in-bio/*" element={<LinkInBioHub />} />
                 <Route path="activity/*" element={<ActivityHub />} />
-                <Route path="settings/*" element={<SettingsHub />} />
-                <Route path="team" element={<Team />} />
+                {/* Hard auth/demo separation — guests may not see settings, billing, or team */}
+                <Route
+                  path="settings/*"
+                  element={
+                    <RequireAuth authOnly>
+                      <SettingsHub />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="team"
+                  element={
+                    <RequireAuth authOnly>
+                      <Team />
+                    </RequireAuth>
+                  }
+                />
                 <Route path="support" element={<Support />} />
 
                 {/* Legacy route redirects */}

@@ -145,9 +145,37 @@ export function AiAssistantDrawer() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open AI Assistant"
-        className="fixed z-40 bottom-24 lg:bottom-6 left-4 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-95 transition-all inline-flex items-center justify-center"
+        className="group fixed z-40 bottom-24 lg:bottom-6 left-4 h-14 w-14 rounded-full inline-flex items-center justify-center transition-all hover:scale-[1.06] active:scale-95"
       >
-        <Sparkles className="h-5 w-5" />
+        {/* Animated conic gradient ring */}
+        <span
+          className="absolute inset-0 rounded-full opacity-90 blur-[2px] animate-[spin_6s_linear_infinite]"
+          style={{
+            background:
+              "conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--primary) / 0.2), hsl(var(--primary)), hsl(var(--primary) / 0.4), hsl(var(--primary)))",
+          }}
+          aria-hidden
+        />
+        {/* Inner glass orb with AI mark */}
+        <span className="relative h-11 w-11 rounded-full bg-background/85 backdrop-blur-xl border border-primary/30 shadow-lg shadow-primary/20 inline-flex items-center justify-center overflow-hidden">
+          <svg viewBox="0 0 24 24" className="h-6 w-6 text-primary" fill="none" aria-hidden>
+            <defs>
+              <linearGradient id="ai-orb-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="currentColor" />
+                <stop offset="100%" stopColor="currentColor" stopOpacity="0.55" />
+              </linearGradient>
+            </defs>
+            {/* Four-point sparkle / AI star */}
+            <path
+              d="M12 2.5c.5 3.6 2.4 5.5 6 6-3.6.5-5.5 2.4-6 6-.5-3.6-2.4-5.5-6-6 3.6-.5 5.5-2.4 6-6Z"
+              fill="url(#ai-orb-grad)"
+            />
+            <circle cx="18.5" cy="17.5" r="1.6" fill="currentColor" opacity="0.9" />
+            <circle cx="5.5" cy="18.5" r="1.1" fill="currentColor" opacity="0.7" />
+          </svg>
+          {/* Pulse dot */}
+          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-background animate-pulse" />
+        </span>
       </button>
 
       <Sheet open={open} onOpenChange={setOpen}>

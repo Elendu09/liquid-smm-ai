@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { DashboardSidebar } from "./DashboardSidebar";
+import { DashboardHeader } from "./DashboardHeader";
 import { MobileHubNav } from "@/components/dashboard/shell/MobileHubNav";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
@@ -44,6 +45,7 @@ export function DashboardLayout() {
             "calc(var(--demo-banner-h, 0px) + var(--mobile-header-h, 0px))",
         }}
       >
+        <DashboardHeader variant="desktop" />
         <DemoBannerInline />
         <PresetLandingBanner />
         <Outlet />
