@@ -5,9 +5,15 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 
 interface Props {
   children: ReactNode;
+  /**
+   * When true, guests (demo mode) are blocked and redirected to /login.
+   * Use for sensitive sections (Settings, Team, Billing) where demo data
+   * MUST NOT be visible or mutable.
+   */
+  authOnly?: boolean;
 }
 
-export function RequireAuth({ children }: Props) {
+export function RequireAuth({ children, authOnly = false }: Props) {
   const { user, loading, isGuest } = useAuthUser();
   const location = useLocation();
 
@@ -20,6 +26,13 @@ export function RequireAuth({ children }: Props) {
         </div>
       </div>
     );
+  }
+
+  // Hard separation: guests may never access auth-only routes. Route them
+  // to /login with a reason so the login page can present the correct CTA.
+  if (authOnly && isGuest && !user) {
+    const next = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?next=${next}&reason=auth-required`} replace />;
   }
 
   if (!user && !isGuest) {
