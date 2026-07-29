@@ -26,12 +26,29 @@ import { AiFillWeekDialog } from "@/components/publish/AiFillWeekDialog";
 import { RecyclingRulesDialog } from "@/components/publish/RecyclingRulesDialog";
 import { BulkCsvImportDialog } from "@/components/publish/BulkCsvImportDialog";
 import { PublicCalendarShareDialog } from "@/components/publish/PublicCalendarShareDialog";
+import { PostSlotDialog, type SlotDialogValue } from "@/components/publish/PostSlotDialog";
 import { ApprovalBadge } from "@/components/publish/ApprovalControls";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
 import { useBestTimes } from "@/hooks/useBestTimes";
+import { guardWrite } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+/** Duration is stored inside platformOverrides under a reserved key so we don't
+ *  need a schema migration. Fallback to 30 minutes. */
+const DURATION_KEY = "__duration";
+function getDurationMin(p: ScheduledPost): number {
+  const raw = p.platformOverrides?.[DURATION_KEY]?.caption;
+  const n = raw ? Number(raw) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : 30;
+}
+function withDuration(
+  overrides: ScheduledPost["platformOverrides"] | undefined,
+  minutes: number,
+): ScheduledPost["platformOverrides"] {
+  return { ...(overrides ?? {}), [DURATION_KEY]: { caption: String(minutes) } };
+}
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
