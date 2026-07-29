@@ -544,6 +544,16 @@ export const ContentCalendar = () => {
         </Button>
       </div>
 
+      {/* Coming-next roadmap chips */}
+      <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+        <span className="uppercase tracking-widest text-muted-foreground/70 mr-1">Coming next</span>
+        {["Autolists", "Best-time heatmap", "Realtime unread", "Live follower spark"].map((t) => (
+          <span key={t} className="inline-flex items-center rounded-full border border-dashed border-primary/40 text-primary/80 px-2 py-0.5 bg-primary/[0.04]">
+            {t}
+          </span>
+        ))}
+      </div>
+
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-40 max-w-sm">
