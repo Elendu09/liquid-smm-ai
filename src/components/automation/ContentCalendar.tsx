@@ -1043,6 +1043,15 @@ export const ContentCalendar = () => {
       <BulkCsvImportDialog open={csvOpen} onOpenChange={setCsvOpen} />
       <PublicCalendarShareDialog open={shareOpen} onOpenChange={setShareOpen} />
       <EventDetailsDialog post={detailsPost} open={!!detailsPost} onOpenChange={(o) => !o && setDetailsPost(null)} />
+      <PostSlotDialog
+        open={slotDialogOpen}
+        onOpenChange={setSlotDialogOpen}
+        post={slotEditPost}
+        initialSlot={slotInitial}
+        onSubmit={handleSlotSubmit}
+        onDelete={(id) => { remove(id); toast.success("Post removed"); }}
+        getDurationMin={getDurationMin}
+      />
     </div>
   );
 };
