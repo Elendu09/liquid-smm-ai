@@ -90,6 +90,7 @@ export const ContentCalendar = () => {
   const [cursor, setCursor] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [view, setView] = useState<ViewMode>("month");
+  const [weekLayout, setWeekLayout] = useState<"grid" | "timeline">("timeline");
   const [columnsLayout, setColumnsLayout] = useState<"kanban" | "list">("kanban");
   const [search, setSearch] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string[]>([]);
@@ -101,7 +102,9 @@ export const ContentCalendar = () => {
   const [csvOpen, setCsvOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [showBestTimes, setShowBestTimes] = useState(true);
+  const [showInsights, setShowInsights] = useState(true);
   const [detailsPost, setDetailsPost] = useState<ScheduledPost | null>(null);
+  const navigate = useNavigate();
 
   const bestTimes = useBestTimes();
 
