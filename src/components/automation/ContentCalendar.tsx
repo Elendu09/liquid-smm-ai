@@ -1,9 +1,12 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CalendarDays, Plus, ChevronLeft, ChevronRight, MoreHorizontal,
   Search, Trash2, Copy, ExternalLink, Clock, ListFilter, Sparkles, X,
-  Star, Repeat2, Upload, Columns3, LayoutGrid, Rows3, Rss, Share2,
+  Star, Repeat2, Upload, Columns3, LayoutGrid, Rows3, Rss, Share2, TrendingUp,
 } from "lucide-react";
+import { TimeGridWeekView } from "@/components/publish/TimeGridWeekView";
+import { CalendarInsightsPanel } from "@/components/publish/CalendarInsightsPanel";
 import { KanbanBoard, type KanbanColumnDef } from "@/components/dashboard/shell/KanbanBoard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
