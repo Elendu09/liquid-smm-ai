@@ -123,14 +123,8 @@ const App = () => (
                     </RequireAuth>
                   }
                 />
-                <Route
-                  path="team"
-                  element={
-                    <RequireAuth authOnly>
-                      <Team />
-                    </RequireAuth>
-                  }
-                />
+                {/* Team page allows demo/guest view (mock members, write-guarded) */}
+                <Route path="team" element={<Team />} />
                 <Route path="support" element={<Support />} />
 
                 {/* Legacy route redirects */}

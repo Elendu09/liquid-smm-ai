@@ -26,12 +26,29 @@ import { AiFillWeekDialog } from "@/components/publish/AiFillWeekDialog";
 import { RecyclingRulesDialog } from "@/components/publish/RecyclingRulesDialog";
 import { BulkCsvImportDialog } from "@/components/publish/BulkCsvImportDialog";
 import { PublicCalendarShareDialog } from "@/components/publish/PublicCalendarShareDialog";
+import { PostSlotDialog, type SlotDialogValue } from "@/components/publish/PostSlotDialog";
 import { ApprovalBadge } from "@/components/publish/ApprovalControls";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
 import { useBestTimes } from "@/hooks/useBestTimes";
+import { guardWrite } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+/** Duration is stored inside platformOverrides under a reserved key so we don't
+ *  need a schema migration. Fallback to 30 minutes. */
+const DURATION_KEY = "__duration";
+function getDurationMin(p: ScheduledPost): number {
+  const raw = p.platformOverrides?.[DURATION_KEY]?.caption;
+  const n = raw ? Number(raw) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : 30;
+}
+function withDuration(
+  overrides: ScheduledPost["platformOverrides"] | undefined,
+  minutes: number,
+): ScheduledPost["platformOverrides"] {
+  return { ...(overrides ?? {}), [DURATION_KEY]: { caption: String(minutes) } };
+}
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -104,6 +121,9 @@ export const ContentCalendar = () => {
   const [showBestTimes, setShowBestTimes] = useState(true);
   const [showInsights, setShowInsights] = useState(true);
   const [detailsPost, setDetailsPost] = useState<ScheduledPost | null>(null);
+  const [slotDialogOpen, setSlotDialogOpen] = useState(false);
+  const [slotEditPost, setSlotEditPost] = useState<ScheduledPost | null>(null);
+  const [slotInitial, setSlotInitial] = useState<{ date: Date; hour: number } | null>(null);
   const navigate = useNavigate();
 
   const bestTimes = useBestTimes();
@@ -254,6 +274,58 @@ export const ContentCalendar = () => {
     toast.success(`Rescheduled to ${next.toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}`);
     setDragId(null);
   };
+
+  const handleResize = (id: string, newStartIso: string, durationMin: number) => {
+    if (!guardWrite("resize scheduled posts")) return;
+    const post = posts.find((p) => p.id === id);
+    if (!post) return;
+    update(id, {
+      scheduledAt: newStartIso,
+      platformOverrides: withDuration(post.platformOverrides, durationMin),
+    });
+    toast.success(`Updated to ${durationMin}m starting ${new Date(newStartIso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`);
+  };
+
+  const openSlotForNew = (date: Date, hour: number) => {
+    if (!guardWrite("schedule posts")) return;
+    setSlotEditPost(null);
+    setSlotInitial({ date, hour });
+    setSlotDialogOpen(true);
+  };
+
+  const openSlotForEdit = (p: ScheduledPost) => {
+    setSlotEditPost(p);
+    setSlotInitial(null);
+    setSlotDialogOpen(true);
+  };
+
+  const handleSlotSubmit = (v: SlotDialogValue) => {
+    if (v.id) {
+      const existing = posts.find((p) => p.id === v.id);
+      update(v.id, {
+        caption: v.caption,
+        mediaUrl: v.mediaUrl,
+        scheduledAt: v.scheduledAt,
+        platformIds: v.platformIds,
+        hashtags: v.hashtags,
+        firstComment: v.firstComment,
+        platformOverrides: withDuration(existing?.platformOverrides, v.durationMin),
+      });
+      toast.success("Post updated");
+    } else {
+      add({
+        caption: v.caption,
+        mediaUrl: v.mediaUrl,
+        scheduledAt: v.scheduledAt,
+        platformIds: v.platformIds,
+        hashtags: v.hashtags,
+        firstComment: v.firstComment,
+        platformOverrides: withDuration(undefined, v.durationMin),
+      });
+      toast.success("Post scheduled");
+    }
+  };
+
 
   const duplicatePost = (p: ScheduledPost) => {
     add({
@@ -472,6 +544,16 @@ export const ContentCalendar = () => {
         </Button>
       </div>
 
+      {/* Coming-next roadmap chips */}
+      <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+        <span className="uppercase tracking-widest text-muted-foreground/70 mr-1">Coming next</span>
+        {["Autolists", "Best-time heatmap", "Realtime unread", "Live follower spark"].map((t) => (
+          <span key={t} className="inline-flex items-center rounded-full border border-dashed border-primary/40 text-primary/80 px-2 py-0.5 bg-primary/[0.04]">
+            {t}
+          </span>
+        ))}
+      </div>
+
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-40 max-w-sm">
@@ -579,11 +661,14 @@ export const ContentCalendar = () => {
               <TimeGridWeekView
                 weekCells={weekCells}
                 posts={filtered}
-                onSelect={(p) => setDetailsPost(p)}
+                onSelect={(p) => openSlotForEdit(p)}
                 onDropAt={(d, h) => handleDropAtHour(d, h)}
                 onDragStart={(id) => setDragId(id)}
                 onDragEnd={() => setDragId(null)}
                 dragId={dragId}
+                onResize={handleResize}
+                onCellClick={openSlotForNew}
+                getDurationMin={getDurationMin}
               />
             ) : (
               <>
@@ -968,6 +1053,15 @@ export const ContentCalendar = () => {
       <BulkCsvImportDialog open={csvOpen} onOpenChange={setCsvOpen} />
       <PublicCalendarShareDialog open={shareOpen} onOpenChange={setShareOpen} />
       <EventDetailsDialog post={detailsPost} open={!!detailsPost} onOpenChange={(o) => !o && setDetailsPost(null)} />
+      <PostSlotDialog
+        open={slotDialogOpen}
+        onOpenChange={setSlotDialogOpen}
+        post={slotEditPost}
+        initialSlot={slotInitial}
+        onSubmit={handleSlotSubmit}
+        onDelete={(id) => { remove(id); toast.success("Post removed"); }}
+        getDurationMin={getDurationMin}
+      />
     </div>
   );
 };

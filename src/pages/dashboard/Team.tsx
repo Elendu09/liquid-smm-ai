@@ -49,6 +49,50 @@ import { InviteMemberDialog } from "@/components/settings/InviteMemberDialog";
 import { logAudit } from "@/components/settings/AuditPanel";
 import { useTeamMembers, type MemberRole, type TeamMember } from "@/hooks/useTeamMembers";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useGuest, guardWrite } from "@/hooks/useGuest";
+
+const DEMO_MEMBERS: TeamMember[] = [
+  {
+    id: "demo-owner",
+    name: "You (Demo)",
+    email: "demo@smmpilot.app",
+    role: "admin",
+    status: "active",
+    joinedAt: new Date(Date.now() - 90 * 86400000).toISOString(),
+    lastActiveAt: new Date().toISOString(),
+    avatarUrl: null,
+  },
+  {
+    id: "demo-admin",
+    name: "Nadia Chen",
+    email: "nadia@studio.co",
+    role: "admin",
+    status: "active",
+    joinedAt: new Date(Date.now() - 60 * 86400000).toISOString(),
+    lastActiveAt: new Date(Date.now() - 1800_000).toISOString(),
+    avatarUrl: null,
+  },
+  {
+    id: "demo-editor",
+    name: "Marcus Reed",
+    email: "marcus@studio.co",
+    role: "editor",
+    status: "active",
+    joinedAt: new Date(Date.now() - 30 * 86400000).toISOString(),
+    lastActiveAt: new Date(Date.now() - 7200_000).toISOString(),
+    avatarUrl: null,
+  },
+  {
+    id: "demo-viewer",
+    name: "Priya Sharma",
+    email: "priya@brand.io",
+    role: "viewer",
+    status: "pending",
+    joinedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    inviteExpiresAt: new Date(Date.now() + 4 * 86400000).toISOString(),
+    avatarUrl: null,
+  },
+];
 
 const ROLE_BADGE: Record<MemberRole, string> = {
   admin: "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20",
@@ -78,7 +122,10 @@ function lastActiveLabel(iso?: string) {
 
 export default function TeamPage() {
   const { user } = useAuthUser();
-  const { members, invite, update, remove } = useTeamMembers();
+  const { isGuest } = useGuest();
+  const remote = useTeamMembers();
+  const members = isGuest && remote.members.length === 0 ? DEMO_MEMBERS : remote.members;
+  const { invite, update, remove } = remote;
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [roleTarget, setRoleTarget] = useState<TeamMember | null>(null);
