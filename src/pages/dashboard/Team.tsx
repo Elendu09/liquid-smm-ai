@@ -122,7 +122,10 @@ function lastActiveLabel(iso?: string) {
 
 export default function TeamPage() {
   const { user } = useAuthUser();
-  const { members, invite, update, remove } = useTeamMembers();
+  const { isGuest } = useGuest();
+  const remote = useTeamMembers();
+  const members = isGuest && remote.members.length === 0 ? DEMO_MEMBERS : remote.members;
+  const { invite, update, remove } = remote;
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [roleTarget, setRoleTarget] = useState<TeamMember | null>(null);
