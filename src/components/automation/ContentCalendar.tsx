@@ -243,6 +243,18 @@ export const ContentCalendar = () => {
     setDropTarget(null);
   };
 
+  const handleDropAtHour = (target: Date, hour: number) => {
+    if (!dragId) return;
+    const post = posts.find((p) => p.id === dragId);
+    if (!post) return;
+    const orig = new Date(post.scheduledAt);
+    const next = new Date(target);
+    next.setHours(hour, orig.getMinutes(), 0, 0);
+    update(post.id, { scheduledAt: next.toISOString() });
+    toast.success(`Rescheduled to ${next.toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}`);
+    setDragId(null);
+  };
+
   const duplicatePost = (p: ScheduledPost) => {
     add({
       caption: p.caption,
