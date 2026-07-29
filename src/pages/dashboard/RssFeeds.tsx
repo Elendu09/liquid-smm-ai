@@ -48,8 +48,42 @@ import {
 } from "@/components/ui/select";
 import { useRssFeeds, type RssFeed, type RssItem } from "@/hooks/useRssFeeds";
 import { platforms as PLATFORMS } from "@/config/platforms";
+import { useGuest } from "@/hooks/useGuest";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+
+const DEMO_FEEDS = [
+  {
+    name: "TechCrunch",
+    url: "https://techcrunch.com/feed/",
+    tone: "from-emerald-500/20 to-emerald-500/5",
+    color: "text-emerald-500",
+    items: 42,
+    platforms: ["twitter", "linkedin"],
+  },
+  {
+    name: "The Verge",
+    url: "https://www.theverge.com/rss/index.xml",
+    tone: "from-purple-500/20 to-purple-500/5",
+    color: "text-purple-500",
+    items: 28,
+    platforms: ["twitter", "facebook"],
+  },
+  {
+    name: "Product Hunt",
+    url: "https://www.producthunt.com/feed",
+    tone: "from-orange-500/20 to-orange-500/5",
+    color: "text-orange-500",
+    items: 17,
+    platforms: ["linkedin", "twitter"],
+  },
+];
+
+const DEMO_ITEMS = [
+  { title: "OpenAI announces new agentic Assistants API", source: "TechCrunch", time: "18m ago" },
+  { title: "The rise of AI-first content workflows for social teams", source: "The Verge", time: "1h ago" },
+  { title: "Top 5 launches this week on Product Hunt", source: "Product Hunt", time: "3h ago" },
+];
 
 const DISCOVER_PRESETS: {
   category: string;
