@@ -148,6 +148,8 @@ export default function RssFeedsPage() {
     importItem,
     dismissItem,
   } = useRssFeeds();
+  const { isGuest } = useGuest();
+
 
   const [tab, setTab] = useState<"feeds" | "items" | "discover">("feeds");
   const [open, setOpen] = useState(false);
