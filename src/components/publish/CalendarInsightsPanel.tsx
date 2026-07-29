@@ -30,7 +30,7 @@ export function CalendarInsightsPanel({ onClose, onOpenInbox }: Props) {
 
   const unresolved = useMemo(() => {
     return [...comments, ...dms]
-      .filter((i) => i.status === "new" || i.status === "pending")
+      .filter((i) => i.status === "new" || i.status === "snoozed")
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, 4);
   }, [comments, dms]);
