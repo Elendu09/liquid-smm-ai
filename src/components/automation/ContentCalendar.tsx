@@ -275,6 +275,58 @@ export const ContentCalendar = () => {
     setDragId(null);
   };
 
+  const handleResize = (id: string, newStartIso: string, durationMin: number) => {
+    if (!guardWrite("resize scheduled posts")) return;
+    const post = posts.find((p) => p.id === id);
+    if (!post) return;
+    update(id, {
+      scheduledAt: newStartIso,
+      platformOverrides: withDuration(post.platformOverrides, durationMin),
+    });
+    toast.success(`Updated to ${durationMin}m starting ${new Date(newStartIso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`);
+  };
+
+  const openSlotForNew = (date: Date, hour: number) => {
+    if (!guardWrite("schedule posts")) return;
+    setSlotEditPost(null);
+    setSlotInitial({ date, hour });
+    setSlotDialogOpen(true);
+  };
+
+  const openSlotForEdit = (p: ScheduledPost) => {
+    setSlotEditPost(p);
+    setSlotInitial(null);
+    setSlotDialogOpen(true);
+  };
+
+  const handleSlotSubmit = (v: SlotDialogValue) => {
+    if (v.id) {
+      const existing = posts.find((p) => p.id === v.id);
+      update(v.id, {
+        caption: v.caption,
+        mediaUrl: v.mediaUrl,
+        scheduledAt: v.scheduledAt,
+        platformIds: v.platformIds,
+        hashtags: v.hashtags,
+        firstComment: v.firstComment,
+        platformOverrides: withDuration(existing?.platformOverrides, v.durationMin),
+      });
+      toast.success("Post updated");
+    } else {
+      add({
+        caption: v.caption,
+        mediaUrl: v.mediaUrl,
+        scheduledAt: v.scheduledAt,
+        platformIds: v.platformIds,
+        hashtags: v.hashtags,
+        firstComment: v.firstComment,
+        platformOverrides: withDuration(undefined, v.durationMin),
+      });
+      toast.success("Post scheduled");
+    }
+  };
+
+
   const duplicatePost = (p: ScheduledPost) => {
     add({
       caption: p.caption,
