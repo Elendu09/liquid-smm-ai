@@ -342,7 +342,70 @@ export default function RssFeedsPage() {
         {/* Feeds tab */}
         <TabsContent value="feeds" className="space-y-3 mt-4">
           {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
-          {!loading && feeds.length === 0 && (
+          {!loading && isGuest && feeds.length === 0 && (
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-dashed border-orange-500/40 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-transparent px-4 py-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Badge className="bg-orange-500/15 text-orange-500 border-0 uppercase text-[10px] tracking-widest">Demo preview</Badge>
+                  <p className="text-sm text-muted-foreground truncate">
+                    Sample feeds shown for demo. <span className="font-medium text-foreground">Sign up</span> to connect real RSS sources.
+                  </p>
+                </div>
+                <Button size="sm" onClick={() => (window.location.href = "/signup")}>Sign up</Button>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                {DEMO_FEEDS.map((f) => (
+                  <Card key={f.name} className={`overflow-hidden bg-gradient-to-br ${f.tone} border-border/60`}>
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className={`h-9 w-9 rounded-xl bg-background/70 flex items-center justify-center ring-1 ring-border/60 ${f.color}`}>
+                          <Rss className="h-4 w-4" />
+                        </div>
+                        <Badge className="bg-green-500/10 text-green-600 border-0"><Radio className="h-3 w-3 mr-1" />Auto</Badge>
+                      </div>
+                      <div>
+                        <div className="font-semibold">{f.name}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">{f.url}</div>
+                      </div>
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Newspaper className="h-3 w-3" /> {f.items} items · Every 1h
+                        </div>
+                        <div className="flex gap-1">
+                          {f.platforms.map((p) => (
+                            <Badge key={p} variant="secondary" className="text-[10px] capitalize">{p}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <Card className="border-border/60">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Recently auto-published (demo)
+                  </CardTitle>
+                  <CardDescription className="text-xs">Preview of how new RSS items become drafts across your channels.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {DEMO_ITEMS.map((it) => (
+                    <div key={it.title} className="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border/50 bg-background/40">
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">📢 {it.title}</div>
+                        <div className="text-[11px] text-muted-foreground">{it.source} · {it.time}</div>
+                      </div>
+                      <Badge className="bg-green-500/10 text-green-600 border-0 shrink-0">
+                        <CheckCircle2 className="h-3 w-3 mr-1" /> Queued
+                      </Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+          {!loading && !isGuest && feeds.length === 0 && (
             <Card>
               <CardContent className="py-12 text-center space-y-3">
                 <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500/15 to-amber-500/5 flex items-center justify-center">
