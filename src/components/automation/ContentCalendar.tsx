@@ -535,34 +535,79 @@ export const ContentCalendar = () => {
 
       {/* Nav header */}
       {(view === "month" || view === "week") && (
-        <div className="rounded-2xl border border-border/60 bg-card p-3 sm:p-4">
-          <div className="flex items-center justify-between mb-3">
-            <Button variant="ghost" size="icon" onClick={() => shift(-1)} aria-label="Previous">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <h4 className="text-sm sm:text-base font-semibold">
-              {view === "month"
-                ? `${months[month]} ${year}`
-                : `${weekCells[0].toLocaleDateString()} – ${weekCells[6].toLocaleDateString()}`}
-            </h4>
-            <Button variant="ghost" size="icon" onClick={() => shift(1)} aria-label="Next">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+        <div className="flex gap-4">
+          <div className="flex-1 min-w-0 rounded-2xl border border-border/60 bg-card p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-3 gap-2">
+              <Button variant="ghost" size="icon" onClick={() => shift(-1)} aria-label="Previous">
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <h4 className="text-sm sm:text-base font-semibold flex-1 text-center">
+                {view === "month"
+                  ? `${months[month]} ${year}`
+                  : `${weekCells[0].toLocaleDateString([], { month: "short", day: "numeric" })} – ${weekCells[6].toLocaleDateString([], { month: "short", day: "numeric" })}`}
+              </h4>
+              {view === "week" && (
+                <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/40">
+                  <button
+                    onClick={() => setWeekLayout("timeline")}
+                    className={cn(
+                      "text-[11px] font-medium px-2 py-0.5 rounded-md transition-colors",
+                      weekLayout === "timeline" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground",
+                    )}
+                    title="Time-slot grid"
+                  >
+                    Timeline
+                  </button>
+                  <button
+                    onClick={() => setWeekLayout("grid")}
+                    className={cn(
+                      "text-[11px] font-medium px-2 py-0.5 rounded-md transition-colors",
+                      weekLayout === "grid" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground",
+                    )}
+                    title="Day cards"
+                  >
+                    Cards
+                  </button>
+                </div>
+              )}
+              <Button variant="ghost" size="icon" onClick={() => shift(1)} aria-label="Next">
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
 
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {daysOfWeek.map((d) => (
-              <div key={d} className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-1.5">
-                {d}
-              </div>
-            ))}
+            {view === "week" && weekLayout === "timeline" ? (
+              <TimeGridWeekView
+                weekCells={weekCells}
+                posts={filtered}
+                onSelect={(p) => setDetailsPost(p)}
+                onDropAt={(d, h) => handleDropAtHour(d, h)}
+                onDragStart={(id) => setDragId(id)}
+                onDragEnd={() => setDragId(null)}
+                dragId={dragId}
+              />
+            ) : (
+              <>
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {daysOfWeek.map((d) => (
+                    <div key={d} className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-1.5">
+                      {d}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {(view === "month" ? monthCells : weekCells).map((d, i) => (
+                    <DayCell key={i} date={d} />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-
-          <div className="grid grid-cols-7 gap-1">
-            {(view === "month" ? monthCells : weekCells).map((d, i) => (
-              <DayCell key={i} date={d} />
-            ))}
-          </div>
+          {showInsights && (
+            <CalendarInsightsPanel
+              onClose={() => setShowInsights(false)}
+              onOpenInbox={() => navigate("/dashboard/engage/inbox")}
+            />
+          )}
         </div>
       )}
 
