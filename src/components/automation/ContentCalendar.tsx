@@ -121,6 +121,9 @@ export const ContentCalendar = () => {
   const [showBestTimes, setShowBestTimes] = useState(true);
   const [showInsights, setShowInsights] = useState(true);
   const [detailsPost, setDetailsPost] = useState<ScheduledPost | null>(null);
+  const [slotDialogOpen, setSlotDialogOpen] = useState(false);
+  const [slotEditPost, setSlotEditPost] = useState<ScheduledPost | null>(null);
+  const [slotInitial, setSlotInitial] = useState<{ date: Date; hour: number } | null>(null);
   const navigate = useNavigate();
 
   const bestTimes = useBestTimes();
