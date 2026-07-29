@@ -445,6 +445,16 @@ export const ContentCalendar = () => {
           <Star className={cn("h-4 w-4 sm:mr-1", showBestTimes && "fill-current")} />
           <span className="hidden sm:inline">Best times</span>
         </Button>
+        <Button
+          size="sm"
+          variant={showInsights ? "default" : "outline"}
+          onClick={() => setShowInsights((v) => !v)}
+          title="Toggle insights side panel"
+          className="hidden xl:inline-flex"
+        >
+          <TrendingUp className={cn("h-4 w-4 sm:mr-1")} />
+          <span className="hidden sm:inline">Insights</span>
+        </Button>
         <Button size="sm" variant="outline" onClick={() => setRecycleOpen(true)}>
           <Repeat2 className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Recycle</span>
         </Button>
