@@ -651,11 +651,14 @@ export const ContentCalendar = () => {
               <TimeGridWeekView
                 weekCells={weekCells}
                 posts={filtered}
-                onSelect={(p) => setDetailsPost(p)}
+                onSelect={(p) => openSlotForEdit(p)}
                 onDropAt={(d, h) => handleDropAtHour(d, h)}
                 onDragStart={(id) => setDragId(id)}
                 onDragEnd={() => setDragId(null)}
                 dragId={dragId}
+                onResize={handleResize}
+                onCellClick={openSlotForNew}
+                getDurationMin={getDurationMin}
               />
             ) : (
               <>
