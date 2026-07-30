@@ -168,6 +168,18 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
           </div>
         </div>
 
+          <div className="py-2">
+            <NetworkPreview
+              caption={caption}
+              mediaUrl={mediaUrl || undefined}
+              hashtags={hashtags.split(/\s+/).filter(Boolean)}
+              platformIds={platformIds}
+              className="md:sticky md:top-0"
+            />
+          </div>
+        </div>
+
+
         <DialogFooter className="gap-2 sm:gap-2">
           {isEdit && onDelete && post && (
             <Button
