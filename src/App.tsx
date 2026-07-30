@@ -3,7 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { ScrollToTopButton } from "@/components/layout/ScrollToTopButton";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AccountProvider } from "@/contexts/AccountContext";
 
@@ -75,6 +76,12 @@ const legacyRedirects: Record<string, string> = {
   "history": "/dashboard/activity/runs",
   "notifications": "/dashboard/activity/notifications",
   "team": "/dashboard/team",
+};
+
+const MarketingScrollTop = () => {
+  const { pathname } = useLocation();
+  if (pathname.startsWith("/dashboard")) return null;
+  return <ScrollToTopButton />;
 };
 
 const App = () => (
@@ -162,6 +169,7 @@ const App = () => (
 
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <MarketingScrollTop />
           </BrowserRouter>
         </TooltipProvider>
       </AccountProvider>
