@@ -67,18 +67,21 @@ export type Database = {
       account_preferences: {
         Row: {
           active_account_id: string | null
+          active_brand_id: string | null
           created_at: string
           updated_at: string
           user_id: string
         }
         Insert: {
           active_account_id?: string | null
+          active_brand_id?: string | null
           created_at?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           active_account_id?: string | null
+          active_brand_id?: string | null
           created_at?: string
           updated_at?: string
           user_id?: string
@@ -89,6 +92,13 @@ export type Database = {
             columns: ["active_account_id"]
             isOneToOne: false
             referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_preferences_active_brand_id_fkey"
+            columns: ["active_brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
         ]
@@ -413,6 +423,51 @@ export type Database = {
           platform_overrides?: Json
           samples?: string[]
           tone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      brands: {
+        Row: {
+          archived: boolean
+          color: string
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          order_index: number
+          slug: string | null
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          order_index?: number
+          slug?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          order_index?: number
+          slug?: string | null
+          timezone?: string
           updated_at?: string
           user_id?: string
         }
@@ -2066,6 +2121,7 @@ export type Database = {
       social_accounts: {
         Row: {
           avatar_url: string | null
+          brand_id: string | null
           connected_at: string
           created_at: string
           display_name: string
@@ -2086,6 +2142,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          brand_id?: string | null
           connected_at?: string
           created_at?: string
           display_name: string
@@ -2106,6 +2163,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          brand_id?: string | null
           connected_at?: string
           created_at?: string
           display_name?: string
@@ -2124,7 +2182,15 @@ export type Database = {
           user_id?: string
           username?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "social_accounts_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stories: {
         Row: {
