@@ -34,7 +34,6 @@ import { useOnboardingContext } from "@/hooks/useOnboardingContext";
 
 
 
-import { useAccounts } from "@/contexts/AccountContext";
 import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 import { useRunHistory } from "@/hooks/useRunHistory";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
@@ -89,7 +88,6 @@ function accountStatusDot(status: string) {
 }
 
 export default function Dashboard() {
-  const { totalAccounts } = useAccounts();
   const { accounts } = useScopedAccounts();
   const { state: onboarding } = useOnboarding();
   const { greeting, laneOrder } = useOnboardingContext();
@@ -165,7 +163,7 @@ export default function Dashboard() {
         <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 overflow-x-auto snap-x snap-mandatory pl-2 pr-2 sm:px-0 pb-2 sm:pb-0 scrollbar-hide">
           <KpiTile
             label="Connected accounts"
-            value={totalAccounts}
+            value={accounts.length}
             icon={Users}
             className="snap-start shrink-0 w-[34vw] sm:w-auto py-2 sm:py-4"
           />
