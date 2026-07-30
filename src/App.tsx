@@ -169,6 +169,7 @@ const App = () => (
 
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <MarketingScrollTop />
           </BrowserRouter>
         </TooltipProvider>
       </AccountProvider>
