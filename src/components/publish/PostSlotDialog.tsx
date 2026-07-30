@@ -96,7 +96,7 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit scheduled post" : "New scheduled post"}</DialogTitle>
           <DialogDescription>
@@ -104,7 +104,9 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2 max-h-[60vh] overflow-y-auto pr-1">
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_300px] max-h-[62vh] overflow-y-auto pr-1">
+        <div className="space-y-4 py-2">
+
           <div>
             <Label htmlFor="pd-caption">Caption</Label>
             <Textarea id="pd-caption" rows={4} value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Write something great…" />
