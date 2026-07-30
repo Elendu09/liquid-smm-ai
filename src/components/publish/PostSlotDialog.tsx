@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { NetworkPreview } from "@/components/publish/NetworkPreview";
 import { platforms as PLATFORMS } from "@/config/platforms";
 import { guardWrite } from "@/hooks/useGuest";
 import type { ScheduledPost } from "@/hooks/useScheduledPosts";
