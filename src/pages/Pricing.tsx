@@ -227,13 +227,28 @@ const Pricing = () => {
 
                 <p className="mt-5 text-sm text-muted-foreground leading-relaxed min-h-[40px]">{plan.description}</p>
 
-                <div className="mt-6 flex items-end gap-1">
-                  <span className="font-['Instrument_Serif'] text-6xl leading-none">${isAnnual ? plan.annualPrice : plan.monthlyPrice}</span>
-                  <span className="text-sm text-muted-foreground pb-2">/ month</span>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {isAnnual ? `Billed annually at $${plan.annualPrice * 12}` : "Billed monthly, cancel anytime"}
-                </p>
+                {plan.custom ? (
+                  <>
+                    <div className="mt-6 flex items-end gap-1">
+                      <span className="font-['Instrument_Serif'] text-5xl leading-none italic">Let's talk</span>
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">Tailored pricing built around your client roster</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="mt-6 flex items-end gap-1">
+                      <span className="font-['Instrument_Serif'] text-6xl leading-none">${isAnnual ? plan.annualPrice : plan.monthlyPrice}</span>
+                      <span className="text-sm text-muted-foreground pb-2">/ month</span>
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {plan.monthlyPrice === 0
+                        ? "Free forever — no card required"
+                        : isAnnual
+                          ? `Billed annually at $${(plan.annualPrice ?? 0) * 12}`
+                          : "Billed monthly, cancel anytime"}
+                    </p>
+                  </>
+                )}
 
                 <Button
                   asChild
@@ -241,11 +256,12 @@ const Pricing = () => {
                   variant={plan.popular ? "default" : "outline"}
                   className="mt-7 w-full rounded-full"
                 >
-                  <Link to="/signup">
-                    Start free trial
+                  <Link to={plan.ctaHref}>
+                    {plan.cta}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
+
 
                 <div className="mt-8 h-px bg-border/60" />
 
