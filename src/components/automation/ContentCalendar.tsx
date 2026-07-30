@@ -466,7 +466,7 @@ export const ContentCalendar = () => {
         </div>
 
         <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/40">
-          {(["month", "week", "feed"] as ViewMode[]).map((v) => (
+          {(["month", "week", "feed", "autolists"] as ViewMode[]).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
