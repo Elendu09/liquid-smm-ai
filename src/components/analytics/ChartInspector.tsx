@@ -8,7 +8,7 @@ import {
   type MetricId,
   type VizType,
 } from "@/hooks/useCustomReports";
-import { useAccounts } from "@/contexts/AccountContext";
+import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 import { cn } from "@/lib/utils";
 
 const VIZ_OPTIONS: { id: VizType; label: string; Icon: typeof LineChart }[] = [
@@ -34,7 +34,7 @@ export function ChartInspector({
   card: ChartCardConfig | null;
   onChange: (patch: Partial<ChartCardConfig>) => void;
 }) {
-  const { accounts } = useAccounts();
+  const { accounts } = useScopedAccounts();
 
   if (!card) {
     return (

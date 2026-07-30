@@ -1,4 +1,4 @@
-import { useAccounts } from "@/contexts/AccountContext";
+import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { CheckCircle2, AlertTriangle, XCircle, Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,7 @@ const STATUS_META = {
 } as const;
 
 export function HealthScoreGrid() {
-  const { accounts } = useAccounts();
+  const { accounts } = useScopedAccounts();
   const { isGuest } = useGuest();
   if (!isGuest && accounts.length === 0) {
     return <EmptyState variant="connect-account" />;

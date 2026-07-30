@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Zap, TrendingDown, TrendingUp, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAccounts } from "@/contexts/AccountContext";
+import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 import { useGuest } from "@/hooks/useGuest";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,7 +45,7 @@ function relTime(iso: string): string {
 }
 
 export function AnomalyFeed() {
-  const { accounts } = useAccounts();
+  const { accounts } = useScopedAccounts();
   const { isGuest } = useGuest();
   const { user } = useAuthUser();
   const [remote, setRemote] = useState<Anomaly[] | null>(null);
