@@ -1,20 +1,18 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { 
-  Check, 
-  X, 
-  Zap, 
-  Crown, 
-  Building2, 
+import {
+  Check,
+  Minus,
+  Zap,
+  Crown,
+  Building2,
   Sparkles,
   Users,
   BarChart3,
@@ -24,319 +22,270 @@ import {
   Bot,
   Link2,
   Eye,
-  Headphones
+  Headphones,
+  ShieldCheck,
+  Rss,
+  Workflow,
+  ArrowRight,
 } from "lucide-react";
+
+const plans = [
+  {
+    name: "Starter",
+    icon: Zap,
+    description: "For solo creators running a couple of channels.",
+    monthlyPrice: 19,
+    annualPrice: 15,
+    popular: false,
+    highlight: "3 social channels",
+    features: [
+      "3 social channels across any platform",
+      "500 scheduled posts / month",
+      "Unified calendar, list & kanban views",
+      "Core analytics dashboard",
+      "AI captions & hashtags (200 credits/mo)",
+      "1 brand voice profile",
+      "Email support",
+    ],
+    limitations: ["No engagement automation", "No competitor tracking", "No team seats"],
+  },
+  {
+    name: "Professional",
+    icon: Crown,
+    description: "For brands publishing everywhere, every day.",
+    monthlyPrice: 49,
+    annualPrice: 39,
+    popular: true,
+    highlight: "15 social channels",
+    features: [
+      "15 social channels across any platform",
+      "Unlimited scheduled posts & recycling",
+      "Advanced analytics, best-times & heatmaps",
+      "AI captions, remix & images (2,000 credits/mo)",
+      "Engagement automation & unified inbox",
+      "Stories, RSS autolists & bulk CSV import",
+      "Approval workflow + 3 team seats",
+      "Link-in-bio builder",
+      "Priority support",
+    ],
+    limitations: ["No white-label reporting", "No API access"],
+  },
+  {
+    name: "Agency",
+    icon: Building2,
+    description: "For teams managing many brands and clients.",
+    monthlyPrice: 99,
+    annualPrice: 79,
+    popular: false,
+    highlight: "Unlimited channels",
+    features: [
+      "Unlimited channels & client workspaces",
+      "Everything in Professional, uncapped",
+      "White-label reports & shared client calendars",
+      "AI everything (10,000 credits/mo)",
+      "Competitor tracking & share-of-voice",
+      "DM automation & audience segments",
+      "Unlimited seats with owner/admin/member roles",
+      "API + MCP access & webhooks",
+      "Dedicated manager, 24/7 escalation",
+    ],
+    limitations: [],
+  },
+];
+
+const featureComparison = [
+  { feature: "Social channels", starter: "3", professional: "15", business: "Unlimited", icon: Users },
+  { feature: "Scheduled posts", starter: "500/mo", professional: "Unlimited", business: "Unlimited", icon: Calendar },
+  { feature: "AI credits included", starter: "200/mo", professional: "2,000/mo", business: "10,000/mo", icon: Sparkles },
+  { feature: "Analytics & reports", starter: "Core", professional: "Advanced", business: "White-label", icon: BarChart3 },
+  { feature: "Hashtag research", starter: "Basic", professional: "Advanced", business: "Premium", icon: Hash },
+  { feature: "Engagement automation", starter: false, professional: true, business: "Premium", icon: Bot },
+  { feature: "Unified inbox & moderation", starter: false, professional: true, business: true, icon: MessageSquare },
+  { feature: "Stories & RSS autolists", starter: false, professional: true, business: true, icon: Rss },
+  { feature: "Approval workflow", starter: false, professional: true, business: true, icon: ShieldCheck },
+  { feature: "Link-in-bio builder", starter: false, professional: "Standard", business: "Custom domain", icon: Link2 },
+  { feature: "Competitor tracking", starter: false, professional: false, business: true, icon: Eye },
+  { feature: "DM automation", starter: false, professional: false, business: true, icon: MessageSquare },
+  { feature: "Team seats", starter: "1", professional: "3", business: "Unlimited", icon: Users },
+  { feature: "API, MCP & webhooks", starter: false, professional: false, business: true, icon: Workflow },
+  { feature: "Support", starter: "Email", professional: "Priority", business: "24/7 dedicated", icon: Headphones },
+];
+
+const faqs = [
+  { question: "Can I switch plans at any time?", answer: "Yes. Upgrades apply instantly and are prorated; downgrades take effect at the start of your next billing period so you keep everything you already paid for." },
+  { question: "How do AI credits work alongside my plan?", answer: "Each plan includes a monthly credit allowance for AI actions — captions, remixes, images, voice mode and AI reports. Scheduling, publishing and analytics never cost credits, and you can top up any time from Settings → Billing." },
+  { question: "Is there a free trial?", answer: "Every plan includes a 14-day free trial with no card required. You also get an instant demo workspace if you'd rather look around before signing up." },
+  { question: "Which platforms are included?", answer: "All of them, on every plan — Instagram, X, LinkedIn, Facebook, TikTok, YouTube, Pinterest, Threads and Google Business. Plans differ by how many channels you connect, not which networks you get." },
+  { question: "What payment methods do you accept?", answer: "All major cards, plus invoicing and bank transfer for annual Agency contracts." },
+  { question: "Are my connected accounts safe?", answer: "We use official platform APIs and OAuth only — we never ask for or store social passwords. Tokens are encrypted, workspaces are isolated with row-level security, and automation respects each platform's rate limits." },
+];
 
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(true);
 
-  const plans = [
-    {
-      name: "Starter",
-      icon: Zap,
-      description: "Perfect for individuals just getting started",
-      monthlyPrice: 19,
-      annualPrice: 15,
-      popular: false,
-      features: [
-        "1 Instagram account",
-        "500 scheduled posts/month",
-        "Basic analytics",
-        "AI caption generator (50/month)",
-        "Hashtag research (basic)",
-        "Email support",
-      ],
-      limitations: [
-        "No auto-engagement",
-        "No competitor tracking",
-        "No DM automation",
-      ]
-    },
-    {
-      name: "Professional",
-      icon: Crown,
-      description: "For creators and growing businesses",
-      monthlyPrice: 49,
-      annualPrice: 39,
-      popular: true,
-      features: [
-        "5 Instagram accounts",
-        "Unlimited scheduled posts",
-        "Advanced analytics & reports",
-        "AI caption generator (unlimited)",
-        "Hashtag research (advanced)",
-        "Auto-engagement bot",
-        "Comment management",
-        "Story automation",
-        "Link in bio builder",
-        "Priority email support",
-      ],
-      limitations: [
-        "No competitor tracking",
-        "No DM automation",
-      ]
-    },
-    {
-      name: "Business",
-      icon: Building2,
-      description: "For agencies and large teams",
-      monthlyPrice: 99,
-      annualPrice: 79,
-      popular: false,
-      features: [
-        "Unlimited Instagram accounts",
-        "Unlimited scheduled posts",
-        "White-label reports",
-        "AI caption generator (unlimited)",
-        "Advanced hashtag research",
-        "Auto-engagement bot (premium)",
-        "Comment management",
-        "Story automation",
-        "Link in bio builder (custom)",
-        "Competitor tracking",
-        "DM automation",
-        "Follower analyzer",
-        "Team collaboration",
-        "API access",
-        "Dedicated account manager",
-        "24/7 priority support",
-      ],
-      limitations: []
-    },
-  ];
-
-  const featureComparison = [
-    { feature: "Instagram Accounts", starter: "1", professional: "5", business: "Unlimited", icon: Users },
-    { feature: "Scheduled Posts", starter: "500/month", professional: "Unlimited", business: "Unlimited", icon: Calendar },
-    { feature: "Analytics & Reports", starter: "Basic", professional: "Advanced", business: "White-label", icon: BarChart3 },
-    { feature: "AI Caption Generator", starter: "50/month", professional: "Unlimited", business: "Unlimited", icon: Sparkles },
-    { feature: "Hashtag Research", starter: "Basic", professional: "Advanced", business: "Premium", icon: Hash },
-    { feature: "Auto-Engagement Bot", starter: false, professional: true, business: "Premium", icon: Bot },
-    { feature: "Comment Management", starter: false, professional: true, business: true, icon: MessageSquare },
-    { feature: "Story Automation", starter: false, professional: true, business: true, icon: Calendar },
-    { feature: "Link in Bio Builder", starter: false, professional: "Standard", business: "Custom", icon: Link2 },
-    { feature: "Competitor Tracking", starter: false, professional: false, business: true, icon: Eye },
-    { feature: "DM Automation", starter: false, professional: false, business: true, icon: MessageSquare },
-    { feature: "Team Collaboration", starter: false, professional: false, business: true, icon: Users },
-    { feature: "API Access", starter: false, professional: false, business: true, icon: Zap },
-    { feature: "Support", starter: "Email", professional: "Priority Email", business: "24/7 Dedicated", icon: Headphones },
-  ];
-
-  const faqs = [
-    {
-      question: "Can I switch plans at any time?",
-      answer: "Yes, you can upgrade or downgrade your plan at any time. When upgrading, you'll be charged the prorated difference. When downgrading, the new rate will apply at the start of your next billing cycle."
-    },
-    {
-      question: "Is there a free trial?",
-      answer: "Yes! All plans come with a 14-day free trial. No credit card required to start. You'll have full access to all features in your chosen plan during the trial period."
-    },
-    {
-      question: "What payment methods do you accept?",
-      answer: "We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and bank transfers for annual Business plans."
-    },
-    {
-      question: "Can I cancel my subscription?",
-      answer: "You can cancel your subscription at any time. You'll continue to have access to your plan features until the end of your current billing period."
-    },
-    {
-      question: "Do you offer refunds?",
-      answer: "Yes, we offer a 30-day money-back guarantee for all plans. If you're not satisfied, contact our support team for a full refund."
-    },
-    {
-      question: "Is my Instagram account safe?",
-      answer: "Absolutely. We use Instagram's official API and follow all platform guidelines. Your account credentials are encrypted and never stored in plain text. We also have built-in safety limits to protect your account."
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background text-foreground">
       <Navbar />
-      
-      {/* Hero Section */}
-      <section className="pt-32 pb-16 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            <Badge variant="secondary" className="mb-4">
-              <Sparkles className="w-3 h-3 mr-1" />
-              Simple, Transparent Pricing
-            </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Choose the Perfect Plan for Your{" "}
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Growth Journey
-              </span>
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              Start with a 14-day free trial. No credit card required.
-            </p>
 
-            {/* Billing Toggle */}
-            <div className="flex items-center justify-center gap-4 mb-12">
-              <Label htmlFor="billing" className={!isAnnual ? "font-semibold" : "text-muted-foreground"}>
-                Monthly
-              </Label>
-              <Switch
-                id="billing"
-                checked={isAnnual}
-                onCheckedChange={setIsAnnual}
-              />
-              <Label htmlFor="billing" className={isAnnual ? "font-semibold" : "text-muted-foreground"}>
-                Annual
-                <Badge variant="secondary" className="ml-2 bg-green-500/10 text-green-500">
-                  Save 20%
-                </Badge>
-              </Label>
+      {/* Hero */}
+      <header className="border-b border-border/60">
+        <div className="container mx-auto px-4 pt-28 pb-14 lg:pt-36 lg:pb-20">
+          <div className="grid lg:grid-cols-12 gap-10 items-end">
+            <div className="lg:col-span-7">
+              <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">— Pricing</p>
+              <h1 className="font-['Instrument_Serif'] text-5xl sm:text-6xl lg:text-7xl mt-4 leading-[0.95] tracking-tight">
+                One workspace for <span className="italic text-rainbow">every channel.</span>
+              </h1>
+              <p className="mt-6 max-w-xl text-base sm:text-lg text-muted-foreground leading-relaxed">
+                Plan, schedule, automate and measure social media across Instagram, TikTok, LinkedIn, X, YouTube, Facebook, Pinterest, Threads and Google Business — from a single calendar with one AI assistant.
+              </p>
+            </div>
+
+            <div className="lg:col-span-5 lg:justify-self-end w-full lg:w-auto">
+              <div className="rounded-3xl border border-border/60 bg-foreground/[0.02] backdrop-blur-xl p-6">
+                <div className="flex items-center justify-between gap-6">
+                  <Label htmlFor="billing" className={`text-sm ${!isAnnual ? "font-semibold" : "text-muted-foreground"}`}>
+                    Monthly
+                  </Label>
+                  <Switch id="billing" checked={isAnnual} onCheckedChange={setIsAnnual} />
+                  <Label htmlFor="billing" className={`text-sm ${isAnnual ? "font-semibold" : "text-muted-foreground"}`}>
+                    Annual
+                  </Label>
+                </div>
+                <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
+                  {isAnnual ? "Billed yearly — two months free on every plan." : "Billed monthly — switch to annual any time to save 20%."}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                  <span className="rounded-full border border-border/60 px-3 py-1">14-day trial</span>
+                  <span className="rounded-full border border-border/60 px-3 py-1">No card</span>
+                  <span className="rounded-full border border-border/60 px-3 py-1">Cancel anytime</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Pricing Cards */}
-      <section className="pb-20">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan, index) => (
-              <Card 
-                key={index} 
-                className={`relative flex flex-col ${
-                  plan.popular 
-                    ? "border-primary shadow-lg shadow-primary/10 scale-105" 
-                    : "border-border"
+      {/* Plans */}
+      <section className="border-b border-border/60">
+        <div className="container mx-auto px-4 py-16 lg:py-20">
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+            {plans.map((plan) => (
+              <div
+                key={plan.name}
+                className={`relative flex flex-col rounded-3xl border p-7 lg:p-8 backdrop-blur-xl transition-colors ${
+                  plan.popular
+                    ? "border-primary/50 bg-primary/[0.04] shadow-[0_24px_80px_-40px_hsl(var(--primary)/0.6)]"
+                    : "border-border/60 bg-foreground/[0.02] hover:border-border"
                 }`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-gradient-to-r from-primary to-accent">
-                      Most Popular
-                    </Badge>
-                  </div>
+                  <span className="absolute -top-3 left-8 rounded-full border border-primary/40 bg-background px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-primary">
+                    Most popular
+                  </span>
                 )}
-                
-                <CardHeader className="text-center pb-8 pt-8">
-                  <div className={`w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
-                    plan.popular 
-                      ? "bg-gradient-to-br from-primary to-accent" 
-                      : "bg-muted"
-                  }`}>
-                    <plan.icon className={`w-7 h-7 ${plan.popular ? "text-primary-foreground" : "text-foreground"}`} />
-                  </div>
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold">
-                      ${isAnnual ? plan.annualPrice : plan.monthlyPrice}
-                    </span>
-                    <span className="text-muted-foreground">/month</span>
-                    {isAnnual && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Billed annually (${plan.annualPrice * 12}/year)
-                      </p>
-                    )}
-                  </div>
-                </CardHeader>
 
-                <CardContent className="flex-1">
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm">{feature}</span>
-                      </li>
-                    ))}
-                    {plan.limitations.map((limitation, limitIndex) => (
-                      <li key={limitIndex} className="flex items-start gap-3 text-muted-foreground">
-                        <X className="w-5 h-5 shrink-0 mt-0.5" />
-                        <span className="text-sm">{limitation}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
+                <div className="flex items-center gap-3">
+                  <span className={`flex h-10 w-10 items-center justify-center rounded-2xl border ${plan.popular ? "border-primary/40 text-primary" : "border-border/60 text-muted-foreground"}`}>
+                    <plan.icon className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <h2 className="font-['Instrument_Serif'] text-2xl leading-none">{plan.name}</h2>
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mt-1">{plan.highlight}</p>
+                  </div>
+                </div>
 
-                <CardFooter className="pt-6">
-                  <Button 
-                    className={`w-full ${
-                      plan.popular 
-                        ? "bg-gradient-to-r from-primary to-accent hover:opacity-90" 
-                        : ""
-                    }`}
-                    variant={plan.popular ? "default" : "outline"}
-                    asChild
-                  >
-                    <Link to="/signup">
-                      Start Free Trial
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
+                <p className="mt-5 text-sm text-muted-foreground leading-relaxed min-h-[40px]">{plan.description}</p>
+
+                <div className="mt-6 flex items-end gap-1">
+                  <span className="font-['Instrument_Serif'] text-6xl leading-none">${isAnnual ? plan.annualPrice : plan.monthlyPrice}</span>
+                  <span className="text-sm text-muted-foreground pb-2">/ month</span>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {isAnnual ? `Billed annually at $${plan.annualPrice * 12}` : "Billed monthly, cancel anytime"}
+                </p>
+
+                <Button
+                  asChild
+                  size="lg"
+                  variant={plan.popular ? "default" : "outline"}
+                  className="mt-7 w-full rounded-full"
+                >
+                  <Link to="/signup">
+                    Start free trial
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+
+                <div className="mt-8 h-px bg-border/60" />
+
+                <ul className="mt-6 space-y-3 flex-1">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <Check className={`h-4 w-4 shrink-0 mt-0.5 ${plan.popular ? "text-primary" : "text-foreground/70"}`} />
+                      <span className="text-sm leading-relaxed">{feature}</span>
+                    </li>
+                  ))}
+                  {plan.limitations.map((limitation) => (
+                    <li key={limitation} className="flex items-start gap-3 text-muted-foreground">
+                      <Minus className="h-4 w-4 shrink-0 mt-0.5" />
+                      <span className="text-sm leading-relaxed">{limitation}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
           </div>
+
+          <p className="mt-10 text-center text-sm text-muted-foreground">
+            Need more than 10,000 credits, SSO or a custom retention policy?{" "}
+            <Link to="/contact" className="text-primary underline underline-offset-4">Talk to sales</Link>.
+          </p>
         </div>
       </section>
 
-      {/* Feature Comparison Table */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Compare All Features</h2>
-            <p className="text-muted-foreground">
-              See what's included in each plan
-            </p>
+      {/* Comparison */}
+      <section className="border-b border-border/60">
+        <div className="container mx-auto px-4 py-16 lg:py-24">
+          <div className="max-w-2xl">
+            <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— Compare</p>
+            <h2 className="font-['Instrument_Serif'] text-4xl sm:text-5xl leading-[0.98] tracking-tight">
+              Every feature, <span className="italic text-rainbow">side by side.</span>
+            </h2>
           </div>
 
-          <div className="max-w-5xl mx-auto overflow-x-auto">
+          <div className="mt-12 overflow-x-auto rounded-3xl border border-border/60 bg-foreground/[0.02] backdrop-blur-xl">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[300px]">Feature</TableHead>
-                  <TableHead className="text-center">Starter</TableHead>
-                  <TableHead className="text-center bg-primary/5">Professional</TableHead>
-                  <TableHead className="text-center">Business</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-[320px] text-[11px] uppercase tracking-[0.18em]">Feature</TableHead>
+                  <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Starter</TableHead>
+                  <TableHead className="text-center text-[11px] uppercase tracking-[0.18em] bg-primary/5">Professional</TableHead>
+                  <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Agency</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {featureComparison.map((row, index) => (
-                  <TableRow key={index}>
+                {featureComparison.map((row) => (
+                  <TableRow key={row.feature}>
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <row.icon className="w-4 h-4 text-muted-foreground" />
+                      <div className="flex items-center gap-2.5">
+                        <row.icon className="h-4 w-4 text-muted-foreground" />
                         {row.feature}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center">
-                      {typeof row.starter === "boolean" ? (
-                        row.starter ? (
-                          <Check className="w-5 h-5 text-green-500 mx-auto" />
+                    {([row.starter, row.professional, row.business] as const).map((value, i) => (
+                      <TableCell key={i} className={`text-center ${i === 1 ? "bg-primary/5" : ""}`}>
+                        {typeof value === "boolean" ? (
+                          value ? (
+                            <Check className="h-4 w-4 text-primary mx-auto" />
+                          ) : (
+                            <Minus className="h-4 w-4 text-muted-foreground/60 mx-auto" />
+                          )
                         ) : (
-                          <X className="w-5 h-5 text-muted-foreground mx-auto" />
-                        )
-                      ) : (
-                        <span className="text-sm">{row.starter}</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center bg-primary/5">
-                      {typeof row.professional === "boolean" ? (
-                        row.professional ? (
-                          <Check className="w-5 h-5 text-green-500 mx-auto" />
-                        ) : (
-                          <X className="w-5 h-5 text-muted-foreground mx-auto" />
-                        )
-                      ) : (
-                        <span className="text-sm font-medium">{row.professional}</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {typeof row.business === "boolean" ? (
-                        row.business ? (
-                          <Check className="w-5 h-5 text-green-500 mx-auto" />
-                        ) : (
-                          <X className="w-5 h-5 text-muted-foreground mx-auto" />
-                        )
-                      ) : (
-                        <span className="text-sm">{row.business}</span>
-                      )}
-                    </TableCell>
+                          <span className={`text-sm ${i === 1 ? "font-medium" : ""}`}>{value}</span>
+                        )}
+                      </TableCell>
+                    ))}
                   </TableRow>
                 ))}
               </TableBody>
@@ -345,53 +294,65 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Frequently Asked Questions</h2>
-            <p className="text-muted-foreground">
-              Everything you need to know about our pricing
-            </p>
-          </div>
+      {/* FAQ */}
+      <section className="border-b border-border/60">
+        <div className="container mx-auto px-4 py-16 lg:py-24">
+          <div className="grid lg:grid-cols-12 gap-10 items-start">
+            <div className="lg:col-span-5 lg:sticky lg:top-24">
+              <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-5">— Billing FAQ</p>
+              <h2 className="font-['Instrument_Serif'] text-4xl sm:text-5xl leading-[0.98] tracking-tight">
+                Pricing <span className="italic text-rainbow">questions.</span>
+              </h2>
+              <p className="mt-5 text-sm sm:text-base text-muted-foreground max-w-md leading-relaxed">
+                Looking for product answers instead?{" "}
+                <Link to="/faq" className="text-primary underline underline-offset-4">Read the full FAQ</Link>.
+              </p>
+            </div>
 
-          <div className="max-w-3xl mx-auto">
-            <Accordion type="single" collapsible className="w-full">
-              {faqs.map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="text-left">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+            <div className="lg:col-span-7">
+              <Accordion type="single" collapsible className="space-y-3">
+                {faqs.map((faq, index) => (
+                  <AccordionItem
+                    key={index}
+                    value={`item-${index}`}
+                    className="rounded-2xl border border-border/60 bg-foreground/[0.02] backdrop-blur-xl px-5 sm:px-6 data-[state=open]:border-primary/40"
+                  >
+                    <AccordionTrigger className="text-left hover:no-underline py-5 font-['Instrument_Serif'] text-lg md:text-xl leading-snug">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground text-sm leading-relaxed pb-5">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-primary/10 via-background to-accent/10">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Grow Your Instagram?</h2>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of creators and businesses who are already using InstaGrow to 
-            accelerate their Instagram growth.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:opacity-90" asChild>
-              <Link to="/signup">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Start Free Trial
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/contact">
-                Contact Sales
-              </Link>
-            </Button>
+      {/* CTA */}
+      <section>
+        <div className="container mx-auto px-4 py-20 lg:py-28">
+          <div className="rounded-[2rem] border border-border/60 bg-foreground/[0.02] backdrop-blur-xl p-10 lg:p-16 text-center">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">— Get started</p>
+            <h2 className="font-['Instrument_Serif'] text-4xl sm:text-5xl lg:text-6xl mt-5 leading-[0.98] tracking-tight max-w-3xl mx-auto">
+              Automate your whole social presence, <span className="italic text-rainbow">not just one app.</span>
+            </h2>
+            <p className="mt-6 text-sm sm:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              Connect every channel, let AI draft and schedule the work, and watch performance roll up into one report. Start free — no card, no lock-in.
+            </p>
+            <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
+              <Button size="lg" className="rounded-full px-8" asChild>
+                <Link to="/signup">
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Start free trial
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="rounded-full px-8" asChild>
+                <Link to="/contact">Talk to sales</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
