@@ -23,6 +23,10 @@ import AcceptInvite from "./pages/AcceptInvite";
 import Privacy from "./pages/legal/Privacy";
 import Terms from "./pages/legal/Terms";
 import Cookies from "./pages/legal/Cookies";
+import About from "./pages/company/About";
+import Blog from "./pages/company/Blog";
+import Careers from "./pages/company/Careers";
+import Contact from "./pages/company/Contact";
 
 
 
@@ -93,9 +97,16 @@ const App = () => (
               <Route path="/b/:slug" element={<PublicBio />} />
               <Route path="/@:slug" element={<PublicBio />} />
               <Route path="/invite/:token" element={<AcceptInvite />} />
-              <Route path="/legal/privacy" element={<Privacy />} />
-              <Route path="/legal/terms" element={<Terms />} />
-              <Route path="/legal/cookies" element={<Cookies />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/cookies" element={<Cookies />} />
+              <Route path="/legal/privacy" element={<Navigate to="/privacy" replace />} />
+              <Route path="/legal/terms" element={<Navigate to="/terms" replace />} />
+              <Route path="/legal/cookies" element={<Navigate to="/cookies" replace />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/careers" element={<Careers />} />
+              <Route path="/contact" element={<Contact />} />
 
 
               

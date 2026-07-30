@@ -36,15 +36,15 @@ const footerLinks = {
     { label: "Analytics", href: "/dashboard/analytics" },
   ],
   company: [
-    { label: "About", href: "#" },
-    { label: "Blog", href: "#" },
-    { label: "Careers", href: "#" },
-    { label: "Contact", href: "#" },
+    { label: "About", href: "/about" },
+    { label: "Blog", href: "/blog" },
+    { label: "Careers", href: "/careers" },
+    { label: "Contact", href: "/contact" },
   ],
   legal: [
-    { label: "Privacy", href: "/legal/privacy" },
-    { label: "Terms", href: "/legal/terms" },
-    { label: "Cookies", href: "/legal/cookies" },
+    { label: "Privacy", href: "/privacy" },
+    { label: "Terms", href: "/terms" },
+    { label: "Cookies", href: "/cookies" },
   ],
 };
 
