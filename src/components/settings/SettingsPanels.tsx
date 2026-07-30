@@ -396,6 +396,7 @@ function download(name: string, contents: string, type = "text/plain") {
 export function BillingPanel() {
   const { isGuest } = useGuest();
   const { balance: credits, events: creditEvents, usedPct: creditsUsedPct } = useCredits();
+  const { plan: planEnt } = usePlan();
   const usage = isGuest ? [
     { label: "Scheduled posts", used: 148, cap: 200, unit: "posts / mo" },
     { label: "AI credits", used: 720, cap: 1000, unit: "credits / mo" },
@@ -606,7 +607,7 @@ export function BillingPanel() {
                   {planEnt.features[row.k] ? (
                     <Check className="h-3.5 w-3.5 text-primary shrink-0" />
                   ) : (
-                    <Lock className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+                    <LockIcon className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
                   )}
                   <span className={planEnt.features[row.k] ? "" : "text-muted-foreground/70"}>
                     {row.label}
