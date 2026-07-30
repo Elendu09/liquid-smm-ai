@@ -64,7 +64,7 @@ const legacyRedirects: Record<string, string> = {
   "presets": "/dashboard/library/presets",
   "history": "/dashboard/activity/runs",
   "notifications": "/dashboard/activity/notifications",
-  "team": "/dashboard/settings/team",
+  "team": "/dashboard/team",
 };
 
 const App = () => (

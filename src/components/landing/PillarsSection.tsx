@@ -6,7 +6,7 @@ const pillars = [
   { icon: Sparkles, eyebrow: "Pillar 02", title: "Stunning content, tailored to you", description: "SkyRank AI learns your brand, audience, and style — then generates scroll-stopping captions, hashtags, and visuals on demand.", ctaLabel: "Open AI Studio", href: "/dashboard/create/ai" },
   { icon: Send, eyebrow: "Pillar 03", title: "One-click, multi-platform posting", description: "Publish and schedule to Facebook, Instagram, LinkedIn, X, Google Business, TikTok, YouTube — from a single composer.", ctaLabel: "Open scheduler", href: "/dashboard/publish/queue" },
   { icon: Palette, eyebrow: "Pillar 04", title: "Customize like a pro", description: "Swap images, tweak captions, and remix professionally designed presets — every post looks unmistakably yours.", ctaLabel: "Browse templates", href: "/dashboard/library/presets" },
-  { icon: Users, eyebrow: "Pillar 05", title: "Team collaboration", description: "Invite teammates, set granular roles and approvals, and keep every campaign moving without the group-chat chaos.", ctaLabel: "Manage team", href: "/dashboard/settings/team" },
+  { icon: Users, eyebrow: "Pillar 05", title: "Team collaboration", description: "Invite teammates, set granular roles and approvals, and keep every campaign moving without the group-chat chaos.", ctaLabel: "Manage team", href: "/dashboard/team" },
   { icon: LifeBuoy, eyebrow: "Pillar 06", title: "Always-on support", description: "Real humans, 24/7. Reach us from the in-app Help widget or email support with an average first reply under an hour.", ctaLabel: "Contact support", href: "/dashboard/support" },
 ];
 
