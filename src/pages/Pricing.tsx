@@ -31,23 +31,47 @@ import {
 
 const plans = [
   {
+    name: "Free",
+    icon: Sparkles,
+    description: "Everything you need to run one brand, forever free.",
+    monthlyPrice: 0,
+    annualPrice: 0,
+    popular: false,
+    custom: false,
+    cta: "Get started free",
+    ctaHref: "/signup",
+    highlight: "1 brand workspace",
+    features: [
+      "1 brand with 3 connected channels",
+      "20 scheduled posts / month",
+      "30 days of analytics history",
+      "5 competitor profiles tracked",
+      "AI social assistant (50 credits/mo)",
+      "MCP access & link-in-bio (1 page)",
+    ],
+    limitations: ["No team seats", "No approval workflow"],
+  },
+  {
     name: "Starter",
     icon: Zap,
     description: "For solo creators running a couple of channels.",
     monthlyPrice: 19,
     annualPrice: 15,
     popular: false,
+    custom: false,
+    cta: "Start free trial",
+    ctaHref: "/signup",
     highlight: "3 social channels",
     features: [
-      "3 social channels across any platform",
+      "Everything in Free, plus:",
+      "10 channels across any platform",
       "500 scheduled posts / month",
       "Unified calendar, list & kanban views",
-      "Core analytics dashboard",
       "AI captions & hashtags (200 credits/mo)",
-      "1 brand voice profile",
-      "Email support",
+      "Unlimited analytics history",
+      "PDF & PPT report exports",
     ],
-    limitations: ["No engagement automation", "No competitor tracking", "No team seats"],
+    limitations: ["No engagement automation", "No team seats"],
   },
   {
     name: "Professional",
@@ -56,67 +80,73 @@ const plans = [
     monthlyPrice: 49,
     annualPrice: 39,
     popular: true,
+    custom: false,
+    cta: "Start free trial",
+    ctaHref: "/signup",
     highlight: "15 social channels",
     features: [
-      "15 social channels across any platform",
-      "Unlimited scheduled posts & recycling",
+      "Everything in Starter, plus:",
+      "15 channels & unlimited publishing",
       "Advanced analytics, best-times & heatmaps",
       "AI captions, remix & images (2,000 credits/mo)",
       "Engagement automation & unified inbox",
-      "Stories, RSS autolists & bulk CSV import",
       "Approval workflow + 3 team seats",
-      "Link-in-bio builder",
+      "Smartlinks & multiple link-in-bio pages",
       "Priority support",
     ],
-    limitations: ["No white-label reporting", "No API access"],
+    limitations: ["No white-label reporting", "No SSO"],
   },
   {
-    name: "Agency",
+    name: "Custom",
     icon: Building2,
-    description: "For teams managing many brands and clients.",
-    monthlyPrice: 99,
-    annualPrice: 79,
+    description: "For agencies and enterprises managing many clients.",
+    monthlyPrice: null,
+    annualPrice: null,
     popular: false,
-    highlight: "Unlimited channels",
+    custom: true,
+    cta: "Let's talk",
+    ctaHref: "/contact",
+    highlight: "Custom number of brands",
     features: [
-      "Unlimited channels & client workspaces",
+      "Custom channels & client workspaces",
       "Everything in Professional, uncapped",
       "White-label reports & shared client calendars",
-      "AI everything (10,000 credits/mo)",
+      "Custom AI assistant credits",
       "Competitor tracking & share-of-voice",
-      "DM automation & audience segments",
       "Unlimited seats with owner/admin/member roles",
-      "API + MCP access & webhooks",
-      "Dedicated manager, 24/7 escalation",
+      "API + MCP access, webhooks & SSO",
+      "Dedicated account manager, 24/7 escalation",
     ],
     limitations: [],
   },
 ];
 
 const featureComparison = [
-  { feature: "Social channels", starter: "3", professional: "15", business: "Unlimited", icon: Users },
-  { feature: "Scheduled posts", starter: "500/mo", professional: "Unlimited", business: "Unlimited", icon: Calendar },
-  { feature: "AI credits included", starter: "200/mo", professional: "2,000/mo", business: "10,000/mo", icon: Sparkles },
-  { feature: "Analytics & reports", starter: "Core", professional: "Advanced", business: "White-label", icon: BarChart3 },
-  { feature: "Hashtag research", starter: "Basic", professional: "Advanced", business: "Premium", icon: Hash },
-  { feature: "Engagement automation", starter: false, professional: true, business: "Premium", icon: Bot },
-  { feature: "Unified inbox & moderation", starter: false, professional: true, business: true, icon: MessageSquare },
-  { feature: "Stories & RSS autolists", starter: false, professional: true, business: true, icon: Rss },
-  { feature: "Approval workflow", starter: false, professional: true, business: true, icon: ShieldCheck },
-  { feature: "Link-in-bio builder", starter: false, professional: "Standard", business: "Custom domain", icon: Link2 },
-  { feature: "Competitor tracking", starter: false, professional: false, business: true, icon: Eye },
-  { feature: "DM automation", starter: false, professional: false, business: true, icon: MessageSquare },
-  { feature: "Team seats", starter: "1", professional: "3", business: "Unlimited", icon: Users },
-  { feature: "API, MCP & webhooks", starter: false, professional: false, business: true, icon: Workflow },
-  { feature: "Support", starter: "Email", professional: "Priority", business: "24/7 dedicated", icon: Headphones },
+  { feature: "Social channels", free: "3", starter: "10", professional: "15", business: "Custom", icon: Users },
+  { feature: "Scheduled posts", free: "20/mo", starter: "500/mo", professional: "Unlimited", business: "Unlimited", icon: Calendar },
+  { feature: "AI credits included", free: "50/mo", starter: "200/mo", professional: "2,000/mo", business: "Custom", icon: Sparkles },
+  { feature: "Analytics history", free: "30 days", starter: "Unlimited", professional: "Unlimited", business: "Unlimited", icon: BarChart3 },
+  { feature: "Reports & exports", free: false, starter: "PDF & PPT", professional: "Templates", business: "White-label", icon: BarChart3 },
+  { feature: "Hashtag research", free: "Basic", starter: "Basic", professional: "Advanced", business: "Premium", icon: Hash },
+  { feature: "Engagement automation", free: false, starter: false, professional: true, business: "Premium", icon: Bot },
+  { feature: "Unified inbox & moderation", free: false, starter: false, professional: true, business: true, icon: MessageSquare },
+  { feature: "Stories & RSS autolists", free: false, starter: true, professional: true, business: true, icon: Rss },
+  { feature: "Approval workflow", free: false, starter: false, professional: true, business: true, icon: ShieldCheck },
+  { feature: "Link-in-bio & smartlinks", free: "1 page", starter: "Multiple", professional: "Standard", business: "Custom domain", icon: Link2 },
+  { feature: "Competitor tracking", free: "5", starter: "100", professional: "100", business: "Unlimited", icon: Eye },
+  { feature: "DM automation", free: false, starter: false, professional: true, business: true, icon: MessageSquare },
+  { feature: "Team seats", free: "1", starter: "1", professional: "3", business: "Unlimited", icon: Users },
+  { feature: "API, MCP & webhooks", free: "MCP only", starter: "MCP only", professional: true, business: true, icon: Workflow },
+  { feature: "Support", free: "Community", starter: "Email", professional: "Priority", business: "24/7 dedicated", icon: Headphones },
 ];
+
 
 const faqs = [
   { question: "Can I switch plans at any time?", answer: "Yes. Upgrades apply instantly and are prorated; downgrades take effect at the start of your next billing period so you keep everything you already paid for." },
   { question: "How do AI credits work alongside my plan?", answer: "Each plan includes a monthly credit allowance for AI actions — captions, remixes, images, voice mode and AI reports. Scheduling, publishing and analytics never cost credits, and you can top up any time from Settings → Billing." },
   { question: "Is there a free trial?", answer: "Every plan includes a 14-day free trial with no card required. You also get an instant demo workspace if you'd rather look around before signing up." },
   { question: "Which platforms are included?", answer: "All of them, on every plan — Instagram, X, LinkedIn, Facebook, TikTok, YouTube, Pinterest, Threads and Google Business. Plans differ by how many channels you connect, not which networks you get." },
-  { question: "What payment methods do you accept?", answer: "All major cards, plus invoicing and bank transfer for annual Agency contracts." },
+  { question: "What payment methods do you accept?", answer: "All major cards, plus invoicing and bank transfer for annual Custom contracts. The Free plan needs no card at all." },
   { question: "Are my connected accounts safe?", answer: "We use official platform APIs and OAuth only — we never ask for or store social passwords. Tokens are encrypted, workspaces are isolated with row-level security, and automation respects each platform's rate limits." },
 ];
 
@@ -169,7 +199,7 @@ const Pricing = () => {
       {/* Plans */}
       <section className="border-b border-border/60">
         <div className="container mx-auto px-4 py-16 lg:py-20">
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-6">
             {plans.map((plan) => (
               <div
                 key={plan.name}
@@ -197,13 +227,28 @@ const Pricing = () => {
 
                 <p className="mt-5 text-sm text-muted-foreground leading-relaxed min-h-[40px]">{plan.description}</p>
 
-                <div className="mt-6 flex items-end gap-1">
-                  <span className="font-['Instrument_Serif'] text-6xl leading-none">${isAnnual ? plan.annualPrice : plan.monthlyPrice}</span>
-                  <span className="text-sm text-muted-foreground pb-2">/ month</span>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {isAnnual ? `Billed annually at $${plan.annualPrice * 12}` : "Billed monthly, cancel anytime"}
-                </p>
+                {plan.custom ? (
+                  <>
+                    <div className="mt-6 flex items-end gap-1">
+                      <span className="font-['Instrument_Serif'] text-5xl leading-none italic">Let's talk</span>
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">Tailored pricing built around your client roster</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="mt-6 flex items-end gap-1">
+                      <span className="font-['Instrument_Serif'] text-6xl leading-none">${isAnnual ? plan.annualPrice : plan.monthlyPrice}</span>
+                      <span className="text-sm text-muted-foreground pb-2">/ month</span>
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {plan.monthlyPrice === 0
+                        ? "Free forever — no card required"
+                        : isAnnual
+                          ? `Billed annually at $${(plan.annualPrice ?? 0) * 12}`
+                          : "Billed monthly, cancel anytime"}
+                    </p>
+                  </>
+                )}
 
                 <Button
                   asChild
@@ -211,11 +256,12 @@ const Pricing = () => {
                   variant={plan.popular ? "default" : "outline"}
                   className="mt-7 w-full rounded-full"
                 >
-                  <Link to="/signup">
-                    Start free trial
+                  <Link to={plan.ctaHref}>
+                    {plan.cta}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
+
 
                 <div className="mt-8 h-px bg-border/60" />
 
@@ -238,8 +284,8 @@ const Pricing = () => {
           </div>
 
           <p className="mt-10 text-center text-sm text-muted-foreground">
-            Need more than 10,000 credits, SSO or a custom retention policy?{" "}
-            <Link to="/contact" className="text-primary underline underline-offset-4">Talk to sales</Link>.
+            Need a custom brand count, SSO or a bespoke retention policy?{" "}
+            <Link to="/contact" className="text-primary underline underline-offset-4">Let's talk</Link>.
           </p>
         </div>
       </section>
@@ -258,10 +304,11 @@ const Pricing = () => {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[320px] text-[11px] uppercase tracking-[0.18em]">Feature</TableHead>
+                  <TableHead className="w-[280px] text-[11px] uppercase tracking-[0.18em]">Feature</TableHead>
+                  <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Free</TableHead>
                   <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Starter</TableHead>
                   <TableHead className="text-center text-[11px] uppercase tracking-[0.18em] bg-primary/5">Professional</TableHead>
-                  <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Agency</TableHead>
+                  <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Custom</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -273,8 +320,8 @@ const Pricing = () => {
                         {row.feature}
                       </div>
                     </TableCell>
-                    {([row.starter, row.professional, row.business] as const).map((value, i) => (
-                      <TableCell key={i} className={`text-center ${i === 1 ? "bg-primary/5" : ""}`}>
+                    {([row.free, row.starter, row.professional, row.business] as const).map((value, i) => (
+                      <TableCell key={i} className={`text-center ${i === 2 ? "bg-primary/5" : ""}`}>
                         {typeof value === "boolean" ? (
                           value ? (
                             <Check className="h-4 w-4 text-primary mx-auto" />
@@ -282,11 +329,12 @@ const Pricing = () => {
                             <Minus className="h-4 w-4 text-muted-foreground/60 mx-auto" />
                           )
                         ) : (
-                          <span className={`text-sm ${i === 1 ? "font-medium" : ""}`}>{value}</span>
+                          <span className={`text-sm ${i === 2 ? "font-medium" : ""}`}>{value}</span>
                         )}
                       </TableCell>
                     ))}
                   </TableRow>
+
                 ))}
               </TableBody>
             </Table>
