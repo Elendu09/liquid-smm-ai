@@ -556,7 +556,7 @@ export const ContentCalendar = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className={cn("flex flex-wrap items-center gap-2", view === "autolists" && "hidden")}>
         <div className="relative flex-1 min-w-40 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search captions…" className="pl-8 h-9" />
@@ -602,7 +602,7 @@ export const ContentCalendar = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className={cn("grid grid-cols-2 md:grid-cols-4 gap-2", view === "autolists" && "hidden")}>
         {[
           { label: "Total", value: stats.total },
           { label: "Upcoming", value: stats.upcoming },
