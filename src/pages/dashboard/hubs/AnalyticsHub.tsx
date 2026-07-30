@@ -38,6 +38,8 @@ export default function AnalyticsHub() {
       <Route element={<AnalyticsLayout />}>
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<Analytics />} />
+        <Route path="benchmarks" element={<BenchmarksView />} />
+
         <Route path="custom" element={<CustomReportsView />} />
         <Route path="reports" element={<Reports />} />
         <Route path="health" element={<HealthOverviewView />} />
