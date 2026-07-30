@@ -284,8 +284,8 @@ const Pricing = () => {
           </div>
 
           <p className="mt-10 text-center text-sm text-muted-foreground">
-            Need more than 10,000 credits, SSO or a custom retention policy?{" "}
-            <Link to="/contact" className="text-primary underline underline-offset-4">Talk to sales</Link>.
+            Need a custom brand count, SSO or a bespoke retention policy?{" "}
+            <Link to="/contact" className="text-primary underline underline-offset-4">Let's talk</Link>.
           </p>
         </div>
       </section>
@@ -304,10 +304,11 @@ const Pricing = () => {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[320px] text-[11px] uppercase tracking-[0.18em]">Feature</TableHead>
+                  <TableHead className="w-[280px] text-[11px] uppercase tracking-[0.18em]">Feature</TableHead>
+                  <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Free</TableHead>
                   <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Starter</TableHead>
                   <TableHead className="text-center text-[11px] uppercase tracking-[0.18em] bg-primary/5">Professional</TableHead>
-                  <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Agency</TableHead>
+                  <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Custom</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -319,8 +320,8 @@ const Pricing = () => {
                         {row.feature}
                       </div>
                     </TableCell>
-                    {([row.starter, row.professional, row.business] as const).map((value, i) => (
-                      <TableCell key={i} className={`text-center ${i === 1 ? "bg-primary/5" : ""}`}>
+                    {([row.free, row.starter, row.professional, row.business] as const).map((value, i) => (
+                      <TableCell key={i} className={`text-center ${i === 2 ? "bg-primary/5" : ""}`}>
                         {typeof value === "boolean" ? (
                           value ? (
                             <Check className="h-4 w-4 text-primary mx-auto" />
@@ -328,11 +329,12 @@ const Pricing = () => {
                             <Minus className="h-4 w-4 text-muted-foreground/60 mx-auto" />
                           )
                         ) : (
-                          <span className={`text-sm ${i === 1 ? "font-medium" : ""}`}>{value}</span>
+                          <span className={`text-sm ${i === 2 ? "font-medium" : ""}`}>{value}</span>
                         )}
                       </TableCell>
                     ))}
                   </TableRow>
+
                 ))}
               </TableBody>
             </Table>
