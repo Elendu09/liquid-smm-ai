@@ -397,17 +397,8 @@ export function BillingPanel() {
   const { isGuest } = useGuest();
   const { balance: credits, events: creditEvents, usedPct: creditsUsedPct } = useCredits();
   const { plan: planEnt } = usePlan();
-  const usage = isGuest ? [
-    { label: "Scheduled posts", used: 148, cap: 200, unit: "posts / mo" },
-    { label: "AI credits", used: 720, cap: 1000, unit: "credits / mo" },
-    { label: "Connected accounts", used: 3, cap: 5, unit: "accounts" },
-    { label: "Team seats", used: 4, cap: 10, unit: "seats" },
-  ] : [
-    { label: "Scheduled posts", used: 0, cap: 0, unit: "posts / mo" },
-    { label: "AI credits", used: credits.usedThisMonth, cap: credits.monthlyAllowance, unit: "credits / mo" },
-    { label: "Connected accounts", used: 0, cap: 0, unit: "accounts" },
-    { label: "Team seats", used: 0, cap: 0, unit: "seats" },
-  ];
+
+
 
   const { items: methods, setItems: setMethods, remove: removeMethod } = useLocalCollection<PaymentMethodRecord>(
     "settings",
