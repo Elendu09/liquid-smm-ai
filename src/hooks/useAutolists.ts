@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { createRemoteCollection } from "./_remoteCollection";
-import { useBrand } from "@/contexts/BrandContext";
+import { useBrands } from "@/contexts/BrandContext";
 
 export interface AutolistSlot {
   /** 0 = Sunday … 6 = Saturday */
@@ -147,7 +147,7 @@ export function upcomingSlots(list: Autolist, count = 8, from = new Date()): Dat
 
 export function useAutolists() {
   const all = store.useItems();
-  const { activeBrand } = useBrand();
+  const { activeBrand } = useBrands();
 
   const autolists = useMemo(() => {
     const scoped = activeBrand ? all.filter((a) => !a.brandId || a.brandId === activeBrand.id) : all;
