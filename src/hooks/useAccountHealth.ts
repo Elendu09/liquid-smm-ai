@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGuest } from "@/hooks/useGuest";
 import { useAccounts } from "@/contexts/AccountContext";
+import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 
 export interface BaselineRow {
   account_id: string;
@@ -19,7 +20,7 @@ export interface BaselineRow {
  */
 export function useAccountHealth() {
   const { isGuest: guest } = useGuest();
-  const { accounts } = useAccounts();
+  const { accounts } = useScopedAccounts();
   const [baselines, setBaselines] = useState<BaselineRow[]>([]);
   const [loading, setLoading] = useState(!guest);
 

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { ScrollToTopButton } from "@/components/layout/ScrollToTopButton";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AccountProvider } from "@/contexts/AccountContext";
+import { BrandProvider } from "@/contexts/BrandContext";
 
 // Public pages
 import Index from "./pages/Index";
@@ -88,6 +89,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AccountProvider>
+        <BrandProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -172,6 +174,7 @@ const App = () => (
             <MarketingScrollTop />
           </BrowserRouter>
         </TooltipProvider>
+        </BrandProvider>
       </AccountProvider>
     </ThemeProvider>
   </QueryClientProvider>

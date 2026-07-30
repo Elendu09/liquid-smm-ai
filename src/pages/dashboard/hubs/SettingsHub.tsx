@@ -1,5 +1,5 @@
 import { Route, Routes, Navigate, Outlet } from "react-router-dom";
-import { UserCog, Bell, BellRing, Link2, CreditCard, Shield, ScrollText, Puzzle, KeyRound, Palette, Webhook } from "lucide-react";
+import { UserCog, Bell, BellRing, Link2, CreditCard, Shield, ScrollText, Puzzle, KeyRound, Palette, Webhook, Building2 } from "lucide-react";
 import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import {
   AccountPanel,
@@ -12,6 +12,7 @@ import {
 import { AuditPanel } from "@/components/settings/AuditPanel";
 import { RolesMatrixPanel } from "@/components/settings/RolesMatrixPanel";
 import { WhiteLabelPanel } from "@/components/settings/WhiteLabelPanel";
+import { BrandsPanel } from "@/components/settings/BrandsPanel";
 import { FeatureGate } from "@/components/shared/FeatureGate";
 import { WebhooksPanel } from "@/components/settings/WebhooksPanel";
 import Integrations from "../Integrations";
@@ -21,6 +22,7 @@ const tabs: HubTab[] = [
   { label: "Account", href: "/dashboard/settings/account", icon: UserCog },
   { label: "Notifications", href: "/dashboard/settings/notifications", icon: Bell },
   { label: "Team alerts", href: "/dashboard/settings/team-alerts", icon: BellRing },
+  { label: "Brands", href: "/dashboard/settings/brands", icon: Building2 },
   { label: "Connected", href: "/dashboard/settings/connected", icon: Link2 },
   { label: "Integrations", href: "/dashboard/settings/integrations", icon: Puzzle },
   { label: "Webhooks", href: "/dashboard/settings/webhooks", icon: Webhook },
@@ -63,6 +65,7 @@ export default function SettingsHub() {
         <Route path="account" element={<Wrap><AccountPanel /></Wrap>} />
         <Route path="notifications" element={<Wrap><NotificationPreferencesPanel /></Wrap>} />
         <Route path="team-alerts" element={<Wrap><TeamActivityNotificationsPanel /></Wrap>} />
+        <Route path="brands" element={<Wrap><BrandsPanel /></Wrap>} />
         <Route path="connected" element={<Wrap><ConnectedPanel /></Wrap>} />
         <Route path="integrations" element={<Wrap><Integrations /></Wrap>} />
         <Route path="integrations/:slug" element={<Wrap><IntegrationDetail /></Wrap>} />

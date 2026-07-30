@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { PLANS, PLAN_ORDER, type FeatureKey, type PlanId } from "@/config/plans";
 import { useAccounts } from "@/contexts/AccountContext";
+import { useBrands } from "@/contexts/BrandContext";
 import { useCredits } from "@/hooks/useCredits";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
@@ -36,7 +37,7 @@ if (typeof window !== "undefined") {
 }
 
 export interface QuotaMeter {
-  key: "posts" | "channels" | "credits" | "seats";
+  key: "posts" | "channels" | "brands" | "credits" | "seats";
   label: string;
   used: number;
   cap: number | null;
@@ -52,6 +53,7 @@ export function usePlan() {
   const planId = useSyncExternalStore(subscribe, () => planCache, () => planCache);
   const { isGuest } = useAuthUser();
   const { accounts } = useAccounts();
+  const { brands } = useBrands();
   const { balance } = useCredits();
   const { posts } = useScheduledPosts();
   const { members } = useTeamMembers();
@@ -89,6 +91,14 @@ export function usePlan() {
         pct: pct(accounts.length, plan.channels),
       },
       {
+        key: "brands",
+        label: "Brand workspaces",
+        used: brands.length,
+        cap: plan.brands,
+        unit: "brands",
+        pct: pct(brands.length, plan.brands),
+      },
+      {
         key: "credits",
         label: "AI credits",
         used: balance.usedThisMonth,
@@ -105,7 +115,7 @@ export function usePlan() {
         pct: pct(Math.max(1, members.length), plan.seats),
       },
     ],
-    [postsThisMonth, accounts.length, balance.usedThisMonth, members.length, plan],
+    [postsThisMonth, accounts.length, brands.length, balance.usedThisMonth, members.length, plan],
   );
 
   const can = useCallback((feature: FeatureKey) => plan.features[feature], [plan]);

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAccounts } from "@/contexts/AccountContext";
+import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 import { platforms } from "@/config/platforms";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { ConnectAccountDialog } from "@/components/accounts/ConnectAccountDialog";
@@ -16,7 +17,8 @@ interface Props {
 }
 
 export function ConnectChannelsSection({ collapsed, onNavigate }: Props) {
-  const { accounts, setActiveAccount, activeAccount } = useAccounts();
+  const { setActiveAccount, activeAccount } = useAccounts();
+  const { accounts } = useScopedAccounts();
   const [connectOpen, setConnectOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");

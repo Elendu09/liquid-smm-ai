@@ -18,6 +18,8 @@ export interface ConnectedAccount {
   lastSync?: Date;
   healthScore: number;
   status: "active" | "warning" | "error" | "disconnected";
+  /** Workspace/brand this channel belongs to (null = unassigned). */
+  brandId?: string | null;
 }
 
 interface AccountContextType {
@@ -29,6 +31,8 @@ interface AccountContextType {
   removeAccount: (accountId: string) => Promise<void>;
   updateAccount: (accountId: string, updates: Partial<ConnectedAccount>) => Promise<void>;
   refresh: () => Promise<void>;
+  /** Move a channel into a brand workspace (null clears the assignment). */
+  assignBrand: (accountId: string, brandId: string | null) => Promise<void>;
   getAccountsByPlatform: (platformId: string) => ConnectedAccount[];
   getPlatformForAccount: (accountId: string) => Platform | undefined;
   totalAccounts: number;
@@ -45,7 +49,7 @@ const guestAccounts: ConnectedAccount[] = [
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=smmpilot",
     isActive: true, followers: 45200, following: 892, posts: 342, engagement: 4.8,
     connectedAt: new Date("2024-01-15"), lastSync: new Date(),
-    healthScore: 92, status: "active",
+    healthScore: 92, status: "active", brandId: "guest-brand-1",
   },
   {
     id: "guest-2", platformId: "tiktok", username: "smmpilot_official",
@@ -53,7 +57,7 @@ const guestAccounts: ConnectedAccount[] = [
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=smmpilot2",
     isActive: true, followers: 128000, following: 156, posts: 89, engagement: 8.2,
     connectedAt: new Date("2024-02-01"), lastSync: new Date(),
-    healthScore: 88, status: "active",
+    healthScore: 88, status: "active", brandId: "guest-brand-1",
   },
   {
     id: "guest-3", platformId: "youtube", username: "SMMSAASChannel",
@@ -61,7 +65,7 @@ const guestAccounts: ConnectedAccount[] = [
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=smmpilot3",
     isActive: true, followers: 12400, following: 45, posts: 156, engagement: 5.1,
     connectedAt: new Date("2024-01-20"), lastSync: new Date(),
-    healthScore: 95, status: "active",
+    healthScore: 95, status: "active", brandId: "guest-brand-2",
   },
 ];
 
@@ -71,6 +75,7 @@ type Row = {
   followers: number; following: number; posts: number; engagement: number;
   health_score: number; status: ConnectedAccount["status"];
   connected_at: string; last_sync: string | null;
+  brand_id?: string | null;
 };
 
 const rowToAccount = (r: Row): ConnectedAccount => ({
@@ -80,6 +85,7 @@ const rowToAccount = (r: Row): ConnectedAccount => ({
   posts: r.posts, engagement: Number(r.engagement), healthScore: r.health_score,
   status: r.status, connectedAt: new Date(r.connected_at),
   lastSync: r.last_sync ? new Date(r.last_sync) : undefined,
+  brandId: r.brand_id ?? null,
 });
 
 export function AccountProvider({ children }: { children: ReactNode }) {
@@ -192,6 +198,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     if (Object.keys(patch).length) await supabase.from("social_accounts").update(patch).eq("id", accountId);
   }, [user]);
 
+  const assignBrand = useCallback(async (accountId: string, brandId: string | null) => {
+    setAccounts((prev) => prev.map((a) => (a.id === accountId ? { ...a, brandId } : a)));
+    if (!user) return;
+    await supabase.from("social_accounts").update({ brand_id: brandId }).eq("id", accountId);
+  }, [user]);
+
   const getAccountsByPlatform = useCallback(
     (platformId: string) => accounts.filter((a) => a.platformId === platformId),
     [accounts]
@@ -213,6 +225,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         accounts, activeAccount, loading,
         setActiveAccount, addAccount, removeAccount, updateAccount,
         refresh: load,
+        assignBrand,
         getAccountsByPlatform, getPlatformForAccount,
         totalAccounts: accounts.length, activePlatforms,
       }}

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CreditsPill } from "@/components/shared/CreditsPill";
+import { BrandSwitcher } from "@/components/shared/BrandSwitcher";
 import { QuotaMeters } from "@/components/shared/QuotaMeters";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { SignOutDialog } from "@/components/auth/SignOutDialog";
@@ -69,6 +70,8 @@ export function DashboardHeader({ variant = "desktop" }: Props) {
             </span>
           </Link>
         )}
+
+        <BrandSwitcher compact={isMobile} className={isMobile ? "ml-1" : "ml-1"} />
 
         <div className={cn("flex-1", isMobile && "min-w-0")} />
 
