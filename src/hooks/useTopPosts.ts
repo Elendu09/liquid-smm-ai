@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGuest } from "@/hooks/useGuest";
-import { useAccounts, type ConnectedAccount } from "@/contexts/AccountContext";
+import { type ConnectedAccount } from "@/contexts/AccountContext";
+import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 
 export type TopPostSort = "engagement" | "reach" | "likes" | "saves" | "shares";
 
@@ -35,7 +36,7 @@ interface Opts {
  */
 export function useTopPosts({ days, sort = "engagement", platform, limit = 6 }: Opts) {
   const { isGuest } = useGuest();
-  const { accounts } = useAccounts();
+  const { accounts, scoped } = useScopedAccounts();
   const [rows, setRows] = useState<TopPost[] | null>(null);
   const [loading, setLoading] = useState(!isGuest);
 
@@ -72,6 +73,8 @@ export function useTopPosts({ days, sort = "engagement", platform, limit = 6 }: 
         const post = postById.get(m.post_id);
         if (!post) continue;
         const account = accounts.find((a) => a.id === m.account_id);
+        // Brand workspace scoping — drop rows outside the active brand.
+        if (scoped && !account) continue;
         if (platform && account && account.platformId !== platform) continue;
         const likes = m.likes ?? 0;
         const comments = m.comments ?? 0;
@@ -98,7 +101,7 @@ export function useTopPosts({ days, sort = "engagement", platform, limit = 6 }: 
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [isGuest, days, platform, accounts.length]);
+  }, [isGuest, days, platform, scoped, accounts.length]);
 
   const sorted = useMemo(() => {
     if (!rows) return [];
