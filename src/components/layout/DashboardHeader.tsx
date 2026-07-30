@@ -31,6 +31,8 @@ interface Props {
  */
 export function DashboardHeader({ variant = "desktop" }: Props) {
   const { user, isGuest } = useAuthUser();
+  const { plan } = usePlan();
+
   const navigate = useNavigate();
   const [signOutOpen, setSignOutOpen] = useState(false);
 
