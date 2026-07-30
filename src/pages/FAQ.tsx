@@ -22,6 +22,7 @@ export default function FAQ() {
       </header>
 
       <FAQSection />
+      <FAQExtended />
       <CTASection />
       <Footer />
     </div>
