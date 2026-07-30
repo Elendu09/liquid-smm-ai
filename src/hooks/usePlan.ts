@@ -53,7 +53,7 @@ export function usePlan() {
   const { isGuest } = useAuthUser();
   const { accounts } = useAccounts();
   const { balance } = useCredits();
-  const posts = useScheduledPosts();
+  const { posts } = useScheduledPosts();
   const { members } = useTeamMembers();
 
   const effectiveId: PlanId = isGuest ? "professional" : planId;
@@ -63,11 +63,9 @@ export function usePlan() {
     const start = new Date();
     start.setDate(1);
     start.setHours(0, 0, 0, 0);
-    const list = (posts as { posts?: unknown[] }).posts ?? [];
-    return (list as { scheduledAt?: string }[]).filter(
-      (p) => p.scheduledAt && new Date(p.scheduledAt) >= start,
-    ).length;
+    return posts.filter((p) => p.scheduledAt && new Date(p.scheduledAt) >= start).length;
   }, [posts]);
+
 
   const pct = (used: number, cap: number | null) =>
     cap === null ? 0 : Math.min(100, Math.round((used / Math.max(1, cap)) * 100));
