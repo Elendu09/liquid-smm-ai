@@ -199,7 +199,7 @@ export function useAnalyticsSeries(metric: MetricId, range: RangeKey, accountIds
  */
 export function useAccountSeries(metric: MetricId, range: RangeKey) {
   const { isGuest: guest } = useGuest();
-  const { accounts, scoped } = useScopedAccounts();
+  const { accounts } = useScopedAccounts();
   const days = RANGE_DAYS[range];
   const [rows, setRows] = useState<Row[] | null>(null);
   const [loading, setLoading] = useState(!guest);
