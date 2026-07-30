@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { TimeGridWeekView } from "@/components/publish/TimeGridWeekView";
 import { CalendarInsightsPanel } from "@/components/publish/CalendarInsightsPanel";
+import { AutolistsPanel } from "@/components/publish/AutolistsPanel";
 import { KanbanBoard, type KanbanColumnDef } from "@/components/dashboard/shell/KanbanBoard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +54,7 @@ function withDuration(
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-type ViewMode = "month" | "week" | "columns" | "feed";
+type ViewMode = "month" | "week" | "columns" | "feed" | "autolists";
 
 type ColumnStatus = "queued" | "sending" | "completed" | "failed" | "paused";
 const KANBAN_COLUMNS: KanbanColumnDef<ColumnStatus>[] = [
@@ -547,7 +548,7 @@ export const ContentCalendar = () => {
       {/* Coming-next roadmap chips */}
       <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
         <span className="uppercase tracking-widest text-muted-foreground/70 mr-1">Coming next</span>
-        {["Autolists", "Best-time heatmap", "Realtime unread", "Live follower spark"].map((t) => (
+        {["Realtime unread", "Live follower spark", "Campaign tags"].map((t) => (
           <span key={t} className="inline-flex items-center rounded-full border border-dashed border-primary/40 text-primary/80 px-2 py-0.5 bg-primary/[0.04]">
             {t}
           </span>
@@ -695,6 +696,8 @@ export const ContentCalendar = () => {
           )}
         </div>
       )}
+
+      {view === "autolists" && <AutolistsPanel />}
 
       {view === "columns" && (
         <div className="relative space-y-4 pb-20">
