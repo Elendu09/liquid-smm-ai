@@ -60,8 +60,12 @@ import {
   Sparkles,
   FileText,
   ShieldCheck,
+  Lock as LockIcon,
 } from "lucide-react";
+import { QuotaMeters } from "@/components/shared/QuotaMeters";
+import { usePlan } from "@/hooks/usePlan";
 import { NotificationPreferencesMatrix } from "./NotificationPreferencesMatrix";
+
 import { TeamNotificationSection } from "./TeamNotificationSection";
 import { PasskeyDialog, type Passkey } from "./PasskeyDialog";
 import { TwoFactorDialog } from "./TwoFactorDialog";
