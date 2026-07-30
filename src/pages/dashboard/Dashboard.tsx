@@ -35,6 +35,7 @@ import { useOnboardingContext } from "@/hooks/useOnboardingContext";
 
 
 import { useAccounts } from "@/contexts/AccountContext";
+import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 import { useRunHistory } from "@/hooks/useRunHistory";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { getPlatformById } from "@/config/platforms";
@@ -88,7 +89,8 @@ function accountStatusDot(status: string) {
 }
 
 export default function Dashboard() {
-  const { accounts, totalAccounts } = useAccounts();
+  const { totalAccounts } = useAccounts();
+  const { accounts } = useScopedAccounts();
   const { state: onboarding } = useOnboarding();
   const { greeting, laneOrder } = useOnboardingContext();
   const openTour = () => window.dispatchEvent(new Event("smmpilot:open-onboarding-tour"));
