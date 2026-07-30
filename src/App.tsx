@@ -78,6 +78,12 @@ const legacyRedirects: Record<string, string> = {
   "team": "/dashboard/team",
 };
 
+const MarketingScrollTop = () => {
+  const { pathname } = useLocation();
+  if (pathname.startsWith("/dashboard")) return null;
+  return <ScrollToTopButton />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
