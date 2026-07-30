@@ -3,6 +3,8 @@ import { MessageCircle, MessageSquare } from "lucide-react";
 import { useInboxMessages } from "@/hooks/useInboxMessages";
 import { InboxBoard } from "./InboxBoard";
 import { cn } from "@/lib/utils";
+import { InboxTriageBar } from "@/components/engage/InboxTriageBar";
+import type { Intent, Sentiment } from "@/hooks/useInboxAnalysis";
 
 /**
  * Unified inbox — a single surface that lets the user pivot between comments
@@ -11,6 +13,8 @@ import { cn } from "@/lib/utils";
  */
 export function UnifiedInboxView() {
   const [kind, setKind] = useState<"comment" | "dm">("comment");
+  const [sentiment, setSentiment] = useState<Sentiment | "all">("all");
+  const [intent, setIntent] = useState<Intent | "all">("all");
   const { items: comments } = useInboxMessages("comment");
   const { items: dms } = useInboxMessages("dm");
 
@@ -58,9 +62,18 @@ export function UnifiedInboxView() {
           })}
         </div>
       </div>
+      <InboxTriageBar
+        items={kind === "comment" ? comments : dms}
+        sentiment={sentiment}
+        intent={intent}
+        onSentiment={setSentiment}
+        onIntent={setIntent}
+      />
       <InboxBoard
         key={kind}
         kind={kind}
+        sentiment={sentiment}
+        intent={intent}
         title={kind === "comment" ? "Comments" : "Direct Messages"}
         description={
           kind === "comment"
