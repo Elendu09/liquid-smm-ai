@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Heart, MessageCircle, Share2, Eye, Trophy, Sparkles, Bookmark } from "lucide-react";
-import { useAccounts } from "@/contexts/AccountContext";
+import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 import { useGuest } from "@/hooks/useGuest";
 import { useTopPosts, type TopPostSort } from "@/hooks/useTopPosts";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
@@ -18,7 +18,7 @@ const GUEST_TITLES = [
 ];
 
 export function TopPostsLeaderboard({ range = "30D" as RangeKey }: { range?: RangeKey }) {
-  const { accounts } = useAccounts();
+  const { accounts } = useScopedAccounts();
   const { isGuest } = useGuest();
   const [sort, setSort] = useState<TopPostSort>("engagement");
   const days = RANGE_DAYS[range] ?? 30;

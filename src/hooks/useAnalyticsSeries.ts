@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGuest } from "@/hooks/useGuest";
-import { useAccounts } from "@/contexts/AccountContext";
+import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 import { resolveMetric, type MetricId } from "@/hooks/useCustomReports";
 
 export type RangeKey = "1D" | "7D" | "30D" | "90D" | "1Y";
@@ -107,12 +107,17 @@ function pickMetric(row: Row, metric: MetricId): number {
  */
 export function useAnalyticsSeries(metric: MetricId, range: RangeKey, accountIds?: string[]): SeriesResult {
   const { isGuest: guest } = useGuest();
-  const { accounts } = useAccounts();
+  const { accounts, scoped } = useScopedAccounts();
   const days = RANGE_DAYS[range];
   const [rows, setRows] = useState<Row[] | null>(null);
   const [loading, setLoading] = useState(!guest);
 
-  const scope = useMemo(() => accountIds?.slice().sort().join(",") ?? "", [accountIds]);
+  const brandIds = useMemo(
+    () => (scoped ? accounts.map((a) => a.id) : null),
+    [scoped, accounts],
+  );
+  const effectiveIds = accountIds ?? brandIds ?? undefined;
+  const scope = useMemo(() => effectiveIds?.slice().sort().join(",") ?? "", [effectiveIds]);
 
   useEffect(() => {
     if (guest) { setRows(null); setLoading(false); return; }
@@ -126,7 +131,7 @@ export function useAnalyticsSeries(metric: MetricId, range: RangeKey, accountIds
         .select("day,account_id,followers,following,posts,engagement,reach,impressions,raw")
         .gte("day", isoDay(since))
         .order("day", { ascending: true });
-      if (accountIds && accountIds.length) q = q.in("account_id", accountIds);
+      if (effectiveIds && effectiveIds.length) q = q.in("account_id", effectiveIds);
       const { data, error } = await q;
       if (cancelled) return;
       if (error) { setRows([]); setLoading(false); return; }
@@ -194,7 +199,7 @@ export function useAnalyticsSeries(metric: MetricId, range: RangeKey, accountIds
  */
 export function useAccountSeries(metric: MetricId, range: RangeKey) {
   const { isGuest: guest } = useGuest();
-  const { accounts } = useAccounts();
+  const { accounts } = useScopedAccounts();
   const days = RANGE_DAYS[range];
   const [rows, setRows] = useState<Row[] | null>(null);
   const [loading, setLoading] = useState(!guest);
@@ -246,14 +251,14 @@ export function useAccountSeries(metric: MetricId, range: RangeKey) {
  */
 export function useCardSeries(metric: MetricId, days: number, platformId?: string): SeriesResult {
   const { isGuest: guest } = useGuest();
-  const { accounts } = useAccounts();
+  const { accounts, scoped } = useScopedAccounts();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [loading, setLoading] = useState(!guest);
 
   const accountIds = useMemo(() => {
-    if (!platformId) return null;
+    if (!platformId) return scoped ? accounts.map((a) => a.id) : null;
     return accounts.filter((a) => a.platformId === platformId).map((a) => a.id);
-  }, [accounts, platformId]);
+  }, [accounts, platformId, scoped]);
   const scope = accountIds?.slice().sort().join(",") ?? "";
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Filter } from "lucide-react";
-import { useAccounts } from "@/contexts/AccountContext";
+import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 import { useGuest } from "@/hooks/useGuest";
 import { useAnalyticsOverview } from "@/hooks/useAnalyticsOverview";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  * (impressions/reach/engagements/clicks). Guest keeps the demo synth path.
  */
 export function FunnelCard() {
-  const { accounts } = useAccounts();
+  const { accounts } = useScopedAccounts();
   const { isGuest } = useGuest();
   const { funnel, loading } = useAnalyticsOverview(90);
 

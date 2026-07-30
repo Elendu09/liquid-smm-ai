@@ -15,7 +15,8 @@ import { isGuestSession } from "@/hooks/useGuest";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { cn } from "@/lib/utils";
 import { ReplyDialog } from "@/components/engage/ReplyDialog";
-import { analyzeMessage, snippetFor, SENTIMENT_STYLE, INTENT_LABEL } from "@/hooks/useInboxAnalysis";
+import { analyzeMessage, snippetFor, SENTIMENT_STYLE, INTENT_LABEL, type Intent, type Sentiment } from "@/hooks/useInboxAnalysis";
+import { useSavedReplies } from "@/hooks/useSavedReplies";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useAccounts } from "@/contexts/AccountContext";
 
@@ -72,6 +73,8 @@ function InboxCard({
   onApprove,
   onReopen,
   onQuickReply,
+  onSavedReply,
+  savedReplies,
 }: {
   item: InboxItem;
   variant: number;
@@ -81,6 +84,8 @@ function InboxCard({
   onApprove: (text: string) => void;
   onReopen: () => void;
   onQuickReply: (text: string) => void;
+  onSavedReply: (id: string, body: string) => void;
+  savedReplies: { id: string; name: string; body: string }[];
 }) {
   const { sentiment, intent } = useMemo(() => analyzeMessage(item.message), [item.message]);
   const snippet = useMemo(() => snippetFor(intent, item.author, variant), [intent, item.author, variant]);
@@ -130,6 +135,21 @@ function InboxCard({
           </button>
         </div>
       )}
+      {savedReplies.length > 0 && item.status !== "replied" && (
+        <div className="flex items-center gap-1 flex-wrap">
+          {savedReplies.slice(0, 3).map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => onSavedReply(r.id, r.body)}
+              className="px-1.5 py-0.5 rounded-full border border-border/60 bg-muted/50 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+              title={r.body}
+            >
+              {r.name}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex items-center justify-between pt-1 border-t border-border/40">
         <span className="text-[10px] text-muted-foreground">
           {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -173,11 +193,15 @@ interface InboxBoardProps {
   kind: "comment" | "dm";
   title: string;
   description?: string;
+  /** Triage filters driven by <InboxTriageBar/> in the unified inbox. */
+  sentiment?: Sentiment | "all";
+  intent?: Intent | "all";
 }
 
-export function InboxBoard({ kind, title, description }: InboxBoardProps) {
+export function InboxBoard({ kind, title, description, sentiment = "all", intent = "all" }: InboxBoardProps) {
   const [view, setView] = useViewMode(`engage-${kind}`, "kanban");
   const { items, setItems, update } = useInboxMessages(kind);
+  const { replies: savedReplies, incrementUsage, render } = useSavedReplies();
   const { accounts } = useAccounts();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InboxStatus | "all">("all");
@@ -196,8 +220,14 @@ export function InboxBoard({ kind, title, description }: InboxBoardProps) {
       const q = search.toLowerCase();
       out = out.filter((i) => i.message.toLowerCase().includes(q) || i.author.toLowerCase().includes(q));
     }
+    if (sentiment !== "all" || intent !== "all") {
+      out = out.filter((i) => {
+        const a = analyzeMessage(i.message);
+        return (sentiment === "all" || a.sentiment === sentiment) && (intent === "all" || a.intent === intent);
+      });
+    }
     return out;
-  }, [items, filter, search]);
+  }, [items, filter, search, sentiment, intent]);
 
   const scheduleReply = (item: InboxItem) => {
     const mins = window.prompt(`Send reply to ${item.author} in how many minutes?`, "15");
@@ -226,6 +256,12 @@ export function InboxBoard({ kind, title, description }: InboxBoardProps) {
     onReopen: () => {
       update(item.id, { status: "new", scheduledFor: undefined });
       toast("Reopened");
+    },
+    onSavedReply: (id: string, body: string) => {
+      const text = render(body, { name: item.author, handle: item.handle, platform: item.platform });
+      incrementUsage(id);
+      update(item.id, { status: "replied", scheduledFor: undefined });
+      toast.success(`Saved reply sent to ${item.author}`, { description: text.slice(0, 80) + (text.length > 80 ? "…" : "") });
     },
     onQuickReply: (text: string) => {
       update(item.id, { status: "replied", scheduledFor: undefined });
@@ -297,7 +333,7 @@ export function InboxBoard({ kind, title, description }: InboxBoardProps) {
             update(item.id, { status: to });
             toast.success(`Moved to ${to}`);
           }}
-          renderItem={(i) => <InboxCard item={i} variant={variants[i.id] ?? 0} {...actions(i)} />}
+          renderItem={(i) => <InboxCard item={i} variant={variants[i.id] ?? 0} savedReplies={savedReplies} {...actions(i)} />}
         />
       ) : (
         <ListView
@@ -306,7 +342,7 @@ export function InboxBoard({ kind, title, description }: InboxBoardProps) {
           emptyLabel="No conversations match your filters."
           renderItem={(i) => (
             <div className="p-4">
-              <InboxCard item={i} variant={variants[i.id] ?? 0} {...actions(i)} />
+              <InboxCard item={i} variant={variants[i.id] ?? 0} savedReplies={savedReplies} {...actions(i)} />
             </div>
           )}
         />

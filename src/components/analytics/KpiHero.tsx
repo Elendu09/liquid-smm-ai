@@ -2,7 +2,7 @@ import { ArrowUp, ArrowDown, Users, Heart, Eye, MousePointerClick, MessageSquare
 import { AreaChart, Area, ResponsiveContainer, YAxis } from "recharts";
 import { cn } from "@/lib/utils";
 import { useAnalyticsSeries, RANGE_DAYS, type RangeKey } from "@/hooks/useAnalyticsSeries";
-import { useAccounts } from "@/contexts/AccountContext";
+import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 import { EmptyState } from "@/components/shared/EmptyState";
 
 const RANGES = ["1D", "7D", "30D", "90D", "1Y"] as const;
@@ -37,7 +37,7 @@ interface KpiHeroProps {
 }
 
 export function KpiHero({ range, onRangeChange }: KpiHeroProps) {
-  const { accounts } = useAccounts();
+  const { accounts } = useScopedAccounts();
   const followers = useAnalyticsSeries("followers", range);
   const engagement = useAnalyticsSeries("engagement", range);
   const reach = useAnalyticsSeries("reach", range);

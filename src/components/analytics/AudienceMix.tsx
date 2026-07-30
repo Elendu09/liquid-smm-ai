@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Users } from "lucide-react";
 import { useGuest } from "@/hooks/useGuest";
-import { useAccounts } from "@/contexts/AccountContext";
+import { useScopedAccounts } from "@/hooks/useScopedAccounts";
 import { useAnalyticsOverview } from "@/hooks/useAnalyticsOverview";
 import { EmptyState } from "@/components/shared/EmptyState";
 
@@ -39,7 +39,7 @@ const PALETTE = ["hsl(var(--primary))", "#10b981", "#f59e0b", "#ec4899", "#8b5cf
  */
 export function AudienceMix() {
   const { isGuest } = useGuest();
-  const { accounts } = useAccounts();
+  const { accounts } = useScopedAccounts();
   const { platformSlices, loading } = useAnalyticsOverview(90);
 
   const real = useMemo(() => {
