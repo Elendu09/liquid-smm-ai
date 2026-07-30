@@ -522,7 +522,7 @@ export function BillingPanel() {
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
           <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
           <div className="min-w-0 text-sm">
-            <p className="font-medium">You're on the Free plan</p>
+            <p className="font-medium">You're on the {planEnt.name} plan</p>
             <p className="text-muted-foreground">
               Billing hasn't been enabled for your workspace yet. Upgrade to unlock higher limits, team seats, and priority publishing.
             </p>
@@ -536,12 +536,12 @@ export function BillingPanel() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Crown className="w-5 h-5 text-primary" />
-                {isGuest ? "Professional plan" : "Free plan"}
+                {planEnt.name} plan
               </CardTitle>
               <CardDescription>{isGuest ? "Your current subscription" : "Your current workspace tier"}</CardDescription>
             </div>
             <Badge variant="secondary" className={isGuest ? "bg-green-500/10 text-green-500" : "bg-muted text-muted-foreground"}>
-              {isGuest ? "Active" : "Free"}
+              {isGuest ? "Active" : planEnt.name}
             </Badge>
           </div>
         </CardHeader>
