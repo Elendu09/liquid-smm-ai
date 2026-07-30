@@ -199,7 +199,7 @@ const Pricing = () => {
       {/* Plans */}
       <section className="border-b border-border/60">
         <div className="container mx-auto px-4 py-16 lg:py-20">
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-6">
             {plans.map((plan) => (
               <div
                 key={plan.name}
