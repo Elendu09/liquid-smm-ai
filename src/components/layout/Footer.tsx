@@ -24,16 +24,16 @@ const YouTubeIcon = () => (
 
 const footerLinks = {
   product: [
-    { label: "Features", href: "/#features" },
-    { label: "Tools", href: "/#tools" },
-    { label: "Pricing", href: "/#pricing" },
-    { label: "FAQ", href: "/#faq" },
+    { label: "Features", href: "/features" },
+    { label: "Tools", href: "/tools" },
+    { label: "Pricing", href: "/pricing" },
+    { label: "FAQ", href: "/faq" },
   ],
   tools: [
-    { label: "Caption Generator", href: "/dashboard/caption-generator" },
-    { label: "Post Scheduler", href: "/dashboard/scheduler" },
-    { label: "Engagement Bot", href: "/dashboard/engagement-bot" },
-    { label: "Analytics", href: "/dashboard/analytics" },
+    { label: "Caption Generator", href: "/dashboard/create/captions" },
+    { label: "Post Scheduler", href: "/dashboard/publish/queue" },
+    { label: "Engagement Bot", href: "/dashboard/engage/bot" },
+    { label: "Analytics", href: "/dashboard/analytics/overview" },
   ],
   company: [
     { label: "About", href: "/about" },

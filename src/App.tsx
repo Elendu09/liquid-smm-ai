@@ -16,6 +16,9 @@ import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Pricing from "./pages/Pricing";
+import Features from "./pages/Features";
+import Tools from "./pages/Tools";
+import FAQ from "./pages/FAQ";
 import Solutions from "./pages/Solutions";
 import PublicCalendar from "./pages/PublicCalendar";
 import PublicBio from "./pages/PublicBio";
@@ -90,6 +93,9 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/tools" element={<Tools />} />
+              <Route path="/faq" element={<FAQ />} />
               <Route path="/solutions" element={<Solutions />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/public/calendar/:token" element={<PublicCalendar />} />
