@@ -205,7 +205,11 @@ export function BrandProvider({ children }: { children: ReactNode }) {
         ),
       );
       if (!user) return;
-      const row: Record<string, unknown> = {};
+      type BrandUpdate = {
+        name?: string; slug?: string | null; description?: string | null;
+        color?: string; logo_url?: string | null; timezone?: string; archived?: boolean;
+      };
+      const row: BrandUpdate = {};
       if (patch.name !== undefined) { row.name = patch.name; row.slug = slugify(patch.name); }
       if (patch.description !== undefined) row.description = patch.description ?? null;
       if (patch.color !== undefined) row.color = patch.color;
