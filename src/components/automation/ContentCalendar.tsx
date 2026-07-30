@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { TimeGridWeekView } from "@/components/publish/TimeGridWeekView";
 import { CalendarInsightsPanel } from "@/components/publish/CalendarInsightsPanel";
+import { AutolistsPanel } from "@/components/publish/AutolistsPanel";
 import { KanbanBoard, type KanbanColumnDef } from "@/components/dashboard/shell/KanbanBoard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +54,7 @@ function withDuration(
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-type ViewMode = "month" | "week" | "columns" | "feed";
+type ViewMode = "month" | "week" | "columns" | "feed" | "autolists";
 
 type ColumnStatus = "queued" | "sending" | "completed" | "failed" | "paused";
 const KANBAN_COLUMNS: KanbanColumnDef<ColumnStatus>[] = [
@@ -466,7 +467,7 @@ export const ContentCalendar = () => {
         </div>
 
         <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/40">
-          {(["month", "week", "feed"] as ViewMode[]).map((v) => (
+          {(["month", "week", "feed", "autolists"] as ViewMode[]).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -547,7 +548,7 @@ export const ContentCalendar = () => {
       {/* Coming-next roadmap chips */}
       <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
         <span className="uppercase tracking-widest text-muted-foreground/70 mr-1">Coming next</span>
-        {["Autolists", "Best-time heatmap", "Realtime unread", "Live follower spark"].map((t) => (
+        {["Realtime unread", "Live follower spark", "Campaign tags"].map((t) => (
           <span key={t} className="inline-flex items-center rounded-full border border-dashed border-primary/40 text-primary/80 px-2 py-0.5 bg-primary/[0.04]">
             {t}
           </span>
@@ -555,7 +556,7 @@ export const ContentCalendar = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className={cn("flex flex-wrap items-center gap-2", view === "autolists" && "hidden")}>
         <div className="relative flex-1 min-w-40 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search captions…" className="pl-8 h-9" />
@@ -601,7 +602,7 @@ export const ContentCalendar = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className={cn("grid grid-cols-2 md:grid-cols-4 gap-2", view === "autolists" && "hidden")}>
         {[
           { label: "Total", value: stats.total },
           { label: "Upcoming", value: stats.upcoming },
@@ -695,6 +696,8 @@ export const ContentCalendar = () => {
           )}
         </div>
       )}
+
+      {view === "autolists" && <AutolistsPanel />}
 
       {view === "columns" && (
         <div className="relative space-y-4 pb-20">

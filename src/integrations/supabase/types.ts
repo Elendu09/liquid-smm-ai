@@ -289,6 +289,59 @@ export type Database = {
         }
         Relationships: []
       }
+      autolists: {
+        Row: {
+          active: boolean
+          brand_id: string | null
+          color: string
+          created_at: string
+          id: string
+          name: string
+          order_index: number
+          platform_ids: string[]
+          slots: Json
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          brand_id?: string | null
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          order_index?: number
+          platform_ids?: string[]
+          slots?: Json
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          brand_id?: string | null
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          order_index?: number
+          platform_ids?: string[]
+          slots?: Json
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autolists_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automation_rules: {
         Row: {
           account_id: string | null
@@ -2001,6 +2054,7 @@ export type Database = {
           approval_status: string | null
           approved_at: string | null
           approved_by: string | null
+          autolist_id: string | null
           caption: string
           category_id: string | null
           created_at: string
@@ -2026,6 +2080,7 @@ export type Database = {
           approval_status?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          autolist_id?: string | null
           caption?: string
           category_id?: string | null
           created_at?: string
@@ -2051,6 +2106,7 @@ export type Database = {
           approval_status?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          autolist_id?: string | null
           caption?: string
           category_id?: string | null
           created_at?: string
@@ -2072,7 +2128,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_posts_autolist_id_fkey"
+            columns: ["autolist_id"]
+            isOneToOne: false
+            referencedRelation: "autolists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       social_account_tokens: {
         Row: {

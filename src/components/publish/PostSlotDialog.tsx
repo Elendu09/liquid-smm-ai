@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { NetworkPreview } from "@/components/publish/NetworkPreview";
 import { platforms as PLATFORMS } from "@/config/platforms";
 import { guardWrite } from "@/hooks/useGuest";
 import type { ScheduledPost } from "@/hooks/useScheduledPosts";
@@ -96,7 +97,7 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit scheduled post" : "New scheduled post"}</DialogTitle>
           <DialogDescription>
@@ -104,7 +105,9 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2 max-h-[60vh] overflow-y-auto pr-1">
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_300px] max-h-[62vh] overflow-y-auto pr-1">
+        <div className="space-y-4 py-2">
+
           <div>
             <Label htmlFor="pd-caption">Caption</Label>
             <Textarea id="pd-caption" rows={4} value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Write something great…" />
@@ -165,6 +168,18 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
             <Textarea id="pd-first" rows={2} value={firstComment} onChange={(e) => setFirstComment(e.target.value)} />
           </div>
         </div>
+
+          <div className="py-2">
+            <NetworkPreview
+              caption={caption}
+              mediaUrl={mediaUrl || undefined}
+              hashtags={hashtags.split(/\s+/).filter(Boolean)}
+              platformIds={platformIds}
+              className="md:sticky md:top-0"
+            />
+          </div>
+        </div>
+
 
         <DialogFooter className="gap-2 sm:gap-2">
           {isEdit && onDelete && post && (
