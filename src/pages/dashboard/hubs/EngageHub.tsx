@@ -1,6 +1,7 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { Bot, Inbox, MessageSquare, MessageCircle } from "lucide-react";
 import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
+import { FeatureGate } from "@/components/shared/FeatureGate";
 import BotRulesView from "../views/BotRulesView";
 import { InboxBoard } from "../views/InboxBoard";
 import { UnifiedInboxView } from "../views/UnifiedInboxView";
@@ -33,7 +34,20 @@ export default function EngageHub() {
     <Routes>
       <Route element={<EngageLayout />}>
         <Route index element={<Navigate to="inbox" replace />} />
-        <Route path="inbox" element={<UnifiedInboxView />} />
+        <Route
+          path="inbox"
+          element={
+            <div className="p-4 sm:p-6 lg:p-8 pt-0 sm:pt-0 lg:pt-0">
+              <FeatureGate
+                feature="inbox"
+                title="Unified inbox is a Professional feature"
+                description="Bring comments, DMs and mentions from every channel into one triage board with assignments, saved replies and SLA counters."
+              >
+                <UnifiedInboxView />
+              </FeatureGate>
+            </div>
+          }
+        />
         <Route path="bot" element={<BotRulesView />} />
         <Route
           path="comments"

@@ -60,8 +60,12 @@ import {
   Sparkles,
   FileText,
   ShieldCheck,
+  Lock as LockIcon,
 } from "lucide-react";
+import { QuotaMeters } from "@/components/shared/QuotaMeters";
+import { usePlan } from "@/hooks/usePlan";
 import { NotificationPreferencesMatrix } from "./NotificationPreferencesMatrix";
+
 import { TeamNotificationSection } from "./TeamNotificationSection";
 import { PasskeyDialog, type Passkey } from "./PasskeyDialog";
 import { TwoFactorDialog } from "./TwoFactorDialog";
@@ -392,17 +396,9 @@ function download(name: string, contents: string, type = "text/plain") {
 export function BillingPanel() {
   const { isGuest } = useGuest();
   const { balance: credits, events: creditEvents, usedPct: creditsUsedPct } = useCredits();
-  const usage = isGuest ? [
-    { label: "Scheduled posts", used: 148, cap: 200, unit: "posts / mo" },
-    { label: "AI credits", used: 720, cap: 1000, unit: "credits / mo" },
-    { label: "Connected accounts", used: 3, cap: 5, unit: "accounts" },
-    { label: "Team seats", used: 4, cap: 10, unit: "seats" },
-  ] : [
-    { label: "Scheduled posts", used: 0, cap: 0, unit: "posts / mo" },
-    { label: "AI credits", used: credits.usedThisMonth, cap: credits.monthlyAllowance, unit: "credits / mo" },
-    { label: "Connected accounts", used: 0, cap: 0, unit: "accounts" },
-    { label: "Team seats", used: 0, cap: 0, unit: "seats" },
-  ];
+  const { plan: planEnt } = usePlan();
+
+
 
   const { items: methods, setItems: setMethods, remove: removeMethod } = useLocalCollection<PaymentMethodRecord>(
     "settings",
@@ -526,7 +522,7 @@ export function BillingPanel() {
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
           <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
           <div className="min-w-0 text-sm">
-            <p className="font-medium">You're on the Free plan</p>
+            <p className="font-medium">You're on the {planEnt.name} plan</p>
             <p className="text-muted-foreground">
               Billing hasn't been enabled for your workspace yet. Upgrade to unlock higher limits, team seats, and priority publishing.
             </p>
@@ -540,12 +536,12 @@ export function BillingPanel() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Crown className="w-5 h-5 text-primary" />
-                {isGuest ? "Professional plan" : "Free plan"}
+                {planEnt.name} plan
               </CardTitle>
               <CardDescription>{isGuest ? "Your current subscription" : "Your current workspace tier"}</CardDescription>
             </div>
             <Badge variant="secondary" className={isGuest ? "bg-green-500/10 text-green-500" : "bg-muted text-muted-foreground"}>
-              {isGuest ? "Active" : "Free"}
+              {isGuest ? "Active" : planEnt.name}
             </Badge>
           </div>
         </CardHeader>
@@ -579,37 +575,41 @@ export function BillingPanel() {
       <Card>
         <CardHeader>
           <CardTitle>Usage this cycle</CardTitle>
-          <CardDescription>Included quotas for your Professional plan</CardDescription>
+          <CardDescription>Live quotas included with your {planEnt.name} plan</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
-          {usage.map((u) => {
-            const pct = Math.min(100, Math.round((u.used / u.cap) * 100));
-            const near = pct >= 80;
-            return (
-              <div key={u.label} className="space-y-1.5">
-                <div className="flex items-baseline justify-between text-sm">
-                  <span className="font-medium">{u.label}</span>
-                  <span className={near ? "text-amber-500" : "text-muted-foreground"}>
-                    {u.used.toLocaleString()} / {u.cap.toLocaleString()} {u.unit}
+          <QuotaMeters bare />
+          <div className="rounded-lg border border-border/60 bg-card/40 p-4">
+            <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2.5">
+              Included in {planEnt.name}
+            </div>
+            <ul className="grid gap-1.5 sm:grid-cols-2 text-sm">
+              {[
+                { k: "inbox" as const, label: "Unified inbox" },
+                { k: "approvals" as const, label: "Approval workflow" },
+                { k: "automation" as const, label: "Engagement automation" },
+                { k: "reportExports" as const, label: "PDF & PPT report exports" },
+                { k: "smartlinks" as const, label: "SmartLinks & link-in-bio" },
+                { k: "whiteLabel" as const, label: "White-label reporting" },
+                { k: "customDomain" as const, label: "Custom domain" },
+                { k: "sso" as const, label: "SSO & advanced roles" },
+              ].map((row) => (
+                <li key={row.k} className="flex items-center gap-2">
+                  {planEnt.features[row.k] ? (
+                    <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                  ) : (
+                    <LockIcon className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+                  )}
+                  <span className={planEnt.features[row.k] ? "" : "text-muted-foreground/70"}>
+                    {row.label}
                   </span>
-                </div>
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className={`h-full transition-all ${near ? "bg-amber-500" : "bg-primary"}`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                {near && (
-                  <p className="text-[11px] text-amber-500 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    Approaching plan limit
-                  </p>
-                )}
-              </div>
-            );
-          })}
+                </li>
+              ))}
+            </ul>
+          </div>
         </CardContent>
       </Card>
+
 
       <Card>
         <CardHeader className="flex flex-row items-start justify-between">

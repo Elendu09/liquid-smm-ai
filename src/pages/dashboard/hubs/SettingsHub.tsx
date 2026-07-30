@@ -12,6 +12,7 @@ import {
 import { AuditPanel } from "@/components/settings/AuditPanel";
 import { RolesMatrixPanel } from "@/components/settings/RolesMatrixPanel";
 import { WhiteLabelPanel } from "@/components/settings/WhiteLabelPanel";
+import { FeatureGate } from "@/components/shared/FeatureGate";
 import { WebhooksPanel } from "@/components/settings/WebhooksPanel";
 import Integrations from "../Integrations";
 import IntegrationDetail from "../IntegrationDetail";
@@ -70,7 +71,20 @@ export default function SettingsHub() {
         <Route path="security" element={<Wrap><SecurityPanel /></Wrap>} />
         <Route path="team" element={<Navigate to="/dashboard/team" replace />} />
         <Route path="roles" element={<Wrap><RolesMatrixPanel /></Wrap>} />
-        <Route path="white-label" element={<Wrap><WhiteLabelPanel /></Wrap>} />
+        <Route
+          path="white-label"
+          element={
+            <Wrap>
+              <FeatureGate
+                feature="whiteLabel"
+                title="White-label is available on the Custom plan"
+                description="Replace SkyRank branding with your own logo, accent colour and support address across the dashboard, reports and client share links."
+              >
+                <WhiteLabelPanel />
+              </FeatureGate>
+            </Wrap>
+          }
+        />
         <Route path="audit" element={<Wrap><AuditPanel /></Wrap>} />
       </Route>
     </Routes>

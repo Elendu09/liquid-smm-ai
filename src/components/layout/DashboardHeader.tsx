@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { HelpCircle, LogOut, Settings, User as UserIcon, Zap, Sparkles } from "lucide-react";
+import { Gauge, HelpCircle, LogOut, Settings, User as UserIcon, Zap, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,11 +10,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CreditsPill } from "@/components/shared/CreditsPill";
+import { QuotaMeters } from "@/components/shared/QuotaMeters";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { SignOutDialog } from "@/components/auth/SignOutDialog";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { usePlan } from "@/hooks/usePlan";
 import { cn } from "@/lib/utils";
+
 
 interface Props {
   variant?: "desktop" | "mobile";
@@ -27,6 +31,8 @@ interface Props {
  */
 export function DashboardHeader({ variant = "desktop" }: Props) {
   const { user, isGuest } = useAuthUser();
+  const { plan } = usePlan();
+
   const navigate = useNavigate();
   const [signOutOpen, setSignOutOpen] = useState(false);
 
@@ -67,6 +73,22 @@ export function DashboardHeader({ variant = "desktop" }: Props) {
         <div className={cn("flex-1", isMobile && "min-w-0")} />
 
         <div className="flex items-center gap-1.5 sm:gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label={`Plan usage — ${plan.name} plan`}
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/70 backdrop-blur px-3 h-8 text-xs font-medium hover:border-primary/50 transition-colors"
+              >
+                <Gauge className="h-3.5 w-3.5 text-primary" />
+                <span>{plan.name}</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72">
+              <QuotaMeters />
+            </PopoverContent>
+          </Popover>
+
           <CreditsPill variant="compact" />
 
           {!isGuest && (
@@ -74,6 +96,7 @@ export function DashboardHeader({ variant = "desktop" }: Props) {
               <NotificationBell collapsed />
             </div>
           )}
+
 
           <Button
             variant="ghost"
