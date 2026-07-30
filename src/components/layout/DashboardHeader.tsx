@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { HelpCircle, LogOut, Settings, User as UserIcon, Zap, Sparkles } from "lucide-react";
+import { Gauge, HelpCircle, LogOut, Settings, User as UserIcon, Zap, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,11 +10,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CreditsPill } from "@/components/shared/CreditsPill";
+import { QuotaMeters } from "@/components/shared/QuotaMeters";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { SignOutDialog } from "@/components/auth/SignOutDialog";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { usePlan } from "@/hooks/usePlan";
 import { cn } from "@/lib/utils";
+
 
 interface Props {
   variant?: "desktop" | "mobile";
