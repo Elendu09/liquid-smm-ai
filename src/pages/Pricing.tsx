@@ -146,7 +146,7 @@ const faqs = [
   { question: "How do AI credits work alongside my plan?", answer: "Each plan includes a monthly credit allowance for AI actions — captions, remixes, images, voice mode and AI reports. Scheduling, publishing and analytics never cost credits, and you can top up any time from Settings → Billing." },
   { question: "Is there a free trial?", answer: "Every plan includes a 14-day free trial with no card required. You also get an instant demo workspace if you'd rather look around before signing up." },
   { question: "Which platforms are included?", answer: "All of them, on every plan — Instagram, X, LinkedIn, Facebook, TikTok, YouTube, Pinterest, Threads and Google Business. Plans differ by how many channels you connect, not which networks you get." },
-  { question: "What payment methods do you accept?", answer: "All major cards, plus invoicing and bank transfer for annual Agency contracts." },
+  { question: "What payment methods do you accept?", answer: "All major cards, plus invoicing and bank transfer for annual Custom contracts. The Free plan needs no card at all." },
   { question: "Are my connected accounts safe?", answer: "We use official platform APIs and OAuth only — we never ask for or store social passwords. Tokens are encrypted, workspaces are isolated with row-level security, and automation respects each platform's rate limits." },
 ];
 
