@@ -20,6 +20,9 @@ import Solutions from "./pages/Solutions";
 import PublicCalendar from "./pages/PublicCalendar";
 import PublicBio from "./pages/PublicBio";
 import AcceptInvite from "./pages/AcceptInvite";
+import Privacy from "./pages/legal/Privacy";
+import Terms from "./pages/legal/Terms";
+import Cookies from "./pages/legal/Cookies";
 
 
 
@@ -90,6 +93,9 @@ const App = () => (
               <Route path="/b/:slug" element={<PublicBio />} />
               <Route path="/@:slug" element={<PublicBio />} />
               <Route path="/invite/:token" element={<AcceptInvite />} />
+              <Route path="/legal/privacy" element={<Privacy />} />
+              <Route path="/legal/terms" element={<Terms />} />
+              <Route path="/legal/cookies" element={<Cookies />} />
 
 
               

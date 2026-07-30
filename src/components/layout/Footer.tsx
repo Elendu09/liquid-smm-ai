@@ -42,9 +42,9 @@ const footerLinks = {
     { label: "Contact", href: "#" },
   ],
   legal: [
-    { label: "Privacy", href: "#" },
-    { label: "Terms", href: "#" },
-    { label: "Cookies", href: "#" },
+    { label: "Privacy", href: "/legal/privacy" },
+    { label: "Terms", href: "/legal/terms" },
+    { label: "Cookies", href: "/legal/cookies" },
   ],
 };
 
