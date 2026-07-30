@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { FAQSection } from "@/components/landing/FAQSection";
+import { FAQExtended } from "@/components/landing/FAQExtended";
 import { CTASection } from "@/components/landing/CTASection";
 
 export default function FAQ() {
@@ -21,6 +22,7 @@ export default function FAQ() {
       </header>
 
       <FAQSection />
+      <FAQExtended />
       <CTASection />
       <Footer />
     </div>
