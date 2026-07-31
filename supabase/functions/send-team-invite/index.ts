@@ -79,7 +79,9 @@ Deno.serve(async (req) => {
     if (!origin) return json({ error: "invalid_app_url" }, 400);
 
     const invite_url = `${origin}/invite/${token}`;
-    const from_name = inviter_name || userData.user.email || "Your teammate";
+    const from_name = escapeHtml(inviter_name || userData.user.email || "Your teammate");
+
+
 
 
     const resendKey = Deno.env.get("RESEND_API_KEY");
