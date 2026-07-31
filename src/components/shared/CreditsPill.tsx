@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Zap } from "lucide-react";
 import { useCredits } from "@/hooks/useCredits";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { cn } from "@/lib/utils";
@@ -30,14 +30,15 @@ export function CreditsPill({ variant = "pill", className }: Props) {
         to="/dashboard/settings?tab=billing"
         aria-label={`${balance.balance} credits remaining`}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/70 backdrop-blur px-2.5 h-8 text-xs font-semibold hover:border-primary/50 transition-colors",
-          low && "border-amber-500/50 text-amber-500",
+          "inline-flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-semibold bg-secondary text-secondary-foreground ring-1 ring-border/60 shadow-sm hover:ring-primary/50 transition-colors",
+          low && "ring-amber-500/60 text-amber-500",
           className,
         )}
       >
-        <Sparkles className={cn("h-3.5 w-3.5", low ? "text-amber-500" : "text-primary")} />
+        <Zap className={cn("h-3.5 w-3.5 fill-current", low ? "text-amber-500" : "text-primary")} />
         <span className="tabular-nums">{balance.balance.toLocaleString()}</span>
       </Link>
+
     ) : (
       <Link
         to="/dashboard/settings?tab=billing"

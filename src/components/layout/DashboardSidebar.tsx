@@ -50,6 +50,7 @@ import { NotificationBell } from "@/components/shared/NotificationBell";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SignOutDialog } from "@/components/auth/SignOutDialog";
 import { CreditsPill } from "@/components/shared/CreditsPill";
+import { HeaderActions } from "./HeaderActions";
 
 type SubItem = { label: string; href: string; icon: React.ComponentType<{ className?: string }> };
 type NavItem = {
@@ -383,7 +384,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                 ? pathname === item.href
                 : pathname.startsWith(item.href) && item.href !== "/dashboard";
               const hasKids = !!item.children?.length;
-              const isOpen = isMobile ? !!openGroups[item.href] : true;
+              const isOpen = !!openGroups[item.href];
 
               const rowContent = (
                 <div
@@ -404,7 +405,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                     type="button"
                     onClick={() => {
                       navigate(item.href);
-                      if (hasKids && showLabels && isMobile) {
+                      if (hasKids && showLabels) {
                         setOpenGroups((p) => ({ ...p, [item.href]: true }));
                       }
                       onNavigate?.();
@@ -418,8 +419,8 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                     <item.icon className="w-4 h-4 flex-shrink-0" />
                     {showLabels && <span className="flex-1 truncate">{item.label}</span>}
                   </button>
-                  {/* Chevron toggle — mobile only */}
-                  {showLabels && hasKids && isMobile && (
+                  {/* Chevron toggle */}
+                  {showLabels && hasKids && (
                     <button
                       type="button"
                       onClick={(e) => {
@@ -641,14 +642,11 @@ export function DashboardSidebar() {
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary via-primary to-primary/70 flex items-center justify-center shadow-sm shadow-primary/30 ring-1 ring-primary/20">
             <Zap className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-['Instrument_Serif'] text-xl leading-none tracking-tight text-foreground truncate">
+          <span className="font-['Instrument_Serif'] text-xl leading-none tracking-tight text-foreground truncate hidden sm:inline">
             SMMSAAS<span className="italic text-primary">.</span>
           </span>
         </Link>
-        <div className="flex items-center gap-1.5">
-          <CreditsPill variant="compact" />
-          <NotificationBell collapsed />
-        </div>
+        <HeaderActions compact className="ml-auto" />
       </div>
 
 
