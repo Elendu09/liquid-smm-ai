@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { safeHref } from "@/lib/safeUrl";
+import { safeUrl } from "@/lib/safeUrl";
 
 const PRESETS: { label: string; source: string; medium: string }[] = [
   { label: "Instagram bio", source: "instagram", medium: "bio" },
@@ -29,7 +29,7 @@ export function UtmBuilder({ defaultUrl = "" }: { defaultUrl?: string }) {
   const [copied, setCopied] = useState(false);
 
   const tagged = useMemo(() => {
-    const base = safeHref(url.trim());
+    const base = safeUrl(url.trim());
     if (!base) return "";
     try {
       const u = new URL(base);
