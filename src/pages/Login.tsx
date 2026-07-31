@@ -179,6 +179,13 @@ const Login = () => {
           <button
             type="button"
             onClick={async () => {
+              const { data: sess } = await supabase.auth.getSession();
+              if (sess.session) {
+                toast.info("You're signed in", {
+                  description: "Sign out first to explore the read-only demo.",
+                });
+                return;
+              }
               await enableGuest();
               toast.info("Demo mode enabled — read-only preview");
               navigate("/dashboard", { replace: true });

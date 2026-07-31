@@ -4,6 +4,8 @@ import { Menu, X, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { HeaderAccountMenu } from "./HeaderAccountMenu";
 
 type NavChild = { label: string; href: string; description?: string };
 type NavItem = { label: string; href?: string; children?: NavChild[] };
@@ -41,6 +43,8 @@ export function Navbar() {
   const closeTimer = useRef<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, isGuest } = useAuthUser();
+  const isAuthed = !!user && !isGuest;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -180,6 +184,9 @@ export function Navbar() {
             {/* Actions */}
             <div className="flex items-center gap-3">
               <ThemeToggle />
+              {isAuthed ? (
+                <HeaderAccountMenu className="hidden sm:flex" />
+              ) : (
               <div className="hidden sm:flex items-center gap-2">
                 <Link to="/login">
                   <Button variant="ghost" size="sm" className="text-[11px] uppercase tracking-[0.2em]">
@@ -196,6 +203,7 @@ export function Navbar() {
                   </Button>
                 </Link>
               </div>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -256,16 +264,22 @@ export function Navbar() {
                   </button>
                 ),
               )}
-              <div className="flex gap-2 mt-4 px-4">
-                <Link to="/login" className="flex-1">
-                  <Button variant="outline" className="w-full">
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/signup" className="flex-1">
-                  <Button className="w-full">Get Started</Button>
-                </Link>
-              </div>
+              {isAuthed ? (
+                <div className="mt-4 px-4">
+                  <HeaderAccountMenu className="w-full justify-between" />
+                </div>
+              ) : (
+                <div className="flex gap-2 mt-4 px-4">
+                  <Link to="/login" className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link to="/signup" className="flex-1">
+                    <Button className="w-full">Get Started</Button>
+                  </Link>
+                </div>
+              )}
             </nav>
           </div>
         )}
