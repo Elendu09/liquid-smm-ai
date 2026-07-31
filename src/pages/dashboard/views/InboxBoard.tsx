@@ -45,7 +45,12 @@ export interface InboxItem {
   scheduledFor?: string;
   /** Teammate display name this conversation is assigned to. */
   assignee?: string;
+  /** AI-generated draft reply queued by an inbox automation rule. */
+  aiDraft?: string;
+  /** Id of the automation rule that last routed this message. */
+  autoRuleId?: string;
 }
+
 
 const columns: KanbanColumnDef<InboxStatus>[] = [
   { id: "new", label: "New", emptyLabel: "Inbox zero ✨" },

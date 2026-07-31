@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Bot, Heart, MessageCircle, UserPlus, Eye, Play, Pause, Settings2, Zap, Shield, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -9,6 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getPlatformById } from "@/config/platforms";
+import { limitsFor, clampDaily, ACTION_LABEL, type EngageAction } from "@/config/engagementLimits";
+import { PostUnderstandingLab } from "@/components/automation/PostUnderstandingLab";
+import { useAccounts } from "@/contexts/AccountContext";
+
 
 const engagementTypes = [
   { id: "likes", label: "Auto Likes", icon: Heart, color: "text-pink-500", enabled: true },
@@ -35,6 +40,20 @@ export const AutoEngagementBot = () => {
   const [keywords, setKeywords] = useState("#fitness #motivation #growth");
   const [negativeKeywords, setNegativeKeywords] = useState("#spam #giveaway #followback");
   const [competitorAllowList, setCompetitorAllowList] = useState("@brand_x @rival_co");
+  const { accounts } = useAccounts();
+
+  /** Networks the budgets apply to: the user's connected ones, else a sensible default set. */
+  const botPlatforms = useMemo(() => {
+    const connected = Array.from(new Set(accounts.map((a) => a.platformId))).filter(Boolean);
+    return connected.length ? connected : ["instagram", "tiktok", "twitter", "linkedin"];
+  }, [accounts]);
+
+  /** Map the engagement-type toggles onto concrete platform actions. */
+  const enabledActions = useMemo<EngageAction[]>(() => {
+    const map: Record<string, EngageAction> = { likes: "like", comments: "comment", follows: "follow", views: "dm" };
+    return engagements.filter((e) => e.enabled).map((e) => map[e.id]).filter(Boolean);
+  }, [engagements]);
+
 
 
   const toggleEngagement = (id: string) => {
@@ -213,6 +232,47 @@ export const AutoEngagementBot = () => {
             </p>
           </div>
 
+          {/* Per-platform safety budgets */}
+          <div>
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              Per-network safety budgets
+              <Badge variant="secondary" className="text-[10px]">auto-capped</Badge>
+            </h4>
+            <p className="text-xs text-muted-foreground mb-3">
+              Each network throttles automation differently. Your daily limit of {dailyLimit[0]} is split across
+              enabled actions and hard-capped at each network's safe ceiling — the bot never exceeds these.
+            </p>
+            <div className="space-y-2">
+              {botPlatforms.map((pid) => {
+                const l = limitsFor(pid);
+                const name = getPlatformById(pid)?.name ?? pid;
+                const active = (Object.keys(l.daily) as EngageAction[]).filter(
+                  (a) => l.daily[a] > 0 && enabledActions.includes(a),
+                );
+                return (
+                  <div key={pid} className="p-3 rounded-lg bg-secondary/50 border border-border">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-sm font-medium">{name}</span>
+                      <span className="text-[11px] text-muted-foreground">≥{l.minDelaySec}s between actions</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {active.length === 0 ? (
+                        <span className="text-[11px] text-muted-foreground">No enabled action is supported here.</span>
+                      ) : active.map((a) => (
+                        <Badge key={a} variant="outline" className="text-[10px]">
+                          {ACTION_LABEL[a]}: {clampDaily(pid, a, dailyLimit[0])}/day
+                        </Badge>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1.5">{l.note}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+
         </div>
 
         {/* Activity Log */}
@@ -270,6 +330,11 @@ export const AutoEngagementBot = () => {
           </div>
         </div>
       </div>
+
+      <div className="mt-6">
+        <PostUnderstandingLab keywords={keywords} negativeKeywords={negativeKeywords} />
+      </div>
+
     </div>
   );
 };

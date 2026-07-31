@@ -1,6 +1,7 @@
 // SkyRank.digital API Service
 // Free APIs with no authentication required
 
+import { freeAiComplete, freeAiImageUrl, cleanText, parseHashtags } from './freeAi';
 import type {
   CaptionResponse,
   HashtagResponse,
@@ -67,7 +68,12 @@ export async function generateCaption(
     });
     return { success: true, ...response };
   } catch (error) {
-    console.error('Caption API error:', error);
+    console.warn('Caption API unavailable, using keyless fallback:', error);
+    const out = await freeAiComplete(
+      'You write scroll-stopping social media captions. Reply with the caption only.',
+      `Write one ${mood || 'engaging'} social media caption about: ${topic}`,
+    );
+    if (out) return { success: true, caption: cleanText(out), topic, mood: mood || 'engaging' };
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to generate caption',
@@ -87,7 +93,12 @@ export async function generateHashtags(
     });
     return { success: true, ...response };
   } catch (error) {
-    console.error('Hashtag API error:', error);
+    console.warn('Hashtag API unavailable, using keyless fallback:', error);
+    const out = await freeAiComplete(
+      'You are a hashtag strategist. Reply with a plain list of hashtags only.',
+      `List 20 relevant ${platform || 'instagram'} hashtags for: ${topic}`,
+    );
+    if (out) return { success: true, hashtags: parseHashtags(out), topic, platform: platform || 'instagram' };
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to generate hashtags',
@@ -109,7 +120,9 @@ export async function chatWithAI(
     const response = await fetchWithTimeout<ChatResponse>(endpoint, params);
     return { success: true, ...response };
   } catch (error) {
-    console.error('Chat API error:', error);
+    console.warn('Chat API unavailable, using keyless fallback:', error);
+    const out = await freeAiComplete('You are a helpful social media assistant.', message);
+    if (out) return { success: true, response: out, model: 'free-fallback' };
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to chat with AI',
@@ -129,7 +142,12 @@ export async function rewriteText(
     });
     return { success: true, ...response };
   } catch (error) {
-    console.error('Rewrite API error:', error);
+    console.warn('Rewrite API unavailable, using keyless fallback:', error);
+    const out = await freeAiComplete(
+      'You rewrite text. Reply with the rewritten text only.',
+      `Rewrite this in a ${style} style:\n\n${text}`,
+    );
+    if (out) return { success: true, rewritten: cleanText(out), original: text, style };
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to rewrite text',
@@ -149,7 +167,12 @@ export async function translateText(
     const response = await fetchWithTimeout<TranslateResponse>('/api/translate', params);
     return { success: true, ...response };
   } catch (error) {
-    console.error('Translate API error:', error);
+    console.warn('Translate API unavailable, using keyless fallback:', error);
+    const out = await freeAiComplete(
+      'You are a translator. Reply with the translation only, preserving emojis and hashtags.',
+      `Translate to ${to}:\n\n${text}`,
+    );
+    if (out) return { success: true, translated: cleanText(out), original: text, to, from };
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to translate text',
@@ -165,7 +188,12 @@ export async function fixGrammar(text: string): Promise<GrammarResponse> {
     });
     return { success: true, ...response };
   } catch (error) {
-    console.error('Grammar API error:', error);
+    console.warn('Grammar API unavailable, using keyless fallback:', error);
+    const out = await freeAiComplete(
+      'You fix grammar and spelling. Reply with the corrected text only.',
+      text,
+    );
+    if (out) return { success: true, corrected: cleanText(out), original: text };
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to fix grammar',
@@ -181,7 +209,12 @@ export async function generateQuote(category?: string): Promise<QuoteResponse> {
     });
     return { success: true, ...response };
   } catch (error) {
-    console.error('Quote API error:', error);
+    console.warn('Quote API unavailable, using keyless fallback:', error);
+    const out = await freeAiComplete(
+      'You share short quotes. Reply with the quote only, no attribution line.',
+      `Give one short ${category || 'motivation'} quote.`,
+    );
+    if (out) return { success: true, quote: cleanText(out), category: category || 'motivation' };
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to generate quote',
@@ -203,11 +236,8 @@ export async function generateImage(
     );
     return { success: true, ...response };
   } catch (error) {
-    console.error('Image API error:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to generate image',
-    };
+    console.warn('Image API unavailable, using keyless fallback:', error);
+    return { success: true, image: freeAiImageUrl(prompt), prompt };
   }
 }
 
@@ -219,7 +249,12 @@ export async function summarizeText(text: string): Promise<SummarizeResponse> {
     });
     return { success: true, ...response };
   } catch (error) {
-    console.error('Summarize API error:', error);
+    console.warn('Summarize API unavailable, using keyless fallback:', error);
+    const out = await freeAiComplete(
+      'You summarise text concisely. Reply with the summary only.',
+      text,
+    );
+    if (out) return { success: true, summary: cleanText(out), original: text };
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to summarize text',

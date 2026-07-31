@@ -17,6 +17,7 @@ import { TestRuleDialog } from "@/components/engage/TestRuleDialog";
 import { RunAutomationDialog } from "@/components/engage/RunAutomationDialog";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useAccounts } from "@/contexts/AccountContext";
+import { InboxAutomationPanel } from "@/components/engage/InboxAutomationPanel";
 
 const seed: BotRule[] = [
   { id: "r1", name: "Welcome new followers", trigger: "New follower", action: "Send welcome DM", enabled: true, runs: 128 },
@@ -114,6 +115,15 @@ export default function BotRulesView() {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pb-8">
+      <InboxAutomationPanel />
+
+      <div className="mb-3">
+        <h2 className="text-base font-semibold">Engagement rules</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Outbound automation: welcome DMs, keyword replies, and niche engagement.
+        </p>
+      </div>
+
       <ToolbarBar
         search={search}
         onSearchChange={setSearch}
