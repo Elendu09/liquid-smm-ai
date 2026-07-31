@@ -50,6 +50,7 @@ import { NotificationBell } from "@/components/shared/NotificationBell";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SignOutDialog } from "@/components/auth/SignOutDialog";
 import { CreditsPill } from "@/components/shared/CreditsPill";
+import { useBrands } from "@/contexts/BrandContext";
 import { BrandSwitcher } from "@/components/shared/BrandSwitcher";
 import { HeaderActions } from "./HeaderActions";
 
