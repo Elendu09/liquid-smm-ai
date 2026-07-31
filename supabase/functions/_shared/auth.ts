@@ -27,8 +27,9 @@ export async function requireUser(req: Request): Promise<{ userId: string } | Re
     auth: { persistSession: false },
   });
   const token = authHeader.slice("Bearer ".length);
-  const { data, error } = await client.auth.getClaims(token);
-  const userId = data?.claims?.sub;
+  const { data, error } = await client.auth.getUser(token);
+  const userId = data?.user?.id;
+
   if (error || !userId) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
