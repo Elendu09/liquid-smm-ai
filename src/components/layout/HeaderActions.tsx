@@ -48,33 +48,42 @@ export function HeaderActions({ compact = false, className }: Props) {
   return (
     <>
       <div className={cn("flex items-center gap-1.5 sm:gap-2", className)}>
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              aria-label={`Plan usage — ${plan.name} plan`}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/70 backdrop-blur h-8 text-xs font-medium hover:border-primary/50 transition-colors",
-                compact ? "px-2" : "px-3",
-              )}
-            >
-              <Gauge className="h-3.5 w-3.5 text-primary" />
-              {!compact && <span>{plan.name}</span>}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-72">
-            <QuotaMeters />
-          </PopoverContent>
-        </Popover>
+        {/* Segmented plan + credits control (list/column toggle style) */}
+        <div className="inline-flex items-center h-9 rounded-lg border border-border/60 bg-muted/40 p-0.5 backdrop-blur">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label={`Plan usage — ${plan.name} plan`}
+                className={cn(
+                  "inline-flex items-center gap-1.5 h-8 rounded-md text-xs font-medium text-foreground/80 hover:bg-background hover:text-foreground transition-colors",
+                  compact ? "px-2" : "px-2.5",
+                )}
+              >
+                <Gauge className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{plan.name}</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72">
+              <QuotaMeters />
+            </PopoverContent>
+          </Popover>
 
-        <CreditsPill variant="compact" />
+          <span className="h-4 w-px bg-border/70" aria-hidden />
 
-        {!isGuest && <NotificationBell collapsed />}
+          <CreditsPill variant="compact" />
+        </div>
+
+        {!isGuest && (
+          <span className="hidden sm:inline-flex">
+            <NotificationBell collapsed />
+          </span>
+        )}
 
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 rounded-full border border-border/50 bg-card/60 hover:bg-muted"
+          className="hidden sm:inline-flex h-9 w-9 rounded-full border border-border/50 bg-card/60 hover:bg-muted"
           onClick={() => navigate("/dashboard/support")}
           aria-label="Help & Support"
         >
