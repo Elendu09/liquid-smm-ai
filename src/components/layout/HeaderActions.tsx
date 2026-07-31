@@ -56,11 +56,11 @@ export function HeaderActions({ compact = false, className }: Props) {
                 type="button"
                 aria-label={`Plan usage — ${plan.name} plan`}
                 className={cn(
-                  "inline-flex items-center gap-1.5 h-8 rounded-md text-xs font-medium text-foreground/80 hover:bg-background hover:text-foreground transition-colors",
+                  "inline-flex items-center gap-1.5 h-8 rounded-md text-xs font-medium text-primary hover:bg-primary/10 transition-colors",
                   compact ? "px-2" : "px-2.5",
                 )}
               >
-                <Gauge className="h-3.5 w-3.5" />
+                <Gauge className="h-3.5 w-3.5 text-primary" />
                 <span className="hidden sm:inline">{plan.name}</span>
               </button>
             </PopoverTrigger>
