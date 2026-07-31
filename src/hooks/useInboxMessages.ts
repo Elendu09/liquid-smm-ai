@@ -17,7 +17,7 @@ type Row = {
   author: string | null;
   body: string | null;
   status: string;
-  data: { handle?: string; platform?: string; scheduledFor?: string } | null;
+  data: { handle?: string; platform?: string; scheduledFor?: string; assignee?: string } | null;
   received_at: string;
 };
 
@@ -31,6 +31,7 @@ const rowToItem = (r: Row): InboxItem => ({
   status: (r.status as InboxItem["status"]) ?? "new",
   kind: (r.kind as "comment" | "dm") ?? "comment",
   scheduledFor: r.data?.scheduledFor,
+  assignee: r.data?.assignee,
 });
 
 /* ---------------- module cache per kind ---------------- */
@@ -145,8 +146,18 @@ export function useInboxMessages(kind: "comment" | "dm") {
       if (patch.status !== undefined) row.status = merged.status;
       if (patch.author !== undefined) row.author = merged.author;
       if (patch.message !== undefined) row.body = merged.message;
-      if (patch.handle !== undefined || patch.platform !== undefined || patch.scheduledFor !== undefined) {
-        row.data = { handle: merged.handle, platform: merged.platform, scheduledFor: merged.scheduledFor };
+      if (
+        patch.handle !== undefined ||
+        patch.platform !== undefined ||
+        patch.scheduledFor !== undefined ||
+        patch.assignee !== undefined
+      ) {
+        row.data = {
+          handle: merged.handle,
+          platform: merged.platform,
+          scheduledFor: merged.scheduledFor,
+          assignee: merged.assignee,
+        };
       }
       void supabase.from("inbox_messages").update(row as never).eq("id", id);
     } else {
@@ -165,7 +176,7 @@ export function useInboxMessages(kind: "comment" | "dm") {
         body: item.message,
         status: item.status,
         received_at: item.createdAt,
-        data: { handle: item.handle, platform: item.platform, scheduledFor: item.scheduledFor },
+        data: { handle: item.handle, platform: item.platform, scheduledFor: item.scheduledFor, assignee: item.assignee },
       } as never).then(({ error }) => {
         if (error) setCache(kind, bucket.cache.filter((i) => i.id !== item.id));
       });
