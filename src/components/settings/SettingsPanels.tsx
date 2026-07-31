@@ -1,3 +1,4 @@
+import { AddonMarketplace } from "@/components/settings/AddonMarketplace";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -610,6 +611,8 @@ export function BillingPanel() {
         </CardContent>
       </Card>
 
+
+      <AddonMarketplace onSelect={(a) => toast.success(`${a.name} added to your next invoice`)} />
 
       <Card>
         <CardHeader className="flex flex-row items-start justify-between">

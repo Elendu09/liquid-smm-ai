@@ -54,6 +54,8 @@ export const aiCreate = {
     post<{ topic: string; tags: ResearchedHashtag[] }>({ op: "hashtags", ...p }),
   translate: (p: { text: string; targetLanguage: string }) =>
     post<{ translated: string; language: string }>({ op: "translate", ...p }),
+  reply: (p: { message: string; author?: string; platform?: string; tone?: string; count?: number }) =>
+    post<{ suggestions: string[] }>({ op: "reply", ...p }),
   brief: (p: { topic: string; goal?: string; audience?: string; platform?: string; tone?: string }) =>
     post<AiBrief>({ op: "brief", ...p }),
 };
