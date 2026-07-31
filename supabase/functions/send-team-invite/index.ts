@@ -57,8 +57,30 @@ Deno.serve(async (req) => {
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
     const { email, token, role, inviter_name, app_url } = parsed.data;
 
-    const invite_url = `${app_url.replace(/\/$/, "")}/invite/${token}`;
+    // The caller must own a matching pending invite row — otherwise this endpoint
+    // could be used to send arbitrary branded invite emails.
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      { auth: { persistSession: false } },
+    );
+    const { data: inviteRow } = await admin
+      .from("team_members")
+      .select("id")
+      .eq("owner_id", userData.user.id)
+      .eq("invite_token", token)
+      .eq("status", "pending")
+      .ilike("email", email)
+      .eq("role", role)
+      .maybeSingle();
+    if (!inviteRow) return json({ error: "invite_not_found" }, 403);
+
+    const origin = resolveAppUrl(app_url, req.headers.get("Origin"));
+    if (!origin) return json({ error: "invalid_app_url" }, 400);
+
+    const invite_url = `${origin}/invite/${token}`;
     const from_name = inviter_name || userData.user.email || "Your teammate";
+
 
     const resendKey = Deno.env.get("RESEND_API_KEY");
     let delivered = false;
