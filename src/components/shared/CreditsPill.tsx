@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Zap } from "lucide-react";
 import { useCredits } from "@/hooks/useCredits";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { cn } from "@/lib/utils";
