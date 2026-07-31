@@ -115,7 +115,7 @@ export function HeaderActions({ compact = false, className }: Props) {
               Open workspace
             </DropdownMenuItem>
             {!isGuest && (
-              <DropdownMenuItem onClick={() => navigate("/dashboard/settings?tab=billing")}>
+              <DropdownMenuItem onClick={() => navigate("/dashboard/settings/billing")}>
                 <Zap className="h-4 w-4 mr-2" />
                 Billing & credits
               </DropdownMenuItem>
