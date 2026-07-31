@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Reply, Clock, Check, RotateCcw, User, Sparkles, RefreshCw, Send } from "lucide-react";
+import { Reply, Clock, Check, RotateCcw, User, Sparkles, RefreshCw, Send, UserPlus, Inbox as InboxIcon, Archive } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -19,6 +19,17 @@ import { analyzeMessage, snippetFor, SENTIMENT_STYLE, INTENT_LABEL, type Intent,
 import { useSavedReplies } from "@/hooks/useSavedReplies";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useAccounts } from "@/contexts/AccountContext";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
+import { BulkActionBar } from "@/components/shared/BulkActionBar";
+import { useTeamMembers } from "@/hooks/useTeamMembers";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type InboxStatus = "new" | "replied" | "snoozed" | "resolved";
 
@@ -32,6 +43,8 @@ export interface InboxItem {
   status: InboxStatus;
   kind: "comment" | "dm";
   scheduledFor?: string;
+  /** Teammate display name this conversation is assigned to. */
+  assignee?: string;
 }
 
 const columns: KanbanColumnDef<InboxStatus>[] = [
@@ -67,6 +80,8 @@ const seed = (kind: "comment" | "dm"): InboxItem[] => {
 function InboxCard({
   item,
   variant,
+  selected,
+  onToggleSelect,
   onReply,
   onSchedule,
   onRetry,
@@ -78,6 +93,8 @@ function InboxCard({
 }: {
   item: InboxItem;
   variant: number;
+  selected?: boolean;
+  onToggleSelect?: () => void;
   onReply: () => void;
   onSchedule: () => void;
   onRetry: () => void;
@@ -92,6 +109,15 @@ function InboxCard({
   return (
     <div className="p-3 space-y-2">
       <div className="flex items-start gap-2">
+        {onToggleSelect && (
+          <Checkbox
+            checked={!!selected}
+            onCheckedChange={onToggleSelect}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Select message from ${item.author}`}
+            className="mt-1"
+          />
+        )}
         <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
           <User className="h-4 w-4 text-muted-foreground" />
         </div>
@@ -110,6 +136,11 @@ function InboxCard({
         <span className="px-1.5 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-[10px] font-medium">
           {INTENT_LABEL[intent]}
         </span>
+        {item.assignee && (
+          <span className="px-1.5 py-0.5 rounded-full border border-border/60 bg-muted/60 text-muted-foreground text-[10px] font-medium">
+            @{item.assignee}
+          </span>
+        )}
         {item.scheduledFor && (
           <span className="px-1.5 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-500 text-[10px] font-medium">
             Scheduled {new Date(item.scheduledFor).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -207,6 +238,7 @@ export function InboxBoard({ kind, title, description, sentiment = "all", intent
   const [filter, setFilter] = useState<InboxStatus | "all">("all");
   const [variants, setVariants] = useState<Record<string, number>>({});
   const [replyTarget, setReplyTarget] = useState<InboxItem | null>(null);
+  const { members } = useTeamMembers();
 
   useEffect(() => {
     if (items.length === 0 && isGuestSession()) setItems(seed(kind));
@@ -228,6 +260,15 @@ export function InboxBoard({ kind, title, description, sentiment = "all", intent
     }
     return out;
   }, [items, filter, search, sentiment, intent]);
+
+  const sel = useBulkSelection(filtered.map((i) => i.id));
+
+  const bulkSet = (patch: Partial<InboxItem>, label: string) => {
+    const ids = sel.ids;
+    ids.forEach((id) => update(id, patch));
+    sel.clear();
+    toast.success(`${ids.length} ${ids.length === 1 ? "message" : "messages"} ${label}`);
+  };
 
   const scheduleReply = (item: InboxItem) => {
     const mins = window.prompt(`Send reply to ${item.author} in how many minutes?`, "15");
@@ -333,7 +374,16 @@ export function InboxBoard({ kind, title, description, sentiment = "all", intent
             update(item.id, { status: to });
             toast.success(`Moved to ${to}`);
           }}
-          renderItem={(i) => <InboxCard item={i} variant={variants[i.id] ?? 0} savedReplies={savedReplies} {...actions(i)} />}
+          renderItem={(i) => (
+            <InboxCard
+              item={i}
+              variant={variants[i.id] ?? 0}
+              savedReplies={savedReplies}
+              selected={sel.isSelected(i.id)}
+              onToggleSelect={() => sel.toggle(i.id)}
+              {...actions(i)}
+            />
+          )}
         />
       ) : (
         <ListView
@@ -342,16 +392,62 @@ export function InboxBoard({ kind, title, description, sentiment = "all", intent
           emptyLabel="No conversations match your filters."
           renderItem={(i) => (
             <div className="p-4">
-              <InboxCard item={i} variant={variants[i.id] ?? 0} savedReplies={savedReplies} {...actions(i)} />
+              <InboxCard
+                item={i}
+                variant={variants[i.id] ?? 0}
+                savedReplies={savedReplies}
+                selected={sel.isSelected(i.id)}
+                onToggleSelect={() => sel.toggle(i.id)}
+                {...actions(i)}
+              />
             </div>
           )}
         />
       )}
 
+      <BulkActionBar
+        count={sel.count}
+        onClear={sel.clear}
+        label={sel.count === 1 ? "message" : "messages"}
+        actions={[
+          { id: "handled", label: "Mark handled", icon: Check, variant: "default", onClick: () => bulkSet({ status: "resolved", scheduledFor: undefined }, "marked handled") },
+          { id: "replied", label: "Move to replied", icon: Reply, onClick: () => bulkSet({ status: "replied", scheduledFor: undefined }, "moved to Replied") },
+          { id: "snoozed", label: "Snooze", icon: Clock, onClick: () => bulkSet({ status: "snoozed" }, "snoozed") },
+          { id: "reopen", label: "Reopen", icon: InboxIcon, onClick: () => bulkSet({ status: "new", scheduledFor: undefined }, "reopened") },
+        ]}
+      />
+
+      {sel.count > 0 && (
+        <div className="pointer-events-auto fixed inset-x-0 bottom-40 z-40 mx-auto flex w-fit md:bottom-24">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="secondary" className="h-8 rounded-full px-3 text-xs shadow-xl">
+                <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+                Assign {sel.count}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-52">
+              <DropdownMenuLabel className="text-xs">Assign to teammate</DropdownMenuLabel>
+              {members.length === 0 && (
+                <DropdownMenuItem disabled className="text-xs">No teammates yet</DropdownMenuItem>
+              )}
+              {members.map((m) => (
+                <DropdownMenuItem key={m.id} className="text-xs" onClick={() => bulkSet({ assignee: m.name }, `assigned to ${m.name}`)}>
+                  {m.name}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuItem className="text-xs" onClick={() => bulkSet({ assignee: undefined }, "unassigned")}>
+                <Archive className="mr-1.5 h-3.5 w-3.5" /> Clear assignment
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
       <ReplyDialog
         open={!!replyTarget}
         onOpenChange={(o) => !o && setReplyTarget(null)}
-        comment={replyTarget ? { id: 0, user: replyTarget.author, content: replyTarget.message } : null}
+        comment={replyTarget ? { id: replyTarget.id, user: replyTarget.author, content: replyTarget.message, platform: replyTarget.platform } : null}
         onSend={(text) => {
           if (!replyTarget) return;
           update(replyTarget.id, { status: "replied", scheduledFor: undefined });
