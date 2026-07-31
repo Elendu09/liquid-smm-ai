@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Bot, Heart, MessageCircle, UserPlus, Eye, Play, Pause, Settings2, Zap, Shield, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -9,6 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getPlatformById } from "@/config/platforms";
+import { limitsFor, clampDaily, ACTION_LABEL, type EngageAction } from "@/config/engagementLimits";
+import { PostUnderstandingLab } from "@/components/automation/PostUnderstandingLab";
+import { useAccounts } from "@/contexts/AccountContext";
+
 
 const engagementTypes = [
   { id: "likes", label: "Auto Likes", icon: Heart, color: "text-pink-500", enabled: true },
