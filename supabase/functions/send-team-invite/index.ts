@@ -15,8 +15,26 @@ const BodySchema = z.object({
   token: z.string().min(10),
   role: z.enum(["admin", "editor", "viewer"]),
   inviter_name: z.string().max(120).optional(),
-  app_url: z.string().url(),
+  app_url: z.string().url().optional(),
 });
+
+/** Only allow links pointing at our own app origins. */
+const ALLOWED_HOST_SUFFIXES = ["lovable.app", "lovableproject.com", "lovable.dev"];
+function resolveAppUrl(candidate: string | undefined, origin: string | null): string | null {
+  for (const value of [candidate, origin]) {
+    if (!value) continue;
+    let u: URL;
+    try { u = new URL(value); } catch { continue; }
+    if (u.protocol !== "https:" && u.hostname !== "localhost") continue;
+    if (
+      u.hostname === "localhost" ||
+      ALLOWED_HOST_SUFFIXES.some((s) => u.hostname === s || u.hostname.endsWith(`.${s}`))
+    ) {
+      return u.origin;
+    }
+  }
+  return null;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
