@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, ArrowRight, Loader2, Check } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Loader2, Check, CheckCircle2, MailCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
@@ -25,6 +25,8 @@ const Signup = () => {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [signedUpEmail, setSignedUpEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const next = safeNext(searchParams.get("next"));
@@ -86,9 +88,98 @@ const Signup = () => {
     if (data.session) {
       navigate(next, { replace: true });
     } else {
-      toast.success("Check your email to confirm your account.");
+      setSignedUpEmail(email);
+      toast.success("Sign up complete — confirm your email to continue.");
     }
   };
+
+  const resend = async () => {
+    if (!signedUpEmail) return;
+    setResending(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: signedUpEmail,
+      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+    });
+    setResending(false);
+    if (error) toast.error(error.message);
+    else toast.success("Confirmation email sent again.");
+  };
+
+  if (signedUpEmail) {
+    return (
+      <AuthLayout
+        eyebrow="Almost there"
+        title="Sign up complete"
+        subtitle="One last step before your workspace unlocks."
+      >
+        <div className="space-y-6">
+          <div className="flex flex-col items-center gap-4 border border-emerald-500/30 bg-emerald-500/5 px-6 py-8 text-center">
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-500/40">
+              <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+            </span>
+            <div className="space-y-1.5">
+              <p className="text-base font-medium text-foreground">Sign up complete</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Complete the email activation to log in to your workspace. We sent a
+                confirmation link to{" "}
+                <span className="text-foreground font-medium">{signedUpEmail}</span>.
+              </p>
+            </div>
+          </div>
+
+          <ul className="space-y-2.5 text-sm">
+            {[
+              "Account created",
+              "Workspace reserved",
+              "Awaiting email activation",
+            ].map((step, i) => (
+              <li key={step} className="flex items-center gap-2.5">
+                {i < 2 ? (
+                  <Check className="h-4 w-4 text-emerald-500" />
+                ) : (
+                  <MailCheck className="h-4 w-4 text-primary" />
+                )}
+                <span className={i < 2 ? "text-foreground" : "text-muted-foreground"}>{step}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="space-y-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-11 rounded-none"
+              onClick={resend}
+              disabled={resending}
+            >
+              {resending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Resend confirmation email
+            </Button>
+            <Button
+              type="button"
+              className="w-full h-11 rounded-none group"
+              onClick={() => navigate(`/login?next=${encodeURIComponent(next)}`)}
+            >
+              Go to sign in
+              <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-0.5" />
+            </Button>
+          </div>
+
+          <p className="text-center text-xs text-muted-foreground">
+            Wrong address?{" "}
+            <button
+              type="button"
+              onClick={() => setSignedUpEmail(null)}
+              className="text-foreground underline underline-offset-4"
+            >
+              Use a different email
+            </button>
+          </p>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout
