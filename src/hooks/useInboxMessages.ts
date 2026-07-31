@@ -17,7 +17,7 @@ type Row = {
   author: string | null;
   body: string | null;
   status: string;
-  data: { handle?: string; platform?: string; scheduledFor?: string; assignee?: string } | null;
+  data: { handle?: string; platform?: string; scheduledFor?: string; assignee?: string; aiDraft?: string; autoRuleId?: string } | null;
   received_at: string;
 };
 
@@ -32,6 +32,8 @@ const rowToItem = (r: Row): InboxItem => ({
   kind: (r.kind as "comment" | "dm") ?? "comment",
   scheduledFor: r.data?.scheduledFor,
   assignee: r.data?.assignee,
+  aiDraft: r.data?.aiDraft,
+  autoRuleId: r.data?.autoRuleId,
 });
 
 /* ---------------- module cache per kind ---------------- */
@@ -150,13 +152,17 @@ export function useInboxMessages(kind: "comment" | "dm") {
         patch.handle !== undefined ||
         patch.platform !== undefined ||
         patch.scheduledFor !== undefined ||
-        patch.assignee !== undefined
+        patch.assignee !== undefined ||
+        patch.aiDraft !== undefined ||
+        patch.autoRuleId !== undefined
       ) {
         row.data = {
           handle: merged.handle,
           platform: merged.platform,
           scheduledFor: merged.scheduledFor,
           assignee: merged.assignee,
+          aiDraft: merged.aiDraft,
+          autoRuleId: merged.autoRuleId,
         };
       }
       void supabase.from("inbox_messages").update(row as never).eq("id", id);
@@ -176,7 +182,7 @@ export function useInboxMessages(kind: "comment" | "dm") {
         body: item.message,
         status: item.status,
         received_at: item.createdAt,
-        data: { handle: item.handle, platform: item.platform, scheduledFor: item.scheduledFor, assignee: item.assignee },
+        data: { handle: item.handle, platform: item.platform, scheduledFor: item.scheduledFor, assignee: item.assignee, aiDraft: item.aiDraft, autoRuleId: item.autoRuleId },
       } as never).then(({ error }) => {
         if (error) setCache(kind, bucket.cache.filter((i) => i.id !== item.id));
       });
