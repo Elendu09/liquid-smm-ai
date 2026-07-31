@@ -44,7 +44,7 @@ export const AutoEngagementBot = () => {
 
   /** Networks the budgets apply to: the user's connected ones, else a sensible default set. */
   const botPlatforms = useMemo(() => {
-    const connected = Array.from(new Set(accounts.map((a) => a.platform))).filter(Boolean);
+    const connected = Array.from(new Set(accounts.map((a) => a.platformId))).filter(Boolean);
     return connected.length ? connected : ["instagram", "tiktok", "twitter", "linkedin"];
   }, [accounts]);
 
