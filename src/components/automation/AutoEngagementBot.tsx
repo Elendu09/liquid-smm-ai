@@ -270,6 +270,11 @@ export const AutoEngagementBot = () => {
           </div>
         </div>
       </div>
+
+      <div className="mt-6">
+        <PostUnderstandingLab keywords={keywords} negativeKeywords={negativeKeywords} />
+      </div>
+
     </div>
   );
 };
