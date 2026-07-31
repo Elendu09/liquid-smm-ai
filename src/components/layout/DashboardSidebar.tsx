@@ -404,7 +404,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                     type="button"
                     onClick={() => {
                       navigate(item.href);
-                      if (hasKids && showLabels && isMobile) {
+                      if (hasKids && showLabels) {
                         setOpenGroups((p) => ({ ...p, [item.href]: true }));
                       }
                       onNavigate?.();
@@ -418,8 +418,8 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                     <item.icon className="w-4 h-4 flex-shrink-0" />
                     {showLabels && <span className="flex-1 truncate">{item.label}</span>}
                   </button>
-                  {/* Chevron toggle — mobile only */}
-                  {showLabels && hasKids && isMobile && (
+                  {/* Chevron toggle */}
+                  {showLabels && hasKids && (
                     <button
                       type="button"
                       onClick={(e) => {
