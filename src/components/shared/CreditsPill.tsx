@@ -27,7 +27,7 @@ export function CreditsPill({ variant = "pill", className }: Props) {
   const body =
     variant === "compact" ? (
       <Link
-        to="/dashboard/settings?tab=billing"
+        to="/dashboard/settings/billing"
         aria-label={`${balance.balance} credits remaining`}
         className={cn(
           "inline-flex items-center gap-1.5 h-8 rounded-md px-2.5 text-xs font-semibold text-foreground/80 hover:bg-background hover:text-foreground transition-colors",
@@ -41,7 +41,7 @@ export function CreditsPill({ variant = "pill", className }: Props) {
 
     ) : (
       <Link
-        to="/dashboard/settings?tab=billing"
+        to="/dashboard/settings/billing"
         aria-label={`${balance.balance} credits remaining, ${usedPct}% of monthly allowance used`}
         className={cn(
           "group inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur pl-2 pr-3 h-9 text-xs font-medium hover:border-foreground/40 transition-colors",
