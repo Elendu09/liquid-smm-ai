@@ -822,10 +822,10 @@ export function AiCommandBar() {
 
             <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
               <SheetHeader>
-                <SheetTitle className="flex items-center justify-between">
-                  <span>AI command history</span>
+                <SheetTitle className="flex items-center justify-between gap-3 pr-12">
+                  <span className="truncate">AI command history</span>
                   {history.length > 0 && (
-                    <Button variant="ghost" size="sm" onClick={clear} className="text-xs">
+                    <Button variant="ghost" size="sm" onClick={clear} className="text-xs shrink-0 mr-2">
                       <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear
                     </Button>
                   )}
