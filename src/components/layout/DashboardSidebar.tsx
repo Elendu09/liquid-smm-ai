@@ -383,7 +383,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                 ? pathname === item.href
                 : pathname.startsWith(item.href) && item.href !== "/dashboard";
               const hasKids = !!item.children?.length;
-              const isOpen = isMobile ? !!openGroups[item.href] : true;
+              const isOpen = !!openGroups[item.href];
 
               const rowContent = (
                 <div
