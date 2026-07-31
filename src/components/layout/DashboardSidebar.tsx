@@ -638,14 +638,17 @@ export function DashboardSidebar() {
             />
           </SheetContent>
         </Sheet>
-        <Link to="/" className="flex items-center gap-2 min-w-0">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary via-primary to-primary/70 flex items-center justify-center shadow-sm shadow-primary/30 ring-1 ring-primary/20">
-            <Zap className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <span className="font-['Instrument_Serif'] text-xl leading-none tracking-tight text-foreground truncate hidden sm:inline">
-            SMMSAAS<span className="italic text-primary">.</span>
-          </span>
-        </Link>
+        <div className="flex items-center gap-2 min-w-0">
+          <Link to="/" className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary via-primary to-primary/70 flex items-center justify-center shadow-sm shadow-primary/30 ring-1 ring-primary/20">
+              <Zap className="w-4 h-4 text-primary-foreground" />
+            </div>
+            <span className="font-['Instrument_Serif'] text-lg sm:text-xl leading-none tracking-tight text-foreground truncate">
+              SMMSAAS<span className="italic text-primary">.</span>
+            </span>
+          </Link>
+          <BrandSwitcher compact className="shrink-0" />
+        </div>
         <HeaderActions compact className="ml-auto" />
       </div>
 
