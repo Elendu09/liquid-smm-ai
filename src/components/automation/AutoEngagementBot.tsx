@@ -40,6 +40,20 @@ export const AutoEngagementBot = () => {
   const [keywords, setKeywords] = useState("#fitness #motivation #growth");
   const [negativeKeywords, setNegativeKeywords] = useState("#spam #giveaway #followback");
   const [competitorAllowList, setCompetitorAllowList] = useState("@brand_x @rival_co");
+  const { accounts } = useAccounts();
+
+  /** Networks the budgets apply to: the user's connected ones, else a sensible default set. */
+  const botPlatforms = useMemo(() => {
+    const connected = Array.from(new Set(accounts.map((a) => a.platform))).filter(Boolean);
+    return connected.length ? connected : ["instagram", "tiktok", "twitter", "linkedin"];
+  }, [accounts]);
+
+  /** Map the engagement-type toggles onto concrete platform actions. */
+  const enabledActions = useMemo<EngageAction[]>(() => {
+    const map: Record<string, EngageAction> = { likes: "like", comments: "comment", follows: "follow", views: "dm" };
+    return engagements.filter((e) => e.enabled).map((e) => map[e.id]).filter(Boolean);
+  }, [engagements]);
+
 
 
   const toggleEngagement = (id: string) => {
