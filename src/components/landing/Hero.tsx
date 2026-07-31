@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { enableGuest } from "@/hooks/useGuest";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { toast } from "sonner";
 
 const InstagramIcon = () => (
@@ -89,8 +90,17 @@ const chips = [
 export function Hero() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const { user, isGuest } = useAuthUser();
 
   const handleDemo = () => {
+    // Hard separation: an authenticated account can never enter demo mode.
+    if (user && !isGuest) {
+      toast.info("You're signed in", {
+        description: "Sign out first to explore the read-only demo.",
+        action: { label: "Open workspace", onClick: () => navigate("/dashboard") },
+      });
+      return;
+    }
     enableGuest();
     toast.success("Demo mode enabled", { description: "Exploring the live dashboard as a guest." });
     navigate("/dashboard");
