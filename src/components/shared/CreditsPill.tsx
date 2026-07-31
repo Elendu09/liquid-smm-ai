@@ -30,12 +30,12 @@ export function CreditsPill({ variant = "pill", className }: Props) {
         to="/dashboard/settings?tab=billing"
         aria-label={`${balance.balance} credits remaining`}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-semibold bg-secondary text-secondary-foreground ring-1 ring-border/60 shadow-sm hover:ring-primary/50 transition-colors",
-          low && "ring-amber-500/60 text-amber-500",
+          "inline-flex items-center gap-1.5 h-8 rounded-md px-2.5 text-xs font-semibold text-foreground/80 hover:bg-background hover:text-foreground transition-colors",
+          low && "text-foreground",
           className,
         )}
       >
-        <Zap className={cn("h-3.5 w-3.5 fill-current", low ? "text-amber-500" : "text-primary")} />
+        <Zap className="h-3.5 w-3.5 fill-current" />
         <span className="tabular-nums">{balance.balance.toLocaleString()}</span>
       </Link>
 
@@ -44,18 +44,12 @@ export function CreditsPill({ variant = "pill", className }: Props) {
         to="/dashboard/settings?tab=billing"
         aria-label={`${balance.balance} credits remaining, ${usedPct}% of monthly allowance used`}
         className={cn(
-          "group inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur pl-2 pr-3 h-9 text-xs font-medium hover:border-primary/50 transition-colors",
-          low && "border-amber-500/50",
+          "group inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur pl-2 pr-3 h-9 text-xs font-medium hover:border-foreground/40 transition-colors",
           className,
         )}
       >
-        <span
-          className={cn(
-            "flex h-6 w-6 items-center justify-center rounded-full bg-primary/10",
-            low && "bg-amber-500/15",
-          )}
-        >
-          <Sparkles className={cn("h-3.5 w-3.5", low ? "text-amber-500" : "text-primary")} />
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground/10">
+          <Sparkles className="h-3.5 w-3.5 text-foreground" />
         </span>
         <span className="tabular-nums font-semibold">{balance.balance.toLocaleString()}</span>
         <span className="text-muted-foreground uppercase tracking-widest text-[10px] hidden sm:inline">
