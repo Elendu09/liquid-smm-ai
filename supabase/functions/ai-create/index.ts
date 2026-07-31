@@ -34,6 +34,10 @@ const translateSchema = z.object({
   language: z.string(),
 });
 
+const replySchema = z.object({
+  suggestions: z.array(z.string()),
+});
+
 const briefSchema = z.object({
   caption: z.string(),
   hashtags: z.array(z.string()),
@@ -42,7 +46,9 @@ const briefSchema = z.object({
 });
 
 interface Body {
-  op: "captions" | "hashtags" | "translate" | "brief";
+  op: "captions" | "hashtags" | "translate" | "brief" | "reply";
+  message?: string;
+  author?: string;
   topic?: string;
   tone?: string;
   platform?: string;
@@ -199,6 +205,26 @@ ${body.text ?? ""}`,
       result = {
         translated: String(raw.translated ?? ""),
         language: String(raw.language ?? body.targetLanguage ?? ""),
+      };
+    } else if (body.op === "reply") {
+      const count = Math.min(Math.max(body.count ?? 3, 1), 5);
+      const raw = await runObject(
+        () =>
+          generateObject({
+            model,
+            schema: replySchema,
+            prompt: `You are a social media community manager replying to an inbound ${body.platform ?? "instagram"} message.
+Author: ${body.author ?? "the customer"}
+Message: "${body.message ?? ""}"
+Tone: ${body.tone ?? "friendly"}
+
+Write exactly ${count} distinct reply options. Each reply must be under 320 characters, address the message directly, stay on-brand, and never invent facts (no prices, no dates, no links unless present in the message).
+Return an object with a "suggestions" array of plain strings.`,
+          }),
+        (fb) => (fb as typeof replySchema._type) ?? { suggestions: [] },
+      );
+      result = {
+        suggestions: (raw.suggestions ?? []).slice(0, count).map((s) => String(s).slice(0, 400)),
       };
     } else if (body.op === "brief") {
       const raw = await runObject(
