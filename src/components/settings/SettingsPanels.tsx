@@ -611,6 +611,8 @@ export function BillingPanel() {
       </Card>
 
 
+      <AddonMarketplace onSelect={(a) => toast.success(`${a.name} added to your next invoice`)} />
+
       <Card>
         <CardHeader className="flex flex-row items-start justify-between">
           <div>

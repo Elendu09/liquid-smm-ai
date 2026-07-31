@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UtmBuilder } from "@/components/linkbio/UtmBuilder";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Plus,
@@ -268,11 +269,12 @@ const LinkInBioBuilder = () => {
         {/* Editor Column */}
         <div className="xl:col-span-2 space-y-4 min-w-0">
           <Tabs defaultValue="links" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4 h-auto">
+            <TabsList className="grid w-full grid-cols-5 h-auto">
               <TabsTrigger value="links" className="text-xs sm:text-sm py-2">Links</TabsTrigger>
               <TabsTrigger value="profile" className="text-xs sm:text-sm py-2">Profile</TabsTrigger>
               <TabsTrigger value="theme" className="text-xs sm:text-sm py-2">Design</TabsTrigger>
               <TabsTrigger value="analytics" className="text-xs sm:text-sm py-2">Stats</TabsTrigger>
+              <TabsTrigger value="utm" className="text-xs sm:text-sm py-2">UTM</TabsTrigger>
             </TabsList>
 
             <TabsContent value="links" className="space-y-4">
@@ -529,6 +531,10 @@ const LinkInBioBuilder = () => {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="utm" className="space-y-4">
+              <UtmBuilder />
             </TabsContent>
           </Tabs>
         </div>
