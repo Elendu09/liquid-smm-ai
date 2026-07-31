@@ -15,8 +15,26 @@ const BodySchema = z.object({
   token: z.string().min(10),
   role: z.enum(["admin", "editor", "viewer"]),
   inviter_name: z.string().max(120).optional(),
-  app_url: z.string().url(),
+  app_url: z.string().url().optional(),
 });
+
+/** Only allow links pointing at our own app origins. */
+const ALLOWED_HOST_SUFFIXES = ["lovable.app", "lovableproject.com", "lovable.dev"];
+function resolveAppUrl(candidate: string | undefined, origin: string | null): string | null {
+  for (const value of [candidate, origin]) {
+    if (!value) continue;
+    let u: URL;
+    try { u = new URL(value); } catch { continue; }
+    if (u.protocol !== "https:" && u.hostname !== "localhost") continue;
+    if (
+      u.hostname === "localhost" ||
+      ALLOWED_HOST_SUFFIXES.some((s) => u.hostname === s || u.hostname.endsWith(`.${s}`))
+    ) {
+      return u.origin;
+    }
+  }
+  return null;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -39,8 +57,32 @@ Deno.serve(async (req) => {
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
     const { email, token, role, inviter_name, app_url } = parsed.data;
 
-    const invite_url = `${app_url.replace(/\/$/, "")}/invite/${token}`;
-    const from_name = inviter_name || userData.user.email || "Your teammate";
+    // The caller must own a matching pending invite row — otherwise this endpoint
+    // could be used to send arbitrary branded invite emails.
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      { auth: { persistSession: false } },
+    );
+    const { data: inviteRow } = await admin
+      .from("team_members")
+      .select("id")
+      .eq("owner_id", userData.user.id)
+      .eq("invite_token", token)
+      .eq("status", "pending")
+      .ilike("email", email)
+      .eq("role", role)
+      .maybeSingle();
+    if (!inviteRow) return json({ error: "invite_not_found" }, 403);
+
+    const origin = resolveAppUrl(app_url, req.headers.get("Origin"));
+    if (!origin) return json({ error: "invalid_app_url" }, 400);
+
+    const invite_url = `${origin}/invite/${token}`;
+    const from_name = escapeHtml(inviter_name || userData.user.email || "Your teammate");
+
+
+
 
     const resendKey = Deno.env.get("RESEND_API_KEY");
     let delivered = false;
@@ -79,4 +121,10 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!)
+  );
 }
