@@ -639,18 +639,20 @@ export function DashboardSidebar() {
             />
           </SheetContent>
         </Sheet>
-        <div className="flex items-center gap-2 min-w-0">
-          <Link to="/" className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary via-primary to-primary/70 flex items-center justify-center shadow-sm shadow-primary/30 ring-1 ring-primary/20">
-              <Zap className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-['Instrument_Serif'] text-lg sm:text-xl leading-none tracking-tight text-foreground truncate">
-              SMMSAAS<span className="italic text-primary">.</span>
+        <span className="mx-2 h-6 w-px bg-border/70 shrink-0" aria-hidden />
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <BrandSwitcher compact className="shrink-0" />
+          <Link to="/dashboard" className="min-w-0 leading-tight">
+            <span className="block font-['Instrument_Serif'] text-base leading-none tracking-tight text-primary truncate">
+              HOME OF SMM
+            </span>
+            <span className="block text-[10px] text-muted-foreground truncate">
+              {activeBrandLabel}
             </span>
           </Link>
-          <BrandSwitcher compact className="shrink-0" />
         </div>
-        <HeaderActions compact className="ml-auto" />
+        <HeaderActions compact className="ml-auto shrink-0" />
+
       </div>
 
 
