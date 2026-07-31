@@ -50,7 +50,6 @@ import { NotificationBell } from "@/components/shared/NotificationBell";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SignOutDialog } from "@/components/auth/SignOutDialog";
 import { CreditsPill } from "@/components/shared/CreditsPill";
-import { useBrands } from "@/contexts/BrandContext";
 import { BrandSwitcher } from "@/components/shared/BrandSwitcher";
 import { HeaderActions } from "./HeaderActions";
 
@@ -614,9 +613,6 @@ export function DashboardSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const { activeBrand } = useBrands();
-  const activeBrandLabel = activeBrand?.name ?? "All brands";
-
 
   useEffect(() => {
     setMobileOpen(false);
@@ -643,20 +639,18 @@ export function DashboardSidebar() {
             />
           </SheetContent>
         </Sheet>
-        <span className="mx-2 h-6 w-px bg-border/70 shrink-0" aria-hidden />
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <BrandSwitcher compact className="shrink-0" />
-          <Link to="/dashboard" className="min-w-0 leading-tight">
-            <span className="block font-['Instrument_Serif'] text-base leading-none tracking-tight text-primary truncate">
-              HOME OF SMM
-            </span>
-            <span className="block text-[10px] text-muted-foreground truncate">
-              {activeBrandLabel}
+        <div className="flex items-center gap-2 min-w-0">
+          <Link to="/" className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary via-primary to-primary/70 flex items-center justify-center shadow-sm shadow-primary/30 ring-1 ring-primary/20">
+              <Zap className="w-4 h-4 text-primary-foreground" />
+            </div>
+            <span className="font-['Instrument_Serif'] text-lg sm:text-xl leading-none tracking-tight text-foreground truncate">
+              SMMSAAS<span className="italic text-primary">.</span>
             </span>
           </Link>
+          <BrandSwitcher compact className="shrink-0" />
         </div>
-        <HeaderActions compact className="ml-auto shrink-0" />
-
+        <HeaderActions compact className="ml-auto" />
       </div>
 
 
