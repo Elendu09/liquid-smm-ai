@@ -613,6 +613,9 @@ export function DashboardSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { activeBrand } = useBrands();
+  const activeBrandLabel = activeBrand?.name ?? "All brands";
+
 
   useEffect(() => {
     setMobileOpen(false);
