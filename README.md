@@ -1,73 +1,47 @@
-# Welcome to your Lovable project
+# Home Automation Suite
 
-## Project info
+i want to create a page mainly for automation which i will integrate into my panel named "HOME OF SMM" then integrate as app.homeofsmm.com, SO ANALYSE MY WEBSITE "SMMPILOT.ONLINE" STYLE AND THEME TO USE IN THESE AI GENERATED PROMPT :"Act as a Senior UI/UX Designer and Full-Stack Developer specializing in SaaS and SMM automation for 2026. Design a comprehensive web platform that merges a traditional SMM Reseller Panel with advanced Automation Tools.
+Core Brand Identity:
+Style: Modern 'Liquid Glass' aesthetic—using depth, soft shadows, and translucent layers.
+Theme: Professional Dark Mode by default, with high-contrast accent colors for call-to-actions (CTAs).
+Tone: High-tech, reliable, and user-centric.
+Website Structure & Key Sections:
+Hero Section: A bold headline focusing on 'Automation-First SMM'. Include a live-data visualization showing real-time automated order fulfillment.
+SMM Panel Core: A clean, searchable table for services (Likes, Followers, Views) with 'Drip-feed' and 'Refill' indicators.
+Automation Suite (The New Section):
+AI Caption Generator: A tool to create engagement-optimized captions.
+Smart Post Scheduler: A calendar view for automated cross-platform posting.
+Auto-Engagement Bot: Settings for automated likes/comments based on niche keywords.
+Growth Analytics: 2026-style 'Scrollytelling' charts that turn data into a visual story of the user's growth.
+Client Dashboard: An 'Agentic UX' design where a central AI assistant helps users pick the best services for their goals.
+Technical Requirements (2026 Standards):
+Responsive: Fully mobile-first design.
+Accessibility: WCAG 2.1 compliant (high readability and keyboard navigation).
+Security: Highlight biometric login (Passkeys) and encrypted payment gateways.
+Output Goals:
+Generate a detailed landing page layout.
+Provide a user flow for the automation tools.
+Write persuasive copy that explains how automation saves the user 80% of their manual SMM work."
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+This project was built with [Lovable](https://lovable.dev).
 
-## How can I edit this code?
+**Live app**: https://liquid-smm-ai.lovable.app
 
-There are several ways of editing your application.
+## Build with Lovable
 
-**Use Lovable**
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/36aa6e53-796b-461a-8e38-d1c37a00f365).
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
-Changes made via Lovable will be committed automatically to this repo.
+## Development
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+git clone <this-repository-url>
+cd <repository-name>
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
