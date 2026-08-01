@@ -369,7 +369,7 @@ export function Hero() {
         </div>
 
         {/* 3D device mockup */}
-        <div className="mt-24 w-full">
+        <div className="mt-32 w-full px-4 pb-16 sm:px-10">
           <Hero3DMockup />
         </div>
 
