@@ -139,7 +139,9 @@ export function Hero() {
       </div>
 
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4 pt-16 pb-24 sm:px-6 lg:pt-24 lg:pb-32">
-        <div className="relative w-full max-w-5xl text-center">
+        <div className="relative isolate w-full max-w-5xl text-center">
+          <HeroWaveBackground />
+
           {chips.map((c) => (
             <div
               key={c.title}
