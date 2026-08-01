@@ -118,7 +118,7 @@ export function Hero3DMockup() {
         </div>
 
         {/* ---- Floating phone ---- */}
-        <div className="absolute -bottom-10 -right-2 hidden w-[168px] rounded-[26px] border-8 border-[hsl(var(--card))] bg-[hsl(var(--background))] shadow-[0_40px_80px_rgba(0,0,0,0.6)] [transform:translateZ(90px)_rotateY(-14deg)_rotateX(4deg)] sm:block">
+        <div className="absolute -bottom-8 right-2 hidden w-[150px] rounded-[26px] border-8 border-[hsl(var(--card))] bg-[hsl(var(--background))] shadow-[0_40px_80px_rgba(0,0,0,0.6)] [transform:translateZ(90px)_rotateY(-14deg)_rotateX(4deg)] sm:block">
           <div className="space-y-2 p-3">
             <div className="flex items-center gap-2">
               <div className="h-7 w-7 rounded-full bg-primary/30" />
@@ -137,7 +137,7 @@ export function Hero3DMockup() {
         </div>
 
         {/* ---- Floating glass card ---- */}
-        <div className="absolute -left-6 -top-8 hidden items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 shadow-2xl backdrop-blur-xl [transform:translateZ(130px)_rotateY(10deg)] md:flex">
+        <div className="absolute left-2 -top-6 hidden items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 shadow-2xl backdrop-blur-xl [transform:translateZ(130px)_rotateY(10deg)] md:flex">
           <Sparkles className="h-4 w-4 text-primary" />
           <div>
             <div className="font-['Instrument_Serif'] text-lg leading-none text-foreground">
