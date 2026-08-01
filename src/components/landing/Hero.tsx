@@ -16,8 +16,6 @@ import { enableGuest } from "@/hooks/useGuest";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { toast } from "sonner";
 import { Hero3DMockup } from "@/components/landing/Hero3DMockup";
-import { HeroWaveBackground } from "@/components/landing/HeroWaveBackground";
-
 
 
 const InstagramIcon = () => (
@@ -141,9 +139,7 @@ export function Hero() {
       </div>
 
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4 pt-16 pb-24 sm:px-6 lg:pt-24 lg:pb-32">
-        <div className="relative isolate w-full max-w-5xl text-center">
-          <HeroWaveBackground />
-
+        <div className="relative w-full max-w-5xl text-center">
           {chips.map((c) => (
             <div
               key={c.title}
@@ -252,14 +248,130 @@ export function Hero() {
               50K+ marketers trust us
             </li>
           </ul>
-
-          {/* 3D device mockup — lives inside the main hero content */}
-          <div className="mt-16 w-full px-2 pb-10 sm:px-6">
-            <Hero3DMockup />
-          </div>
         </div>
 
+        <div className="group relative mt-20 w-full max-w-5xl [perspective:1200px]">
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-card/70 shadow-[0_50px_100px_rgba(0,0,0,0.55)] backdrop-blur-3xl transition-transform duration-700 ease-out [transform:rotateX(10deg)] group-hover:[transform:rotateX(4deg)_translateY(-6px)]">
+            {/* Browser chrome */}
+            <div className="flex items-center justify-between gap-4 border-b border-white/5 px-5 py-3">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+              </div>
+              <div className="font-['Instrument_Serif'] text-lg leading-none text-muted-foreground">
+                smmsaas<span className="italic text-rainbow">.</span>studio
+              </div>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Live</span>
+            </div>
 
+            {/* Video / showreel canvas */}
+            <div className="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-[hsl(var(--background))] via-[hsl(var(--card))] to-[hsl(var(--background))]">
+              {/* animated waveform SVG */}
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 800 450"
+                className="absolute inset-0 h-full w-full"
+                preserveAspectRatio="none"
+              >
+                <defs>
+                  <linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="hsl(var(--brand-pink))" stopOpacity="0" />
+                    <stop offset="30%" stopColor="hsl(var(--brand-pink))" stopOpacity="0.9" />
+                    <stop offset="60%" stopColor="hsl(var(--brand-purple))" stopOpacity="0.9" />
+                    <stop offset="100%" stopColor="hsl(var(--brand-cyan))" stopOpacity="0" />
+                  </linearGradient>
+                  <radialGradient id="orbGrad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="hsl(var(--brand-purple))" stopOpacity="0.55" />
+                    <stop offset="60%" stopColor="hsl(var(--brand-pink))" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="hsl(var(--brand-cyan))" stopOpacity="0" />
+                  </radialGradient>
+                  <linearGradient id="tickGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="hsl(var(--brand-pink))" />
+                    <stop offset="50%" stopColor="hsl(var(--brand-purple))" />
+                    <stop offset="100%" stopColor="hsl(var(--brand-cyan))" />
+                  </linearGradient>
+                </defs>
+                <circle cx="400" cy="225" r="220" fill="url(#orbGrad)" />
+                {[0, 1, 2].map((i) => (
+                  <path
+                    key={i}
+                    d="M0,225 Q100,180 200,225 T400,225 T600,225 T800,225"
+                    fill="none"
+                    stroke="url(#waveGrad)"
+                    strokeWidth={1.2 + i * 0.6}
+                    opacity={0.7 - i * 0.2}
+                  >
+                    <animate
+                      attributeName="d"
+                      dur={`${6 + i * 2}s`}
+                      repeatCount="indefinite"
+                      values="
+                        M0,225 Q100,180 200,225 T400,225 T600,225 T800,225;
+                        M0,225 Q100,270 200,225 T400,225 T600,225 T800,225;
+                        M0,225 Q100,180 200,225 T400,225 T600,225 T800,225"
+                    />
+                  </path>
+                ))}
+                {/* grid ticks */}
+                {Array.from({ length: 40 }).map((_, i) => (
+                  <line
+                    key={i}
+                    x1={i * 20}
+                    y1={410}
+                    x2={i * 20}
+                    y2={410 - ((i * 37) % 40) - 6}
+                    stroke="url(#tickGrad)"
+                    strokeOpacity={0.7}
+                    strokeWidth={2}
+                  />
+                ))}
+              </svg>
+
+              {/* Center play button */}
+              <button
+                type="button"
+                aria-label="Watch demo"
+                className="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-[0_0_60px_hsl(var(--primary)/0.6)] transition-transform hover:scale-105"
+              >
+                <Play className="ml-1 h-7 w-7 fill-current" aria-hidden="true" />
+                <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-primary/40" />
+              </button>
+
+              {/* Corner badges */}
+              <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1 backdrop-blur">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                <span className="text-[10px] uppercase tracking-[0.2em] text-foreground">Showreel · 02:14</span>
+              </div>
+              <div className="absolute right-5 top-5 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground backdrop-blur">
+                4K · HDR
+              </div>
+
+              {/* Bottom caption strip */}
+              <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 bg-black/40 px-5 py-3 backdrop-blur">
+                <div className="font-['Instrument_Serif'] text-xl leading-none text-foreground">
+                  See the panel in <span className="italic text-rainbow">motion</span>
+                </div>
+                <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  <span>AI Captions</span>
+                  <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+                  <span>Scheduler</span>
+                  <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+                  <span>Auto DMs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            aria-hidden="true"
+            className="absolute -bottom-6 left-1/2 -z-10 h-16 w-4/5 -translate-x-1/2 rounded-full bg-primary/30 blur-[100px]"
+          />
+        </div>
+
+        {/* 3D device mockup */}
+        <div className="mt-32 w-full px-4 pb-16 sm:px-10">
+          <Hero3DMockup />
+        </div>
 
 
         <div className="mt-16 flex w-full flex-col items-center gap-6">
