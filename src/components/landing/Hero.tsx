@@ -16,6 +16,8 @@ import { enableGuest } from "@/hooks/useGuest";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { toast } from "sonner";
 import { Hero3DMockup } from "@/components/landing/Hero3DMockup";
+import { HeroWaveBackground } from "@/components/landing/HeroWaveBackground";
+
 
 
 const InstagramIcon = () => (
