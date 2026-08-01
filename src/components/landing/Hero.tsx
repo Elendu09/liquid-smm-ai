@@ -366,6 +366,11 @@ export function Hero() {
           />
         </div>
 
+        {/* 3D device mockup */}
+        <div className="mt-24 w-full">
+          <Hero3DMockup />
+        </div>
+
 
         <div className="mt-16 flex w-full flex-col items-center gap-6">
           <span className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
