@@ -137,7 +137,7 @@ export function Hero3DMockup() {
         </div>
 
         {/* ---- Floating glass card ---- */}
-        <div className="absolute -left-6 -top-8 hidden items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 shadow-2xl backdrop-blur-xl [transform:translateZ(130px)_rotateY(10deg)] md:flex">
+        <div className="absolute left-2 -top-6 hidden items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 shadow-2xl backdrop-blur-xl [transform:translateZ(130px)_rotateY(10deg)] md:flex">
           <Sparkles className="h-4 w-4 text-primary" />
           <div>
             <div className="font-['Instrument_Serif'] text-lg leading-none text-foreground">
