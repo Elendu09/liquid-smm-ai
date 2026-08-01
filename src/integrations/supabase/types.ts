@@ -2462,6 +2462,7 @@ export type Database = {
         Args: { _owner_id: string; _user_id: string }
         Returns: boolean
       }
+      public_fulfillment_pulse: { Args: never; Returns: Json }
       refresh_platform_rollup: {
         Args: { _days?: number; _user_id: string }
         Returns: number
