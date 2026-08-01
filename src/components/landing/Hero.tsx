@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { enableGuest } from "@/hooks/useGuest";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { toast } from "sonner";
+import { Hero3DMockup } from "@/components/landing/Hero3DMockup";
+
 
 const InstagramIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
