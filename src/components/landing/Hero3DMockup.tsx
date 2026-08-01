@@ -1,13 +1,18 @@
 import { useRef, useState } from "react";
-import { Sparkles, TrendingUp, Heart, Calendar } from "lucide-react";
+import { Sparkles, TrendingUp, CheckCircle2, Clock } from "lucide-react";
+import { useFulfillmentPulse } from "@/hooks/useFulfillmentPulse";
+
+const nf = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
 
 /**
  * Pure CSS 3D device mockup (laptop + floating phone + glass cards).
- * Tilts with the pointer for a real perspective feel.
+ * Tilts with the pointer and animates from the LIVE order-fulfillment pulse
+ * (queued / sending / completed publish jobs).
  */
 export function Hero3DMockup() {
   const ref = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 12, y: 0 });
+  const { pulse, successRate } = useFulfillmentPulse();
 
   const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = ref.current?.getBoundingClientRect();
@@ -17,13 +22,28 @@ export function Hero3DMockup() {
     setTilt({ x: 12 - py * 14, y: px * 18 });
   };
 
+  const hourly = pulse.hourly.length ? pulse.hourly : Array.from({ length: 24 }, () => 0);
+  const peak = Math.max(1, ...hourly);
+  const live = pulse.sending > 0;
+
+  const kpis = [
+    { l: "Published 24h", v: nf.format(pulse.completed24h), i: CheckCircle2 },
+    { l: "Success", v: successRate === null ? "—" : `${successRate}%`, i: TrendingUp },
+    { l: "In queue", v: nf.format(pulse.queued), i: Clock },
+  ];
+
+  // Chart path traced from the real hourly publish volume.
+  const areaPoints = hourly
+    .map((v, i) => `${(i / (hourly.length - 1)) * 300},${80 - (v / peak) * 66}`)
+    .join(" ");
+
   return (
     <div
       ref={ref}
       onMouseMove={onMove}
       onMouseLeave={() => setTilt({ x: 12, y: 0 })}
       aria-hidden="true"
-      className="relative mx-auto w-full max-w-4xl select-none [perspective:1400px]"
+      className="relative mx-auto w-full max-w-3xl select-none [perspective:1400px]"
     >
       <div
         className="relative transition-transform duration-300 ease-out [transform-style:preserve-3d]"
@@ -40,6 +60,12 @@ export function Hero3DMockup() {
               <span className="ml-3 font-['Instrument_Serif'] text-base leading-none text-muted-foreground">
                 smmsaas<span className="italic text-rainbow">.</span>studio
               </span>
+              <span className="ml-auto flex items-center gap-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+                <span
+                  className={`h-1.5 w-1.5 rounded-full bg-primary ${live ? "animate-ping" : "animate-pulse"}`}
+                />
+                {live ? `${pulse.sending} sending` : "Live"}
+              </span>
             </div>
 
             {/* dashboard mock */}
@@ -49,7 +75,7 @@ export function Hero3DMockup() {
                   <div
                     key={n}
                     className={`rounded-lg px-2.5 py-1.5 text-[10px] uppercase tracking-[0.14em] ${
-                      i === 1 ? "bg-primary/15 text-primary" : "text-muted-foreground"
+                      i === 2 ? "bg-primary/15 text-primary" : "text-muted-foreground"
                     }`}
                   >
                     {n}
@@ -59,11 +85,7 @@ export function Hero3DMockup() {
 
               <div className="space-y-3 p-4">
                 <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { l: "Reach", v: "128K", i: TrendingUp },
-                    { l: "Engagement", v: "9.4%", i: Heart },
-                    { l: "Scheduled", v: "312", i: Calendar },
-                  ].map((k) => (
+                  {kpis.map((k) => (
                     <div
                       key={k.l}
                       className="rounded-xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur"
@@ -79,7 +101,7 @@ export function Hero3DMockup() {
                   ))}
                 </div>
 
-                {/* chart */}
+                {/* chart driven by real hourly fulfillment volume */}
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                   <svg viewBox="0 0 300 90" className="h-24 w-full" preserveAspectRatio="none">
                     <defs>
@@ -88,23 +110,20 @@ export function Hero3DMockup() {
                         <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
                       </linearGradient>
                     </defs>
-                    <path
-                      d="M0,70 C40,40 60,78 100,52 C140,26 170,60 210,34 C245,12 270,30 300,16 L300,90 L0,90 Z"
-                      fill="url(#mockArea)"
-                    />
-                    <path
-                      d="M0,70 C40,40 60,78 100,52 C140,26 170,60 210,34 C245,12 270,30 300,16"
+                    <polygon fill="url(#mockArea)" points={`0,90 ${areaPoints} 300,90`} />
+                    <polyline
                       fill="none"
                       stroke="hsl(var(--primary))"
                       strokeWidth="2"
+                      points={areaPoints}
                     />
                   </svg>
                   <div className="flex gap-1.5">
-                    {Array.from({ length: 24 }).map((_, i) => (
+                    {hourly.map((v, i) => (
                       <div
                         key={i}
-                        className="h-6 flex-1 rounded-sm bg-primary/25"
-                        style={{ height: `${8 + ((i * 29) % 22)}px` }}
+                        className="flex-1 rounded-sm bg-primary/25 transition-all duration-700"
+                        style={{ height: `${6 + (v / peak) * 22}px` }}
                       />
                     ))}
                   </div>
@@ -130,8 +149,8 @@ export function Hero3DMockup() {
             <div className="aspect-square rounded-xl bg-gradient-to-br from-primary/40 via-primary/10 to-transparent" />
             <div className="h-1.5 w-full rounded-full bg-white/15" />
             <div className="h-1.5 w-3/4 rounded-full bg-white/10" />
-            <div className="rounded-lg bg-primary/20 py-1.5 text-center text-[8px] uppercase tracking-[0.18em] text-primary">
-              Publish now
+            <div className="overflow-hidden rounded-lg bg-primary/20 py-1.5 text-center text-[8px] uppercase tracking-[0.18em] text-primary">
+              {live ? "Publishing…" : `${nf.format(pulse.queued)} queued`}
             </div>
           </div>
         </div>
@@ -141,10 +160,10 @@ export function Hero3DMockup() {
           <Sparkles className="h-4 w-4 text-primary" />
           <div>
             <div className="font-['Instrument_Serif'] text-lg leading-none text-foreground">
-              AI caption ready
+              {nf.format(pulse.completedTotal)} orders fulfilled
             </div>
             <div className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
-              3 variants generated
+              {nf.format(pulse.accounts)} channels automated
             </div>
           </div>
         </div>
