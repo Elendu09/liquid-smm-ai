@@ -51,6 +51,8 @@ import { CaptionDraftIntent } from "./ai-intents/CaptionDraftIntent";
 import { ScheduledPostIntent } from "./ai-intents/ScheduledPostIntent";
 import { VoiceCallDialog } from "./VoiceCallDialog";
 import { useImageAttachments, type ImageAttachment } from "@/hooks/useImageAttachments";
+import { freeAiRun } from "@/services/freeAi";
+
 import {
   SlashCommandMenu,
   SLASH_COMMANDS,
