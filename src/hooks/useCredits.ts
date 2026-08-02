@@ -14,19 +14,26 @@ export interface CreditBalance {
   balance: number;
   monthlyAllowance: number;
   usedThisMonth: number;
+  purchased: number;
+  renewsAt: string | null;
   updatedAt: string | null;
 }
 
 const DEFAULT: CreditBalance = {
   balance: 0,
-  monthlyAllowance: 500,
+  monthlyAllowance: 0,
   usedThisMonth: 0,
+  purchased: 0,
+  renewsAt: null,
   updatedAt: null,
 };
 
 /**
  * Live workspace credit balance + ledger for the signed-in user.
  * Guests get a zeroed shape so components can render without branching.
+ *
+ * Schema: credit_balances(included, purchased, used, cap, renews_at).
+ * Remaining balance = included + purchased - used.
  */
 export function useCredits() {
   const { user, isGuest } = useAuthUser();
@@ -44,33 +51,43 @@ export function useCredits() {
     setLoading(true);
     const [{ data: bal }, { data: evs }] = await Promise.all([
       supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("credit_balances" as any)
-        .select("balance, monthly_allowance, used_this_month, updated_at")
+        .from("credit_balances")
+        .select("included, purchased, used, cap, renews_at, updated_at")
         .eq("user_id", user.id)
         .maybeSingle(),
       supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("credit_events" as any)
-        .select("id, delta, reason, metadata, created_at")
+        .from("credit_events")
+        .select("id, delta, kind, label, meta, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(20),
     ]);
+
     if (bal) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const b = bal as any;
+      const included = Number(bal.included ?? 0);
+      const purchased = Number(bal.purchased ?? 0);
+      const used = Number(bal.used ?? 0);
       setBalance({
-        balance: Number(b.balance ?? 0),
-        monthlyAllowance: Number(b.monthly_allowance ?? 500),
-        usedThisMonth: Number(b.used_this_month ?? 0),
-        updatedAt: b.updated_at ?? null,
+        balance: Math.max(0, included + purchased - used),
+        monthlyAllowance: Number(bal.cap ?? included) || included,
+        usedThisMonth: used,
+        purchased,
+        renewsAt: bal.renews_at ?? null,
+        updatedAt: bal.updated_at ?? null,
       });
     } else {
       setBalance({ ...DEFAULT });
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setEvents(((evs as any[]) ?? []) as CreditEvent[]);
+
+    setEvents(
+      (evs ?? []).map((e) => ({
+        id: e.id,
+        delta: Number(e.delta ?? 0),
+        reason: e.label ?? e.kind ?? "",
+        metadata: (e.meta as Record<string, unknown>) ?? null,
+        created_at: e.created_at,
+      })),
+    );
     setLoading(false);
   }, [user, isGuest]);
 
