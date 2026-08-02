@@ -18,7 +18,25 @@ import type {
 } from '@/types/skyrank';
 
 const BASE_URL = 'https://skyrank.digital';
-const TIMEOUT = 10000; // 10 seconds
+const TIMEOUT = 4000; // fail fast — keyless fallbacks take over
+
+/**
+ * Circuit breaker.
+ *
+ * SkyRank is an unauthenticated third-party host and is regularly unreachable.
+ * Without a breaker every tool pays the full timeout on every call before
+ * falling back. After a failure we skip SkyRank entirely for 5 minutes.
+ */
+const COOLDOWN_MS = 5 * 60_000;
+let openUntil = 0;
+
+export function skyrankAvailable(): boolean {
+  return Date.now() >= openUntil;
+}
+
+function tripBreaker() {
+  openUntil = Date.now() + COOLDOWN_MS;
+}
 
 // Helper to make API requests with timeout
 async function fetchWithTimeout<T>(
@@ -26,6 +44,10 @@ async function fetchWithTimeout<T>(
   params: Record<string, string>,
   timeout = TIMEOUT
 ): Promise<T> {
+  if (!skyrankAvailable()) {
+    throw new Error('SkyRank temporarily unavailable (cooling down)');
+  }
+
   const url = new URL(endpoint, BASE_URL);
   Object.entries(params).forEach(([key, value]) => {
     if (value) url.searchParams.append(key, value);
@@ -42,6 +64,7 @@ async function fetchWithTimeout<T>(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
+      tripBreaker();
       throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
 
@@ -49,6 +72,7 @@ async function fetchWithTimeout<T>(
     return data as T;
   } catch (error) {
     clearTimeout(timeoutId);
+    tripBreaker();
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error('Request timed out. Please try again.');
     }
