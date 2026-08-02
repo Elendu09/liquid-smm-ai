@@ -644,6 +644,7 @@ export type Database = {
           included: number
           purchased: number
           renews_at: string
+          trial_ends_at: string | null
           updated_at: string
           used: number
           user_id: string
@@ -654,6 +655,7 @@ export type Database = {
           included?: number
           purchased?: number
           renews_at?: string
+          trial_ends_at?: string | null
           updated_at?: string
           used?: number
           user_id: string
@@ -664,6 +666,7 @@ export type Database = {
           included?: number
           purchased?: number
           renews_at?: string
+          trial_ends_at?: string | null
           updated_at?: string
           used?: number
           user_id?: string
