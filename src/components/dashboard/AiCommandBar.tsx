@@ -604,9 +604,11 @@ export function AiCommandBar() {
         return;
       }
       const msg = e instanceof Error ? e.message : String(e);
+      if (await keylessFallback(msg)) return;
       toast.error(`AI command failed: ${msg}`);
       const entry = logAiCommand({ prompt: text, text: "", toolCalls: [], status: "error", error: msg });
       setLatest(entry);
+
     } finally {
       setBusy(false);
       abortRef.current = null;
