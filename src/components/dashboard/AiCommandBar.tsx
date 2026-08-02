@@ -51,6 +51,8 @@ import { CaptionDraftIntent } from "./ai-intents/CaptionDraftIntent";
 import { ScheduledPostIntent } from "./ai-intents/ScheduledPostIntent";
 import { VoiceCallDialog } from "./VoiceCallDialog";
 import { useImageAttachments, type ImageAttachment } from "@/hooks/useImageAttachments";
+import { freeAiRun } from "@/services/freeAi";
+
 import {
   SlashCommandMenu,
   SLASH_COMMANDS,
@@ -434,6 +436,33 @@ export function AiCommandBar() {
       setLatest({ ...workingEntry });
     };
 
+    /**
+     * Last-resort keyless answer. When the gateway is unreachable, rate limited
+     * or out of credits we still give the user a plain-text reply through the
+     * zero-login providers instead of a dead end. Tool calls are unavailable
+     * on this path, so it answers in text only.
+     */
+    const keylessFallback = async (reason: string): Promise<boolean> => {
+      const out = await freeAiRun(
+        "You are the in-app assistant for a social media management platform. Answer briefly and practically in plain text. You cannot perform actions right now — if the user asked for an action, explain what they should click instead.",
+        text || "Summarise what I can do here.",
+        ctrl.signal,
+      );
+      if (!out?.text) return false;
+      const committed = logAiCommand({
+        prompt: workingEntry.prompt,
+        text: out.text,
+        toolCalls: [],
+        status: "success",
+      });
+      setLatest(committed);
+      toast.info("Answered in offline mode", { description: reason });
+      if (!opts?.keepAttachments) attachments.clear();
+      return true;
+    };
+
+
+
     try {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-command`;
       const res = await fetch(url, {
@@ -474,10 +503,12 @@ export function AiCommandBar() {
             : res.status === 402
               ? "AI credits exhausted. Add credits in Settings → Plans & credits."
               : `AI command failed (${res.status}). ${errBody.slice(0, 140)}`;
+        if (await keylessFallback(msg)) return;
         toast.error(msg);
         const entry = logAiCommand({ prompt: text, text: "", toolCalls: [], status: "error", error: msg });
         setLatest(entry);
         return;
+
       }
 
       // SSE parsing loop
@@ -573,9 +604,11 @@ export function AiCommandBar() {
         return;
       }
       const msg = e instanceof Error ? e.message : String(e);
+      if (await keylessFallback(msg)) return;
       toast.error(`AI command failed: ${msg}`);
       const entry = logAiCommand({ prompt: text, text: "", toolCalls: [], status: "error", error: msg });
       setLatest(entry);
+
     } finally {
       setBusy(false);
       abortRef.current = null;
