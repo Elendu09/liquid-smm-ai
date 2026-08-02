@@ -503,10 +503,12 @@ export function AiCommandBar() {
             : res.status === 402
               ? "AI credits exhausted. Add credits in Settings → Plans & credits."
               : `AI command failed (${res.status}). ${errBody.slice(0, 140)}`;
+        if (await keylessFallback(msg)) return;
         toast.error(msg);
         const entry = logAiCommand({ prompt: text, text: "", toolCalls: [], status: "error", error: msg });
         setLatest(entry);
         return;
+
       }
 
       // SSE parsing loop
