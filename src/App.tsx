@@ -60,7 +60,7 @@ const queryClient = new QueryClient();
 const legacyRedirects: Record<string, string> = {
   "caption-generator": "/dashboard/create/captions",
   "hashtag-research": "/dashboard/create/hashtags",
-  "ai-studio": "/dashboard/create/ai",
+  "ai-studio": "/dashboard/create/studio",
   "scheduler": "/dashboard/publish/queue",
   "content-calendar": "/dashboard/publish/calendar",
   "story-automation": "/dashboard/publish/stories",
