@@ -196,20 +196,39 @@ Deno.serve(async (req) => {
     }),
   };
 
+  // ---- Credit metering (pre-flight). Failures below never debit. ----
+  const hasImages = (body.attachments ?? []).some(
+    (a) => a && a.kind === "image" && typeof a.dataUrl === "string" && a.dataUrl.startsWith("data:image/"),
+  );
+  const feature: FeatureKey = hasImages
+    ? "command.vision"
+    : body.mode === "voice"
+      ? "command.voice"
+      : "command.text";
+  const preflight = await checkCredits(authed.userId, feature);
+  if (!preflight.allowed) return insufficientCredits(preflight);
+
   const gateway = createLovableAiGatewayProvider(key);
   const model = gateway("google/gemini-2.5-flash");
+
+  // ---- Long-term memory: rolling summary persisted across sessions ----
+  const memory = await loadMemory(authed.userId);
 
   const context = body.context ?? {};
   const historyBlock =
     body.history && body.history.length
       ? `Recent conversation (oldest → newest):\n${body.history
-          .slice(-6)
+          .slice(-8)
           .map((h, i) => {
             const tools = h.toolNames?.length ? ` [tools: ${h.toolNames.join(", ")}]` : "";
             return `${i + 1}. USER: ${h.prompt}\n   ASSISTANT: ${(h.text ?? "").slice(0, 240)}${tools}`;
           })
           .join("\n")}`
       : "No prior conversation this session.";
+
+  const memoryBlock = memory.summary
+    ? `Long-term memory of this user (rolling summary of earlier sessions, ${memory.turns} turns so far):\n${memory.summary}`
+    : "No long-term memory yet for this user.";
 
   const contextBlock = `Current context:
 - Now: ${nowIso}
@@ -221,6 +240,8 @@ Deno.serve(async (req) => {
 - Goals: ${(context.goals ?? []).join(", ") || "(unset)"}
 - Brand description: ${context.brandDescription ?? "(unset)"}
 - Autonomy: ${context.autonomy ?? "suggest"} (manual = draft only, suggest = propose tools for approval, auto-approval = safe to auto-run non-destructive tools)
+
+${memoryBlock}
 
 ${historyBlock}`;
 
