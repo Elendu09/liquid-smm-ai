@@ -145,6 +145,16 @@ Deno.serve(async (req) => {
     });
   }
 
+  const feature = FEATURE_BY_OP[body.op];
+  if (!feature) {
+    return new Response(JSON.stringify({ error: "Unknown op" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const preflight = await checkCredits(authed.userId, feature);
+  if (!preflight.allowed) return insufficientCredits(preflight);
+
   const gateway = createLovableAiGatewayProvider(key);
   const model = gateway("google/gemini-2.5-flash");
 
