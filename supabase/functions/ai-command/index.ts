@@ -6,6 +6,14 @@ import { streamText, tool, stepCountIs } from "npm:ai@5.0.60";
 import { z } from "npm:zod@3.25.76";
 import { createLovableAiGatewayProvider, corsHeaders } from "../_shared/ai-gateway.ts";
 import { requireUser } from "../_shared/auth.ts";
+import {
+  chargeCredits,
+  checkCredits,
+  insufficientCredits,
+  loadMemory,
+  saveMemory,
+  type FeatureKey,
+} from "../_shared/credits.ts";
 
 const SYSTEM = `You are SMMSAAS's in-app command runner. The user types a short instruction and you must translate it into ONE OR MORE tool calls that the app will surface for their approval.
 
@@ -188,20 +196,39 @@ Deno.serve(async (req) => {
     }),
   };
 
+  // ---- Credit metering (pre-flight). Failures below never debit. ----
+  const hasImages = (body.attachments ?? []).some(
+    (a) => a && a.kind === "image" && typeof a.dataUrl === "string" && a.dataUrl.startsWith("data:image/"),
+  );
+  const feature: FeatureKey = hasImages
+    ? "command.vision"
+    : body.mode === "voice"
+      ? "command.voice"
+      : "command.text";
+  const preflight = await checkCredits(authed.userId, feature);
+  if (!preflight.allowed) return insufficientCredits(preflight);
+
   const gateway = createLovableAiGatewayProvider(key);
   const model = gateway("google/gemini-2.5-flash");
+
+  // ---- Long-term memory: rolling summary persisted across sessions ----
+  const memory = await loadMemory(authed.userId);
 
   const context = body.context ?? {};
   const historyBlock =
     body.history && body.history.length
       ? `Recent conversation (oldest → newest):\n${body.history
-          .slice(-6)
+          .slice(-8)
           .map((h, i) => {
             const tools = h.toolNames?.length ? ` [tools: ${h.toolNames.join(", ")}]` : "";
             return `${i + 1}. USER: ${h.prompt}\n   ASSISTANT: ${(h.text ?? "").slice(0, 240)}${tools}`;
           })
           .join("\n")}`
       : "No prior conversation this session.";
+
+  const memoryBlock = memory.summary
+    ? `Long-term memory of this user (rolling summary of earlier sessions, ${memory.turns} turns so far):\n${memory.summary}`
+    : "No long-term memory yet for this user.";
 
   const contextBlock = `Current context:
 - Now: ${nowIso}
@@ -213,6 +240,8 @@ Deno.serve(async (req) => {
 - Goals: ${(context.goals ?? []).join(", ") || "(unset)"}
 - Brand description: ${context.brandDescription ?? "(unset)"}
 - Autonomy: ${context.autonomy ?? "suggest"} (manual = draft only, suggest = propose tools for approval, auto-approval = safe to auto-run non-destructive tools)
+
+${memoryBlock}
 
 ${historyBlock}`;
 
@@ -262,18 +291,21 @@ ${historyBlock}`;
       async start(controller) {
         const send = (obj: unknown) =>
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+        let fullText = "";
+        const usedTools: string[] = [];
         try {
           for await (const chunk of result.fullStream) {
             switch (chunk.type) {
-              case "text-delta":
+              case "text-delta": {
                 // AI SDK v5 exposes streaming text under `chunk.text`; older builds used `textDelta`.
-                send({
-                  type: "text-delta",
-                  // deno-lint-ignore no-explicit-any
-                  text: (chunk as any).text ?? (chunk as any).textDelta ?? "",
-                });
+                // deno-lint-ignore no-explicit-any
+                const t = (chunk as any).text ?? (chunk as any).textDelta ?? "";
+                fullText += t;
+                send({ type: "text-delta", text: t });
                 break;
+              }
               case "tool-call":
+                usedTools.push(chunk.toolName);
                 send({
                   type: "tool-call",
                   id: chunk.toolCallId,
@@ -299,7 +331,26 @@ ${historyBlock}`;
                 break;
             }
           }
+
+          // ---- Successful run: debit credits + fold this turn into memory ----
+          const charge = await chargeCredits(authed.userId, feature, {
+            model: "google/gemini-2.5-flash",
+            route: context.currentRoute ?? null,
+            mode: body.mode ?? "text",
+            images: hasImages,
+            tools: usedTools,
+            surface: "ai-command",
+          });
+          send({ type: "credits", spent: charge.spent, remaining: charge.remaining, feature });
+
+          const turnLine = `- "${body.prompt.slice(0, 160)}" → ${
+            usedTools.length ? `[${usedTools.join(", ")}] ` : ""
+          }${fullText.replace(/\s+/g, " ").slice(0, 200)}`;
+          const nextSummary = `${memory.summary}\n${turnLine}`.trim().split("\n").slice(-24).join("\n").slice(-4000);
+          await saveMemory(authed.userId, { summary: nextSummary, turns: memory.turns + 1 });
+
           send({ type: "done" });
+
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           console.error("ai-command stream failed:", message);

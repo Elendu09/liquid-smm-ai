@@ -51,6 +51,7 @@ import LinkInBioHub from "@/pages/dashboard/hubs/LinkInBioHub";
 import ActivityHub from "@/pages/dashboard/hubs/ActivityHub";
 import SettingsHub from "@/pages/dashboard/hubs/SettingsHub";
 import Support from "@/pages/dashboard/Support";
+import Campaigns from "@/pages/dashboard/Campaigns";
 import Team from "@/pages/dashboard/Team";
 
 const queryClient = new QueryClient();
@@ -59,7 +60,7 @@ const queryClient = new QueryClient();
 const legacyRedirects: Record<string, string> = {
   "caption-generator": "/dashboard/create/captions",
   "hashtag-research": "/dashboard/create/hashtags",
-  "ai-studio": "/dashboard/create/ai",
+  "ai-studio": "/dashboard/create/studio",
   "scheduler": "/dashboard/publish/queue",
   "content-calendar": "/dashboard/publish/calendar",
   "story-automation": "/dashboard/publish/stories",
@@ -155,9 +156,18 @@ const App = () => (
                     </RequireAuth>
                   }
                 />
+                <Route
+                  path="campaigns"
+                  element={
+                    <RequireAuth authOnly>
+                      <Campaigns />
+                    </RequireAuth>
+                  }
+                />
                 {/* Team page allows demo/guest view (mock members, write-guarded) */}
                 <Route path="team" element={<Team />} />
                 <Route path="support" element={<Support />} />
+
 
                 {/* Legacy route redirects */}
                 {Object.entries(legacyRedirects).map(([from, to]) => (

@@ -69,13 +69,15 @@ const navItems: NavItem[] = [
     href: "/dashboard/create",
     icon: Sparkles,
     children: [
-      { label: "AI Studio", href: "/dashboard/create/ai", icon: Wand2 },
+      { label: "Studio", href: "/dashboard/create/studio", icon: Wand2 },
       { label: "Captions", href: "/dashboard/create/captions", icon: Type },
       { label: "Hashtags", href: "/dashboard/create/hashtags", icon: Hash },
     ],
   },
+  { label: "Campaigns", href: "/dashboard/campaigns", icon: Target },
   {
     label: "Publish",
+
     href: "/dashboard/publish",
     icon: Calendar,
     children: [

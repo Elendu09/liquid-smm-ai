@@ -1,80 +1,54 @@
-## What I verified first
+# Plan: AI memory, credit metering, unified Studio, and Campaigns
 
-- `https://skyrank.digital/api/caption` — **connection fails outright** (no HTTP response, curl code 000). SkyRank is effectively dead right now, so every SkyRank-first tool is silently falling back on each call and paying a 10s timeout before it does.
-- `https://text.pollinations.ai` — **200 OK**. The keyless fallback in `src/services/freeAi.ts` and `supabase/functions/_shared/free-ai.ts` is the only thing keeping those tools alive.
-- Inbox today: `InboxBoard.tsx` (466 lines) is one generic kanban of `new / replied / snoozed / resolved` with hardcoded demo seed names, plus `UnifiedInboxView` tabs for Comments/DMs and `InboxTriageBar`. It has no per-platform structure, no conversation thread view, and no mentions/reviews/ads-comments channels — which is why it reads as generic.
+## What I verified first
+- The command bar already sends a bounded history (`HISTORY_TURNS`) to `ai-command`, and that function has a history-aware system prompt. So memory exists but is shallow and local to the command bar only.
+- No edge function currently writes to `credit_balances` / `credit_events`. Credits are granted at signup and displayed, but **nothing is ever debited** — the meter is cosmetic today.
+- There is no campaigns page or campaigns table anywhere in the project.
+- `Create` hub has separate `Studio` (`CreateStudio.tsx`) and `AI Studio` (`AiCreateView.tsx`) tabs.
 
 ---
 
-## Phase 1 — Inbox redesign (UI/UX)
+## Phase 1 — AI memory that actually persists and sharpens
+- Persist every AI turn to `ai_command_history` reliably (it already exists) and raise recall depth from a flat slice to a two-layer memory:
+  - **Recent turns** — last ~8 verbatim exchanges.
+  - **Rolling summary** — a short, model-written running summary of older turns, stored per user, refreshed every N turns so long sessions stay cheap but contextual.
+- Send both to `ai-command` plus a lightweight workspace snapshot (connected platforms, active brand, recent drafts/scheduled posts, current route) so the assistant answers "reschedule that", "same platforms", "use my usual tone" correctly.
+- Expose memory in the UI: history sheet gets search, per-entry "reuse prompt", and a "forget this turn" control.
+- Share the same memory service with AI Studio and Campaigns so all AI surfaces see one conversation.
 
-Move from "kanban of cards" to a **three-pane triage console**, the pattern every serious social inbox uses (Metricool, Sprout, Buffer):
+## Phase 2 — Honest, transparent credit metering
+- Add a shared server module used by **every** AI edge function (`ai-command`, `ai-create`, `ai-engage`, `ai-home-summary`, `notif-ai-summary`, voice speak/transcribe, campaign generation).
+- Flow per call: check balance → refuse with a clear 402 if empty → run → debit actual cost after completion → write a `credit_events` row with feature name, model, tokens, and where it was triggered from.
+- Pricing is published in-app: a rate card (e.g. caption pack, hashtag research, voice minute, campaign generation) so users see the cost **before** they click. Failed calls and keyless-fallback calls cost 0.
+- UI: cost hint on AI buttons, a live toast showing "−N credits" after each run, and Settings → Billing usage broken down by feature with the full ledger.
+- Guest/demo mode never debits and never shows a real balance.
 
-```text
-┌──────────────┬────────────────────┬─────────────────────┐
-│ Channel rail │  Conversation list │  Thread + reply     │
-│ All          │  ▸ avatar + snippet│  full message chain │
-│ Instagram 12 │  ▸ platform badge  │  author context     │
-│ TikTok     4 │  ▸ sentiment dot   │  AI draft + tones   │
-│ YouTube    2 │  ▸ SLA timer       │  saved replies      │
-│ LinkedIn   1 │                    │  assign / status    │
-│ ── types ──  │                    │                     │
-│ Comments     │                    │                     │
-│ DMs          │                    │                     │
-│ Mentions     │                    │                     │
-│ Reviews      │                    │                     │
-└──────────────┴────────────────────┴─────────────────────┘
-```
+## Phase 3 — Merge Studio + AI Studio into one page
+- Replace the two tabs with a single **Studio** route with internal sections, keeping old URLs redirecting in.
+- Layout: composer on the left (caption, media, platform tabs), live multi-platform previews on the right, AI panel docked alongside instead of a separate page.
+- Upgrades: AI variants inline (tone/length/hook rewrites), hashtag + first-comment generation in place, brand-voice selector, per-platform overrides, character/limit checks, image attachment and AI image generation, one-click "schedule" or "add to campaign".
+- Visual pass consistent with the Instrument Serif dashboard styling and glass surfaces.
 
-- **Left rail**: real connected accounts from `AccountContext` (not a fixed list), each with an unread count, plus message-type filters. Accounts with nothing connected show a connect prompt instead of fake data.
-- **Middle list**: virtualised, grouped by "Needs reply / Waiting / Done", with sentiment dot, intent chip, SLA age turning amber → red, assignee avatar, and multi-select for the existing bulk actions.
-- **Right pane**: real conversation thread (message history, not a single bubble), author panel (handle, follower count when available, past interactions), reply composer with tone switcher, AI draft, saved replies, translate, and per-platform character limits + capability flags (e.g. no DMs on YouTube, review-reply rules on Google Business).
-- **Mobile/tablet**: rail collapses to a horizontal scrollable chip row; list is full-width; tapping opens the thread as a full-screen sheet with the circular close button already standard in the app.
-- Keep the kanban as a secondary view toggle so nothing existing is lost; the console becomes the default.
-- Styling stays on the current tokens — Instrument Serif headers, glass surfaces, primary accent, no new colors.
-- Guest/demo keeps seeded data; authenticated users see real rows or a proper empty state (existing `isGuestSession` split preserved).
+## Phase 4 — Campaigns (researched against Metricool, Buffer, Hootsuite, Later, Sprout)
+Common denominators those tools ship, and what we build:
+- **Campaign object**: name, objective, brand, date range, platforms, budget/target KPIs, color/tag, status (draft, active, paused, completed).
+- **Campaign board**: grid + list + timeline (Gantt-style) view of all campaigns with progress bars.
+- **Campaign detail**: brief, content calendar filtered to the campaign, post list with approval state, asset shelf, notes, and team assignment.
+- **Tagging**: every scheduled post can belong to a campaign, so existing calendar/queue views gain a campaign filter and colored labels.
+- **AI campaign builder**: from a brief (goal, audience, duration, platforms) generate a full content plan — themes, posting cadence, per-post captions and hashtags — previewed as a table the user approves before it becomes scheduled posts. Metered via Phase 2.
+- **Campaign analytics**: rollup of reach, engagement, clicks, and posts for the campaign's posts and window, with per-platform breakdown and best/worst performing posts.
+- **Lifecycle**: duplicate campaign, archive, export report, and schedule a recurring campaign report.
 
-## Phase 2 — Inbox functionality
+## Phase 5 — Wiring and polish
+- Sidebar/nav entry for Campaigns, campaign filters in Publish/Calendar/Analytics, notifications for campaign milestones and end-of-campaign summaries.
+- Guest demo data for Campaigns so visitors see a populated example.
 
-- Per-platform adapters describing what each network supports (reply, like, hide, delete, DM, review response, char limit) so the UI only offers real actions.
-- Thread persistence: an `inbox_threads` shape so replies and history survive reloads, scoped by brand + user with RLS and grants.
-- Keyboard triage (`j/k`, `r`, `e`, `a`), snooze presets, and "next unhandled" auto-advance.
-- SLA + first-response-time metrics feeding the existing triage bar.
-
-## Phase 3 — Unified AI layer (never fails)
-
-Create one router used by **every** AI surface (`ai-create`, `ai-engage`, `ai-command`, SkyRank tools, inbox drafts):
-
-1. **Lovable AI Gateway** (`google/gemini-3.6-flash`) — primary, server-side, key stays in the edge function.
-2. **SkyRank** — demoted to opportunistic, with its timeout cut from 10s to ~4s and a circuit breaker that stops calling it for 5 minutes after a failure (right now every user waits on a dead host).
-3. **Keyless public endpoints** — Pollinations (verified live) plus a second unauthenticated wrapper as tertiary.
-
-Rules: shared retry/backoff, per-provider timeout, normalized response shape, one typed error surfaced to the UI (429 → "try again", 402 → credits), and never an empty screen — the caller always gets either text or an explicit, actionable message.
-
-## Phase 4 — The new plain-text AI feature (frontend, zero-login)
-
-A **"Quick AI" plain-text panel** that runs entirely client-side against unauthenticated public endpoints — no OAuth, no keys, no setup:
-
-- Provider list: Pollinations text endpoint (confirmed working) + one or two additional keyless public REST endpoints, tried in order.
-- Optional Puter.js loaded lazily from its CDN as an extra keyless provider, behind the same router interface so a CDN outage can't break the page.
-- Security: output is rendered as plain text only (no HTML injection), prompts are stripped of anything resembling credentials before leaving the browser, `private: true` is sent where supported, requests are aborted on unmount, and this path is used **only** for non-sensitive prompts. Anything touching account data, tokens, or customer messages stays on the server path in Phase 3.
-- Surfaces: a lightweight text tool in the AI command bar and inline "rephrase / shorten / translate" actions in the inbox composer.
-
-## Phase 5 — Trial credits
-
-Proposed grant, wired to the existing `credit_balances` / `credit_events` tables:
-
-| | Credits | Notes |
-|---|---|---|
-| Guest/demo | 0 (unmetered mock) | demo responses only, never touches the ledger |
-| New signup trial | **100** | granted once on first sign-in, 14-day window |
-| Free plan (post-trial) | 25 / month | resets monthly |
-
-Cost per action: caption/hashtags/short text = 1, inbox AI draft = 1, long-form or image = 3, voice = 2. Keyless frontend providers (Phase 4) cost **0** — that's the safety valve so a user out of credits still gets a usable answer with a "using free mode" hint. Balance is deducted server-side (never trusted from the client), with a top-up path already present in Settings → Billing.
+---
 
 ## Technical notes
+- New tables: `campaigns`, `campaign_posts` link (or a `campaign_id` column on `scheduled_posts`), plus an AI memory summary column/table. All with RLS scoped to `auth.uid()` and explicit GRANTs.
+- Credit debits happen server-side only, inside the edge functions, so the balance cannot be manipulated from the browser.
+- Campaign analytics reuse the existing `post_metrics` / rollup functions rather than a new collector.
 
-- New: an AI router module shared by edge functions, per-platform inbox capability config, and the three-pane inbox components under `src/components/engage/`.
-- Modified: `InboxBoard.tsx`, `UnifiedInboxView.tsx`, `InboxTriageBar.tsx`, `src/services/skyrank.ts` (timeout + circuit breaker), `supabase/functions/_shared/free-ai.ts`, `ai-create`, `ai-engage`, `ai-command`.
-- Database: inbox thread/message tables and a trial-grant column, each with GRANTs and RLS in the same migration.
-- No new paid dependencies; Puter.js is loaded from CDN on demand.
+## Suggested build order
+Phase 2 first (it protects everything else), then 1, then 3, then 4–5.

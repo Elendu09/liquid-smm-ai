@@ -7,6 +7,20 @@ import { generateObject, NoObjectGeneratedError } from "npm:ai@5.0.60";
 import { z } from "npm:zod@3.25.76";
 import { createLovableAiGatewayProvider, corsHeaders } from "../_shared/ai-gateway.ts";
 import { requireUser } from "../_shared/auth.ts";
+import {
+  chargeCredits,
+  checkCredits,
+  insufficientCredits,
+  type FeatureKey,
+} from "../_shared/credits.ts";
+
+const FEATURE_BY_OP: Record<string, FeatureKey> = {
+  captions: "create.captions",
+  hashtags: "create.hashtags",
+  translate: "create.translate",
+  brief: "create.brief",
+  reply: "create.reply",
+};
 
 const captionsSchema = z.object({
   captions: z.array(
@@ -130,6 +144,16 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
+  const feature = FEATURE_BY_OP[body.op];
+  if (!feature) {
+    return new Response(JSON.stringify({ error: "Unknown op" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const preflight = await checkCredits(authed.userId, feature);
+  if (!preflight.allowed) return insufficientCredits(preflight);
 
   const gateway = createLovableAiGatewayProvider(key);
   const model = gateway("google/gemini-2.5-flash");
@@ -266,9 +290,20 @@ Return an object with:
       });
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const charge = await chargeCredits(authed.userId, feature, {
+      model: "google/gemini-2.5-flash",
+      op: body.op,
+      platform: body.platform ?? null,
+      surface: "ai-create",
     });
+
+    return new Response(
+      JSON.stringify({
+        ...(result as Record<string, unknown>),
+        _credits: { spent: charge.spent, remaining: charge.remaining, feature },
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const isRateLimit = message.toLowerCase().includes("rate") || message.includes("429");

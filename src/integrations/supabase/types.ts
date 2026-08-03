@@ -166,6 +166,33 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_memory: {
+        Row: {
+          created_at: string
+          facts: Json
+          summary: string
+          turns: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          facts?: Json
+          summary?: string
+          turns?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          facts?: Json
+          summary?: string
+          turns?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       asset_versions: {
         Row: {
           asset_id: string
@@ -525,6 +552,83 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      campaigns: {
+        Row: {
+          archived: boolean
+          audience: string
+          brand_id: string | null
+          brief: string
+          color: string
+          created_at: string
+          end_date: string | null
+          goal_engagement: number
+          goal_posts: number
+          goal_reach: number
+          id: string
+          meta: Json
+          name: string
+          objective: string
+          platform_ids: string[]
+          start_date: string | null
+          status: string
+          tone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          audience?: string
+          brand_id?: string | null
+          brief?: string
+          color?: string
+          created_at?: string
+          end_date?: string | null
+          goal_engagement?: number
+          goal_posts?: number
+          goal_reach?: number
+          id?: string
+          meta?: Json
+          name: string
+          objective?: string
+          platform_ids?: string[]
+          start_date?: string | null
+          status?: string
+          tone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          audience?: string
+          brand_id?: string | null
+          brief?: string
+          color?: string
+          created_at?: string
+          end_date?: string | null
+          goal_engagement?: number
+          goal_posts?: number
+          goal_reach?: number
+          id?: string
+          meta?: Json
+          name?: string
+          objective?: string
+          platform_ids?: string[]
+          start_date?: string | null
+          status?: string
+          tone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       competitors: {
         Row: {
@@ -2058,6 +2162,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           autolist_id: string | null
+          campaign_id: string | null
           caption: string
           category_id: string | null
           created_at: string
@@ -2084,6 +2189,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           autolist_id?: string | null
+          campaign_id?: string | null
           caption?: string
           category_id?: string | null
           created_at?: string
@@ -2110,6 +2216,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           autolist_id?: string | null
+          campaign_id?: string | null
           caption?: string
           category_id?: string | null
           created_at?: string
@@ -2137,6 +2244,13 @@ export type Database = {
             columns: ["autolist_id"]
             isOneToOne: false
             referencedRelation: "autolists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_posts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
             referencedColumns: ["id"]
           },
         ]
@@ -2454,6 +2568,7 @@ export type Database = {
           reach: number
         }[]
       }
+      credit_remaining: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2469,6 +2584,19 @@ export type Database = {
       refresh_platform_rollup: {
         Args: { _days?: number; _user_id: string }
         Returns: number
+      }
+      spend_credits: {
+        Args: {
+          _amount: number
+          _feature: string
+          _meta?: Json
+          _user_id: string
+        }
+        Returns: {
+          ok: boolean
+          remaining: number
+          spent: number
+        }[]
       }
     }
     Enums: {
