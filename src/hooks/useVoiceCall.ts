@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { fnBearer } from "@/lib/fnAuth";
 
 export type VoiceCallStatus =
   | "idle"
@@ -111,7 +112,7 @@ export function useVoiceCall(opts: Options) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${await fnBearer()}`,
         },
         body: JSON.stringify({ text }),
       });
@@ -178,7 +179,7 @@ export function useVoiceCall(opts: Options) {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-transcribe`;
       const res = await fetch(url, {
         method: "POST",
-        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        headers: { Authorization: `Bearer ${await fnBearer()}` },
         body: form,
       });
       if (!res.ok) {
