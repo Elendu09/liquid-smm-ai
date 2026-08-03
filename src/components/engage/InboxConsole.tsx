@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Check,
   Clock,
   Inbox as InboxIcon,
+  Keyboard,
   MessageCircle,
   MessageSquare,
   RotateCcw,
@@ -93,6 +94,7 @@ export function InboxConsole({ sentiment = "all", intent = "all" }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const quickAi = useQuickAi();
+  const replyBoxRef = useRef<HTMLTextAreaElement | null>(null);
 
   const all = useMemo<InboxItem[]>(
     () =>
@@ -140,12 +142,37 @@ export function InboxConsole({ sentiment = "all", intent = "all" }: Props) {
   }, [filtered]);
 
   const active = useMemo(() => all.find((i) => i.id === activeId) ?? null, [all, activeId]);
+  const activeIndex = useMemo(() => filtered.findIndex((i) => i.id === activeId), [filtered, activeId]);
 
   // Keep a valid selection as filters change (desktop only).
   useEffect(() => {
     if (activeId && filtered.some((i) => i.id === activeId)) return;
     setActiveId(filtered[0]?.id ?? null);
   }, [filtered, activeId]);
+
+  /** Advance to the next "needs reply" item, or just the next row, after an action. */
+  const advance = (fromId: string) => {
+    const idx = filtered.findIndex((i) => i.id === fromId);
+    if (idx === -1) return;
+    const rest = filtered.filter((i) => i.id !== fromId);
+    const nextNeedsReply = rest.find((i) => BUCKET_OF[i.status] === "needs");
+    const fallback = rest[Math.min(idx, rest.length - 1)];
+    setActiveId((nextNeedsReply ?? fallback)?.id ?? null);
+  };
+
+  const moveSelection = (dir: 1 | -1) => {
+    if (filtered.length === 0) return;
+    const idx = activeIndex === -1 ? 0 : activeIndex;
+    const next = filtered[(idx + dir + filtered.length) % filtered.length];
+    if (next) setActiveId(next.id);
+  };
+
+  const snooze = (item: InboxItem, minutes: number) => {
+    const when = new Date(Date.now() + minutes * 60_000).toISOString();
+    patch(item, { status: "snoozed", scheduledFor: when });
+    toast(`Snoozed for ${minutes < 60 ? `${minutes}m` : minutes < 1440 ? `${Math.round(minutes / 60)}h` : "tomorrow"}`);
+    advance(item.id);
+  };
 
   useEffect(() => {
     if (!active) { setDraft(""); return; }
@@ -167,7 +194,40 @@ export function InboxConsole({ sentiment = "all", intent = "all" }: Props) {
     patch(active, { status: "replied", scheduledFor: undefined });
     toast.success(`Reply sent to ${active.author}`, { description: draft.slice(0, 80) });
     setMobileOpen(false);
+    advance(active.id);
   };
+
+  // Keyboard triage: j/k move selection, r focuses the reply box, e marks
+  // handled and advances, a opens the assign menu. Ignored while typing.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      const typing = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement | null)?.isContentEditable;
+      if (typing) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      switch (e.key) {
+        case "j":
+          e.preventDefault();
+          moveSelection(1);
+          break;
+        case "k":
+          e.preventDefault();
+          moveSelection(-1);
+          break;
+        case "r":
+          if (active) { e.preventDefault(); setMobileOpen(true); replyBoxRef.current?.focus(); }
+          break;
+        case "e":
+          if (active) { e.preventDefault(); patch(active, { status: "resolved" }); toast.success("Marked handled"); advance(active.id); }
+          break;
+        case "a":
+          if (active && members.length) { e.preventDefault(); patch(active, { assignee: members[0].name }); toast.success(`Assigned to ${members[0].name}`); }
+          break;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [active, filtered, members]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const runQuickAi = async (task: "rephrase" | "shorten" | "friendly" | "translate") => {
     const base = draft.trim() || active?.message || "";
@@ -280,6 +340,7 @@ export function InboxConsole({ sentiment = "all", intent = "all" }: Props) {
         </div>
 
         <Textarea
+          ref={replyBoxRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           rows={3}
@@ -298,21 +359,32 @@ export function InboxConsole({ sentiment = "all", intent = "all" }: Props) {
                 <ThumbsUp className="h-4 w-4" />
               </Button>
             )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" title="Snooze">
+                  <Clock className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuLabel className="text-xs">Snooze for</DropdownMenuLabel>
+                {[
+                  { label: "15 minutes", minutes: 15 },
+                  { label: "1 hour", minutes: 60 },
+                  { label: "4 hours", minutes: 240 },
+                  { label: "Tomorrow", minutes: 1440 },
+                ].map((p) => (
+                  <DropdownMenuItem key={p.minutes} className="text-xs" onClick={() => snooze(active, p.minutes)}>
+                    {p.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 rounded-full"
-              title="Snooze"
-              onClick={() => { patch(active, { status: "snoozed" }); toast("Snoozed"); }}
-            >
-              <Clock className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full"
-              title="Mark handled"
-              onClick={() => { patch(active, { status: "resolved" }); toast.success("Marked handled"); }}
+              title="Mark handled (e)"
+              onClick={() => { patch(active, { status: "resolved" }); toast.success("Marked handled"); advance(active.id); }}
             >
               <Check className="h-4 w-4" />
             </Button>
@@ -378,6 +450,10 @@ export function InboxConsole({ sentiment = "all", intent = "all" }: Props) {
               <RailButton label="Comments" icon={<MessageSquare className="h-3.5 w-3.5" />} active={kindFilter === "comment"} onClick={() => setKindFilter(kindFilter === "comment" ? "all" : "comment")} />
               <RailButton label="DMs" icon={<MessageCircle className="h-3.5 w-3.5" />} active={kindFilter === "dm"} onClick={() => setKindFilter(kindFilter === "dm" ? "all" : "dm")} />
               <RailButton label="Reviews" icon={<Star className="h-3.5 w-3.5" />} active={false} onClick={() => toast("Reviews arrive once a review-capable channel is connected.")} />
+              <div className="hidden items-center gap-1.5 px-2 pt-3 text-[10px] text-muted-foreground lg:flex" title="j/k move · r reply · e handled · a assign">
+                <Keyboard className="h-3 w-3" />
+                <span>j/k · r · e · a</span>
+              </div>
             </div>
           </aside>
 
