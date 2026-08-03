@@ -155,9 +155,18 @@ const App = () => (
                     </RequireAuth>
                   }
                 />
+                <Route
+                  path="campaigns"
+                  element={
+                    <RequireAuth authOnly>
+                      <Campaigns />
+                    </RequireAuth>
+                  }
+                />
                 {/* Team page allows demo/guest view (mock members, write-guarded) */}
                 <Route path="team" element={<Team />} />
                 <Route path="support" element={<Support />} />
+
 
                 {/* Legacy route redirects */}
                 {Object.entries(legacyRedirects).map(([from, to]) => (
