@@ -291,18 +291,21 @@ ${historyBlock}`;
       async start(controller) {
         const send = (obj: unknown) =>
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+        let fullText = "";
+        const usedTools: string[] = [];
         try {
           for await (const chunk of result.fullStream) {
             switch (chunk.type) {
-              case "text-delta":
+              case "text-delta": {
                 // AI SDK v5 exposes streaming text under `chunk.text`; older builds used `textDelta`.
-                send({
-                  type: "text-delta",
-                  // deno-lint-ignore no-explicit-any
-                  text: (chunk as any).text ?? (chunk as any).textDelta ?? "",
-                });
+                // deno-lint-ignore no-explicit-any
+                const t = (chunk as any).text ?? (chunk as any).textDelta ?? "";
+                fullText += t;
+                send({ type: "text-delta", text: t });
                 break;
+              }
               case "tool-call":
+                usedTools.push(chunk.toolName);
                 send({
                   type: "tool-call",
                   id: chunk.toolCallId,
@@ -328,7 +331,26 @@ ${historyBlock}`;
                 break;
             }
           }
+
+          // ---- Successful run: debit credits + fold this turn into memory ----
+          const charge = await chargeCredits(authed.userId, feature, {
+            model: "google/gemini-2.5-flash",
+            route: context.currentRoute ?? null,
+            mode: body.mode ?? "text",
+            images: hasImages,
+            tools: usedTools,
+            surface: "ai-command",
+          });
+          send({ type: "credits", spent: charge.spent, remaining: charge.remaining, feature });
+
+          const turnLine = `- "${body.prompt.slice(0, 160)}" → ${
+            usedTools.length ? `[${usedTools.join(", ")}] ` : ""
+          }${fullText.replace(/\s+/g, " ").slice(0, 200)}`;
+          const nextSummary = `${memory.summary}\n${turnLine}`.trim().split("\n").slice(-24).join("\n").slice(-4000);
+          await saveMemory(authed.userId, { summary: nextSummary, turns: memory.turns + 1 });
+
           send({ type: "done" });
+
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           console.error("ai-command stream failed:", message);
