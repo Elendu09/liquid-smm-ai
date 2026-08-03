@@ -290,9 +290,20 @@ Return an object with:
       });
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const charge = await chargeCredits(authed.userId, feature, {
+      model: "google/gemini-2.5-flash",
+      op: body.op,
+      platform: body.platform ?? null,
+      surface: "ai-create",
     });
+
+    return new Response(
+      JSON.stringify({
+        ...(result as Record<string, unknown>),
+        _credits: { spent: charge.spent, remaining: charge.remaining, feature },
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const isRateLimit = message.toLowerCase().includes("rate") || message.includes("429");
