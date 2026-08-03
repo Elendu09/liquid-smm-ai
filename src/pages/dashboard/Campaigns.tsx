@@ -168,12 +168,10 @@ export default function Campaigns() {
             icon={Target}
             title="No campaigns yet"
             description="Create a campaign and let AI draft the hooks, captions, hashtags and cadence for you."
-            action={
-              <Button onClick={() => setOpen(true)}>
-                <Plus className="mr-1.5 h-4 w-4" /> New campaign
-              </Button>
-            }
+            ctaLabel="New campaign"
+            onCta={() => setOpen(true)}
           />
+
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {campaigns.map((c) => (
