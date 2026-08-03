@@ -63,6 +63,7 @@ import {
   type SlashParam,
 } from "./SlashCommandMenu";
 import { SlashParamHints } from "./SlashParamHints";
+import { fnBearer } from "@/lib/fnAuth";
 
 const DRAFT_KEY = "smmpilot:ai-command-draft";
 const HISTORY_TURNS = 6;
@@ -176,7 +177,7 @@ export function AiCommandBar() {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-transcribe`;
       const res = await fetch(url, {
         method: "POST",
-        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        headers: { Authorization: `Bearer ${await fnBearer()}` },
         body: form,
       });
       if (!res.ok) throw new Error(`Transcribe ${res.status}`);
@@ -471,7 +472,7 @@ export function AiCommandBar() {
         headers: {
           "Content-Type": "application/json",
           Accept: "text/event-stream",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${await fnBearer()}`,
         },
         body: JSON.stringify({
           prompt: text || "Describe what you see and suggest what I can do with it.",
