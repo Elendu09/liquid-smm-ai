@@ -241,7 +241,7 @@ export function CampaignBuilderDialog({
                         : "border-border/60 text-muted-foreground hover:bg-muted/50",
                     )}
                   >
-                    <PlatformIcon platformId={id} className="h-3.5 w-3.5" />
+                    <PlatformIcon platform={id} className="h-3.5 w-3.5" />
                     <span className="capitalize">{id}</span>
                   </button>
                 ))}
@@ -260,7 +260,7 @@ export function CampaignBuilderDialog({
                   {result.posts.map((p, i) => (
                     <div key={i} className="rounded-lg border border-border/50 bg-background/60 p-3">
                       <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
-                        <PlatformIcon platformId={p.platform} className="h-3.5 w-3.5" />
+                        <PlatformIcon platform={p.platform} className="h-3.5 w-3.5" />
                         <span>Day {p.day}</span>
                         <span>·</span>
                         <span className="capitalize">{p.format}</span>
