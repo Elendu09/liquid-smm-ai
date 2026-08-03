@@ -1,15 +1,28 @@
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-create`;
-const AUTH = `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`;
+const APIKEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 async function post<T>(payload: Record<string, unknown>): Promise<T | null> {
   try {
+    // ai-create requires a real user JWT — the anon key has no `sub` claim.
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) {
+      toast.error("Sign in to use AI features.");
+      return null;
+    }
     const res = await fetch(URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: AUTH },
+      headers: {
+        "Content-Type": "application/json",
+        apikey: APIKEY,
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(payload),
     });
+
     if (!res.ok) {
       const text = await res.text();
       const msg =
