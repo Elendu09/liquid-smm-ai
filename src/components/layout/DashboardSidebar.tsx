@@ -74,8 +74,10 @@ const navItems: NavItem[] = [
       { label: "Hashtags", href: "/dashboard/create/hashtags", icon: Hash },
     ],
   },
+  { label: "Campaigns", href: "/dashboard/campaigns", icon: Target },
   {
     label: "Publish",
+
     href: "/dashboard/publish",
     icon: Calendar,
     children: [
