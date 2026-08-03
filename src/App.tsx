@@ -51,6 +51,7 @@ import LinkInBioHub from "@/pages/dashboard/hubs/LinkInBioHub";
 import ActivityHub from "@/pages/dashboard/hubs/ActivityHub";
 import SettingsHub from "@/pages/dashboard/hubs/SettingsHub";
 import Support from "@/pages/dashboard/Support";
+import Campaigns from "@/pages/dashboard/Campaigns";
 import Team from "@/pages/dashboard/Team";
 
 const queryClient = new QueryClient();
