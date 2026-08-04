@@ -161,6 +161,15 @@ function PostCard({
             variant="ghost"
             size="icon"
             className="h-7 w-7"
+            aria-label="Edit post"
+            onClick={onEdit}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
             aria-label="Reschedule post"
             onClick={onReschedule}
           >
@@ -307,6 +316,7 @@ export default function QueueBoard() {
               onDelete={() => handleDelete(p.id)}
               onReschedule={() => setRescheduling(p)}
               onRetry={() => retrySend(p)}
+              onEdit={() => setEditing(p)}
             />
           )}
         />
@@ -322,6 +332,7 @@ export default function QueueBoard() {
                 onDelete={() => handleDelete(p.id)}
                 onReschedule={() => setRescheduling(p)}
                 onRetry={() => retrySend(p)}
+                onEdit={() => setEditing(p)}
               />
             </div>
           )}
@@ -329,6 +340,28 @@ export default function QueueBoard() {
       )}
 
       <ScheduleDialog open={scheduleOpen} onOpenChange={setScheduleOpen} />
+      <PostSlotDialog
+        open={!!editing}
+        onOpenChange={(o) => !o && setEditing(null)}
+        post={editing}
+        onSubmit={(v) => {
+          if (!editing) return;
+          update(editing.id, {
+            caption: v.caption,
+            mediaUrl: v.mediaUrl,
+            scheduledAt: v.scheduledAt,
+            platformIds: v.platformIds,
+            hashtags: v.hashtags,
+            firstComment: v.firstComment,
+          });
+          toast.success("Post updated");
+          setEditing(null);
+        }}
+        onDelete={(id) => {
+          handleDelete(id);
+          setEditing(null);
+        }}
+      />
       <RescheduleDialog
         post={rescheduling}
         open={!!rescheduling}
