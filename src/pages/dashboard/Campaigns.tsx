@@ -254,8 +254,14 @@ export default function Campaigns() {
                 key={c.id}
                 campaign={c}
                 scheduledCount={countFor(c)}
-                onStatus={(s) => void update(c.id, { status: s })}
-                onDelete={() => void remove(c.id)}
+                onStatus={(s) => {
+                  if (demoMode) return void guardWrite("manage campaigns");
+                  void update(c.id, { status: s });
+                }}
+                onDelete={() => {
+                  if (demoMode) return void guardWrite("delete campaigns");
+                  void remove(c.id);
+                }}
               />
             ))}
           </div>
