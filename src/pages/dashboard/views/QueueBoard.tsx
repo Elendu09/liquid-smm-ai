@@ -98,11 +98,13 @@ function PostCard({
   onDelete,
   onReschedule,
   onRetry,
+  onEdit,
 }: {
   post: ScheduledPost;
   onDelete: () => void;
   onReschedule: () => void;
   onRetry: () => void;
+  onEdit: () => void;
 }) {
   const status: SendStatus = post.status ?? "queued";
   const tz = post.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -112,6 +114,20 @@ function PostCard({
         <p className="text-sm line-clamp-3 text-foreground flex-1">{post.caption || "Untitled post"}</p>
         <StatusPill post={post} />
       </div>
+      {post.mediaUrl && (
+        <button
+          type="button"
+          onClick={onEdit}
+          className="block w-full overflow-hidden rounded-lg border border-border/60"
+          aria-label="View and edit post media"
+        >
+          {/\.(mp4|webm|mov)(\?|$)/i.test(post.mediaUrl) ? (
+            <video src={post.mediaUrl} className="h-28 w-full object-cover" muted />
+          ) : (
+            <img src={post.mediaUrl} alt="Scheduled post media" loading="lazy" className="h-28 w-full object-cover" />
+          )}
+        </button>
+      )}
       {status === "sending" && (
         <Progress value={post.sendProgress ?? 0} className="h-1" />
       )}
