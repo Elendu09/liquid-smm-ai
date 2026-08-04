@@ -200,6 +200,7 @@ export default function QueueBoard() {
   const [search, setSearch] = useState("");
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [rescheduling, setRescheduling] = useState<ScheduledPost | null>(null);
+  const [editing, setEditing] = useState<ScheduledPost | null>(null);
   const [pauseOpen, setPauseOpen] = useState(false);
 
   useEffect(() => {
