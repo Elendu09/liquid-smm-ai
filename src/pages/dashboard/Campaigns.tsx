@@ -9,6 +9,8 @@ import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { CampaignBuilderDialog } from "@/components/campaigns/CampaignBuilderDialog";
 import { useCampaigns, type Campaign } from "@/hooks/useCampaigns";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
+import { useGuest } from "@/hooks/useGuest";
+import { useRealOrEmpty } from "@/hooks/useRealOrEmpty";
 import {
   Select,
   SelectContent,
