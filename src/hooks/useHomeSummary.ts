@@ -82,9 +82,15 @@ export function useHomeSummary() {
   }, [accounts, posts, notifications, best]);
 
   const refresh = useCallback(async () => {
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess.session?.access_token;
+    if (!token) return; // guests / signed-out users can't call the AI function
     setLoading(true); setError(null);
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke("ai-home-summary", { body: aggregate });
+      const { data, error: fnErr } = await supabase.functions.invoke("ai-home-summary", {
+        body: aggregate,
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (fnErr) throw fnErr;
       const next: HomeSummary = { ...data, generatedAt: new Date().toISOString() };
       setSummary(next);
@@ -102,6 +108,7 @@ export function useHomeSummary() {
     if (!summary && accounts.length > 0) refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   return { summary, loading, error, refresh, aggregate };
 }
