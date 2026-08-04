@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { NetworkPreview } from "@/components/publish/NetworkPreview";
+import { MediaField } from "@/components/publish/MediaField";
 import { platforms as PLATFORMS } from "@/config/platforms";
 import { guardWrite } from "@/hooks/useGuest";
 import type { ScheduledPost } from "@/hooks/useScheduledPosts";
@@ -153,10 +154,11 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="pd-media">Media URL (optional)</Label>
-            <Input id="pd-media" value={mediaUrl} onChange={(e) => setMediaUrl(e.target.value)} placeholder="https://…" />
-          </div>
+          <MediaField
+            value={mediaUrl || undefined}
+            onChange={(u) => setMediaUrl(u ?? "")}
+            label="Image / video"
+          />
 
           <div>
             <Label htmlFor="pd-tags">Hashtags (space-separated)</Label>

@@ -9,6 +9,8 @@ import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { CampaignBuilderDialog } from "@/components/campaigns/CampaignBuilderDialog";
 import { useCampaigns, type Campaign } from "@/hooks/useCampaigns";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
+import { useGuest, guardWrite } from "@/hooks/useGuest";
+import { useRealOrEmpty } from "@/hooks/useRealOrEmpty";
 import {
   Select,
   SelectContent,
@@ -106,10 +108,76 @@ function CampaignCard({
   );
 }
 
+const DEMO_CAMPAIGNS: Campaign[] = [
+  {
+    id: "demo-1",
+    name: "Spring product launch",
+    objective: "awareness",
+    brief: "3-week teaser → launch → social proof push across IG, TikTok and LinkedIn.",
+    audience: "Creators & small brands",
+    tone: "confident, playful",
+    color: "#6366f1",
+    status: "active",
+    platformIds: ["instagram", "tiktok", "linkedin"],
+    startDate: new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10),
+    endDate: new Date(Date.now() + 12 * 86400000).toISOString().slice(0, 10),
+    goalPosts: 18,
+    goalReach: 120000,
+    goalEngagement: 4200,
+    archived: false,
+    meta: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "demo-2",
+    name: "Always-on education series",
+    objective: "engagement",
+    brief: "Weekly how-to carousels and short-form tips to keep the feed warm.",
+    audience: "SMM managers",
+    tone: "helpful, direct",
+    color: "#22d3ee",
+    status: "draft",
+    platformIds: ["instagram", "twitter"],
+    startDate: new Date().toISOString().slice(0, 10),
+    endDate: null,
+    goalPosts: 12,
+    goalReach: 45000,
+    goalEngagement: 1800,
+    archived: false,
+    meta: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "demo-3",
+    name: "Black Friday countdown",
+    objective: "conversions",
+    brief: "5-day countdown with daily offers, stories and retargeting hooks.",
+    audience: "Existing followers",
+    tone: "urgent, upbeat",
+    color: "#f472b6",
+    status: "completed",
+    platformIds: ["facebook", "instagram"],
+    startDate: new Date(Date.now() - 40 * 86400000).toISOString().slice(0, 10),
+    endDate: new Date(Date.now() - 33 * 86400000).toISOString().slice(0, 10),
+    goalPosts: 10,
+    goalReach: 210000,
+    goalEngagement: 9100,
+    archived: false,
+    meta: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
 export default function Campaigns() {
-  const { campaigns, update, remove } = useCampaigns();
+  const { campaigns: real, update, remove } = useCampaigns();
   const { posts } = useScheduledPosts();
+  const { isGuest } = useGuest();
   const [open, setOpen] = useState(false);
+  const campaigns = useRealOrEmpty(real, { isGuest, demo: DEMO_CAMPAIGNS });
+  const demoMode = isGuest && real.length === 0;
 
   const stats = useMemo(() => {
     const active = campaigns.filter((c) => c.status === "active").length;
@@ -140,6 +208,13 @@ export default function Campaigns() {
           </Button>
         }
       />
+
+      {demoMode && (
+        <p className="mt-4 rounded-xl border border-primary/30 bg-primary/5 px-3.5 py-2.5 text-xs text-muted-foreground">
+          <span className="font-medium text-primary">Demo campaigns</span> — sample data so you can explore the
+          builder. Sign up to create real, AI-planned campaigns.
+        </p>
+      )}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {[
@@ -179,8 +254,14 @@ export default function Campaigns() {
                 key={c.id}
                 campaign={c}
                 scheduledCount={countFor(c)}
-                onStatus={(s) => void update(c.id, { status: s })}
-                onDelete={() => void remove(c.id)}
+                onStatus={(s) => {
+                  if (demoMode) return void guardWrite("manage campaigns");
+                  void update(c.id, { status: s });
+                }}
+                onDelete={() => {
+                  if (demoMode) return void guardWrite("delete campaigns");
+                  void remove(c.id);
+                }}
               />
             ))}
           </div>
