@@ -11,6 +11,7 @@ import {
   RotateCw,
   Pause,
   PauseCircle,
+  Pencil,
 } from "lucide-react";
 import { format, parseISO, isBefore } from "date-fns";
 import { useMcpInbox } from "@/hooks/useMcpInbox";
@@ -30,6 +31,7 @@ import { useScheduledPosts, type ScheduledPost, type SendStatus } from "@/hooks/
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { ScheduleDialog } from "@/components/publish/ScheduleDialog";
 import { RescheduleDialog } from "@/components/publish/RescheduleDialog";
+import { PostSlotDialog } from "@/components/publish/PostSlotDialog";
 import { PauseAllDialog } from "@/components/publish/PauseAllDialog";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useAccounts } from "@/contexts/AccountContext";
