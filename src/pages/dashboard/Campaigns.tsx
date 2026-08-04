@@ -209,6 +209,13 @@ export default function Campaigns() {
         }
       />
 
+      {demoMode && (
+        <p className="mt-4 rounded-xl border border-primary/30 bg-primary/5 px-3.5 py-2.5 text-xs text-muted-foreground">
+          <span className="font-medium text-primary">Demo campaigns</span> — sample data so you can explore the
+          builder. Sign up to create real, AI-planned campaigns.
+        </p>
+      )}
+
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {[
           { label: "Campaigns", value: stats.total, icon: Target },
