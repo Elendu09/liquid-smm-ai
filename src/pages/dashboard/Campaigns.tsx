@@ -217,6 +217,14 @@ export default function Campaigns() {
                   if (demoMode) return void guardWrite("delete campaigns");
                   void remove(c.id);
                 }}
+                onShare={() => {
+                  const url = c.id.startsWith("demo-")
+                    ? `${window.location.origin}/c/${campaignSlug(c.name)}`
+                    : `${window.location.origin}/dashboard/campaigns`;
+                  void navigator.clipboard.writeText(url);
+                  toast.success("Share link copied", { description: url });
+                }}
+
               />
             ))}
           </div>
