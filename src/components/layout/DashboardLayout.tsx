@@ -49,7 +49,7 @@ export function DashboardLayout() {
         <DemoBannerInline />
         <PresetLandingBanner />
         <Outlet />
-        <div className="h-20 lg:hidden" aria-hidden />
+        <div className="h-28 lg:hidden" aria-hidden />
       </main>
       <MobileHubNav />
       <OnboardingWizard open={tourOpen} onOpenChange={handleWizardOpenChange} />
