@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { Plus, Target, TrendingUp, CalendarRange, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Plus, Target, TrendingUp, CalendarRange, Trash2, Share2 } from "lucide-react";
+import { DEMO_CAMPAIGNS, campaignSlug } from "@/lib/demoCampaigns";
 import { PageHeader } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
