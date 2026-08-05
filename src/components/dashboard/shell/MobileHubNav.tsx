@@ -11,68 +11,76 @@ const right = [
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3, tour: "mobile-nav-analytics" },
 ];
 
+const itemClass = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    "relative flex flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1.5 text-[10px] font-medium min-h-[44px] transition-all duration-300",
+    isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
+  );
+
+function Item({ i }: { i: (typeof left)[number] }) {
+  return (
+    <NavLink key={i.href} to={i.href} end={"exact" in i ? i.exact : undefined} data-tour={i.tour} className={itemClass}>
+      {({ isActive }) => (
+        <>
+          <span
+            className={cn(
+              "grid h-8 w-11 place-items-center rounded-full transition-all duration-300",
+              isActive
+                ? "bg-primary/15 ring-1 ring-primary/25 shadow-[0_4px_14px_-6px_hsl(var(--primary)/0.6)]"
+                : "bg-transparent",
+            )}
+          >
+            <i.icon className={cn("transition-all duration-300", isActive ? "w-[18px] h-[18px]" : "w-5 h-5")} />
+          </span>
+          <span className={cn("leading-none transition-opacity", isActive ? "opacity-100" : "opacity-80")}>
+            {i.label}
+          </span>
+        </>
+      )}
+    </NavLink>
+  );
+}
+
 export function MobileHubNav() {
   return (
     <nav
       aria-label="Hub navigation"
       data-tour="mobile-nav"
-      className="lg:hidden fixed bottom-0 inset-x-0 z-40 h-16 bg-card/95 backdrop-blur-md border-t border-border"
+      className="lg:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2"
     >
-      <div className="relative h-full max-w-screen-sm mx-auto grid grid-cols-5 items-center px-2">
-        {left.map((i) => (
-          <NavLink
-            key={i.href}
-            to={i.href}
-            end={i.exact}
-            data-tour={i.tour}
-            className={({ isActive }) =>
-              cn(
-                "flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium min-h-[48px] transition-colors",
-                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
-              )
-            }
-          >
-            <i.icon className="w-5 h-5" />
-            <span>{i.label}</span>
-          </NavLink>
-        ))}
+      <div className="relative mx-auto max-w-screen-sm rounded-[26px] border border-border/50 bg-card/70 backdrop-blur-2xl shadow-[0_10px_40px_-12px_hsl(220_40%_10%/0.45)]">
+        {/* Soft top highlight for the glass edge */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-[26px] bg-gradient-to-r from-transparent via-foreground/15 to-transparent" />
 
-        {/* Floating center */}
-        <div className="flex items-start justify-center">
-          <NavLink
-            to="/dashboard/publish"
-            data-tour="mobile-nav-publish"
-            className={({ isActive }) =>
-              cn(
-                "-mt-8 w-14 h-14 rounded-full flex flex-col items-center justify-center gap-0 shadow-lg ring-4 ring-background transition-transform active:scale-95",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-primary text-primary-foreground hover:bg-primary/90",
-              )
-            }
-            aria-label="Publish"
-          >
-            <Calendar className="w-5 h-5" />
-            <span className="text-[9px] font-semibold leading-none mt-0.5">Publish</span>
-          </NavLink>
+        <div className="grid grid-cols-5 items-center px-2 py-1.5">
+          {left.map((i) => (
+            <Item key={i.href} i={i} />
+          ))}
+
+          {/* Floating center publish action */}
+          <div className="flex items-start justify-center">
+            <NavLink
+              to="/dashboard/publish"
+              data-tour="mobile-nav-publish"
+              className={({ isActive }) =>
+                cn(
+                  "-mt-7 flex h-14 w-14 flex-col items-center justify-center gap-0 rounded-full bg-primary text-primary-foreground ring-[5px] ring-background transition-transform duration-200 active:scale-95",
+                  isActive
+                    ? "shadow-[0_10px_30px_-8px_hsl(var(--primary)/0.85)]"
+                    : "shadow-[0_8px_24px_-10px_hsl(var(--primary)/0.7)] hover:bg-primary/90",
+                )
+              }
+              aria-label="Publish"
+            >
+              <Calendar className="h-5 w-5" />
+              <span className="mt-0.5 text-[9px] font-semibold leading-none">Publish</span>
+            </NavLink>
+          </div>
+
+          {right.map((i) => (
+            <Item key={i.href} i={i} />
+          ))}
         </div>
-
-        {right.map((i) => (
-          <NavLink
-            key={i.href}
-            to={i.href}
-            data-tour={i.tour}
-            className={({ isActive }) =>
-              cn(
-                "flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium min-h-[48px] transition-colors",
-                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
-              )
-            }
-          >
-            <i.icon className="w-5 h-5" />
-            <span>{i.label}</span>
-          </NavLink>
-        ))}
       </div>
     </nav>
   );
