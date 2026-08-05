@@ -24,6 +24,7 @@ import FAQ from "./pages/FAQ";
 import Solutions from "./pages/Solutions";
 import PublicCalendar from "./pages/PublicCalendar";
 import PublicBio from "./pages/PublicBio";
+import PublicCampaign from "./pages/PublicCampaign";
 import AcceptInvite from "./pages/AcceptInvite";
 import Privacy from "./pages/legal/Privacy";
 import Terms from "./pages/legal/Terms";
