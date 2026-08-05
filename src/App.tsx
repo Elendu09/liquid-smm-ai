@@ -113,6 +113,8 @@ const App = () => (
               <Route path="/bio/:slug" element={<PublicBio />} />
               <Route path="/b/:slug" element={<PublicBio />} />
               <Route path="/@:slug" element={<PublicBio />} />
+              <Route path="/c/:slug" element={<PublicCampaign />} />
+
               <Route path="/invite/:token" element={<AcceptInvite />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
