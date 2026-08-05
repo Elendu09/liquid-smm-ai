@@ -33,11 +33,13 @@ function CampaignCard({
   scheduledCount,
   onStatus,
   onDelete,
+  onShare,
 }: {
   campaign: Campaign;
   scheduledCount: number;
   onStatus: (s: Campaign["status"]) => void;
   onDelete: () => void;
+  onShare: () => void;
 }) {
   const goal = campaign.goalPosts || 0;
   const pct = goal ? Math.min(100, Math.round((scheduledCount / goal) * 100)) : 0;
