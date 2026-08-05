@@ -634,7 +634,13 @@ export function DashboardSidebar() {
               <Menu className="w-5 h-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-72 flex flex-col">
+          {/* Prevent Radix auto-focusing the search input, which would pop the
+              on-screen keyboard every time the drawer opens on mobile/tablet. */}
+          <SheetContent
+            side="left"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            className="p-0 w-72 flex flex-col rounded-r-3xl border-border/60 bg-card/95 backdrop-blur-xl"
+          >
             <SidebarContent
               collapsed={false}
               setCollapsed={setCollapsed}
