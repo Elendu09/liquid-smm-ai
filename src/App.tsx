@@ -159,14 +159,9 @@ const App = () => (
                     </RequireAuth>
                   }
                 />
-                <Route
-                  path="campaigns"
-                  element={
-                    <RequireAuth authOnly>
-                      <Campaigns />
-                    </RequireAuth>
-                  }
-                />
+                {/* Campaigns is guest-viewable (demo data, write-guarded) */}
+                <Route path="campaigns" element={<Campaigns />} />
+
                 {/* Team page allows demo/guest view (mock members, write-guarded) */}
                 <Route path="team" element={<Team />} />
                 <Route path="support" element={<Support />} />
