@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { Plus, Target, TrendingUp, CalendarRange, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Plus, Target, TrendingUp, CalendarRange, Trash2, Share2 } from "lucide-react";
+import { DEMO_CAMPAIGNS, campaignSlug } from "@/lib/demoCampaigns";
 import { PageHeader } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,11 +33,13 @@ function CampaignCard({
   scheduledCount,
   onStatus,
   onDelete,
+  onShare,
 }: {
   campaign: Campaign;
   scheduledCount: number;
   onStatus: (s: Campaign["status"]) => void;
   onDelete: () => void;
+  onShare: () => void;
 }) {
   const goal = campaign.goalPosts || 0;
   const pct = goal ? Math.min(100, Math.round((scheduledCount / goal) * 100)) : 0;
@@ -97,79 +101,30 @@ function CampaignCard({
         <Button
           variant="ghost"
           size="icon"
-          className="ml-auto h-8 w-8 rounded-full text-muted-foreground hover:text-destructive"
+          className="ml-auto h-10 w-10 rounded-full text-muted-foreground hover:text-primary"
+          onClick={onShare}
+          aria-label={`Copy share link for ${campaign.name}`}
+        >
+          <Share2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 rounded-full text-muted-foreground hover:text-destructive"
           onClick={onDelete}
           aria-label={`Delete ${campaign.name}`}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
+
       </footer>
     </article>
   );
 }
 
-const DEMO_CAMPAIGNS: Campaign[] = [
-  {
-    id: "demo-1",
-    name: "Spring product launch",
-    objective: "awareness",
-    brief: "3-week teaser → launch → social proof push across IG, TikTok and LinkedIn.",
-    audience: "Creators & small brands",
-    tone: "confident, playful",
-    color: "#6366f1",
-    status: "active",
-    platformIds: ["instagram", "tiktok", "linkedin"],
-    startDate: new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10),
-    endDate: new Date(Date.now() + 12 * 86400000).toISOString().slice(0, 10),
-    goalPosts: 18,
-    goalReach: 120000,
-    goalEngagement: 4200,
-    archived: false,
-    meta: {},
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "demo-2",
-    name: "Always-on education series",
-    objective: "engagement",
-    brief: "Weekly how-to carousels and short-form tips to keep the feed warm.",
-    audience: "SMM managers",
-    tone: "helpful, direct",
-    color: "#22d3ee",
-    status: "draft",
-    platformIds: ["instagram", "twitter"],
-    startDate: new Date().toISOString().slice(0, 10),
-    endDate: null,
-    goalPosts: 12,
-    goalReach: 45000,
-    goalEngagement: 1800,
-    archived: false,
-    meta: {},
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "demo-3",
-    name: "Black Friday countdown",
-    objective: "conversions",
-    brief: "5-day countdown with daily offers, stories and retargeting hooks.",
-    audience: "Existing followers",
-    tone: "urgent, upbeat",
-    color: "#f472b6",
-    status: "completed",
-    platformIds: ["facebook", "instagram"],
-    startDate: new Date(Date.now() - 40 * 86400000).toISOString().slice(0, 10),
-    endDate: new Date(Date.now() - 33 * 86400000).toISOString().slice(0, 10),
-    goalPosts: 10,
-    goalReach: 210000,
-    goalEngagement: 9100,
-    archived: false,
-    meta: {},
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+// Demo campaigns live in a shared module so the public /c/:slug share route
+// can render the exact same read-only samples.
+
 
 export default function Campaigns() {
   const { campaigns: real, update, remove } = useCampaigns();
@@ -262,6 +217,14 @@ export default function Campaigns() {
                   if (demoMode) return void guardWrite("delete campaigns");
                   void remove(c.id);
                 }}
+                onShare={() => {
+                  const url = c.id.startsWith("demo-")
+                    ? `${window.location.origin}/c/${campaignSlug(c.name)}`
+                    : `${window.location.origin}/dashboard/campaigns`;
+                  void navigator.clipboard.writeText(url);
+                  toast.success("Share link copied", { description: url });
+                }}
+
               />
             ))}
           </div>

@@ -196,8 +196,10 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
     });
   }, [pathname]);
 
-  // Global ⌘K / Ctrl+K to focus search
+  // Global ⌘K / Ctrl+K to focus search (desktop only — never pop the
+  // on-screen keyboard on touch devices).
   useEffect(() => {
+    if (isMobile) return;
     const onKey = (e: globalThis.KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -207,7 +209,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [isMobile]);
 
   const openOnboardingTour = () => {
     window.dispatchEvent(new CustomEvent("smmpilot:open-onboarding-tour"));
@@ -632,7 +634,13 @@ export function DashboardSidebar() {
               <Menu className="w-5 h-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-72 flex flex-col">
+          {/* Prevent Radix auto-focusing the search input, which would pop the
+              on-screen keyboard every time the drawer opens on mobile/tablet. */}
+          <SheetContent
+            side="left"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            className="p-0 w-72 flex flex-col rounded-r-3xl border-border/60 bg-card/95 backdrop-blur-xl"
+          >
             <SidebarContent
               collapsed={false}
               setCollapsed={setCollapsed}

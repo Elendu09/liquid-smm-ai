@@ -24,6 +24,7 @@ import FAQ from "./pages/FAQ";
 import Solutions from "./pages/Solutions";
 import PublicCalendar from "./pages/PublicCalendar";
 import PublicBio from "./pages/PublicBio";
+import PublicCampaign from "./pages/PublicCampaign";
 import AcceptInvite from "./pages/AcceptInvite";
 import Privacy from "./pages/legal/Privacy";
 import Terms from "./pages/legal/Terms";
@@ -112,6 +113,8 @@ const App = () => (
               <Route path="/bio/:slug" element={<PublicBio />} />
               <Route path="/b/:slug" element={<PublicBio />} />
               <Route path="/@:slug" element={<PublicBio />} />
+              <Route path="/c/:slug" element={<PublicCampaign />} />
+
               <Route path="/invite/:token" element={<AcceptInvite />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
@@ -156,14 +159,9 @@ const App = () => (
                     </RequireAuth>
                   }
                 />
-                <Route
-                  path="campaigns"
-                  element={
-                    <RequireAuth authOnly>
-                      <Campaigns />
-                    </RequireAuth>
-                  }
-                />
+                {/* Campaigns is guest-viewable (demo data, write-guarded) */}
+                <Route path="campaigns" element={<Campaigns />} />
+
                 {/* Team page allows demo/guest view (mock members, write-guarded) */}
                 <Route path="team" element={<Team />} />
                 <Route path="support" element={<Support />} />
