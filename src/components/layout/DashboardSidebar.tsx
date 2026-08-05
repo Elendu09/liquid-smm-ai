@@ -196,8 +196,10 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
     });
   }, [pathname]);
 
-  // Global ⌘K / Ctrl+K to focus search
+  // Global ⌘K / Ctrl+K to focus search (desktop only — never pop the
+  // on-screen keyboard on touch devices).
   useEffect(() => {
+    if (isMobile) return;
     const onKey = (e: globalThis.KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -207,7 +209,7 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [isMobile]);
 
   const openOnboardingTour = () => {
     window.dispatchEvent(new CustomEvent("smmpilot:open-onboarding-tour"));
