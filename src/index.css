@@ -464,6 +464,25 @@
   }
 }
 
+/* Mobile glass finetune — softer radii, gentler borders, floating surfaces.
+   Scoped to small screens so the desktop layout is untouched. */
+@media (max-width: 767px) {
+  .rounded-lg { border-radius: 1rem; }
+  .rounded-xl { border-radius: 1.25rem; }
+  .rounded-2xl { border-radius: 1.5rem; }
+
+  [role="dialog"] {
+    border-radius: 1.75rem;
+  }
+
+  /* Larger, easier icon targets on touch */
+  button[aria-label] {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
+
+
 :root {
   --mobile-header-h: 3.5rem;
 }
