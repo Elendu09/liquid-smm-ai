@@ -99,12 +99,22 @@ function CampaignCard({
         <Button
           variant="ghost"
           size="icon"
-          className="ml-auto h-8 w-8 rounded-full text-muted-foreground hover:text-destructive"
+          className="ml-auto h-10 w-10 rounded-full text-muted-foreground hover:text-primary"
+          onClick={onShare}
+          aria-label={`Copy share link for ${campaign.name}`}
+        >
+          <Share2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 rounded-full text-muted-foreground hover:text-destructive"
           onClick={onDelete}
           aria-label={`Delete ${campaign.name}`}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
+
       </footer>
     </article>
   );
