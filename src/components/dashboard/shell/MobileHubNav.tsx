@@ -26,7 +26,7 @@ function Item({ i }: { i: (typeof left)[number] }) {
             className={cn(
               "grid h-8 w-11 place-items-center rounded-full transition-all duration-300",
               isActive
-                ? "bg-primary/20 ring-1 ring-primary/35 shadow-[0_4px_14px_-6px_hsl(var(--primary)/0.6),inset_0_1px_0_hsl(var(--foreground)/0.1)]"
+                ? "bg-primary/15 ring-1 ring-primary/25 shadow-[0_4px_14px_-6px_hsl(var(--primary)/0.6)]"
                 : "bg-transparent",
             )}
           >
@@ -48,17 +48,7 @@ export function MobileHubNav() {
       data-tour="mobile-nav"
       className="lg:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2"
     >
-      <div className="relative mx-auto max-w-screen-sm liquid-pill animate-liquid-rise">
-        {/* Slow-moving ambient halo behind the nav for the liquid look */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -inset-3 rounded-[inherit] liquid-orb"
-          style={{
-            background:
-              "radial-gradient(60% 80% at 50% 50%, hsl(var(--primary) / 0.35) 0%, hsl(var(--primary) / 0) 70%)",
-            zIndex: -1,
-          }}
-        />
+      <div className="relative mx-auto max-w-screen-sm rounded-[26px] border border-border/50 bg-card/70 backdrop-blur-2xl shadow-[0_10px_40px_-12px_hsl(220_40%_10%/0.45)]">
         {/* Soft top highlight for the glass edge */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-[26px] bg-gradient-to-r from-transparent via-foreground/15 to-transparent" />
 

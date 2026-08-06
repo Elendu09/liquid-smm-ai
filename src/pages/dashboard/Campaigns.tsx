@@ -5,6 +5,7 @@ import { DEMO_CAMPAIGNS, campaignSlug } from "@/lib/demoCampaigns";
 import { PageHeader } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { CampaignBuilderDialog } from "@/components/campaigns/CampaignBuilderDialog";
@@ -44,20 +45,10 @@ function CampaignCard({
   const pct = goal ? Math.min(100, Math.round((scheduledCount / goal) * 100)) : 0;
 
   return (
-    <article className="relative liquid-card liquid-press-lift p-4 sm:p-5">
-      {/* Ambient halo behind the card so it floats off the canvas. */}
-      <span
-        aria-hidden
-        className="liquid-halo"
-        style={{ animation: "liquid-glow-pulse 6s ease-in-out infinite" }}
-      />
-
-      <header className="relative flex items-start justify-between gap-3">
+    <article className="rounded-2xl border border-border/60 bg-card/70 p-4 backdrop-blur-sm transition-colors hover:border-primary/40">
+      <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-lg font-semibold tracking-tight">
-            {campaign.name}
-            <span className="italic text-primary">.</span>
-          </h3>
+          <h3 className="truncate text-lg font-semibold">{campaign.name}</h3>
           <p className="mt-0.5 text-xs capitalize text-muted-foreground">
             {campaign.objective}
             {campaign.startDate ? ` · from ${campaign.startDate}` : ""}
@@ -70,14 +61,14 @@ function CampaignCard({
       </header>
 
       {campaign.brief && (
-        <p className="relative mt-2 line-clamp-2 text-sm text-muted-foreground">{campaign.brief}</p>
+        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{campaign.brief}</p>
       )}
 
-      <div className="relative mt-3 flex flex-wrap items-center gap-1.5">
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
         {campaign.platformIds.map((p) => (
           <span
             key={p}
-            className="flex items-center gap-1 rounded-full border border-border/60 bg-card/65 px-2 py-0.5 text-xs capitalize text-muted-foreground backdrop-blur-sm transition-colors hover:border-primary/40 hover:text-foreground"
+            className="flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 text-xs capitalize text-muted-foreground"
           >
             <PlatformIcon platform={p} className="h-3 w-3" />
             {p}
@@ -85,22 +76,17 @@ function CampaignCard({
         ))}
       </div>
 
-      <div className="relative mt-4 space-y-1.5">
+      <div className="mt-4 space-y-1.5">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>Posts planned</span>
           <span>
             {scheduledCount} / {goal || "—"}
           </span>
         </div>
-        <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted/80">
-          <div
-            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary via-brand-cyan to-brand-purple transition-[width] duration-700 ease-out"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
+        <Progress value={pct} className="h-1.5" />
       </div>
 
-      <footer className="relative mt-4 flex items-center gap-2">
+      <footer className="mt-4 flex items-center gap-2">
         <Select value={campaign.status} onValueChange={(v) => onStatus(v as Campaign["status"])}>
           <SelectTrigger className="h-8 w-[130px] text-xs">
             <SelectValue />
@@ -115,7 +101,7 @@ function CampaignCard({
         <Button
           variant="ghost"
           size="icon"
-          className="ml-auto h-10 w-10 rounded-full text-muted-foreground transition-all duration-200 hover:text-primary active:scale-90"
+          className="ml-auto h-10 w-10 rounded-full text-muted-foreground hover:text-primary"
           onClick={onShare}
           aria-label={`Copy share link for ${campaign.name}`}
         >
@@ -124,7 +110,7 @@ function CampaignCard({
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-full text-muted-foreground transition-all duration-200 hover:text-destructive active:scale-90"
+          className="h-10 w-10 rounded-full text-muted-foreground hover:text-destructive"
           onClick={onDelete}
           aria-label={`Delete ${campaign.name}`}
         >
@@ -185,45 +171,22 @@ export default function Campaigns() {
         </p>
       )}
 
-      <div className="relative mt-4 grid gap-3 sm:grid-cols-3 liquid-stagger">
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {[
-          {
-            label: "Campaigns",
-            value: stats.total,
-            icon: Target,
-            accentBg: "bg-primary/12 text-primary",
-            accentHalo:
-              "radial-gradient(60% 80% at 50% 30%, hsl(217 91% 60% / 0.22) 0%, hsl(217 91% 60% / 0) 70%)",
-          },
-          {
-            label: "Active now",
-            value: stats.active,
-            icon: TrendingUp,
-            accentBg: "bg-emerald-500/12 text-emerald-500",
-            accentHalo:
-              "radial-gradient(60% 80% at 50% 30%, hsl(142 70% 50% / 0.22) 0%, hsl(142 70% 50% / 0) 70%)",
-          },
-          {
-            label: "Posts planned",
-            value: stats.planned,
-            icon: CalendarRange,
-            accentBg: "bg-cyan-500/12 text-cyan-500",
-            accentHalo:
-              "radial-gradient(60% 80% at 50% 30%, hsl(190 90% 50% / 0.22) 0%, hsl(190 90% 50% / 0) 70%)",
-          },
+          { label: "Campaigns", value: stats.total, icon: Target },
+          { label: "Active now", value: stats.active, icon: TrendingUp },
+          { label: "Posts planned", value: stats.planned, icon: CalendarRange },
         ].map((s) => (
-          <div key={s.label} className="relative liquid-card liquid-press p-3.5 sm:p-4">
-            <span aria-hidden className="liquid-halo" style={{ background: s.accentHalo }} />
-            <div className="relative flex items-center gap-3">
-              <span
-                className={`grid h-9 w-9 place-items-center rounded-lg ring-1 ring-inset ring-white/10 ${s.accentBg}`}
-              >
-                <s.icon className="h-4 w-4" />
-              </span>
-              <div>
-                <p className="text-2xl font-semibold leading-none tracking-tight">{s.value}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{s.label}</p>
-              </div>
+          <div
+            key={s.label}
+            className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 p-3.5"
+          >
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
+              <s.icon className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-xl font-semibold leading-none">{s.value}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{s.label}</p>
             </div>
           </div>
         ))}
@@ -240,7 +203,7 @@ export default function Campaigns() {
           />
 
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 liquid-stagger">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {campaigns.map((c) => (
               <CampaignCard
                 key={c.id}

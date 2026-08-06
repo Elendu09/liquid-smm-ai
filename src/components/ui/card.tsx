@@ -2,27 +2,9 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-/**
- * Liquid Glass Card — the shared surface used by the dashboard, library,
- * campaigns, analytics and the public marketing pages.
- *
- * Default rendering is a floating glass surface with a soft specular
- * highlight, an ambient halo, and a subtle 35px lift on hover. Add the
- * `liquid-flat` or `liquid-elevate` class to vary the depth.
- */
-
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(
-        "liquid-card liquid-press-lift text-card-foreground",
-        className,
-      )}
-      {...props}
-    />
-  ),
-);
+const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)} {...props} />
+));
 Card.displayName = "Card";
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(

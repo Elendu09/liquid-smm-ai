@@ -23,7 +23,7 @@ export function SectionCard({
   return (
     <Tag
       className={cn(
-        "relative liquid-card liquid-press-lift",
+        "rounded-2xl border border-border/60 bg-card dark:bg-card/70 dark:backdrop-blur-sm shadow-[var(--shadow-premium)]",
         className,
       )}
     >
