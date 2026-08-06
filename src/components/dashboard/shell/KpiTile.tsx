@@ -36,8 +36,9 @@ export function KpiTile({
             <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" aria-hidden="true" />
           </div>
         )}
+        {visual}
         {delta && (
-          <div
+
             className={cn(
               "flex items-center gap-0.5 text-[10px] sm:text-xs font-semibold",
               isPositive ? "text-brand-green" : "text-destructive",
