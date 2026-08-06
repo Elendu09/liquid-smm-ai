@@ -829,6 +829,11 @@ export const ContentCalendar = () => {
                               {p.approvalStatus && p.approvalStatus !== "draft" && (
                                 <ApprovalBadge status={p.approvalStatus} />
                               )}
+                              {campaignName(p.campaignId) && (
+                                <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                                  {campaignName(p.campaignId)}
+                                </span>
+                              )}
                               {p.platformIds.slice(0, 3).map((id) => (
                                 <span key={id} className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded-full">
                                   <PlatformIcon platform={id} size="xs" />
@@ -888,6 +893,12 @@ export const ContentCalendar = () => {
                     {p.approvalStatus && p.approvalStatus !== "draft" && (
                       <ApprovalBadge status={p.approvalStatus} />
                     )}
+                    {campaignName(p.campaignId) && (
+                      <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                        {campaignName(p.campaignId)}
+                      </span>
+                    )}
+                    
                   </div>
                   <div className="flex items-center gap-1 flex-wrap">
                     {p.platformIds.slice(0, 4).map((id) => (
