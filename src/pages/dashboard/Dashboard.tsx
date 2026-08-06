@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   PageHeader,
   KpiTile,
+  HeaderActionRow,
   SectionCard,
   EmptyState,
 } from "@/components/dashboard/shell";
@@ -29,6 +30,8 @@ import { PWAInstallBanner } from "@/components/dashboard/PWAInstallBanner";
 import { AiCommandBar } from "@/components/dashboard/AiCommandBar";
 import { HomeSummaryCard } from "@/components/dashboard/HomeSummaryCard";
 import { TemplatesSection } from "@/components/dashboard/TemplatesSection";
+import { Sparkline } from "@/components/shared/Sparkline";
+import { useFollowerSpark } from "@/hooks/useFollowerSpark";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useOnboardingContext } from "@/hooks/useOnboardingContext";
 
@@ -93,6 +96,7 @@ export default function Dashboard() {
   const { greeting, laneOrder } = useOnboardingContext();
   const openTour = () => window.dispatchEvent(new Event("smmpilot:open-onboarding-tour"));
   const { rows: runs } = useRunHistory();
+  const followerSpark = useFollowerSpark();
   const { posts } = useScheduledPosts();
   const laneOrderOf = (k: "upcoming" | "health" | "recent") => laneOrder.indexOf(k);
 
@@ -148,6 +152,7 @@ export default function Dashboard() {
             label="Total followers"
             value={totalFollowers.toLocaleString()}
             icon={TrendingUp}
+            visual={<Sparkline points={followerSpark} />}
             className="snap-start shrink-0 w-[34vw] sm:w-auto py-2 sm:py-4"
           />
           <KpiTile
