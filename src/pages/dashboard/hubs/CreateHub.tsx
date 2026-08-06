@@ -1,6 +1,6 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
-import { Sparkles, Hash, PenLine, Mic2 } from "lucide-react";
-import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
+import { Sparkles, Hash, PenLine, Mic2, LayoutTemplate, Plus } from "lucide-react";
+import { PageHeader, HubTabs, HeaderActionRow, openOnboardingTour, type HubTab } from "@/components/dashboard/shell";
 import UnifiedStudio from "../views/UnifiedStudio";
 import CaptionsCreateView from "../views/CaptionsCreateView";
 import HashtagsCreateView from "../views/HashtagsCreateView";
@@ -21,7 +21,17 @@ function CreateLayout() {
           title="Create"
           description="Draft, edit, and preview posts before they hit the queue."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Create" }]}
+          actions={
+            <HeaderActionRow
+              actions={[
+                { label: "New post", icon: Plus, to: "/dashboard/create/studio", primary: true },
+                { label: "Take the tour", icon: Sparkles, onClick: openOnboardingTour },
+                { label: "Templates", icon: LayoutTemplate, to: "/dashboard/library/presets" },
+              ]}
+            />
+          }
         />
+
         <HubTabs tabs={tabs} />
       </div>
       <Outlet />
