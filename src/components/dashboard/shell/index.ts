@@ -6,6 +6,9 @@ export { LoadingState } from "./LoadingState";
 export { KpiTile } from "./KpiTile";
 export { HubTabs } from "./HubTabs";
 export type { HubTab } from "./HubTabs";
+export { HeaderActionRow, openOnboardingTour } from "./HeaderActionRow";
+export type { HeaderAction } from "./HeaderActionRow";
+
 export { ViewToggle, useViewMode, VIEW_ICONS } from "./ViewToggle";
 export type { ViewMode } from "./ViewToggle";
 export { KanbanBoard } from "./KanbanBoard";
