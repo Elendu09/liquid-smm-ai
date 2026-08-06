@@ -32,6 +32,7 @@ import { ApprovalBadge } from "@/components/publish/ApprovalControls";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
 import { useBestTimes } from "@/hooks/useBestTimes";
+import { useCampaigns } from "@/hooks/useCampaigns";
 import { guardWrite } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -112,6 +113,8 @@ export const ContentCalendar = () => {
   const [columnsLayout, setColumnsLayout] = useState<"kanban" | "list">("kanban");
   const [search, setSearch] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string[]>([]);
+  const [campaignFilter, setCampaignFilter] = useState<string | null>(null);
+
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
@@ -128,6 +131,7 @@ export const ContentCalendar = () => {
   const navigate = useNavigate();
 
   const bestTimes = useBestTimes();
+  const { campaigns } = useCampaigns();
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -138,13 +142,21 @@ export const ContentCalendar = () => {
     return Array.from(s);
   }, [posts]);
 
+  const campaignTags = useMemo(
+    () => campaigns.filter((c) => posts.some((p) => p.campaignId === c.id)),
+    [campaigns, posts],
+  );
+  const campaignName = (id?: string) => campaigns.find((c) => c.id === id)?.name;
+
   const filtered = useMemo(() => {
     return posts.filter((p) => {
       if (platformFilter.length && !p.platformIds.some((id) => platformFilter.includes(id))) return false;
+      if (campaignFilter && p.campaignId !== campaignFilter) return false;
       if (search && !p.caption.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [posts, platformFilter, search]);
+  }, [posts, platformFilter, campaignFilter, search]);
+
 
   const postsByDay = useMemo(() => {
     const map = new Map<string, ScheduledPost[]>();
@@ -545,15 +557,42 @@ export const ContentCalendar = () => {
         </Button>
       </div>
 
-      {/* Coming-next roadmap chips */}
-      <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-        <span className="uppercase tracking-widest text-muted-foreground/70 mr-1">Coming next</span>
-        {["Realtime unread", "Live follower spark", "Campaign tags"].map((t) => (
-          <span key={t} className="inline-flex items-center rounded-full border border-dashed border-primary/40 text-primary/80 px-2 py-0.5 bg-primary/[0.04]">
-            {t}
-          </span>
-        ))}
-      </div>
+      {/* Campaign tags — filter the calendar by campaign */}
+      {campaignTags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+          <span className="mr-1 uppercase tracking-widest text-[10px] text-muted-foreground/70">Campaigns</span>
+          <button
+            type="button"
+            onClick={() => setCampaignFilter(null)}
+            aria-pressed={campaignFilter === null}
+            className={cn(
+              "rounded-full border px-2.5 py-0.5 font-medium transition-colors",
+              campaignFilter === null
+                ? "border-primary/50 bg-primary/10 text-primary"
+                : "border-border/60 text-muted-foreground hover:text-foreground",
+            )}
+          >
+            All
+          </button>
+          {campaignTags.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setCampaignFilter(campaignFilter === c.id ? null : c.id)}
+              aria-pressed={campaignFilter === c.id}
+              className={cn(
+                "rounded-full border px-2.5 py-0.5 font-medium transition-colors",
+                campaignFilter === c.id
+                  ? "border-primary/50 bg-primary/10 text-primary"
+                  : "border-border/60 text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+
 
       {/* Filters */}
       <div className={cn("flex flex-wrap items-center gap-2", view === "autolists" && "hidden")}>
@@ -790,6 +829,11 @@ export const ContentCalendar = () => {
                               {p.approvalStatus && p.approvalStatus !== "draft" && (
                                 <ApprovalBadge status={p.approvalStatus} />
                               )}
+                              {campaignName(p.campaignId) && (
+                                <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                                  {campaignName(p.campaignId)}
+                                </span>
+                              )}
                               {p.platformIds.slice(0, 3).map((id) => (
                                 <span key={id} className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded-full">
                                   <PlatformIcon platform={id} size="xs" />
@@ -849,6 +893,12 @@ export const ContentCalendar = () => {
                     {p.approvalStatus && p.approvalStatus !== "draft" && (
                       <ApprovalBadge status={p.approvalStatus} />
                     )}
+                    {campaignName(p.campaignId) && (
+                      <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                        {campaignName(p.campaignId)}
+                      </span>
+                    )}
+                    
                   </div>
                   <div className="flex items-center gap-1 flex-wrap">
                     {p.platformIds.slice(0, 4).map((id) => (

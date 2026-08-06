@@ -31,7 +31,9 @@ export interface ScheduledPost {
   rejectionReason?: string;
   recycleRuleId?: string;
   categoryId?: string;
+  campaignId?: string;
 }
+
 
 const STORAGE_KEY = "smmpilot:scheduled-posts";
 
@@ -97,6 +99,7 @@ type Row = {
   approval_status: ApprovalStatus | null; approved_by: string | null;
   approved_at: string | null; rejection_reason: string | null;
   recycle_rule_id: string | null; category_id: string | null;
+  campaign_id: string | null;
 };
 
 const rowToPost = (r: Row): ScheduledPost => ({
@@ -121,6 +124,7 @@ const rowToPost = (r: Row): ScheduledPost => ({
   rejectionReason: r.rejection_reason ?? undefined,
   recycleRuleId: r.recycle_rule_id ?? undefined,
   categoryId: r.category_id ?? undefined,
+  campaignId: r.campaign_id ?? undefined,
 });
 
 function postToRow(p: Partial<ScheduledPost>): ScheduledPostUpdate {
@@ -144,6 +148,7 @@ function postToRow(p: Partial<ScheduledPost>): ScheduledPostUpdate {
   if (p.rejectionReason !== undefined) row.rejection_reason = p.rejectionReason ?? null;
   if (p.recycleRuleId !== undefined) row.recycle_rule_id = p.recycleRuleId ?? null;
   if (p.categoryId !== undefined) row.category_id = p.categoryId ?? null;
+  if (p.campaignId !== undefined) row.campaign_id = p.campaignId ?? null;
   return row;
 }
 

@@ -171,26 +171,29 @@ export default function Campaigns() {
         </p>
       )}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        {[
-          { label: "Campaigns", value: stats.total, icon: Target },
-          { label: "Active now", value: stats.active, icon: TrendingUp },
-          { label: "Posts planned", value: stats.planned, icon: CalendarRange },
-        ].map((s) => (
-          <div
-            key={s.label}
-            className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 p-3.5"
-          >
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
-              <s.icon className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="text-xl font-semibold leading-none">{s.value}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{s.label}</p>
+      <div className="mt-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-1 sm:grid sm:grid-cols-3 sm:overflow-visible">
+          {[
+            { label: "Campaigns", value: stats.total, icon: Target },
+            { label: "Active now", value: stats.active, icon: TrendingUp },
+            { label: "Posts planned", value: stats.planned, icon: CalendarRange },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="snap-start shrink-0 min-w-[62%] xs:min-w-[48%] sm:min-w-0 flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 p-3.5 backdrop-blur-sm"
+            >
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                <s.icon className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xl font-semibold leading-none">{s.value}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{s.label}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
+
 
       <div className="mt-6">
         {campaigns.length === 0 ? (

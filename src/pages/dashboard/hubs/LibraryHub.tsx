@@ -1,6 +1,7 @@
 import { Outlet, Route, Routes, Navigate, Link } from "react-router-dom";
-import { FolderOpen, Palette, FileText, Image as ImageIcon } from "lucide-react";
-import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
+import { FolderOpen, Palette, FileText, Image as ImageIcon, Sparkles } from "lucide-react";
+import { PageHeader, HubTabs, HeaderActionRow, openOnboardingTour, type HubTab } from "@/components/dashboard/shell";
+
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import CaptionsBoard from "../views/CaptionsBoard";
 import AssetsBoard from "../views/AssetsBoard";
@@ -52,9 +53,19 @@ function LibraryLayout() {
         <PageHeader
           title="Library"
           description="Reusable assets, captions, and platform presets."
+          actions={
+            <HeaderActionRow
+              actions={[
+                { label: "Upload asset", icon: FolderOpen, to: "/dashboard/library/assets", primary: true },
+                { label: "Take the tour", icon: Sparkles, onClick: openOnboardingTour },
+                { label: "Templates", icon: Palette, to: "/dashboard/library/presets" },
+              ]}
+            />
+          }
         />
         <LibraryStats />
         <HubTabs tabs={tabs} />
+
       </div>
       <Outlet />
     </div>

@@ -75,38 +75,47 @@ export function InboxTriageBar({
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pt-4 space-y-3">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-        {tiles.map(({ icon: Icon, label, value, tone }) => (
-          <div key={label} className="rounded-xl border border-border/60 bg-card/40 backdrop-blur px-3 py-2">
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-              <Icon className="h-3 w-3" />
-              {label}
+      <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-1 sm:grid sm:grid-cols-3 lg:grid-cols-5 sm:overflow-visible">
+          {tiles.map(({ icon: Icon, label, value, tone }) => (
+            <div
+              key={label}
+              className="snap-start shrink-0 min-w-[38%] sm:min-w-0 rounded-xl border border-border/60 bg-card/40 backdrop-blur px-3 py-2"
+            >
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                <Icon className="h-3 w-3" />
+                {label}
+              </div>
+              <p className={cn("text-lg font-semibold leading-tight", tone)}>{value}</p>
             </div>
-            <p className={cn("text-lg font-semibold leading-tight", tone)}>{value}</p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex gap-1 overflow-x-auto" role="group" aria-label="Filter by sentiment">
-          {SENTIMENTS.map((s) => (
-            <button key={s} type="button" onClick={() => onSentiment(s)} aria-pressed={sentiment === s} className={chip(sentiment === s)}>
-              {s === "all" ? "All sentiment" : s}
-            </button>
-          ))}
+
+      <div className="flex items-center gap-2">
+        <div className="-mx-4 flex flex-1 min-w-0 gap-1 overflow-x-auto scrollbar-none px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+          <div className="flex gap-1" role="group" aria-label="Filter by sentiment">
+            {SENTIMENTS.map((s) => (
+              <button key={s} type="button" onClick={() => onSentiment(s)} aria-pressed={sentiment === s} className={chip(sentiment === s)}>
+                {s === "all" ? "All sentiment" : s}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-1" role="group" aria-label="Filter by intent">
+            {INTENTS.map((i) => (
+              <button key={i} type="button" onClick={() => onIntent(i)} aria-pressed={intent === i} className={chip(intent === i)}>
+                {i === "all" ? "All intents" : i}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-1 overflow-x-auto" role="group" aria-label="Filter by intent">
-          {INTENTS.map((i) => (
-            <button key={i} type="button" onClick={() => onIntent(i)} aria-pressed={intent === i} className={chip(intent === i)}>
-              {i === "all" ? "All intents" : i}
-            </button>
-          ))}
-        </div>
-        <Button variant="outline" size="sm" className="h-8 gap-1.5 ml-auto" onClick={() => setRepliesOpen(true)}>
+        <Button variant="outline" size="sm" className="h-8 shrink-0 gap-1.5" onClick={() => setRepliesOpen(true)}>
           <MessageSquareQuote className="h-3.5 w-3.5" />
-          <span className="text-xs">Saved replies</span>
+          <span className="hidden text-xs sm:inline">Saved replies</span>
         </Button>
       </div>
+
 
       <SavedRepliesDialog open={repliesOpen} onOpenChange={setRepliesOpen} />
     </div>

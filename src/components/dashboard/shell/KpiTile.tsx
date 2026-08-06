@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { LucideIcon, ArrowDown, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +9,8 @@ interface KpiTileProps {
   isPositive?: boolean;
   icon?: LucideIcon;
   className?: string;
+  /** Optional visual (e.g. a sparkline) rendered in the tile's top-right slot. */
+  visual?: ReactNode;
 }
 
 export function KpiTile({
@@ -17,7 +20,9 @@ export function KpiTile({
   isPositive = true,
   icon: Icon,
   className,
+  visual,
 }: KpiTileProps) {
+
   return (
     <div
       className={cn(
@@ -31,9 +36,11 @@ export function KpiTile({
             <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" aria-hidden="true" />
           </div>
         )}
+        {visual}
         {delta && (
           <div
             className={cn(
+
               "flex items-center gap-0.5 text-[10px] sm:text-xs font-semibold",
               isPositive ? "text-brand-green" : "text-destructive",
             )}

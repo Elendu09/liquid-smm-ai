@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   PageHeader,
   KpiTile,
+  HeaderActionRow,
   SectionCard,
   EmptyState,
 } from "@/components/dashboard/shell";
@@ -29,6 +30,8 @@ import { PWAInstallBanner } from "@/components/dashboard/PWAInstallBanner";
 import { AiCommandBar } from "@/components/dashboard/AiCommandBar";
 import { HomeSummaryCard } from "@/components/dashboard/HomeSummaryCard";
 import { TemplatesSection } from "@/components/dashboard/TemplatesSection";
+import { Sparkline } from "@/components/shared/Sparkline";
+import { useFollowerSpark } from "@/hooks/useFollowerSpark";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useOnboardingContext } from "@/hooks/useOnboardingContext";
 
@@ -93,6 +96,7 @@ export default function Dashboard() {
   const { greeting, laneOrder } = useOnboardingContext();
   const openTour = () => window.dispatchEvent(new Event("smmpilot:open-onboarding-tour"));
   const { rows: runs } = useRunHistory();
+  const followerSpark = useFollowerSpark();
   const { posts } = useScheduledPosts();
   const laneOrderOf = (k: "upcoming" | "health" | "recent") => laneOrder.indexOf(k);
 
@@ -120,38 +124,15 @@ export default function Dashboard() {
         breadcrumbs={[{ label: "Dashboard" }]}
 
         actions={
-          <div className="grid grid-cols-3 gap-2 w-full md:w-auto md:flex md:items-center">
-            {/* Unified glass button style: translucent surface, gradient sheen on top edge, primary hover */}
-            <Button
-              asChild
-              size="sm"
-              className="w-full md:w-auto text-[11px] sm:text-xs md:text-sm px-2 sm:px-3 group relative overflow-hidden rounded-lg border border-primary/40 bg-gradient-to-b from-primary/90 to-primary text-primary-foreground shadow-[0_4px_16px_-6px_hsl(var(--primary)/0.6)] hover:shadow-[0_8px_22px_-6px_hsl(var(--primary)/0.75)] hover:from-primary hover:to-primary/90 transition-all before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary-foreground/60 before:to-transparent"
-            >
-              <Link to="/dashboard/create">
-                <Zap className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" /> Quick action
-              </Link>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={openTour}
-              className="w-full md:w-auto text-[11px] sm:text-xs md:text-sm px-2 sm:px-3 group relative overflow-hidden rounded-lg border border-border/60 bg-card/60 text-foreground backdrop-blur-md hover:bg-card/80 hover:border-primary/50 hover:text-foreground transition-all before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-foreground/25 before:to-transparent"
-            >
-              <Sparkles className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" /> Take the tour
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="w-full md:w-auto text-[11px] sm:text-xs md:text-sm px-2 sm:px-3 group relative overflow-hidden rounded-lg border border-border/60 bg-card/60 text-foreground backdrop-blur-md hover:bg-card/80 hover:border-primary/50 hover:text-foreground transition-all before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-foreground/25 before:to-transparent"
-            >
-              <Link to="/dashboard/activity/runs">
-                <Clock className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" /> Activity
-              </Link>
-            </Button>
-            
-          </div>
+          <HeaderActionRow
+            actions={[
+              { label: "Quick action", icon: Zap, to: "/dashboard/create", primary: true },
+              { label: "Take the tour", icon: Sparkles, onClick: openTour },
+              { label: "Activity", icon: Clock, to: "/dashboard/activity/runs" },
+            ]}
+          />
         }
+
       />
 
       <HomeSummaryCard />
@@ -171,6 +152,7 @@ export default function Dashboard() {
             label="Total followers"
             value={totalFollowers.toLocaleString()}
             icon={TrendingUp}
+            visual={<Sparkline points={followerSpark} />}
             className="snap-start shrink-0 w-[34vw] sm:w-auto py-2 sm:py-4"
           />
           <KpiTile
