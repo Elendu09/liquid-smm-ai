@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/landing/Hero";
@@ -11,8 +13,17 @@ import { CTASection } from "@/components/landing/CTASection";
 import { PillarsSection } from "@/components/landing/PillarsSection";
 import { SolutionsGrid } from "@/components/landing/SolutionsGrid";
 import { AnimatedStatsBanner } from "@/components/landing/AnimatedStatsBanner";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { user, isGuest, loading } = useAuthUser();
+  // Signed-in users land here after OAuth / email-confirmation redirects to the
+  // origin. Send them to their dashboard instead of the marketing homepage.
+  useEffect(() => {
+    if (!loading && user && !isGuest) navigate("/dashboard", { replace: true });
+  }, [user, isGuest, loading, navigate]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

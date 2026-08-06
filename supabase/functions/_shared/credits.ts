@@ -21,6 +21,7 @@ export const RATE_CARD = {
   "create.translate": 1,
   "create.brief": 3,
   "create.reply": 1,
+  "create.rewrite": 2,
   "engage.reply": 1,
   "home.summary": 1,
   "notif.summary": 1,

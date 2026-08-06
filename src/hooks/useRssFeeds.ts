@@ -271,12 +271,13 @@ export function useRssFeeds() {
   }, [feeds, load]);
 
   const importItem = useCallback(
-    async (item: RssItem, opts?: { platforms?: string[]; scheduledAt?: string | null }) => {
+    async (item: RssItem, opts?: { platforms?: string[]; scheduledAt?: string | null; caption?: string }) => {
       if (!guardWrite("import RSS item")) return;
       if (!user) return toast.error("Sign in first");
       const feed = feeds.find((f) => f.id === item.feed_id);
       const platforms = opts?.platforms ?? feed?.target_platforms ?? [];
       const caption =
+        opts?.caption ??
         (feed?.caption_template ?? "{title}\n\n{link}")
           .split("{title}").join(item.title ?? "")
           .split("{link}").join(item.link ?? "")

@@ -52,6 +52,9 @@ import { platforms as PLATFORMS } from "@/config/platforms";
 import { useGuest } from "@/hooks/useGuest";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { cleanRssText } from "@/lib/rssUtils";
+import { aiCreate } from "@/hooks/useAiCreate";
+import { formatCost } from "@/config/aiCosts";
 
 const DEMO_FEEDS = [
   {
@@ -159,6 +162,9 @@ export default function RssFeedsPage() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [editing, setEditing] = useState<RssFeed | null>(null);
   const [previewItem, setPreviewItem] = useState<RssItem | null>(null);
+  const [rewriteItem, setRewriteItem] = useState<RssItem | null>(null);
+  const [rewritten, setRewritten] = useState("");
+  const [rewriting, setRewriting] = useState(false);
   const [search, setSearch] = useState("");
   const [itemFilter, setItemFilter] = useState<ItemFilter>("all");
 
@@ -271,6 +277,30 @@ export default function RssFeedsPage() {
         q ? (it.title ?? "").toLowerCase().includes(q) || (it.summary ?? "").toLowerCase().includes(q) : true,
       );
   }, [items, itemFilter, search]);
+
+  const runRewrite = async (item: RssItem) => {
+    const feed = feeds.find((f) => f.id === item.feed_id);
+    setRewriteItem(item);
+    setRewritten("");
+    setRewriting(true);
+    try {
+      const res = await aiCreate.rewrite({
+        text: `${item.title ?? ""}\n\n${cleanRssText(item.summary, 900)}`,
+        platform: feed?.target_platforms?.[0],
+        tone: "engaging",
+      });
+      if (res) setRewritten(res.rewritten);
+    } finally {
+      setRewriting(false);
+    }
+  };
+
+  const saveRewritten = async () => {
+    if (!rewriteItem || !rewritten.trim()) return;
+    await importItem(rewriteItem, { caption: rewritten.trim() });
+    setRewriteItem(null);
+    setRewritten("");
+  };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -598,7 +628,7 @@ export default function RssFeedsPage() {
                     )}
                   </div>
                   {it.summary && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">{it.summary}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{cleanRssText(it.summary)}</p>
                   )}
                   <div className="text-[10px] text-muted-foreground flex items-center gap-2">
                     <Clock className="h-3 w-3" />
@@ -609,6 +639,16 @@ export default function RssFeedsPage() {
                   <div className="flex gap-1 pt-2">
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => setPreviewItem(it)}>
                       <Eye className="h-3.5 w-3.5 mr-1" /> Preview
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-primary hover:text-primary"
+                      onClick={() => void runRewrite(it)}
+                      disabled={rewriting && rewriteItem?.id === it.id}
+                      title={`AI rewrite — ${formatCost("create.rewrite")}`}
+                    >
+                      <Sparkles className={`h-3.5 w-3.5 ${rewriting && rewriteItem?.id === it.id ? "animate-pulse" : ""}`} />
                     </Button>
                     {!it.imported && (
                       <Button size="sm" className="flex-1" onClick={() => importItem(it)}>
@@ -989,7 +1029,7 @@ export default function RssFeedsPage() {
               className="w-full rounded-lg aspect-video object-cover bg-muted"
             />
           )}
-          <p className="text-sm text-muted-foreground whitespace-pre-line">{previewItem?.summary}</p>
+          <p className="text-sm text-muted-foreground whitespace-pre-line">{cleanRssText(previewItem?.summary ?? "", 2000)}</p>
           {previewItem?.link && (
             <a
               href={previewItem.link}
@@ -1005,6 +1045,52 @@ export default function RssFeedsPage() {
             {previewItem && !previewItem.imported && (
               <Button onClick={() => { importItem(previewItem); setPreviewItem(null); }}>
                 <Send className="h-4 w-4 mr-2" /> Save as draft
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI rewrite dialog */}
+      <Dialog open={!!rewriteItem} onOpenChange={(v) => { if (!v) setRewriteItem(null); setRewritten(""); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" /> AI rewrite
+            </DialogTitle>
+            <DialogDescription className="line-clamp-2">{rewriteItem?.title}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="rounded-xl border border-border/60 bg-background/40 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Original</div>
+              <p className="text-xs text-muted-foreground line-clamp-3">
+                {rewriteItem ? cleanRssText(rewriteItem.summary ?? rewriteItem.title, 200) : ""}
+              </p>
+            </div>
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-primary mb-2">
+                Rewritten — {formatCost("create.rewrite")}
+              </div>
+              {rewriting ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                  <Sparkles className="h-4 w-4 animate-pulse" /> Rewriting…
+                </div>
+              ) : rewritten ? (
+                <p className="text-sm whitespace-pre-line">{rewritten}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Rewrite this item into a social-ready post. Credits are only charged on success.</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRewriteItem(null)}>Cancel</Button>
+            {rewritten ? (
+              <Button onClick={() => void saveRewritten()}>
+                <Send className="h-4 w-4 mr-1" /> Save as draft
+              </Button>
+            ) : (
+              <Button onClick={() => rewriteItem && void runRewrite(rewriteItem)} disabled={rewriting}>
+                <Sparkles className="h-4 w-4 mr-1" /> Rewrite
               </Button>
             )}
           </DialogFooter>

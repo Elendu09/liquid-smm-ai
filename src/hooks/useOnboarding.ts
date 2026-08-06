@@ -17,11 +17,19 @@ export interface OnboardingProfile {
   autonomy: Autonomy;
 }
 
+export interface WorkspaceBlueprint {
+  focus: string;
+  suggestedAutomations: string[];
+  starterHashtags: string[];
+  contentMix: { pillar: string; share: number }[];
+}
+
 export interface OnboardingState {
   completed: boolean;
   completedAt?: string;
   seen?: boolean;
   profile: OnboardingProfile;
+  meta?: { blueprint?: WorkspaceBlueprint };
 }
 
 const KEY = "smmpilot:onboarding";
@@ -53,6 +61,7 @@ function readLocal(): OnboardingState {
       completedAt: parsed.completedAt,
       seen: !!parsed.seen,
       profile: { ...defaultProfile, ...(parsed.profile ?? {}) },
+      meta: parsed.meta,
     };
   } catch {
     return defaultState;
@@ -126,6 +135,7 @@ export function useOnboarding() {
         completedAt: remote?.completedAt ?? local.completedAt,
         seen: !!(remote?.seen ?? local.seen),
         profile: mergedProfile,
+        meta: (remote?.meta as OnboardingState["meta"]) ?? local.meta,
       };
 
       setState(merged);
@@ -154,10 +164,22 @@ export function useOnboarding() {
 
   return {
     state,
+    blueprint: state.meta?.blueprint,
     updateProfile: (patch: Partial<OnboardingProfile>) =>
       persist({ ...state, profile: { ...state.profile, ...patch } }),
-    complete: () =>
-      persist({ ...state, completed: true, seen: true, completedAt: new Date().toISOString() }),
+    complete: async () => {
+      const next = { ...state, completed: true, seen: true, completedAt: new Date().toISOString() };
+      await persist(next);
+      // Turn the onboarding answers into real workspace setup (brand, content
+      // categories, brand voice, AI blueprint). Fire-and-forget; idempotent.
+      if (user) {
+        try {
+          await supabase.functions.invoke("onboarding-setup", {
+            body: { profile: next.profile },
+          });
+        } catch { /* non-fatal */ }
+      }
+    },
     markSeen: () => persist({ ...state, seen: true }),
     reset: () => persist({ completed: false, seen: false, profile: defaultProfile }),
 

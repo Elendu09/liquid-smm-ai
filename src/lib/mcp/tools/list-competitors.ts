@@ -6,7 +6,7 @@ export default defineTool({
   name: "list_competitors",
   title: "List tracked competitors",
   description:
-    "List the signed-in user's tracked competitors across all platforms (Instagram, TikTok, YouTube, X, LinkedIn, GitHub and more). Returns handle, platform, display name, status and follower count.",
+    "List the signed-in user's tracked competitors across all platforms (Instagram, TikTok, YouTube, X, LinkedIn, Threads, Reddit, Bluesky and more). Returns handle, platform, display name, status and follower count.",
   inputSchema: {
     platform: z.string().optional().describe("Optional platform filter (e.g. instagram, github)."),
   },

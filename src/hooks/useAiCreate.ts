@@ -71,4 +71,6 @@ export const aiCreate = {
     post<{ suggestions: string[] }>({ op: "reply", ...p }),
   brief: (p: { topic: string; goal?: string; audience?: string; platform?: string; tone?: string }) =>
     post<AiBrief>({ op: "brief", ...p }),
+  rewrite: (p: { text: string; platform?: string; tone?: string }) =>
+    post<{ rewritten: string; title: string }>({ op: "rewrite", ...p }),
 };

@@ -26,6 +26,7 @@ import {
 } from "@/components/dashboard/shell";
 import { OnboardingChecklistCard } from "@/components/dashboard/OnboardingChecklistCard";
 import { OnboardingScoreCard } from "@/components/dashboard/OnboardingScoreCard";
+import { PersonalizedSetupPanel } from "@/components/dashboard/PersonalizedSetupPanel";
 import { PWAInstallBanner } from "@/components/dashboard/PWAInstallBanner";
 import { AiCommandBar } from "@/components/dashboard/AiCommandBar";
 import { HomeSummaryCard } from "@/components/dashboard/HomeSummaryCard";
@@ -173,6 +174,8 @@ export default function Dashboard() {
       <PWAInstallBanner />
 
       <OnboardingScoreCard />
+
+      <PersonalizedSetupPanel />
 
       {!onboarding.completed && <OnboardingChecklistCard onReopen={openTour} />}
 

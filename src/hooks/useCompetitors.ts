@@ -5,6 +5,14 @@ export interface CompetitorSnapshot {
   followers: number;
 }
 
+/** Live stats pulled from a public per-network API (when the network has one). */
+export interface CompetitorLiveStats {
+  followers: number;
+  posts: number;
+  source: string;
+  fetchedAt: string;
+}
+
 export interface Competitor {
   id: string;
   handle: string;
@@ -15,6 +23,8 @@ export interface Competitor {
   followers?: number;
   /** Historical follower snapshots for growth-over-time charts. */
   followersHistory?: CompetitorSnapshot[];
+  /** Real per-network stats, when available. */
+  liveStats?: CompetitorLiveStats;
   createdAt: string;
 }
 
@@ -25,7 +35,7 @@ interface Row {
   platform: string;
   display_name: string | null;
   notes: string | null;
-  data: { status?: string; followers?: number; followersHistory?: CompetitorSnapshot[] } | null;
+  data: { status?: string; followers?: number; followersHistory?: CompetitorSnapshot[]; liveStats?: CompetitorLiveStats } | null;
   created_at: string;
 }
 
@@ -33,6 +43,7 @@ interface CompetitorData {
   status: Competitor["status"];
   followers?: number;
   followersHistory?: CompetitorSnapshot[];
+  liveStats?: CompetitorLiveStats;
 }
 
 const collection = createRemoteCollection<Competitor, Row>({
@@ -48,6 +59,7 @@ const collection = createRemoteCollection<Competitor, Row>({
     status: (r.data?.status as Competitor["status"]) ?? "tracking",
     followers: r.data?.followers,
     followersHistory: r.data?.followersHistory ?? [],
+    liveStats: r.data?.liveStats,
     createdAt: r.created_at,
   }),
   toInsertRow: (item, userId) => ({
@@ -61,6 +73,7 @@ const collection = createRemoteCollection<Competitor, Row>({
       status: item.status,
       followers: item.followers,
       followersHistory: item.followersHistory ?? [],
+      liveStats: item.liveStats,
     } satisfies CompetitorData,
   }),
   toUpdateRow: (patch) => {
@@ -84,6 +97,7 @@ export function useCompetitors() {
       status: patch.status ?? current?.status ?? "tracking",
       followers: patch.followers !== undefined ? patch.followers : current?.followers,
       followersHistory: patch.followersHistory ?? current?.followersHistory ?? [],
+      liveStats: patch.liveStats !== undefined ? patch.liveStats : current?.liveStats,
     };
     await collection.update(id, { ...patch, data });
   };

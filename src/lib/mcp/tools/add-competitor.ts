@@ -6,7 +6,7 @@ export default defineTool({
   name: "add_competitor",
   title: "Track a competitor",
   description:
-    "Start tracking a competitor for the signed-in user. Pass the platform (instagram, tiktok, youtube, twitter, linkedin, facebook, github, threads, pinterest, reddit) and their handle/username. Write tools require user approval inside the app.",
+    "Start tracking a competitor for the signed-in user. Pass the platform (instagram, tiktok, youtube, twitter, linkedin, facebook, threads, pinterest, reddit, bluesky) and their handle/username. Write tools require user approval inside the app.",
   inputSchema: {
     platform: z.string().describe("Platform the competitor is on (e.g. instagram, github)."),
     handle: z.string().describe("The competitor's handle or username on that platform."),

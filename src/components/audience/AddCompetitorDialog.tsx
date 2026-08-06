@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const PLATFORMS = [
   "Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn", "Facebook",
-  "GitHub", "Threads", "Pinterest", "Reddit", "Snapchat",
+  "Threads", "Pinterest", "Reddit", "Bluesky", "Snapchat",
 ];
 
 export interface NewCompetitorInput {
@@ -36,8 +36,8 @@ export function AddCompetitorDialog({ open, onOpenChange, onAdd }: Props) {
 
   const submit = () => {
     if (!username.trim()) return;
-    // GitHub/Reddit handles are bare; social handles carry the @ prefix.
-    const needsAt = !["GitHub", "Reddit", "Pinterest"].includes(platform);
+    // Reddit/Pinterest/Bluesky handles are bare; social handles carry the @ prefix.
+    const needsAt = !["Reddit", "Pinterest", "Bluesky"].includes(platform);
     const uname = needsAt && !username.startsWith("@") ? `@${username}` : username.trim();
     onAdd({ username: uname, platform, notes: notes.trim() });
     onOpenChange(false);

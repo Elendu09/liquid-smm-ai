@@ -20,6 +20,7 @@ const FEATURE_BY_OP: Record<string, FeatureKey> = {
   translate: "create.translate",
   brief: "create.brief",
   reply: "create.reply",
+  rewrite: "create.rewrite",
 };
 
 const captionsSchema = z.object({
@@ -59,8 +60,13 @@ const briefSchema = z.object({
   cta: z.string(),
 });
 
+const rewriteSchema = z.object({
+  rewritten: z.string(),
+  title: z.string(),
+});
+
 interface Body {
-  op: "captions" | "hashtags" | "translate" | "brief" | "reply";
+  op: "captions" | "hashtags" | "translate" | "brief" | "reply" | "rewrite";
   message?: string;
   author?: string;
   topic?: string;
@@ -282,6 +288,32 @@ Return an object with:
         hashtags: (raw.hashtags ?? []).slice(0, 15).map(String),
         hooks: (raw.hooks ?? []).slice(0, 6).map(String),
         cta: String(raw.cta ?? ""),
+      };
+    } else if (body.op === "rewrite") {
+      const raw = await runObject(
+        () =>
+          generateObject({
+            model,
+            schema: rewriteSchema,
+            prompt: `You are a social media manager turning a news/article item into an engaging social post.
+Platform: ${body.platform ?? "instagram"}
+Tone: ${body.tone ?? "engaging"}
+Source item:
+${(body.text ?? "").slice(0, 2000)}
+
+Return an object with:
+- "rewritten" (a ready-to-post caption under 900 chars, with a compelling hook; no hashtags unless natural)
+- "title" (a short headline under 140 chars)`,
+          }),
+        (fb) =>
+          (fb as typeof rewriteSchema._type) ?? {
+            rewritten: body.text ?? "",
+            title: "",
+          },
+      );
+      result = {
+        rewritten: String(raw.rewritten ?? "").slice(0, 1200),
+        title: String(raw.title ?? "").slice(0, 140),
       };
     } else {
       return new Response(JSON.stringify({ error: "Unknown op" }), {
