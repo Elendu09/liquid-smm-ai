@@ -1,6 +1,7 @@
 import { Outlet, Route, Routes, Navigate, Link } from "react-router-dom";
-import { FolderOpen, Palette, FileText, Image as ImageIcon } from "lucide-react";
-import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
+import { FolderOpen, Palette, FileText, Image as ImageIcon, Sparkles } from "lucide-react";
+import { PageHeader, HubTabs, HeaderActionRow, openOnboardingTour, type HubTab } from "@/components/dashboard/shell";
+
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import CaptionsBoard from "../views/CaptionsBoard";
 import AssetsBoard from "../views/AssetsBoard";
