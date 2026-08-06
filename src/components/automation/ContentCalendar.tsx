@@ -545,15 +545,42 @@ export const ContentCalendar = () => {
         </Button>
       </div>
 
-      {/* Coming-next roadmap chips */}
-      <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-        <span className="uppercase tracking-widest text-muted-foreground/70 mr-1">Coming next</span>
-        {["Realtime unread", "Live follower spark", "Campaign tags"].map((t) => (
-          <span key={t} className="inline-flex items-center rounded-full border border-dashed border-primary/40 text-primary/80 px-2 py-0.5 bg-primary/[0.04]">
-            {t}
-          </span>
-        ))}
-      </div>
+      {/* Campaign tags — filter the calendar by campaign */}
+      {campaignTags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+          <span className="mr-1 uppercase tracking-widest text-[10px] text-muted-foreground/70">Campaigns</span>
+          <button
+            type="button"
+            onClick={() => setCampaignFilter(null)}
+            aria-pressed={campaignFilter === null}
+            className={cn(
+              "rounded-full border px-2.5 py-0.5 font-medium transition-colors",
+              campaignFilter === null
+                ? "border-primary/50 bg-primary/10 text-primary"
+                : "border-border/60 text-muted-foreground hover:text-foreground",
+            )}
+          >
+            All
+          </button>
+          {campaignTags.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setCampaignFilter(campaignFilter === c.id ? null : c.id)}
+              aria-pressed={campaignFilter === c.id}
+              className={cn(
+                "rounded-full border px-2.5 py-0.5 font-medium transition-colors",
+                campaignFilter === c.id
+                  ? "border-primary/50 bg-primary/10 text-primary"
+                  : "border-border/60 text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+
 
       {/* Filters */}
       <div className={cn("flex flex-wrap items-center gap-2", view === "autolists" && "hidden")}>
