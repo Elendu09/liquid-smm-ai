@@ -92,15 +92,41 @@ export default function ContentLibraryPage() {
   const hashtagSets = useMemo(() => (isGuest ? mockHashtagSets : []), [isGuest]);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+    <div className="relative isolate p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+      {/* Ambient backdrop — gives the page the same liquid feel as the rest of the app */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] overflow-hidden"
+      >
+        <span
+          className="liquid-orb absolute -top-24 -left-24 h-72 w-72"
+          style={{
+            background:
+              "radial-gradient(60% 80% at 50% 30%, hsl(217 91% 60% / 0.25) 0%, hsl(217 91% 60% / 0) 70%)",
+          }}
+        />
+        <span
+          className="liquid-orb absolute -top-16 right-0 h-80 w-80"
+          style={{
+            animationDelay: "5s",
+            background:
+              "radial-gradient(60% 80% at 50% 30%, hsl(270 70% 60% / 0.20) 0%, hsl(270 70% 60% / 0) 70%)",
+          }}
+        />
+      </div>
+
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Folder className="h-8 w-8 text-primary" />
-            Content Library
+          <h1 className="font-['Instrument_Serif'] font-normal tracking-tight leading-[0.95] text-4xl sm:text-5xl flex items-center gap-3">
+            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/25 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_8px_24px_-12px_hsl(var(--primary)/0.5)]">
+              <Folder className="h-5 w-5" />
+            </span>
+            Content Library<span className="italic text-primary">.</span>
           </h1>
-          <p className="text-muted-foreground mt-1">Manage your media, captions, and hashtag collections</p>
+          <p className="text-muted-foreground mt-2 max-w-xl">
+            Manage your media, captions, and hashtag collections
+          </p>
         </div>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
@@ -111,31 +137,55 @@ export default function ContentLibraryPage() {
       {/* Search and Filters */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Search assets..."
-            className="pl-10"
+            className="pl-10 liquid-flat"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" className="liquid-press">
             <Filter className="h-4 w-4" />
           </Button>
-          <div className="flex items-center border rounded-md">
+          <div
+            role="tablist"
+            aria-label="View mode"
+            className="relative inline-flex liquid-pill p-1"
+          >
+            <span
+              aria-hidden
+              className="liquid-pill__indicator"
+              style={{
+                left: viewMode === "grid" ? "4px" : "calc(50% + 0px)",
+                width: "calc(50% - 4px)",
+              }}
+            />
             <Button
-              variant={viewMode === "grid" ? "secondary" : "ghost"}
+              variant="ghost"
               size="icon"
-              className="rounded-r-none"
+              aria-pressed={viewMode === "grid"}
+              className={cn(
+                "relative z-10 h-9 w-9 rounded-full transition-colors duration-300 active:scale-90",
+                viewMode === "grid"
+                  ? "text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
               onClick={() => setViewMode("grid")}
             >
               <Grid3X3 className="h-4 w-4" />
             </Button>
             <Button
-              variant={viewMode === "list" ? "secondary" : "ghost"}
+              variant="ghost"
               size="icon"
-              className="rounded-l-none"
+              aria-pressed={viewMode === "list"}
+              className={cn(
+                "relative z-10 h-9 w-9 rounded-full transition-colors duration-300 active:scale-90",
+                viewMode === "list"
+                  ? "text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
               onClick={() => setViewMode("list")}
             >
               <List className="h-4 w-4" />
@@ -146,7 +196,7 @@ export default function ContentLibraryPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="media" className="space-y-6">
-        <TabsList>
+        <TabsList className="relative inline-flex h-11 liquid-pill">
           <TabsTrigger value="media" className="gap-2">
             <Image className="h-4 w-4" />
             Media Assets
@@ -162,7 +212,7 @@ export default function ContentLibraryPage() {
         </TabsList>
 
         {/* Media Assets Tab */}
-        <TabsContent value="media">
+        <TabsContent value="media" forceMount>
           {assets.length === 0 ? (
             <EmptyState
               variant="upload-asset"
@@ -173,82 +223,109 @@ export default function ContentLibraryPage() {
               ctaHref="/dashboard/library/assets"
             />
           ) : (
-          <div className={cn(
-            "grid gap-4",
-            viewMode === "grid" ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"
-          )}>
-            {assets.map((asset) => (
-              <Card key={asset.id} className={cn("overflow-hidden group", viewMode === "list" && "flex")}>
-                <div className={cn(
-                  "relative bg-muted",
-                  viewMode === "grid" ? "aspect-square" : "w-24 h-24 shrink-0"
-                )}>
-                  <img
-                    src={asset.thumbnail}
-                    alt={asset.name}
-                    className="w-full h-full object-cover"
-                  />
-                  {asset.type === "video" && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                      <Video className="h-8 w-8 text-white" />
-                    </div>
-                  )}
-                  {asset.favorite && (
-                    <div className="absolute top-2 left-2">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <Button size="icon" variant="secondary" className="h-8 w-8">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="secondary" className="h-8 w-8">
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <CardContent className={cn("p-3", viewMode === "list" && "flex-1 flex items-center justify-between")}>
-                  <div className={viewMode === "list" ? "flex-1" : ""}>
-                    <p className="font-medium text-sm truncate">{asset.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {asset.size} {asset.dimensions && `• ${asset.dimensions}`}
-                    </p>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                        <MoreHorizontal className="h-4 w-4" />
+            <div
+              className={cn(
+                "grid gap-4 liquid-stagger",
+                viewMode === "grid"
+                  ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                  : "grid-cols-1",
+              )}
+            >
+              {assets.map((asset) => (
+                <Card
+                  key={asset.id}
+                  className={cn("overflow-hidden group", viewMode === "list" && "flex")}
+                >
+                  <div
+                    className={cn(
+                      "relative bg-muted overflow-hidden",
+                      viewMode === "grid" ? "aspect-square" : "w-28 h-28 shrink-0",
+                    )}
+                  >
+                    <img
+                      src={asset.thumbnail}
+                      alt={asset.name}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+                    />
+                    {asset.type === "video" && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <Video className="h-8 w-8 text-white" />
+                      </div>
+                    )}
+                    {asset.favorite && (
+                      <div className="absolute top-2 left-2 drop-shadow">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      </div>
+                    )}
+                    {/* Hover overlay — softened to use the new glass sheen */}
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/55 opacity-0 backdrop-blur-sm transition-all duration-300 group-hover:opacity-100">
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="h-9 w-9 translate-y-2 rounded-full transition-all duration-300 group-hover:translate-y-0"
+                      >
+                        <Download className="h-4 w-4" />
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Star className="mr-2 h-4 w-4" />
-                        {asset.favorite ? "Unfavorite" : "Favorite"}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Duplicate
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-500">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="h-9 w-9 translate-y-2 rounded-full transition-all duration-300 delay-75 group-hover:translate-y-0"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <CardContent
+                    className={cn(
+                      "p-3",
+                      viewMode === "list" && "flex-1 flex items-center justify-between",
+                    )}
+                  >
+                    <div className={viewMode === "list" ? "flex-1" : ""}>
+                      <p className="font-medium text-sm truncate">{asset.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {asset.size} {asset.dimensions && `• ${asset.dimensions}`}
+                      </p>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0 rounded-full"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Star className="mr-2 h-4 w-4" />
+                          {asset.favorite ? "Unfavorite" : "Favorite"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Download className="mr-2 h-4 w-4" />
+                          Download
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Copy className="mr-2 h-4 w-4" />
+                          Duplicate
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-500">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </TabsContent>
 
         {/* Caption Templates Tab */}
-        <TabsContent value="captions">
+        <TabsContent value="captions" forceMount>
           {captionTemplates.length === 0 ? (
             <EmptyState
               icon={FileText}
@@ -258,53 +335,67 @@ export default function ContentLibraryPage() {
               ctaHref="/dashboard/create/captions"
             />
           ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {captionTemplates.map((template) => (
-              <Card key={template.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-base">{template.name}</CardTitle>
-                      <Badge variant="secondary" className="mt-1">{template.category}</Badge>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{template.content}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-1">
-                      {template.platforms.slice(0, 3).map((platform) => (
-                        <Badge key={platform} variant="outline" className="text-xs">
-                          {platform}
+            <div className="grid gap-4 md:grid-cols-2 liquid-stagger">
+              {captionTemplates.map((template) => (
+                <Card key={template.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-base">{template.name}</CardTitle>
+                        <Badge variant="secondary" className="mt-1">
+                          {template.category}
                         </Badge>
-                      ))}
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>Edit</DropdownMenuItem>
+                          <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-red-500">
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    <Button size="sm" variant="outline">
-                      <Copy className="mr-2 h-3 w-3" />
-                      Use
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                      {template.content}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-1">
+                        {template.platforms.slice(0, 3).map((platform) => (
+                          <Badge
+                            key={platform}
+                            variant="outline"
+                            className="text-xs"
+                          >
+                            {platform}
+                          </Badge>
+                        ))}
+                      </div>
+                      <Button size="sm" variant="outline" className="liquid-press">
+                        <Copy className="mr-2 h-3 w-3" />
+                        Use
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
           {captionTemplates.length > 0 && (
             <div className="mt-4 flex justify-center">
-              <Button variant="outline">
+              <Button variant="outline" className="liquid-press">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Caption Template
               </Button>
@@ -313,7 +404,7 @@ export default function ContentLibraryPage() {
         </TabsContent>
 
         {/* Hashtag Sets Tab */}
-        <TabsContent value="hashtags">
+        <TabsContent value="hashtags" forceMount>
           {hashtagSets.length === 0 ? (
             <EmptyState
               icon={Hash}
@@ -323,46 +414,56 @@ export default function ContentLibraryPage() {
               ctaHref="/dashboard/create/hashtags"
             />
           ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {hashtagSets.map((set) => (
-              <Card key={set.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Hash className="h-4 w-4 text-primary" />
-                        {set.name}
-                      </CardTitle>
-                      <CardDescription>{set.hashtags.length} hashtags • Used {set.uses} times</CardDescription>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 liquid-stagger">
+              {hashtagSets.map((set) => (
+                <Card key={set.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Hash className="h-4 w-4 text-primary" />
+                          {set.name}
+                        </CardTitle>
+                        <CardDescription>
+                          {set.hashtags.length} hashtags • Used {set.uses} times
+                        </CardDescription>
+                      </div>
+                      <Badge variant="secondary">{set.category}</Badge>
                     </div>
-                    <Badge variant="secondary">{set.category}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {set.hashtags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs font-normal">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Copy className="mr-2 h-3 w-3" />
-                      Copy All
-                    </Button>
-                    <Button size="sm" variant="ghost">
-                      Edit
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {set.hashtags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="outline"
+                          className="text-xs font-normal transition-colors hover:border-primary/40 hover:text-foreground"
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 liquid-press"
+                      >
+                        <Copy className="mr-2 h-3 w-3" />
+                        Copy All
+                      </Button>
+                      <Button size="sm" variant="ghost" className="liquid-press">
+                        Edit
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
           {hashtagSets.length > 0 && (
             <div className="mt-4 flex justify-center">
-              <Button variant="outline">
+              <Button variant="outline" className="liquid-press">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Hashtag Set
               </Button>

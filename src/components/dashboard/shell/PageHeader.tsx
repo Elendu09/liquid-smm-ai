@@ -25,10 +25,29 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "flex flex-col gap-3 pb-5 mb-6 border-b border-border/40 dark:border-border/60",
+        "relative isolate flex flex-col gap-3 pb-5 mb-6 border-b border-border/40 dark:border-border/60",
         className,
       )}
     >
+      {/* Ambient glow backing the title — adds depth without changing
+          the layout. Pointer-events: none so it never intercepts clicks. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-x-4 -top-6 -bottom-6 -z-10 liquid-orb"
+        style={{
+          background:
+            "radial-gradient(45% 60% at 25% 30%, hsl(var(--primary) / 0.16) 0%, hsl(var(--primary) / 0) 70%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-10 top-0 h-32 w-64 -z-10 liquid-orb"
+        style={{
+          animationDelay: "3s",
+          background:
+            "radial-gradient(40% 60% at 60% 40%, hsl(var(--brand-purple) / 0.14) 0%, hsl(var(--brand-purple) / 0) 70%)",
+        }}
+      />
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
           {kicker && (

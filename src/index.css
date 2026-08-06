@@ -163,27 +163,176 @@
 }
 
 @layer components {
-  /* Glass card effect */
-  .glass-card {
-    @apply relative overflow-hidden rounded-xl border bg-card/60 backdrop-blur-xl;
+  /* -----------------------------------------------------------
+     Liquid Glass Design System
+     Soft floating glass with specular highlights, ambient glows
+     and tactile micro-interactions. Built on top of the existing
+     color tokens — does not introduce a new palette.
+     ----------------------------------------------------------- */
+
+  /* Flat surface — barely-there glass for grouped regions. */
+  .liquid-flat {
+    @apply relative overflow-hidden rounded-2xl border bg-card/65 backdrop-blur-md;
     border-color: hsl(var(--glass-border));
   }
 
+  /* Floating surface — the default for cards & dialogs. */
+  .liquid-card {
+    @apply relative overflow-hidden rounded-2xl border bg-card/70 backdrop-blur-xl;
+    border-color: hsl(var(--glass-border));
+    box-shadow:
+      0 1px 0 0 hsl(var(--foreground) / 0.05) inset,
+      0 24px 48px -24px hsl(220 40% 12% / 0.28);
+  }
+
+  /* Premium floating — used for elevated panels & modals. */
+  .liquid-elevate {
+    @apply relative overflow-hidden rounded-3xl border bg-card/80 backdrop-blur-2xl;
+    border-color: hsl(var(--glass-border));
+    box-shadow:
+      0 1px 0 0 hsl(var(--foreground) / 0.06) inset,
+      0 32px 64px -28px hsl(220 40% 12% / 0.35),
+      0 2px 6px hsl(220 40% 12% / 0.04);
+  }
+
+  /* Specular highlight — a soft top edge reflection. Works on any
+     `position: relative` element; pair with `relative isolate`. */
+  .liquid-card::before,
+  .liquid-flat::before,
+  .liquid-elevate::before {
+    content: "";
+    @apply pointer-events-none absolute inset-0 rounded-[inherit];
+    background: linear-gradient(
+      180deg,
+      hsl(var(--foreground) / 0.07) 0%,
+      hsl(var(--foreground) / 0.02) 18%,
+      transparent 38%
+    );
+    opacity: 0.9;
+  }
+
+  /* The colored ambient halo that sits beneath a liquid surface to
+     give it depth (use as a sibling absolutely positioned behind the card). */
+  .liquid-halo {
+    @apply pointer-events-none absolute -inset-3 rounded-[inherit] blur-2xl;
+    background: radial-gradient(
+      60% 80% at 50% 30%,
+      hsl(var(--primary) / 0.35) 0%,
+      hsl(var(--primary) / 0) 70%
+    );
+    opacity: 0.55;
+    z-index: -1;
+  }
+
+  /* Animated specular sheen — sweeps across a card once. */
+  .liquid-sheen {
+    @apply pointer-events-none absolute inset-0 rounded-[inherit] overflow-hidden;
+  }
+  .liquid-sheen::after {
+    content: "";
+    @apply absolute inset-y-0 -inset-x-1/2;
+    background: linear-gradient(
+      115deg,
+      transparent 0%,
+      hsl(var(--foreground) / 0.08) 40%,
+      hsl(var(--foreground) / 0.16) 50%,
+      hsl(var(--foreground) / 0.08) 60%,
+      transparent 100%
+    );
+    transform: translateX(0);
+    animation: liquid-specular 7s ease-in-out infinite;
+  }
+
+  /* Liquid skeleton — shimmer gradient on a frosted surface. */
+  .liquid-skeleton {
+    @apply relative overflow-hidden rounded-lg;
+    background: linear-gradient(
+      100deg,
+      hsl(var(--muted) / 0.6) 0%,
+      hsl(var(--muted) / 0.9) 50%,
+      hsl(var(--muted) / 0.6) 100%
+    );
+    background-size: 250% 100%;
+    animation: liquid-shimmer 2.4s linear infinite;
+  }
+
+  /* Tactile press state used by `.liquid-press` elements. */
+  .liquid-press {
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.3s ease,
+                border-color 0.3s ease;
+  }
+  .liquid-press:hover {
+    transform: translateY(-2px);
+  }
+  .liquid-press:active {
+    transform: translateY(0) scale(0.985);
+  }
+
+  /* Hover lift variant of liquid-press with a stronger shadow ramp. */
+  .liquid-press-lift {
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.35s ease,
+                border-color 0.35s ease,
+                background-color 0.35s ease;
+  }
+  .liquid-press-lift:hover {
+    transform: translateY(-4px) scale(1.012);
+    box-shadow:
+      0 1px 0 0 hsl(var(--foreground) / 0.06) inset,
+      0 40px 64px -28px hsl(220 40% 12% / 0.45),
+      0 0 0 1px hsl(var(--primary) / 0.18);
+    border-color: hsl(var(--primary) / 0.4);
+  }
+  .dark .liquid-press-lift:hover {
+    box-shadow:
+      0 1px 0 0 hsl(var(--foreground) / 0.10) inset,
+      0 40px 64px -28px hsl(0 0% 0% / 0.55),
+      0 0 0 1px hsl(var(--primary) / 0.32);
+  }
+  .liquid-press-lift:active {
+    transform: translateY(0) scale(0.99);
+  }
+
+  /* Floating glass pill (buttons, badge clusters, hub nav). */
+  .liquid-pill {
+    @apply relative isolate overflow-hidden rounded-full border bg-card/75 backdrop-blur-xl;
+    border-color: hsl(var(--glass-border));
+    box-shadow:
+      0 1px 0 0 hsl(var(--foreground) / 0.06) inset,
+      0 8px 24px -16px hsl(220 40% 12% / 0.35);
+  }
+
+  /* Sliding indicator for segmented selectors. Place a single
+     <span class="liquid-pill__indicator" /> inside the parent. */
+  .liquid-pill__indicator {
+    @apply pointer-events-none absolute inset-y-1 rounded-full bg-primary;
+    box-shadow:
+      0 1px 0 0 hsl(var(--foreground) / 0.08) inset,
+      0 8px 24px -10px hsl(var(--primary) / 0.55);
+    transition: left 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                width 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                top 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Ambient orb background — used to add gentle colored lights
+     floating behind a page region. */
+  .liquid-orb {
+    @apply pointer-events-none absolute rounded-full blur-3xl;
+    animation: liquid-orb 14s ease-in-out infinite;
+  }
+
+  /* Legacy alias kept for backward compatibility. */
+  .glass-card {
+    @apply liquid-card;
+  }
   .glass-card::before {
-    content: '';
-    @apply absolute inset-0 rounded-xl pointer-events-none;
-    background: linear-gradient(135deg, hsl(0 0% 100% / 0.05) 0%, transparent 50%);
-  }
-
-  /* Light mode glass adjustments */
-  :root .glass-card {
-    @apply bg-card/80 shadow-lg;
-    box-shadow: 0 4px 24px hsl(217 91% 50% / 0.05);
-  }
-
-  .dark .glass-card {
-    @apply bg-card/60;
-    box-shadow: 0 0 20px hsl(217 91% 60% / 0.1);
+    @apply pointer-events-none absolute inset-0 rounded-[inherit];
+    background: linear-gradient(
+      135deg,
+      hsl(0 0% 100% / 0.05) 0%,
+      transparent 50%
+    );
   }
 
   /* Glow effects - Dark mode only */
@@ -454,6 +603,43 @@
 
 }
 
+@keyframes liquid-specular {
+  0% { transform: translateX(-120%); }
+  60% { transform: translateX(220%); }
+  100% { transform: translateX(220%); }
+}
+
+@keyframes liquid-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes liquid-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.55; }
+  33% { transform: translate(30px, -20px) scale(1.06); opacity: 0.75; }
+  66% { transform: translate(-20px, 20px) scale(0.95); opacity: 0.6; }
+}
+
+@keyframes liquid-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes liquid-glow-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.05); }
+}
+
+@keyframes liquid-rise {
+  0% { opacity: 0; transform: translateY(14px) scale(0.99); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes liquid-tap {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.96); }
+}
+
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -462,6 +648,31 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Liquid glass alias classes so consumers can use Tailwind-style
+     names that match the keyframes / animations in tailwind.config.ts. */
+  .animate-liquid-rise { animation: liquid-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .animate-liquid-float { animation: liquid-float 6s ease-in-out infinite; }
+  .animate-liquid-glow-pulse { animation: liquid-glow-pulse 4s ease-in-out infinite; }
+  .animate-liquid-tap { animation: liquid-tap 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+  .animate-liquid-shimmer { animation: liquid-shimmer 2.4s linear infinite; }
+  .animate-liquid-specular { animation: liquid-specular 7s ease-in-out infinite; }
+  .animate-liquid-orb { animation: liquid-orb 14s ease-in-out infinite; }
+
+  /* Stagger helpers for grids of liquid cards. */
+  .liquid-stagger > * { animation: liquid-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .liquid-stagger > *:nth-child(1) { animation-delay: 40ms; }
+  .liquid-stagger > *:nth-child(2) { animation-delay: 90ms; }
+  .liquid-stagger > *:nth-child(3) { animation-delay: 140ms; }
+  .liquid-stagger > *:nth-child(4) { animation-delay: 190ms; }
+  .liquid-stagger > *:nth-child(5) { animation-delay: 240ms; }
+  .liquid-stagger > *:nth-child(6) { animation-delay: 290ms; }
+  .liquid-stagger > *:nth-child(7) { animation-delay: 340ms; }
+  .liquid-stagger > *:nth-child(8) { animation-delay: 390ms; }
+  .liquid-stagger > *:nth-child(9) { animation-delay: 440ms; }
+  .liquid-stagger > *:nth-child(10) { animation-delay: 490ms; }
+  .liquid-stagger > *:nth-child(11) { animation-delay: 540ms; }
+  .liquid-stagger > *:nth-child(12) { animation-delay: 590ms; }
 }
 
 /* Mobile glass finetune — softer radii, gentler borders, floating surfaces.
