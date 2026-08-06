@@ -52,9 +52,19 @@ function LibraryLayout() {
         <PageHeader
           title="Library"
           description="Reusable assets, captions, and platform presets."
+          actions={
+            <HeaderActionRow
+              actions={[
+                { label: "Upload asset", icon: FolderOpen, to: "/dashboard/library/assets", primary: true },
+                { label: "Take the tour", icon: Sparkles, onClick: openOnboardingTour },
+                { label: "Templates", icon: Palette, to: "/dashboard/library/presets" },
+              ]}
+            />
+          }
         />
         <LibraryStats />
         <HubTabs tabs={tabs} />
+
       </div>
       <Outlet />
     </div>
