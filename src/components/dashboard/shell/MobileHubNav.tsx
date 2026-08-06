@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, Sparkles, Calendar, Bot, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUnreadInbox } from "@/hooks/useUnreadInbox";
 
 const left = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard, exact: true, tour: "mobile-nav-home" },
@@ -17,20 +18,25 @@ const itemClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
   );
 
-function Item({ i }: { i: (typeof left)[number] }) {
+function Item({ i, badge }: { i: (typeof left)[number]; badge?: number }) {
   return (
     <NavLink key={i.href} to={i.href} end={"exact" in i ? i.exact : undefined} data-tour={i.tour} className={itemClass}>
       {({ isActive }) => (
         <>
           <span
             className={cn(
-              "grid h-8 w-11 place-items-center rounded-full transition-all duration-300",
+              "relative grid h-8 w-11 place-items-center rounded-full transition-all duration-300",
               isActive
                 ? "bg-primary/15 ring-1 ring-primary/25 shadow-[0_4px_14px_-6px_hsl(var(--primary)/0.6)]"
                 : "bg-transparent",
             )}
           >
             <i.icon className={cn("transition-all duration-300", isActive ? "w-[18px] h-[18px]" : "w-5 h-5")} />
+            {!!badge && (
+              <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] h-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-semibold leading-none text-primary-foreground ring-2 ring-card">
+                {badge > 99 ? "99+" : badge}
+              </span>
+            )}
           </span>
           <span className={cn("leading-none transition-opacity", isActive ? "opacity-100" : "opacity-80")}>
             {i.label}
@@ -40,6 +46,7 @@ function Item({ i }: { i: (typeof left)[number] }) {
     </NavLink>
   );
 }
+
 
 export function MobileHubNav() {
   return (
