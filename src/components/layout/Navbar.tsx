@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
     children: [
       { label: "Features", href: "/features", description: "Every capability, category by category" },
       { label: "Tools", href: "/tools", description: "Free AI tools for captions, hashtags & more" },
+      { label: "MCP Server", href: "/mcp", description: "Connect your workspace to AI agents" },
       { label: "Integrations", href: "/#tools", description: "Connect 14+ social platforms" },
       { label: "FAQ", href: "/faq", description: "Answers on publishing, AI and security" },
     ],

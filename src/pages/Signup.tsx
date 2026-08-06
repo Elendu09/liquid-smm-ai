@@ -31,6 +31,15 @@ const Signup = () => {
   const navigate = useNavigate();
   const next = safeNext(searchParams.get("next"));
 
+  // Referral capture: remember the invite code so it can be claimed once the
+  // account is authenticated (survives the email-confirmation redirect).
+  const refCode = searchParams.get("ref");
+  useEffect(() => {
+    if (refCode) {
+      try { window.localStorage.setItem("smmpilot:pendingRef", refCode); } catch { /* ignore */ }
+    }
+  }, [refCode]);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate(next, { replace: true });

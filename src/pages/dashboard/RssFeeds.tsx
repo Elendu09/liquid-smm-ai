@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -140,6 +141,8 @@ export default function RssFeedsPage() {
     items,
     loading,
     fetching,
+    progress,
+    syncingFeedId,
     addFeed,
     addFeedsBulk,
     updateFeed,
@@ -220,6 +223,9 @@ export default function RssFeedsPage() {
 
   const submit = async () => {
     if (!url.trim()) return toast.error("Feed URL is required");
+    if (!/^https?:\/\/\S+$/i.test(url.trim())) {
+      return toast.error("Invalid feed URL — enter a full http(s) address");
+    }
     const payload = {
       url: url.trim(),
       title: title.trim() || null,
@@ -306,6 +312,19 @@ export default function RssFeedsPage() {
           </div>
         </div>
       </div>
+
+      {/* Real-time sync progress */}
+      {fetching && progress !== null && (
+        <div className="rounded-xl border border-border/60 bg-card/50 px-4 py-3 space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+              <RefreshCw className="h-3 w-3 animate-spin" /> Syncing feeds…
+            </span>
+            <span className="text-xs font-medium">{progress}%</span>
+          </div>
+          <Progress value={progress} className="h-1.5" />
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
@@ -500,7 +519,7 @@ export default function RssFeedsPage() {
                       aria-label="Active"
                     />
                     <Button size="icon" variant="ghost" onClick={() => fetchNow(f.id)} disabled={fetching} title="Fetch now">
-                      <RefreshCw className={`h-4 w-4 ${fetching ? "animate-spin" : ""}`} />
+                      <RefreshCw className={`h-4 w-4 ${syncingFeedId === f.id ? "animate-spin" : ""}`} />
                     </Button>
                     <Button size="icon" variant="ghost" onClick={() => openEdit(f)} title="Edit">
                       <Pencil className="h-4 w-4" />

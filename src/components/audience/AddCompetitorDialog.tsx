@@ -8,7 +8,10 @@ import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const PLATFORMS = ["Instagram", "TikTok", "YouTube", "Twitter", "Facebook", "LinkedIn"];
+const PLATFORMS = [
+  "Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn", "Facebook",
+  "GitHub", "Threads", "Pinterest", "Reddit", "Snapchat",
+];
 
 export interface NewCompetitorInput {
   username: string;
@@ -33,7 +36,9 @@ export function AddCompetitorDialog({ open, onOpenChange, onAdd }: Props) {
 
   const submit = () => {
     if (!username.trim()) return;
-    const uname = username.startsWith("@") ? username : `@${username}`;
+    // GitHub/Reddit handles are bare; social handles carry the @ prefix.
+    const needsAt = !["GitHub", "Reddit", "Pinterest"].includes(platform);
+    const uname = needsAt && !username.startsWith("@") ? `@${username}` : username.trim();
     onAdd({ username: uname, platform, notes: notes.trim() });
     onOpenChange(false);
   };

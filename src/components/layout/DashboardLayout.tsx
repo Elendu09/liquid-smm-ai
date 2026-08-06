@@ -12,11 +12,13 @@ import { PresetLandingBanner } from "@/components/dashboard/PresetLandingBanner"
 import { DemoBanner, DemoBannerInline } from "@/components/layout/DemoBanner";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useSendSimulator } from "@/hooks/useSendSimulator";
+import { useClaimPendingReferral } from "@/hooks/useClaimPendingReferral";
 
 export function DashboardLayout() {
   const { state, markSeen } = useOnboarding();
   const [tourOpen, setTourOpen] = useState(false);
   useSendSimulator();
+  useClaimPendingReferral();
 
   // One-shot: open the setup wizard exactly once, on first dashboard visit for
   // a user who has neither completed nor previously dismissed it. After it

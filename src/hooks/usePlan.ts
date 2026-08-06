@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { PLANS, PLAN_ORDER, type FeatureKey, type PlanId } from "@/config/plans";
+import { rewardReferralForPlan } from "@/hooks/useReferrals";
 import { useAccounts } from "@/contexts/AccountContext";
 import { useBrands } from "@/contexts/BrandContext";
 import { useCredits } from "@/hooks/useCredits";
@@ -23,11 +24,19 @@ function subscribe(cb: () => void) {
   return () => listeners.delete(cb);
 }
 
+const PAID_PLANS = new Set<PlanId>(["starter", "professional", "custom"]);
+
 /** Change the active plan (billing flows / demo switcher). */
 export function setPlan(next: PlanId) {
+  const prev = planCache;
   planCache = next;
   if (typeof window !== "undefined") window.localStorage.setItem(KEY, next);
   emit();
+  // Referral program: the first time a referred user moves onto a paid tier,
+  // award the referrer credits. Fire-and-forget; the edge fn is idempotent.
+  if (PAID_PLANS.has(next) && !PAID_PLANS.has(prev)) {
+    void rewardReferralForPlan(next);
+  }
 }
 
 if (typeof window !== "undefined") {

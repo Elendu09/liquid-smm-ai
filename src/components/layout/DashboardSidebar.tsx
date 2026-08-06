@@ -36,6 +36,7 @@ import {
   Terminal,
   Bell,
   CornerDownLeft,
+  Gift,
   Palette,
   Rss,
 } from "lucide-react";
@@ -147,6 +148,7 @@ const navItems: NavItem[] = [
     ],
   },
   { label: "Team", href: "/dashboard/team", icon: Users, exact: true },
+  { label: "Referrals", href: "/dashboard/referrals", icon: Gift, exact: true },
 ];
 
 type CommandResult = {

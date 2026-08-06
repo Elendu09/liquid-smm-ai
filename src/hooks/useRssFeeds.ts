@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { guardWrite } from "@/hooks/useGuest";
+import { emitAppNotification } from "@/lib/notifications/emit";
 
 export interface RssFeed {
   id: string;
@@ -48,6 +49,9 @@ export function useRssFeeds() {
   const [items, setItems] = useState<RssItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetching, setFetching] = useState(false);
+  /** 0-100 real-time sync progress (null when idle). */
+  const [progress, setProgress] = useState<number | null>(null);
+  const [syncingFeedId, setSyncingFeedId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) {
@@ -205,22 +209,66 @@ export function useRssFeeds() {
     if (!guardWrite("fetch RSS")) return;
     setFetching(true);
     try {
-      const { data, error } = await supabase.functions.invoke("rss-fetch", {
-        body: feedId ? { feed_id: feedId } : {},
-      });
-      if (error) throw error;
-      const results = (data as { results?: { imported?: number; error?: string }[] })?.results ?? [];
-      const total = results.reduce((n, r) => n + (r.imported ?? 0), 0);
-      const errs = results.filter((r) => r.error).length;
-      if (errs) toast.warning(`Fetched with ${errs} error(s)`);
-      else toast.success(total ? `Imported ${total} new item(s)` : "Feeds up-to-date");
+      if (feedId) {
+        setSyncingFeedId(feedId);
+        const { data, error } = await supabase.functions.invoke("rss-fetch", {
+          body: { feed_id: feedId },
+        });
+        if (error) throw error;
+        const results = (data as { results?: { imported?: number; error?: string }[] })?.results ?? [];
+        const imported = results.reduce((n, r) => n + (r.imported ?? 0), 0);
+        if (results.some((r) => r.error)) toast.warning("Feed refreshed with errors");
+        else toast.success(imported ? `Imported ${imported} new item(s)` : "Feed up-to-date");
+        await load();
+        return;
+      }
+
+      // Fetch-all with real per-feed progress + success/failure alerts.
+      const targets = feeds.filter((f) => f.active);
+      if (targets.length === 0) {
+        toast.info("No active feeds to sync");
+        return;
+      }
+      let ok = 0, failed = 0, imported = 0;
+      for (let i = 0; i < targets.length; i++) {
+        const f = targets[i];
+        setSyncingFeedId(f.id);
+        setProgress(Math.round((i / targets.length) * 100));
+        const { data, error } = await supabase.functions.invoke("rss-fetch", {
+          body: { feed_id: f.id },
+        });
+        const errs = (data as { results?: { error?: string }[] })?.results?.some((r) => r.error) ?? false;
+        if (error || errs) {
+          failed++;
+          toast.error(`Sync failed for ${f.title ?? f.url}`);
+          void emitAppNotification({
+            type: "alert",
+            severity: "warning",
+            title: "RSS sync failed",
+            message: `Couldn't refresh ${f.title ?? f.url}`,
+            actionUrl: "/dashboard/publish/rss",
+            groupKey: `rss:${f.id}`,
+          });
+        } else {
+          ok++;
+          imported += (data as { results?: { imported?: number }[] })?.results?.reduce((n, r) => n + (r.imported ?? 0), 0) ?? 0;
+        }
+      }
+      setProgress(100);
+      if (failed > 0) {
+        toast.warning(`Synced ${ok}/${targets.length} feed${targets.length === 1 ? "" : "s"}${imported ? ` · imported ${imported}` : ""} · ${failed} failed`);
+      } else {
+        toast.success(imported ? `Synced ${targets.length} feed${targets.length === 1 ? "" : "s"} · imported ${imported}` : `All ${targets.length} feed${targets.length === 1 ? "" : "s"} up-to-date`);
+      }
       await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Fetch failed");
     } finally {
       setFetching(false);
+      setProgress(null);
+      setSyncingFeedId(null);
     }
-  }, [load]);
+  }, [feeds, load]);
 
   const importItem = useCallback(
     async (item: RssItem, opts?: { platforms?: string[]; scheduledAt?: string | null }) => {
@@ -267,6 +315,8 @@ export function useRssFeeds() {
     items,
     loading,
     fetching,
+    progress,
+    syncingFeedId,
     addFeed,
     addFeedsBulk,
     updateFeed,

@@ -26,6 +26,7 @@ const footerLinks = {
   product: [
     { label: "Features", href: "/features" },
     { label: "Tools", href: "/tools" },
+    { label: "MCP Server", href: "/mcp" },
     { label: "Pricing", href: "/pricing" },
     { label: "FAQ", href: "/faq" },
   ],

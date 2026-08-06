@@ -1,5 +1,10 @@
 import { createRemoteCollection } from "./_remoteCollection";
 
+export interface CompetitorSnapshot {
+  at: string;
+  followers: number;
+}
+
 export interface Competitor {
   id: string;
   handle: string;
@@ -8,6 +13,8 @@ export interface Competitor {
   notes?: string;
   status: "tracking" | "priority" | "archived";
   followers?: number;
+  /** Historical follower snapshots for growth-over-time charts. */
+  followersHistory?: CompetitorSnapshot[];
   createdAt: string;
 }
 
@@ -18,8 +25,14 @@ interface Row {
   platform: string;
   display_name: string | null;
   notes: string | null;
-  data: { status?: string; followers?: number } | null;
+  data: { status?: string; followers?: number; followersHistory?: CompetitorSnapshot[] } | null;
   created_at: string;
+}
+
+interface CompetitorData {
+  status: Competitor["status"];
+  followers?: number;
+  followersHistory?: CompetitorSnapshot[];
 }
 
 const collection = createRemoteCollection<Competitor, Row>({
@@ -34,6 +47,7 @@ const collection = createRemoteCollection<Competitor, Row>({
     notes: r.notes ?? undefined,
     status: (r.data?.status as Competitor["status"]) ?? "tracking",
     followers: r.data?.followers,
+    followersHistory: r.data?.followersHistory ?? [],
     createdAt: r.created_at,
   }),
   toInsertRow: (item, userId) => ({
@@ -43,7 +57,11 @@ const collection = createRemoteCollection<Competitor, Row>({
     platform: item.platform,
     display_name: item.displayName ?? null,
     notes: item.notes ?? null,
-    data: { status: item.status, followers: item.followers },
+    data: {
+      status: item.status,
+      followers: item.followers,
+      followersHistory: item.followersHistory ?? [],
+    } satisfies CompetitorData,
   }),
   toUpdateRow: (patch) => {
     const row: Record<string, unknown> = {};
@@ -51,18 +69,39 @@ const collection = createRemoteCollection<Competitor, Row>({
     if (patch.platform !== undefined) row.platform = patch.platform;
     if (patch.displayName !== undefined) row.display_name = patch.displayName ?? null;
     if (patch.notes !== undefined) row.notes = patch.notes ?? null;
-    if (patch.status !== undefined || patch.followers !== undefined) {
-      row.data = { status: patch.status, followers: patch.followers };
-    }
+    // `data` is passed through whole so status/followers/history never clobber
+    // each other across partial updates.
+    if (patch.data !== undefined) row.data = patch.data;
     return row;
   },
 });
 
 export function useCompetitors() {
+  /** Merge partial updates into the full `data` blob so nothing is lost. */
+  const update = async (id: string, patch: Partial<Competitor>) => {
+    const current = collection.read().find((c) => c.id === id);
+    const data: CompetitorData = {
+      status: patch.status ?? current?.status ?? "tracking",
+      followers: patch.followers !== undefined ? patch.followers : current?.followers,
+      followersHistory: patch.followersHistory ?? current?.followersHistory ?? [],
+    };
+    await collection.update(id, { ...patch, data });
+  };
+
+  /** Record a follower snapshot now (appends to the growth history). */
+  const recordSnapshot = async (id: string, followers: number) => {
+    const current = collection.read().find((c) => c.id === id);
+    if (!current) return;
+    const history = [...(current.followersHistory ?? []), { at: new Date().toISOString(), followers }];
+    await update(id, { followers, followersHistory: history });
+  };
+
   return {
     items: collection.useItems(),
     add: collection.add,
-    update: collection.update,
+    update,
     remove: collection.remove,
+    recordSnapshot,
+    read: collection.read,
   };
 }

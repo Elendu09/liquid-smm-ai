@@ -25,6 +25,8 @@ import Solutions from "./pages/Solutions";
 import PublicCalendar from "./pages/PublicCalendar";
 import PublicBio from "./pages/PublicBio";
 import PublicCampaign from "./pages/PublicCampaign";
+import ReferralLanding from "./pages/ReferralLanding";
+import Mcp from "./pages/Mcp";
 import AcceptInvite from "./pages/AcceptInvite";
 import Privacy from "./pages/legal/Privacy";
 import Terms from "./pages/legal/Terms";
@@ -54,6 +56,7 @@ import SettingsHub from "@/pages/dashboard/hubs/SettingsHub";
 import Support from "@/pages/dashboard/Support";
 import Campaigns from "@/pages/dashboard/Campaigns";
 import Team from "@/pages/dashboard/Team";
+import Referrals from "@/pages/dashboard/Referrals";
 
 const queryClient = new QueryClient();
 
@@ -108,6 +111,7 @@ const App = () => (
               <Route path="/tools" element={<Tools />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/solutions" element={<Solutions />} />
+              <Route path="/mcp" element={<Mcp />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/public/calendar/:token" element={<PublicCalendar />} />
               <Route path="/bio/:slug" element={<PublicBio />} />
@@ -116,6 +120,7 @@ const App = () => (
               <Route path="/c/:slug" element={<PublicCampaign />} />
 
               <Route path="/invite/:token" element={<AcceptInvite />} />
+              <Route path="/referral/:code" element={<ReferralLanding />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/cookies" element={<Cookies />} />
@@ -164,6 +169,7 @@ const App = () => (
 
                 {/* Team page allows demo/guest view (mock members, write-guarded) */}
                 <Route path="team" element={<Team />} />
+                <Route path="referrals" element={<Referrals />} />
                 <Route path="support" element={<Support />} />
 
 

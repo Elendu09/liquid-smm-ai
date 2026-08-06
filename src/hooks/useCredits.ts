@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { emitAppNotification } from "@/lib/notifications/emit";
 
 export interface CreditEvent {
   id: string;
@@ -115,6 +116,28 @@ export function useCredits() {
     const cap = balance.monthlyAllowance || 1;
     return Math.min(100, Math.round((balance.usedThisMonth / cap) * 100));
   }, [balance]);
+
+  // Alert once per month when credits cross 80% — surfaces on every dashboard page.
+  useEffect(() => {
+    if (!user || isGuest) return;
+    const monthKey = new Date().toISOString().slice(0, 7);
+    if (usedPct >= 80) {
+      try {
+        const storageKey = `smmpilot:lowcredits:${user.id}:${monthKey}`;
+        if (!window.localStorage.getItem(storageKey)) {
+          window.localStorage.setItem(storageKey, "1");
+          void emitAppNotification({
+            type: "alert",
+            severity: "warning",
+            title: "AI credits running low",
+            message: `You've used ${usedPct}% of your monthly AI credits.`,
+            actionUrl: "/dashboard/settings",
+            groupKey: `lowcredits:${user.id}:${monthKey}`,
+          });
+        }
+      } catch { /* ignore */ }
+    }
+  }, [user, isGuest, usedPct]);
 
   return { balance, events, loading, usedPct, refetch: load };
 }
