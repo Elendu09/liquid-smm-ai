@@ -87,8 +87,9 @@ export function MobileHubNav() {
           </div>
 
           {right.map((i) => (
-            <Item key={i.href} i={i} />
+            <Item key={i.href} i={i} badge={i.href === "/dashboard/engage" ? unread.total : undefined} />
           ))}
+
         </div>
       </div>
     </nav>
