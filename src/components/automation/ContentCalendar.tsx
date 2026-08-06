@@ -140,13 +140,21 @@ export const ContentCalendar = () => {
     return Array.from(s);
   }, [posts]);
 
+  const campaignTags = useMemo(
+    () => campaigns.filter((c) => posts.some((p) => p.campaignId === c.id)),
+    [campaigns, posts],
+  );
+  const campaignName = (id?: string) => campaigns.find((c) => c.id === id)?.name;
+
   const filtered = useMemo(() => {
     return posts.filter((p) => {
       if (platformFilter.length && !p.platformIds.some((id) => platformFilter.includes(id))) return false;
+      if (campaignFilter && p.campaignId !== campaignFilter) return false;
       if (search && !p.caption.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [posts, platformFilter, search]);
+  }, [posts, platformFilter, campaignFilter, search]);
+
 
   const postsByDay = useMemo(() => {
     const map = new Map<string, ScheduledPost[]>();
