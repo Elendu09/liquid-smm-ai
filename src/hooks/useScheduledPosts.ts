@@ -31,7 +31,9 @@ export interface ScheduledPost {
   rejectionReason?: string;
   recycleRuleId?: string;
   categoryId?: string;
+  campaignId?: string;
 }
+
 
 const STORAGE_KEY = "smmpilot:scheduled-posts";
 
