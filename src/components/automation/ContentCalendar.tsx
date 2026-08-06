@@ -112,6 +112,8 @@ export const ContentCalendar = () => {
   const [columnsLayout, setColumnsLayout] = useState<"kanban" | "list">("kanban");
   const [search, setSearch] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string[]>([]);
+  const [campaignFilter, setCampaignFilter] = useState<string | null>(null);
+
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
