@@ -49,7 +49,9 @@ function Item({ i, badge }: { i: (typeof left)[number]; badge?: number }) {
 
 
 export function MobileHubNav() {
+  const unread = useUnreadInbox();
   return (
+
     <nav
       aria-label="Hub navigation"
       data-tour="mobile-nav"
