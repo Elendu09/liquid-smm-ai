@@ -32,6 +32,7 @@ import { ApprovalBadge } from "@/components/publish/ApprovalControls";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useScheduledPosts, type ScheduledPost } from "@/hooks/useScheduledPosts";
 import { useBestTimes } from "@/hooks/useBestTimes";
+import { useCampaigns } from "@/hooks/useCampaigns";
 import { guardWrite } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -130,6 +131,7 @@ export const ContentCalendar = () => {
   const navigate = useNavigate();
 
   const bestTimes = useBestTimes();
+  const { campaigns } = useCampaigns();
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
