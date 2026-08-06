@@ -38,8 +38,9 @@ export function KpiTile({
         )}
         {visual}
         {delta && (
-
+          <div
             className={cn(
+
               "flex items-center gap-0.5 text-[10px] sm:text-xs font-semibold",
               isPositive ? "text-brand-green" : "text-destructive",
             )}
