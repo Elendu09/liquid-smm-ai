@@ -9,6 +9,19 @@ export interface BotRule {
   action: string;
   enabled: boolean;
   runs: number;
+  /** Visual flow (n8n-style pipeline): an ordered list of nodes. */
+  flow?: FlowNode[];
+}
+
+export type FlowNodeType = "trigger" | "condition" | "action";
+
+/** One node in a rule's visual flow. Edges connect node[i] → node[i+1]. */
+export interface FlowNode {
+  id: string;
+  type: FlowNodeType;
+  kind: string;
+  label: string;
+  params: Record<string, string>;
 }
 
 const STORAGE_KEY = "smmpilot:engage:bot-rules";
@@ -43,7 +56,7 @@ if (typeof window !== "undefined") {
 
 type Row = {
   id: string; name: string; enabled: boolean; kind: string;
-  config: { trigger?: string; action?: string; runs?: number } | null;
+  config: { trigger?: string; action?: string; runs?: number; flow?: FlowNode[] } | null;
   created_at: string;
 };
 
@@ -54,6 +67,7 @@ const rowToRule = (r: Row): BotRule => ({
   action: r.config?.action ?? "",
   enabled: r.enabled,
   runs: r.config?.runs ?? 0,
+  flow: r.config?.flow,
 });
 
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
@@ -121,7 +135,7 @@ export function useAutomationRules() {
         kind: RULE_KIND,
         name: rule.name,
         enabled: rule.enabled,
-        config: { trigger: rule.trigger, action: rule.action, runs: rule.runs },
+        config: { trigger: rule.trigger, action: rule.action, runs: rule.runs, flow: rule.flow },
       } as never).then(({ error }) => {
         if (error) setCache(cache.filter((r) => r.id !== rule.id));
       });
@@ -140,8 +154,8 @@ export function useAutomationRules() {
       const row: Record<string, unknown> = {};
       if (patch.name !== undefined) row.name = merged.name;
       if (patch.enabled !== undefined) row.enabled = merged.enabled;
-      if (patch.trigger !== undefined || patch.action !== undefined || patch.runs !== undefined) {
-        row.config = { trigger: merged.trigger, action: merged.action, runs: merged.runs };
+      if (patch.trigger !== undefined || patch.action !== undefined || patch.runs !== undefined || patch.flow !== undefined) {
+        row.config = { trigger: merged.trigger, action: merged.action, runs: merged.runs, flow: merged.flow };
       }
       void supabase.from("automation_rules").update(row as never).eq("id", id);
     } else {

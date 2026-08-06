@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Bot, Plus, Trash2, Power, LayoutGrid, List, PlayCircle, Pencil, Copy, Zap } from "lucide-react";
+import { Bot, Plus, Trash2, Power, LayoutGrid, List, PlayCircle, Pencil, Copy, Zap, Workflow } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -18,6 +18,10 @@ import { RunAutomationDialog } from "@/components/engage/RunAutomationDialog";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useAccounts } from "@/contexts/AccountContext";
 import { InboxAutomationPanel } from "@/components/engage/InboxAutomationPanel";
+import { BotFlowEditor } from "@/components/engage/BotFlowEditor";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 const seed: BotRule[] = [
   { id: "r1", name: "Welcome new followers", trigger: "New follower", action: "Send welcome DM", enabled: true, runs: 128 },
@@ -35,6 +39,7 @@ export default function BotRulesView() {
   const [testOpen, setTestOpen] = useState(false);
   const [testing, setTesting] = useState<BotRule | null>(null);
   const [runOpen, setRunOpen] = useState(false);
+  const [flowRuleId, setFlowRuleId] = useState<string | null>(null);
 
   // Guests get a seeded demo so the board isn't blank; authenticated users start clean.
   useEffect(() => {
@@ -45,6 +50,11 @@ export default function BotRulesView() {
   const filtered = useMemo(
     () => items.filter((r) => !search || r.name.toLowerCase().includes(search.toLowerCase())),
     [items, search],
+  );
+
+  const flowRule = useMemo(
+    () => items.find((r) => r.id === flowRuleId) ?? items[0] ?? null,
+    [items, flowRuleId],
   );
 
   const handleSubmit = (draft: RuleDraft) => {
@@ -135,6 +145,7 @@ export default function BotRulesView() {
             options={[
               { value: "grid", label: "Cards", icon: (p) => <LayoutGrid {...p} /> },
               { value: "list", label: "List", icon: (p) => <List {...p} /> },
+              { value: "flow", label: "Flow", icon: (p) => <Workflow {...p} /> },
             ]}
           />
         }
@@ -160,6 +171,40 @@ export default function BotRulesView() {
             description="Automate welcome DMs, keyword replies, and more. Create your first rule to start saving hours every week."
             ctaLabel="New rule"
             onCta={() => { setEditing(null); setRuleDialogOpen(true); }}
+          />
+        )
+      ) : view === "flow" ? (
+        flowRule ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={flowRule.id} onValueChange={setFlowRuleId}>
+                <SelectTrigger className="w-72"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {items.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                Build the rule visually — trigger → conditions → actions.
+              </span>
+              <Button size="sm" variant="outline" className="ml-auto" onClick={() => { setEditing(flowRule); setRuleDialogOpen(true); }}>
+                <Pencil className="h-4 w-4 mr-1" /> Edit details
+              </Button>
+            </div>
+            <BotFlowEditor
+              key={flowRule.id}
+              rule={flowRule}
+              onSave={(id, fl) => { update(id, { flow: fl }); toast.success("Flow saved"); }}
+            />
+          </div>
+        ) : (
+          <EmptyState
+            variant="create-first"
+            title="No rules yet"
+            description="Create a rule to open the visual flow editor."
+            ctaLabel="New rule"
+            onCta={() => setRuleDialogOpen(true)}
           />
         )
       ) : view === "grid" ? (

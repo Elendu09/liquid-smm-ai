@@ -296,9 +296,9 @@ export default function RssFeedsPage() {
   };
 
   const saveRewritten = async () => {
-    if (!rewriteItem || !rewritten.trim()) return;
-    await importItem(rewriteItem, { caption: rewritten.trim() });
-    setRewriteItem(null);
+    if (!previewItem || !rewritten.trim()) return;
+    await importItem(previewItem, { caption: rewritten.trim() });
+    setPreviewItem(null);
     setRewritten("");
   };
 
@@ -475,93 +475,86 @@ export default function RssFeedsPage() {
               </CardContent>
             </Card>
           )}
-          {feeds.map((f) => (
-            <Card key={f.id} className="hover:border-primary/40 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold truncate">{f.title || f.url}</span>
-                      {f.auto_publish ? (
-                        <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-0">
-                          <Radio className="h-3 w-3 mr-1" /> Auto
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">Drafts</Badge>
-                      )}
-                      {f.ai_rewrite && (
-                        <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-0">
-                          <Sparkles className="h-3 w-3 mr-1" /> AI Rewrite
-                        </Badge>
-                      )}
-                      {f.last_status === "ok" && (
-                        <Badge variant="outline" className="border-green-500/40 text-green-500">
-                          <CheckCircle2 className="h-3 w-3 mr-1" /> Healthy
-                        </Badge>
-                      )}
-                      {f.last_status === "error" && (
-                        <Badge variant="outline" className="border-destructive/40 text-destructive">
-                          <AlertCircle className="h-3 w-3 mr-1" /> Error
-                        </Badge>
-                      )}
+          {feeds.map((f) => {
+            const isSyncing = syncingFeedId === f.id;
+            const isError = f.last_status === "error";
+            const isOk = f.last_status === "ok";
+            return (
+              <Card key={f.id} className={`overflow-hidden hover:border-primary/40 transition-colors ${isError ? "border-destructive/30" : ""}`}>
+                <div className={`h-1 w-full ${isError ? "bg-gradient-to-r from-destructive to-destructive/40" : isOk ? "bg-gradient-to-r from-emerald-500 to-emerald-500/40" : "bg-gradient-to-r from-primary to-primary/30"}`} />
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`h-11 w-11 shrink-0 rounded-xl flex items-center justify-center ring-1 ${isError ? "bg-destructive/10 text-destructive ring-destructive/20" : isOk ? "bg-emerald-500/10 text-emerald-600 ring-emerald-500/20" : "bg-primary/10 text-primary ring-primary/20"}`}>
+                      {isSyncing ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Rss className="h-5 w-5" />}
                     </div>
-                    <a
-                      href={f.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-muted-foreground hover:text-foreground truncate inline-flex items-center gap-1 mt-1"
-                    >
-                      {f.url} <ExternalLink className="h-3 w-3" />
-                    </a>
-                    <div className="text-xs text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {f.last_fetched_at
-                          ? `Fetched ${formatDistanceToNow(new Date(f.last_fetched_at))} ago`
-                          : "Not fetched"}
-                      </span>
-                      <span>· Every {INTERVAL_OPTIONS.find((o) => o.value === f.poll_interval_minutes)?.label ?? `${f.poll_interval_minutes}m`}</span>
-                      <span>· {f.last_item_count} items in feed</span>
-                      {f.last_error && <span className="text-destructive">· {f.last_error}</span>}
-                    </div>
-                    {(f.target_platforms.length > 0 || f.filter_keywords.length > 0 || f.exclude_keywords.length > 0) && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {f.target_platforms.map((p) => (
-                          <Badge key={p} variant="secondary" className="text-[10px] capitalize">{p}</Badge>
-                        ))}
-                        {f.filter_keywords.map((k) => (
-                          <Badge key={"i-" + k} variant="outline" className="text-[10px] border-green-500/40 text-green-600">
-                            +{k}
-                          </Badge>
-                        ))}
-                        {f.exclude_keywords.map((k) => (
-                          <Badge key={"x-" + k} variant="outline" className="text-[10px] border-destructive/40 text-destructive">
-                            −{k}
-                          </Badge>
-                        ))}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold truncate">{f.title || f.url}</span>
+                        {f.auto_publish ? (
+                          <Badge className="bg-green-500/10 text-green-600 border-0"><Radio className="h-3 w-3 mr-1" /> Auto</Badge>
+                        ) : (
+                          <Badge variant="outline">Drafts</Badge>
+                        )}
+                        {f.ai_rewrite && (
+                          <Badge className="bg-primary/10 text-primary border-0"><Sparkles className="h-3 w-3 mr-1" /> AI</Badge>
+                        )}
+                        {isError ? (
+                          <Badge variant="outline" className="border-destructive/40 text-destructive"><AlertCircle className="h-3 w-3 mr-1" /> Error</Badge>
+                        ) : isOk ? (
+                          <Badge variant="outline" className="border-emerald-500/40 text-emerald-600"><CheckCircle2 className="h-3 w-3 mr-1" /> Healthy</Badge>
+                        ) : (
+                          <Badge variant="outline">New</Badge>
+                        )}
                       </div>
-                    )}
+                      <a href={f.url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-foreground truncate inline-flex items-center gap-1 mt-1">
+                        {f.url} <ExternalLink className="h-3 w-3" />
+                      </a>
+                      <div className="text-xs text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {f.last_fetched_at ? `Fetched ${formatDistanceToNow(new Date(f.last_fetched_at))} ago` : "Not fetched"}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Radio className="h-3 w-3" /> {INTERVAL_OPTIONS.find((o) => o.value === f.poll_interval_minutes)?.label ?? `${f.poll_interval_minutes}m`}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Newspaper className="h-3 w-3" /> {f.last_item_count} items
+                        </span>
+                        {f.last_error && <span className="text-destructive truncate max-w-[180px]">{f.last_error}</span>}
+                      </div>
+                      {(f.target_platforms.length > 0 || f.filter_keywords.length > 0 || f.exclude_keywords.length > 0) && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {f.target_platforms.map((p) => (
+                            <Badge key={p} variant="secondary" className="text-[10px] capitalize">{p}</Badge>
+                          ))}
+                          {f.filter_keywords.map((k) => (
+                            <Badge key={"i-" + k} variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-600">+{k}</Badge>
+                          ))}
+                          {f.exclude_keywords.map((k) => (
+                            <Badge key={"x-" + k} variant="outline" className="text-[10px] border-destructive/40 text-destructive">−{k}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-center gap-1.5 shrink-0">
+                      <Switch checked={f.active} onCheckedChange={(v) => updateFeed(f.id, { active: v })} aria-label="Active" />
+                      <div className="flex gap-1">
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => fetchNow(f.id)} disabled={fetching} title="Fetch now">
+                          <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(f)} title="Edit">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeFeed(f.id)} title="Delete">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Switch
-                      checked={f.active}
-                      onCheckedChange={(v) => updateFeed(f.id, { active: v })}
-                      aria-label="Active"
-                    />
-                    <Button size="icon" variant="ghost" onClick={() => fetchNow(f.id)} disabled={fetching} title="Fetch now">
-                      <RefreshCw className={`h-4 w-4 ${syncingFeedId === f.id ? "animate-spin" : ""}`} />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => openEdit(f)} title="Edit">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="text-destructive" onClick={() => removeFeed(f.id)} title="Delete">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </TabsContent>
 
         {/* Items tab */}
@@ -1012,7 +1005,7 @@ export default function RssFeedsPage() {
       </Dialog>
 
       {/* Item preview */}
-      <Dialog open={!!previewItem} onOpenChange={(v) => !v && setPreviewItem(null)}>
+      <Dialog open={!!previewItem} onOpenChange={(v) => { if (!v) { setPreviewItem(null); setRewritten(""); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="line-clamp-2">{previewItem?.title}</DialogTitle>
@@ -1040,8 +1033,35 @@ export default function RssFeedsPage() {
               Open original <ExternalLink className="h-3 w-3" />
             </a>
           )}
+
+          {/* In-place AI rewrite */}
+          {rewriting && rewriteItem?.id === previewItem?.id && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+              <Sparkles className="h-4 w-4 animate-pulse" /> Rewriting with AI…
+            </div>
+          )}
+          {rewritten && !(rewriting && rewriteItem?.id === previewItem?.id) && (
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+              <div className="text-[10px] uppercase tracking-wider text-primary">
+                AI rewrite · {formatCost("create.rewrite")}
+              </div>
+              <p className="text-sm whitespace-pre-line">{rewritten}</p>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => void saveRewritten()}>
+                  <Send className="h-3.5 w-3.5 mr-1" /> Use as draft
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => previewItem && void runRewrite(previewItem)} disabled={rewriting}>
+                  <Sparkles className="h-3.5 w-3.5 mr-1" /> Regenerate
+                </Button>
+              </div>
+            </div>
+          )}
+
           <DialogFooter>
             <Button variant="ghost" onClick={() => setPreviewItem(null)}>Close</Button>
+            <Button variant="outline" onClick={() => previewItem && void runRewrite(previewItem)} disabled={rewriting} title={`AI rewrite — ${formatCost("create.rewrite")}`}>
+              <Sparkles className="h-3.5 w-3.5 mr-1" /> AI rewrite
+            </Button>
             {previewItem && !previewItem.imported && (
               <Button onClick={() => { importItem(previewItem); setPreviewItem(null); }}>
                 <Send className="h-4 w-4 mr-2" /> Save as draft
@@ -1051,51 +1071,6 @@ export default function RssFeedsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* AI rewrite dialog */}
-      <Dialog open={!!rewriteItem} onOpenChange={(v) => { if (!v) setRewriteItem(null); setRewritten(""); }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" /> AI rewrite
-            </DialogTitle>
-            <DialogDescription className="line-clamp-2">{rewriteItem?.title}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="rounded-xl border border-border/60 bg-background/40 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Original</div>
-              <p className="text-xs text-muted-foreground line-clamp-3">
-                {rewriteItem ? cleanRssText(rewriteItem.summary ?? rewriteItem.title, 200) : ""}
-              </p>
-            </div>
-            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-primary mb-2">
-                Rewritten — {formatCost("create.rewrite")}
-              </div>
-              {rewriting ? (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-                  <Sparkles className="h-4 w-4 animate-pulse" /> Rewriting…
-                </div>
-              ) : rewritten ? (
-                <p className="text-sm whitespace-pre-line">{rewritten}</p>
-              ) : (
-                <p className="text-xs text-muted-foreground">Rewrite this item into a social-ready post. Credits are only charged on success.</p>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setRewriteItem(null)}>Cancel</Button>
-            {rewritten ? (
-              <Button onClick={() => void saveRewritten()}>
-                <Send className="h-4 w-4 mr-1" /> Save as draft
-              </Button>
-            ) : (
-              <Button onClick={() => rewriteItem && void runRewrite(rewriteItem)} disabled={rewriting}>
-                <Sparkles className="h-4 w-4 mr-1" /> Rewrite
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
