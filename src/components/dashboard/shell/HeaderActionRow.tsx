@@ -69,3 +69,19 @@ export function HeaderActionRow({
 
 export const openOnboardingTour = () =>
   window.dispatchEvent(new Event("smmpilot:open-onboarding-tour"));
+
+/**
+ * Build the header action row from a hub's own sections, so the header always
+ * mirrors the tabs below it instead of introducing new destinations.
+ */
+export function sectionActions(
+  tabs: { label: string; href: string; icon?: React.ComponentType<{ className?: string }> }[],
+): HeaderAction[] {
+  return tabs.map((t, i) => ({
+    label: t.label,
+    icon: t.icon,
+    to: t.href,
+    primary: i === 0,
+  }));
+}
+
