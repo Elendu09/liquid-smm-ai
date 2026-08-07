@@ -210,8 +210,9 @@ export const INTEGRATIONS: Integration[] = [
     transport: "http",
     steps: baseSteps("n8n"),
     prompts: [
-      "Cross-post RSS entries to SkyRank",
-      "Notify Discord when a scheduled post publishes",
+      "When an Instagram post publishes, adapt and reshare it to TikTok, YouTube, LinkedIn, and X",
+      "Cross-post RSS entries to SkyRank with an approval step before publishing",
+      "Notify Discord when a scheduled post publishes or a reshare branch fails",
     ],
   },
   {

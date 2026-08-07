@@ -30,7 +30,11 @@ export function HeaderActionRow({
   className?: string;
 }) {
   const cols =
-    actions.length === 2 ? "grid-cols-2" : actions.length >= 4 ? "grid-cols-4" : "grid-cols-3";
+    actions.length === 2
+      ? "grid-cols-2"
+      : actions.length >= 4
+        ? "grid-cols-2 sm:grid-cols-4"
+        : "grid-cols-3";
 
   return (
     <div className={cn("grid gap-2 w-full md:w-auto md:flex md:items-center", cols, className)}>
