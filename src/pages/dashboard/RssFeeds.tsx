@@ -840,9 +840,12 @@ export default function RssFeedsPage() {
                   <div className="text-xs text-muted-foreground">
                     Rewrite each headline into an engaging social hook before publishing.
                   </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {formatCost("create.rewrite")} per imported item{lowCredits ? " · not enough credits" : ""}
+                  </div>
                 </div>
               </div>
-              <Switch checked={aiRewrite} onCheckedChange={setAiRewrite} />
+              <Switch checked={aiRewrite} onCheckedChange={setAiRewrite} disabled={lowCredits && !aiRewrite} />
             </div>
           </div>
           <DialogFooter>
@@ -971,9 +974,12 @@ export default function RssFeedsPage() {
                   <div className="text-xs text-muted-foreground">
                     Rewrite every headline into an engaging social hook.
                   </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {formatCost("create.rewrite")} per imported item{lowCredits ? " · not enough credits" : ""}
+                  </div>
                 </div>
               </div>
-              <Switch checked={bulkAi} onCheckedChange={setBulkAi} />
+              <Switch checked={bulkAi} onCheckedChange={setBulkAi} disabled={lowCredits && !bulkAi} />
             </div>
           </div>
           <DialogFooter>
