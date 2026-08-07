@@ -282,29 +282,39 @@ export default function RssFeedsPage() {
       );
   }, [items, itemFilter, search]);
 
+  /** Shared rewriter used by the preview dialog and by feed-level auto-rewrite. */
+  const autoRewrite = useCallback(async (text: string, platform?: string) => {
+    const res = await aiCreate.rewrite({ text: cleanRssText(text, 900), platform, tone: "engaging" });
+    return res?.rewritten ?? null;
+  }, []);
+
   const runRewrite = async (item: RssItem) => {
+    if (lowCredits) {
+      toast.error("Not enough credits for an AI rewrite.");
+      return;
+    }
     const feed = feeds.find((f) => f.id === item.feed_id);
     setRewriteItem(item);
     setRewritten("");
     setRewriting(true);
     try {
-      const res = await aiCreate.rewrite({
-        text: `${item.title ?? ""}\n\n${cleanRssText(item.summary, 900)}`,
-        platform: feed?.target_platforms?.[0],
-        tone: "engaging",
-      });
-      if (res) setRewritten(res.rewritten);
+      const out = await autoRewrite(
+        `${item.title ?? ""}\n\n${item.summary ?? ""}`,
+        feed?.target_platforms?.[0],
+      );
+      if (out) setRewritten(out);
     } finally {
       setRewriting(false);
     }
   };
 
-  const saveRewritten = async () => {
+  const saveRewritten = async (queue = false) => {
     if (!previewItem || !rewritten.trim()) return;
-    await importItem(previewItem, { caption: rewritten.trim() });
+    await importItem(previewItem, { caption: rewritten.trim(), queue, skipAutoRewrite: true });
     setPreviewItem(null);
     setRewritten("");
   };
+
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
