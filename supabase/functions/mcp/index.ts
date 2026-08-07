@@ -308,13 +308,213 @@ var get_automation_settings_default = defineTool8({
   }
 });
 
+// src/lib/mcp/tools/list-competitors.ts
+import { defineTool as defineTool9 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { z as z3 } from "npm:zod@^3.25.76";
+
+// src/lib/mcp/helpers.ts
+import { createClient } from "npm:@supabase/supabase-js@^2.110.5";
+function edgeSupabase(ctx) {
+  const token = typeof ctx.getToken === "function" ? ctx.getToken() : void 0;
+  const deno = globalThis.Deno;
+  const url = "https://ntbtbzssdwkbrfcmqyfc.supabase.co";
+  const key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50YnRienNzZHdrYnJmY21xeWZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwOTgwMzYsImV4cCI6MjA5OTY3NDAzNn0.XrUg247n7k82LNwnvHSaB-ftEnm0-J9umSWScQlfAhw";
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    }
+  });
+}
+function requireAuth(ctx) {
+  if (!ctx.isAuthenticated()) {
+    return {
+      ok: false,
+      content: [{ type: "text", text: "Not authenticated. Connect your account via OAuth to use this tool." }],
+      isError: true
+    };
+  }
+  return { ok: true };
+}
+function tableResult(rows, summary) {
+  const text = summary ? `${summary}
+
+` : "";
+  return {
+    content: [{ type: "text", text: text + JSON.stringify(rows, null, 2) }],
+    structuredContent: rows
+  };
+}
+
+// src/lib/mcp/tools/list-competitors.ts
+var list_competitors_default = defineTool9({
+  name: "list_competitors",
+  title: "List tracked competitors",
+  description: "List the signed-in user's tracked competitors across all platforms (Instagram, TikTok, YouTube, X, LinkedIn, Threads, Reddit, Bluesky and more). Returns handle, platform, display name, status and follower count.",
+  inputSchema: {
+    platform: z3.string().optional().describe("Optional platform filter (e.g. instagram, github).")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async (input, ctx) => {
+    const auth2 = requireAuth(ctx);
+    if (!auth2.ok) return auth2;
+    const db = edgeSupabase(ctx);
+    let q = db.from("competitors").select("id, handle, platform, display_name, notes, data, created_at").eq("user_id", ctx.getUserId());
+    if (input.platform) q = q.eq("platform", input.platform.toLowerCase());
+    const { data, error } = await q.order("created_at", { ascending: false });
+    if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
+    return tableResult(data ?? [], `${(data ?? []).length} tracked competitor(s)`);
+  }
+});
+
+// src/lib/mcp/tools/add-competitor.ts
+import { defineTool as defineTool10 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { z as z4 } from "npm:zod@^3.25.76";
+var add_competitor_default = defineTool10({
+  name: "add_competitor",
+  title: "Track a competitor",
+  description: "Start tracking a competitor for the signed-in user. Pass the platform (instagram, tiktok, youtube, twitter, linkedin, facebook, threads, pinterest, reddit, bluesky) and their handle/username. Write tools require user approval inside the app.",
+  inputSchema: {
+    platform: z4.string().describe("Platform the competitor is on (e.g. instagram, github)."),
+    handle: z4.string().describe("The competitor's handle or username on that platform."),
+    displayName: z4.string().optional().describe("Optional display name."),
+    notes: z4.string().optional().describe("Optional note about this competitor.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  handler: async (input, ctx) => {
+    const auth2 = requireAuth(ctx);
+    if (!auth2.ok) return auth2;
+    const db = edgeSupabase(ctx);
+    const row = {
+      user_id: ctx.getUserId(),
+      platform: input.platform.toLowerCase(),
+      handle: input.handle.trim(),
+      display_name: input.displayName?.trim() || null,
+      notes: input.notes?.trim() || null,
+      data: { status: "tracking" }
+    };
+    const { data, error } = await db.from("competitors").insert(row).select("id, handle, platform").maybeSingle();
+    if (error) {
+      if (String(error.code ?? "").startsWith("23")) {
+        return { content: [{ type: "text", text: "This competitor is already being tracked." }], isError: false };
+      }
+      return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
+    }
+    return tableResult(data ?? {}, `Now tracking ${input.handle} on ${input.platform}.`);
+  }
+});
+
+// src/lib/mcp/tools/list-rss-feeds.ts
+import { defineTool as defineTool11 } from "npm:@lovable.dev/mcp-js@0.22.2";
+var list_rss_feeds_default = defineTool11({
+  name: "list_rss_feeds",
+  title: "List RSS feeds",
+  description: "List the signed-in user's RSS automation feeds with their URL, poll interval, last fetch status, item counts, target platforms and errors. Use this before proposing any RSS-related action.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async (_input, ctx) => {
+    const auth2 = requireAuth(ctx);
+    if (!auth2.ok) return auth2;
+    const db = edgeSupabase(ctx);
+    const { data, error } = await db.from("rss_feeds").select("id, url, title, target_platforms, filter_keywords, exclude_keywords, auto_publish, poll_interval_minutes, last_fetched_at, last_status, last_error, active").eq("owner_id", ctx.getUserId()).order("created_at", { ascending: false });
+    if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
+    return tableResult(data ?? [], `${(data ?? []).length} RSS feed(s)`);
+  }
+});
+
+// src/lib/mcp/tools/list-notifications.ts
+import { defineTool as defineTool12 } from "npm:@lovable.dev/mcp-js@0.22.2";
+import { z as z5 } from "npm:zod@^3.25.76";
+var list_notifications_default = defineTool12({
+  name: "list_notifications",
+  title: "List notifications",
+  description: "List the signed-in user's recent in-app notifications (engagement, milestones, alerts, reminders, system) with severity and read state. Use this to check for alerts, sync failures or milestone updates.",
+  inputSchema: {
+    limit: z5.number().int().min(1).max(50).optional().describe("Number of notifications to return (default 10).")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async (input, ctx) => {
+    const auth2 = requireAuth(ctx);
+    if (!auth2.ok) return auth2;
+    const limit = Math.min(50, Math.max(1, Number(input.limit ?? 10) || 10));
+    const db = edgeSupabase(ctx);
+    const { data, error } = await db.from("notifications").select("id, type, severity, title, message, action_url, read_at, created_at").eq("user_id", ctx.getUserId()).order("created_at", { ascending: false }).limit(limit);
+    if (error) return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
+    const unread = (data ?? []).filter((n) => !n.read_at).length;
+    return tableResult(data ?? [], `${(data ?? []).length} notification(s), ${unread} unread`);
+  }
+});
+
+// src/lib/mcp/tools/get-referral-status.ts
+import { defineTool as defineTool13 } from "npm:@lovable.dev/mcp-js@0.22.2";
+var get_referral_status_default = defineTool13({
+  name: "get_referral_status",
+  title: "Get referral status",
+  description: "Return the signed-in user's referral program status: their share code and link, lifetime referral credits earned, and how many referred signups have upgraded to a paid plan.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async (_input, ctx) => {
+    const auth2 = requireAuth(ctx);
+    if (!auth2.ok) return auth2;
+    const userId = ctx.getUserId();
+    const db = edgeSupabase(ctx);
+    const [{ data: profile }, { data: referrals }, { data: events }] = await Promise.all([
+      db.from("profiles").select("referral_code, referred_by").eq("id", userId).maybeSingle(),
+      db.from("referrals").select("id, referred_user_id, plan, credits_awarded, rewarded_at").eq("referrer_id", userId).order("rewarded_at", { ascending: false }),
+      db.from("credit_events").select("delta").eq("user_id", userId).eq("kind", "referral")
+    ]);
+    const totalEarned = (events ?? []).reduce((sum, e) => sum + Number(e.delta ?? 0), 0);
+    const payload = {
+      referralCode: profile?.referral_code ?? null,
+      referralLink: profile?.referral_code ? `https://smmsaas.com/referral/${profile.referral_code}` : null,
+      totalCreditsEarned: totalEarned,
+      paidReferrals: (referrals ?? []).length,
+      referredBy: profile?.referred_by ?? null,
+      referrals: referrals ?? []
+    };
+    return tableResult(payload, payload.referralCode ? `Share code: ${payload.referralCode}` : "No referral code yet.");
+  }
+});
+
+// src/lib/mcp/tools/get-credits.ts
+import { defineTool as defineTool14 } from "npm:@lovable.dev/mcp-js@0.22.2";
+var get_credits_default = defineTool14({
+  name: "get_credits",
+  title: "Get AI credit balance",
+  description: "Return the signed-in user's AI credit balance (remaining, monthly allowance, used this month, purchased) plus their recent credit ledger events. Use this before recommending any credit-consuming action.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async (_input, ctx) => {
+    const auth2 = requireAuth(ctx);
+    if (!auth2.ok) return auth2;
+    const userId = ctx.getUserId();
+    const db = edgeSupabase(ctx);
+    const [{ data: bal }, { data: events }] = await Promise.all([
+      db.from("credit_balances").select("included, purchased, used, cap, renews_at").eq("user_id", userId).maybeSingle(),
+      db.from("credit_events").select("kind, delta, label, meta, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(15)
+    ]);
+    const included = Number(bal?.included ?? 0);
+    const purchased = Number(bal?.purchased ?? 0);
+    const used = Number(bal?.used ?? 0);
+    const payload = {
+      remaining: Math.max(0, included + purchased - used),
+      monthlyAllowance: Number(bal?.cap ?? included) || included,
+      usedThisMonth: used,
+      purchased,
+      renewsAt: bal?.renews_at ?? null,
+      recentEvents: events ?? []
+    };
+    return tableResult(payload, `${payload.remaining} credits remaining`);
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "ntbtbzssdwkbrfcmqyfc";
 var mcp_default = defineMcp({
   name: "smm-app-mcp",
   title: "SMM App MCP",
-  version: "0.3.0",
-  instructions: "Tools for the SMM app. Start with `get_user_profile` and `get_automation_settings` to tailor actions to the user. Use `whoami` for identity, `list_platforms` for supported networks, `list_scheduled_posts` / `queue_cross_platform_post` for the publish queue, and `list_captions` / `create_caption_draft` for the caption library. Write tools require user approval inside the app.",
+  version: "0.4.0",
+  instructions: "Tools for the SMM app. Start with `get_user_profile` and `get_automation_settings` to tailor actions to the user. Use `whoami` for identity, `list_platforms` for supported networks, `list_scheduled_posts` / `queue_cross_platform_post` for the publish queue, `list_captions` / `create_caption_draft` for the caption library, `list_competitors` / `add_competitor` for competitive tracking, `list_rss_feeds` for RSS automation, `list_notifications` for alerts, `get_credits` for the AI credit balance and `get_referral_status` for the referral program. Write tools require user approval inside the app.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
@@ -327,7 +527,13 @@ var mcp_default = defineMcp({
     list_scheduled_posts_default,
     queue_cross_platform_post_default,
     list_captions_default,
-    create_caption_draft_default
+    create_caption_draft_default,
+    list_competitors_default,
+    add_competitor_default,
+    list_rss_feeds_default,
+    list_notifications_default,
+    get_referral_status_default,
+    get_credits_default
   ]
 });
 

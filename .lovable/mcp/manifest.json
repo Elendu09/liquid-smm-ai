@@ -12,7 +12,7 @@
   "mcp": {
     "server": {
       "name": "smm-app-mcp",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "title": "SMM App MCP"
     },
     "tools": [
@@ -210,6 +210,138 @@
           ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_competitors",
+        "title": "List tracked competitors",
+        "description": "List the signed-in user's tracked competitors across all platforms (Instagram, TikTok, YouTube, X, LinkedIn, Threads, Reddit, Bluesky and more). Returns handle, platform, display name, status and follower count.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "platform": {
+              "type": "string",
+              "description": "Optional platform filter (e.g. instagram, github)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_competitor",
+        "title": "Track a competitor",
+        "description": "Start tracking a competitor for the signed-in user. Pass the platform (instagram, tiktok, youtube, twitter, linkedin, facebook, threads, pinterest, reddit, bluesky) and their handle/username. Write tools require user approval inside the app.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "platform": {
+              "type": "string",
+              "description": "Platform the competitor is on (e.g. instagram, github)."
+            },
+            "handle": {
+              "type": "string",
+              "description": "The competitor's handle or username on that platform."
+            },
+            "displayName": {
+              "type": "string",
+              "description": "Optional display name."
+            },
+            "notes": {
+              "type": "string",
+              "description": "Optional note about this competitor."
+            }
+          },
+          "required": [
+            "platform",
+            "handle"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_rss_feeds",
+        "title": "List RSS feeds",
+        "description": "List the signed-in user's RSS automation feeds with their URL, poll interval, last fetch status, item counts, target platforms and errors. Use this before proposing any RSS-related action.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_notifications",
+        "title": "List notifications",
+        "description": "List the signed-in user's recent in-app notifications (engagement, milestones, alerts, reminders, system) with severity and read state. Use this to check for alerts, sync failures or milestone updates.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Number of notifications to return (default 10)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_referral_status",
+        "title": "Get referral status",
+        "description": "Return the signed-in user's referral program status: their share code and link, lifetime referral credits earned, and how many referred signups have upgraded to a paid plan.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_credits",
+        "title": "Get AI credit balance",
+        "description": "Return the signed-in user's AI credit balance (remaining, monthly allowance, used this month, purchased) plus their recent credit ledger events. Use this before recommending any credit-consuming action.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
         },
         "outputSchema": null
       }
