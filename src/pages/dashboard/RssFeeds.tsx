@@ -55,7 +55,7 @@ import { formatDistanceToNow } from "date-fns";
 import { cleanRssText } from "@/lib/rssUtils";
 import { aiCreate } from "@/hooks/useAiCreate";
 import { useCredits } from "@/hooks/useCredits";
-import { formatCost } from "@/config/aiCosts";
+import { formatCost, aiCost } from "@/config/aiCosts";
 
 const DEMO_FEEDS = [
   {
@@ -157,10 +157,8 @@ export default function RssFeedsPage() {
   } = useRssFeeds();
   const { isGuest } = useGuest();
   const { balance } = useCredits();
-  const remainingCredits = balance
-    ? Math.max(0, (balance.included ?? 0) + (balance.purchased ?? 0) - (balance.used ?? 0))
-    : null;
-  const lowCredits = remainingCredits !== null && remainingCredits < COST_REWRITE;
+  const remainingCredits = balance?.balance ?? 0;
+  const lowCredits = remainingCredits < aiCost("create.rewrite");
 
 
   const [tab, setTab] = useState<"feeds" | "items" | "discover">("feeds");
