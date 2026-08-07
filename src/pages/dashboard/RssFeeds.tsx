@@ -1039,39 +1039,67 @@ export default function RssFeedsPage() {
           )}
 
           {/* In-place AI rewrite */}
-          {rewriting && rewriteItem?.id === previewItem?.id && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-              <Sparkles className="h-4 w-4 animate-pulse" /> Rewriting with AI…
-            </div>
-          )}
-          {rewritten && !(rewriting && rewriteItem?.id === previewItem?.id) && (
-            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
-              <div className="text-[10px] uppercase tracking-wider text-primary">
+          <div className="rounded-xl border border-primary/25 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-primary">
+                <Sparkles className={`h-3.5 w-3.5 ${rewriting ? "animate-pulse" : ""}`} />
                 AI rewrite · {formatCost("create.rewrite")}
               </div>
-              <p className="text-sm whitespace-pre-line">{rewritten}</p>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => void saveRewritten()}>
-                  <Send className="h-3.5 w-3.5 mr-1" /> Use as draft
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => previewItem && void runRewrite(previewItem)} disabled={rewriting}>
-                  <Sparkles className="h-3.5 w-3.5 mr-1" /> Regenerate
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8"
+                disabled={rewriting || lowCredits}
+                onClick={() => previewItem && void runRewrite(previewItem)}
+              >
+                {rewriting ? "Rewriting…" : rewritten ? "Regenerate" : "Rewrite with AI"}
+              </Button>
             </div>
-          )}
+            {lowCredits && (
+              <p className="text-[11px] text-destructive">
+                Not enough credits — top up in Settings → Billing.
+              </p>
+            )}
+            {rewritten && (
+              <>
+                <Textarea
+                  rows={5}
+                  value={rewritten}
+                  onChange={(e) => setRewritten(e.target.value)}
+                  className="text-sm bg-background/70"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={() => void saveRewritten(false)}>
+                    <Send className="h-3.5 w-3.5 mr-1" /> Use this text
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => void saveRewritten(true)}>
+                    <Clock className="h-3.5 w-3.5 mr-1" /> Add to queue
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setRewritten(""); setRewriteItem(null); }}>
+                    Revert
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => setPreviewItem(null)}>Close</Button>
-            <Button variant="outline" onClick={() => previewItem && void runRewrite(previewItem)} disabled={rewriting} title={`AI rewrite — ${formatCost("create.rewrite")}`}>
-              <Sparkles className="h-3.5 w-3.5 mr-1" /> AI rewrite
-            </Button>
             {previewItem && !previewItem.imported && (
-              <Button onClick={() => { void importItem(previewItem, { rewrite: autoRewrite }); setPreviewItem(null); }}>
-                <Send className="h-4 w-4 mr-2" /> Save as draft
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => { void importItem(previewItem, { queue: true, rewrite: autoRewrite }); setPreviewItem(null); }}
+                >
+                  <Clock className="h-4 w-4 mr-2" /> Add to queue
+                </Button>
+                <Button onClick={() => { void importItem(previewItem, { rewrite: autoRewrite }); setPreviewItem(null); }}>
+                  <Send className="h-4 w-4 mr-2" /> Save as draft
+                </Button>
+              </>
             )}
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
 
