@@ -54,6 +54,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { cleanRssText } from "@/lib/rssUtils";
 import { aiCreate } from "@/hooks/useAiCreate";
+import { useCredits } from "@/hooks/useCredits";
 import { formatCost } from "@/config/aiCosts";
 
 const DEMO_FEEDS = [
@@ -155,6 +156,11 @@ export default function RssFeedsPage() {
     dismissItem,
   } = useRssFeeds();
   const { isGuest } = useGuest();
+  const { balance } = useCredits();
+  const remainingCredits = balance
+    ? Math.max(0, (balance.included ?? 0) + (balance.purchased ?? 0) - (balance.used ?? 0))
+    : null;
+  const lowCredits = remainingCredits !== null && remainingCredits < COST_REWRITE;
 
 
   const [tab, setTab] = useState<"feeds" | "items" | "discover">("feeds");
@@ -633,18 +639,8 @@ export default function RssFeedsPage() {
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => setPreviewItem(it)}>
                       <Eye className="h-3.5 w-3.5 mr-1" /> Preview
                     </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="text-primary hover:text-primary"
-                      onClick={() => void runRewrite(it)}
-                      disabled={rewriting && rewriteItem?.id === it.id}
-                      title={`AI rewrite — ${formatCost("create.rewrite")}`}
-                    >
-                      <Sparkles className={`h-3.5 w-3.5 ${rewriting && rewriteItem?.id === it.id ? "animate-pulse" : ""}`} />
-                    </Button>
                     {!it.imported && (
-                      <Button size="sm" className="flex-1" onClick={() => importItem(it)}>
+                      <Button size="sm" className="flex-1" onClick={() => void importItem(it, { rewrite: autoRewrite })}>
                         <Send className="h-3.5 w-3.5 mr-1" /> Draft
                       </Button>
                     )}
@@ -1063,7 +1059,7 @@ export default function RssFeedsPage() {
               <Sparkles className="h-3.5 w-3.5 mr-1" /> AI rewrite
             </Button>
             {previewItem && !previewItem.imported && (
-              <Button onClick={() => { importItem(previewItem); setPreviewItem(null); }}>
+              <Button onClick={() => { void importItem(previewItem, { rewrite: autoRewrite }); setPreviewItem(null); }}>
                 <Send className="h-4 w-4 mr-2" /> Save as draft
               </Button>
             )}
