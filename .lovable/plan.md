@@ -26,7 +26,7 @@ Make imported items land in Publish as ready-to-schedule posts:
 
 ## 4. Referral: fix the broken data layer
 
-The referral feature reads `profiles.referral_code`, `profiles.referred_by` and a `referrals` table — none of these exist in the database, so referral pages error and no link can be issued.
+The referral feature reads `profiles.referral_code`, `profiles.referred_by` and a `referrals` table — none of these exist in the database (verified against the live schema), so referral pages error, the project currently fails to typecheck in `useReferrals.ts` and the MCP referral tool, and no link can be issued. The migration below is what clears both the runtime error and the build errors.
 
 - Add `referral_code` (unique) and `referred_by` to profiles, and create the `referrals` ledger (referrer, referred user, plan, credits awarded, timestamp) with access rules so a user only sees their own referrals and the referral edge functions can write.
 - Issue a referral code automatically for every user (new signups on profile creation, plus a backfill for existing accounts) so the share link always exists rather than being minted on first page visit.
