@@ -6,7 +6,7 @@ export { LoadingState } from "./LoadingState";
 export { KpiTile } from "./KpiTile";
 export { HubTabs } from "./HubTabs";
 export type { HubTab } from "./HubTabs";
-export { HeaderActionRow, openOnboardingTour } from "./HeaderActionRow";
+export { HeaderActionRow, openOnboardingTour, sectionActions } from "./HeaderActionRow";
 export type { HeaderAction } from "./HeaderActionRow";
 
 export { ViewToggle, useViewMode, VIEW_ICONS } from "./ViewToggle";

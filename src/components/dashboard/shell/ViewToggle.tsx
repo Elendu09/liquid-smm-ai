@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { LayoutGrid, List, Calendar as CalendarIcon, GitCommitVertical } from "lucide-react";
+import { LayoutGrid, List, Calendar as CalendarIcon, GitCommitVertical, Workflow } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type ViewMode = "list" | "kanban" | "calendar" | "grid" | "timeline";
+export type ViewMode = "list" | "kanban" | "calendar" | "grid" | "timeline" | "flow";
 
 interface Option {
   value: ViewMode;
@@ -21,7 +21,9 @@ export const VIEW_ICONS = {
   grid: LayoutGrid,
   calendar: CalendarIcon,
   timeline: GitCommitVertical,
+  flow: Workflow,
 } as const;
+
 
 interface ViewToggleProps {
   value?: ViewMode;

@@ -31,8 +31,12 @@ export function edgeSupabase(ctx: ToolContext) {
   });
 }
 
+type TextBlock = { type: "text"; text: string };
+
 /** Standard auth guard for tool handlers. */
-export function requireAuth(ctx: ToolContext): { ok: true } | { ok: false; content: { type: "text"; text: string }[]; isError: true } {
+export function requireAuth(
+  ctx: ToolContext,
+): { ok: true; content: TextBlock[] } | { ok: false; content: TextBlock[]; isError: true } {
   if (!ctx.isAuthenticated()) {
     return {
       ok: false,
@@ -40,14 +44,18 @@ export function requireAuth(ctx: ToolContext): { ok: true } | { ok: false; conte
       isError: true,
     };
   }
-  return { ok: true };
+  return { ok: true, content: [] };
 }
 
-/** Render a row set as a compact text/structured result. */
-export function tableResult(rows: unknown[], summary?: string) {
+/** Render a row set (or a single object) as a compact text/structured result. */
+export function tableResult(
+  rows: unknown[] | Record<string, unknown>,
+  summary?: string,
+): { content: TextBlock[]; structuredContent: Record<string, unknown> } {
   const text = summary ? `${summary}\n\n` : "";
   return {
     content: [{ type: "text", text: text + JSON.stringify(rows, null, 2) }],
-    structuredContent: rows,
+    structuredContent: Array.isArray(rows) ? { rows } : rows,
   };
 }
+

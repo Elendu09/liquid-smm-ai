@@ -1775,6 +1775,8 @@ export type Database = {
           display_name: string | null
           id: string
           onboarding_state: Json
+          referral_code: string | null
+          referred_by: string | null
           timezone: string
           updated_at: string
         }
@@ -1785,6 +1787,8 @@ export type Database = {
           display_name?: string | null
           id: string
           onboarding_state?: Json
+          referral_code?: string | null
+          referred_by?: string | null
           timezone?: string
           updated_at?: string
         }
@@ -1795,6 +1799,8 @@ export type Database = {
           display_name?: string | null
           id?: string
           onboarding_state?: Json
+          referral_code?: string | null
+          referred_by?: string | null
           timezone?: string
           updated_at?: string
         }
@@ -1848,6 +1854,39 @@ export type Database = {
           platform_ids?: string[]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          credits_awarded: number
+          id: string
+          plan: string
+          referred_user_id: string
+          referrer_id: string
+          rewarded_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credits_awarded?: number
+          id?: string
+          plan?: string
+          referred_user_id: string
+          referrer_id: string
+          rewarded_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credits_awarded?: number
+          id?: string
+          plan?: string
+          referred_user_id?: string
+          referrer_id?: string
+          rewarded_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2569,6 +2608,7 @@ export type Database = {
         }[]
       }
       credit_remaining: { Args: { _user_id: string }; Returns: number }
+      gen_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

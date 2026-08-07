@@ -334,7 +334,7 @@ function requireAuth(ctx) {
       isError: true
     };
   }
-  return { ok: true };
+  return { ok: true, content: [] };
 }
 function tableResult(rows, summary) {
   const text = summary ? `${summary}
@@ -342,7 +342,7 @@ function tableResult(rows, summary) {
 ` : "";
   return {
     content: [{ type: "text", text: text + JSON.stringify(rows, null, 2) }],
-    structuredContent: rows
+    structuredContent: Array.isArray(rows) ? { rows } : rows
   };
 }
 

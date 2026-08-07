@@ -270,27 +270,76 @@ export function useRssFeeds() {
     }
   }, [feeds, load]);
 
+  /** Next free publishing slot: tomorrow-ish, spaced 2h after the latest queued post. */
+  const nextQueueSlot = useCallback(async () => {
+    const { data } = await client
+      .from("scheduled_posts")
+      .select("scheduled_at")
+      .in("status", ["scheduled", "queued", "draft"])
+      .order("scheduled_at", { ascending: false })
+      .limit(1);
+    const last = data?.[0]?.scheduled_at ? new Date(data[0].scheduled_at as string) : null;
+    const base = last && last.getTime() > Date.now() ? last : new Date();
+    return new Date(base.getTime() + 2 * 60 * 60 * 1000).toISOString();
+  }, []);
+
   const importItem = useCallback(
-    async (item: RssItem, opts?: { platforms?: string[]; scheduledAt?: string | null; caption?: string }) => {
+    async (
+      item: RssItem,
+      opts?: {
+        platforms?: string[];
+        scheduledAt?: string | null;
+        caption?: string;
+        /** Slot into the next free publishing time instead of leaving it undated. */
+        queue?: boolean;
+        /** Force-skip the feed's automatic AI rewrite (already rewritten upstream). */
+        skipAutoRewrite?: boolean;
+        /** Injected rewriter so the hook stays free of AI imports. */
+        rewrite?: (text: string, platform?: string) => Promise<string | null>;
+      },
+    ) => {
       if (!guardWrite("import RSS item")) return;
       if (!user) return toast.error("Sign in first");
+      if (item.imported) return toast.info("This item is already in Publish");
+
       const feed = feeds.find((f) => f.id === item.feed_id);
       const platforms = opts?.platforms ?? feed?.target_platforms ?? [];
-      const caption =
+
+      let caption =
         opts?.caption ??
         (feed?.caption_template ?? "{title}\n\n{link}")
           .split("{title}").join(item.title ?? "")
           .split("{link}").join(item.link ?? "")
           .split("{summary}").join(item.summary ?? "");
+
+      // Feed-level AI rewrite: every imported item is rewritten (and charged) once.
+      if (feed?.ai_rewrite && !opts?.skipAutoRewrite && !opts?.caption && opts?.rewrite) {
+        const out = await opts.rewrite(
+          `${item.title ?? ""}\n\n${item.summary ?? ""}`.trim(),
+          platforms[0],
+        );
+        if (out) caption = out;
+      }
+
+      const scheduledAt = opts?.queue
+        ? await nextQueueSlot()
+        : (opts?.scheduledAt ?? null);
+
       const { data: post, error } = await client
         .from("scheduled_posts")
         .insert({
           user_id: user.id,
           caption,
-          media_url: item.image_url ?? null,
-          status: opts?.scheduledAt ? "scheduled" : "draft",
+          media_url: item.image_url ?? item.thumbnail_url ?? null,
+          status: scheduledAt ? "scheduled" : "draft",
           platform_ids: platforms,
-          scheduled_at: opts?.scheduledAt ?? null,
+          scheduled_at: scheduledAt ?? new Date().toISOString(),
+          platform_overrides: {
+            source: "rss",
+            rss_feed_id: item.feed_id,
+            rss_feed_title: feed?.title ?? feed?.url ?? null,
+            rss_item_link: item.link ?? null,
+          },
         })
         .select("id")
         .single();
@@ -299,11 +348,12 @@ export function useRssFeeds() {
         .from("rss_items")
         .update({ imported: true, scheduled_post_id: post?.id ?? null })
         .eq("id", item.id);
-      toast.success(opts?.scheduledAt ? "Scheduled from RSS" : "Draft created");
+      toast.success(scheduledAt ? "Added to your publishing queue" : "Draft created in Publish");
       await load();
     },
-    [user, feeds, load],
+    [user, feeds, load, nextQueueSlot],
   );
+
 
   const dismissItem = useCallback(async (id: string) => {
     if (!guardWrite("dismiss item")) return;

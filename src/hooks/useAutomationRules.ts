@@ -15,14 +15,29 @@ export interface BotRule {
 
 export type FlowNodeType = "trigger" | "condition" | "action";
 
-/** One node in a rule's visual flow. Edges connect node[i] → node[i+1]. */
+/** Explicit connection between two nodes (supports branching). */
+export interface FlowEdge {
+  from: string;
+  to: string;
+  /** Optional branch label, e.g. "true" / "false" on a condition. */
+  branch?: string;
+}
+
+/**
+ * One node in a rule's visual flow. Nodes carry a canvas position; when `edges`
+ * are absent on the rule, nodes are treated as a linear chain (legacy rules).
+ */
 export interface FlowNode {
   id: string;
   type: FlowNodeType;
   kind: string;
   label: string;
   params: Record<string, string>;
+  position?: { x: number; y: number };
+  disabled?: boolean;
+  edges?: FlowEdge[];
 }
+
 
 const STORAGE_KEY = "smmpilot:engage:bot-rules";
 const RULE_KIND = "engagement-bot";

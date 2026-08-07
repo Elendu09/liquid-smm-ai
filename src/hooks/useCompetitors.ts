@@ -25,6 +25,13 @@ export interface Competitor {
   followersHistory?: CompetitorSnapshot[];
   /** Real per-network stats, when available. */
   liveStats?: CompetitorLiveStats;
+  /** Raw JSON blob persisted to the `data` column; written on update only. */
+  data?: {
+    status: Competitor["status"];
+    followers?: number;
+    followersHistory?: CompetitorSnapshot[];
+    liveStats?: CompetitorLiveStats;
+  };
   createdAt: string;
 }
 

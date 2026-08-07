@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Rss,
   Plus,
@@ -54,7 +54,8 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { cleanRssText } from "@/lib/rssUtils";
 import { aiCreate } from "@/hooks/useAiCreate";
-import { formatCost } from "@/config/aiCosts";
+import { useCredits } from "@/hooks/useCredits";
+import { formatCost, aiCost } from "@/config/aiCosts";
 
 const DEMO_FEEDS = [
   {
@@ -155,6 +156,9 @@ export default function RssFeedsPage() {
     dismissItem,
   } = useRssFeeds();
   const { isGuest } = useGuest();
+  const { balance } = useCredits();
+  const remainingCredits = balance?.balance ?? 0;
+  const lowCredits = remainingCredits < aiCost("create.rewrite");
 
 
   const [tab, setTab] = useState<"feeds" | "items" | "discover">("feeds");
@@ -278,29 +282,39 @@ export default function RssFeedsPage() {
       );
   }, [items, itemFilter, search]);
 
+  /** Shared rewriter used by the preview dialog and by feed-level auto-rewrite. */
+  const autoRewrite = useCallback(async (text: string, platform?: string) => {
+    const res = await aiCreate.rewrite({ text: cleanRssText(text, 900), platform, tone: "engaging" });
+    return res?.rewritten ?? null;
+  }, []);
+
   const runRewrite = async (item: RssItem) => {
+    if (lowCredits) {
+      toast.error("Not enough credits for an AI rewrite.");
+      return;
+    }
     const feed = feeds.find((f) => f.id === item.feed_id);
     setRewriteItem(item);
     setRewritten("");
     setRewriting(true);
     try {
-      const res = await aiCreate.rewrite({
-        text: `${item.title ?? ""}\n\n${cleanRssText(item.summary, 900)}`,
-        platform: feed?.target_platforms?.[0],
-        tone: "engaging",
-      });
-      if (res) setRewritten(res.rewritten);
+      const out = await autoRewrite(
+        `${item.title ?? ""}\n\n${item.summary ?? ""}`,
+        feed?.target_platforms?.[0],
+      );
+      if (out) setRewritten(out);
     } finally {
       setRewriting(false);
     }
   };
 
-  const saveRewritten = async () => {
+  const saveRewritten = async (queue = false) => {
     if (!previewItem || !rewritten.trim()) return;
-    await importItem(previewItem, { caption: rewritten.trim() });
+    await importItem(previewItem, { caption: rewritten.trim(), queue, skipAutoRewrite: true });
     setPreviewItem(null);
     setRewritten("");
   };
+
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -633,18 +647,8 @@ export default function RssFeedsPage() {
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => setPreviewItem(it)}>
                       <Eye className="h-3.5 w-3.5 mr-1" /> Preview
                     </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="text-primary hover:text-primary"
-                      onClick={() => void runRewrite(it)}
-                      disabled={rewriting && rewriteItem?.id === it.id}
-                      title={`AI rewrite — ${formatCost("create.rewrite")}`}
-                    >
-                      <Sparkles className={`h-3.5 w-3.5 ${rewriting && rewriteItem?.id === it.id ? "animate-pulse" : ""}`} />
-                    </Button>
                     {!it.imported && (
-                      <Button size="sm" className="flex-1" onClick={() => importItem(it)}>
+                      <Button size="sm" className="flex-1" onClick={() => void importItem(it, { rewrite: autoRewrite })}>
                         <Send className="h-3.5 w-3.5 mr-1" /> Draft
                       </Button>
                     )}
@@ -836,9 +840,12 @@ export default function RssFeedsPage() {
                   <div className="text-xs text-muted-foreground">
                     Rewrite each headline into an engaging social hook before publishing.
                   </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {formatCost("create.rewrite")} per imported item{lowCredits ? " · not enough credits" : ""}
+                  </div>
                 </div>
               </div>
-              <Switch checked={aiRewrite} onCheckedChange={setAiRewrite} />
+              <Switch checked={aiRewrite} onCheckedChange={setAiRewrite} disabled={lowCredits && !aiRewrite} />
             </div>
           </div>
           <DialogFooter>
@@ -967,9 +974,12 @@ export default function RssFeedsPage() {
                   <div className="text-xs text-muted-foreground">
                     Rewrite every headline into an engaging social hook.
                   </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {formatCost("create.rewrite")} per imported item{lowCredits ? " · not enough credits" : ""}
+                  </div>
                 </div>
               </div>
-              <Switch checked={bulkAi} onCheckedChange={setBulkAi} />
+              <Switch checked={bulkAi} onCheckedChange={setBulkAi} disabled={lowCredits && !bulkAi} />
             </div>
           </div>
           <DialogFooter>
@@ -1035,39 +1045,67 @@ export default function RssFeedsPage() {
           )}
 
           {/* In-place AI rewrite */}
-          {rewriting && rewriteItem?.id === previewItem?.id && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-              <Sparkles className="h-4 w-4 animate-pulse" /> Rewriting with AI…
-            </div>
-          )}
-          {rewritten && !(rewriting && rewriteItem?.id === previewItem?.id) && (
-            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
-              <div className="text-[10px] uppercase tracking-wider text-primary">
+          <div className="rounded-xl border border-primary/25 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-primary">
+                <Sparkles className={`h-3.5 w-3.5 ${rewriting ? "animate-pulse" : ""}`} />
                 AI rewrite · {formatCost("create.rewrite")}
               </div>
-              <p className="text-sm whitespace-pre-line">{rewritten}</p>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => void saveRewritten()}>
-                  <Send className="h-3.5 w-3.5 mr-1" /> Use as draft
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => previewItem && void runRewrite(previewItem)} disabled={rewriting}>
-                  <Sparkles className="h-3.5 w-3.5 mr-1" /> Regenerate
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8"
+                disabled={rewriting || lowCredits}
+                onClick={() => previewItem && void runRewrite(previewItem)}
+              >
+                {rewriting ? "Rewriting…" : rewritten ? "Regenerate" : "Rewrite with AI"}
+              </Button>
             </div>
-          )}
+            {lowCredits && (
+              <p className="text-[11px] text-destructive">
+                Not enough credits — top up in Settings → Billing.
+              </p>
+            )}
+            {rewritten && (
+              <>
+                <Textarea
+                  rows={5}
+                  value={rewritten}
+                  onChange={(e) => setRewritten(e.target.value)}
+                  className="text-sm bg-background/70"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={() => void saveRewritten(false)}>
+                    <Send className="h-3.5 w-3.5 mr-1" /> Use this text
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => void saveRewritten(true)}>
+                    <Clock className="h-3.5 w-3.5 mr-1" /> Add to queue
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setRewritten(""); setRewriteItem(null); }}>
+                    Revert
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => setPreviewItem(null)}>Close</Button>
-            <Button variant="outline" onClick={() => previewItem && void runRewrite(previewItem)} disabled={rewriting} title={`AI rewrite — ${formatCost("create.rewrite")}`}>
-              <Sparkles className="h-3.5 w-3.5 mr-1" /> AI rewrite
-            </Button>
             {previewItem && !previewItem.imported && (
-              <Button onClick={() => { importItem(previewItem); setPreviewItem(null); }}>
-                <Send className="h-4 w-4 mr-2" /> Save as draft
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => { void importItem(previewItem, { queue: true, rewrite: autoRewrite }); setPreviewItem(null); }}
+                >
+                  <Clock className="h-4 w-4 mr-2" /> Add to queue
+                </Button>
+                <Button onClick={() => { void importItem(previewItem, { rewrite: autoRewrite }); setPreviewItem(null); }}>
+                  <Send className="h-4 w-4 mr-2" /> Save as draft
+                </Button>
+              </>
             )}
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
 

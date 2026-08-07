@@ -1,6 +1,6 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { Bot, Inbox, MessageSquare, MessageCircle, Sparkles } from "lucide-react";
-import { PageHeader, HubTabs, HeaderActionRow, openOnboardingTour, type HubTab } from "@/components/dashboard/shell";
+import { PageHeader, HubTabs, HeaderActionRow, sectionActions, type HubTab } from "@/components/dashboard/shell";
 import { FeatureGate } from "@/components/shared/FeatureGate";
 import { useUnreadInbox } from "@/hooks/useUnreadInbox";
 import BotRulesView from "../views/BotRulesView";
@@ -25,13 +25,7 @@ function EngageLayout() {
           description="Reply, auto-engage, and manage conversations across every account."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Engage" }]}
           actions={
-            <HeaderActionRow
-              actions={[
-                { label: "Open inbox", icon: Inbox, to: "/dashboard/engage/inbox", primary: true },
-                { label: "Take the tour", icon: Sparkles, onClick: openOnboardingTour },
-                { label: "Bot rules", icon: Bot, to: "/dashboard/engage/bot" },
-              ]}
-            />
+            <HeaderActionRow actions={sectionActions(tabs)} />
           }
         />
         <HubTabs tabs={tabs} />
