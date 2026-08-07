@@ -36,6 +36,11 @@ export interface FlowNode {
   position?: { x: number; y: number };
   disabled?: boolean;
   edges?: FlowEdge[];
+  /** Optional runtime metadata added by the visual editor. */
+  runCount?: number;
+  lastRunAt?: string;
+  notes?: string;
+  metadata?: Record<string, string>;
 }
 
 

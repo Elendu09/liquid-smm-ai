@@ -39,6 +39,7 @@ import {
   Gift,
   Palette,
   Rss,
+  Share2,
 } from "lucide-react";
 import { ConnectChannelsSection } from "./ConnectChannelsSection";
 import { cn } from "@/lib/utils";
@@ -97,6 +98,7 @@ const navItems: NavItem[] = [
       { label: "Comments", href: "/dashboard/engage/comments", icon: MessageSquare },
       { label: "DMs", href: "/dashboard/engage/dms", icon: Send },
       { label: "Bot rules", href: "/dashboard/engage/bot", icon: Bot },
+      { label: "Reshare", href: "/dashboard/engage/reshare", icon: Share2 },
     ],
   },
   {

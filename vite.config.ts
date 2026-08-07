@@ -7,7 +7,9 @@ import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: "0.0.0.0",
+    // Arena proxies the app through a generated *.e2b.app hostname.
+    allowedHosts: true,
     port: 8080,
     hmr: {
       overlay: false,
