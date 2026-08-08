@@ -20,11 +20,13 @@ import ResetPassword from "./pages/ResetPassword";
 import Pricing from "./pages/Pricing";
 import Features from "./pages/Features";
 import Tools from "./pages/Tools";
+import ToolDetail from "./pages/ToolDetail";
 import FAQ from "./pages/FAQ";
 import Solutions from "./pages/Solutions";
 import PublicCalendar from "./pages/PublicCalendar";
 import PublicBio from "./pages/PublicBio";
 import PublicCampaign from "./pages/PublicCampaign";
+import PublicApproval from "./pages/PublicApproval";
 import ReferralLanding from "./pages/ReferralLanding";
 import Mcp from "./pages/Mcp";
 import AcceptInvite from "./pages/AcceptInvite";
@@ -33,6 +35,7 @@ import Terms from "./pages/legal/Terms";
 import Cookies from "./pages/legal/Cookies";
 import About from "./pages/company/About";
 import Blog from "./pages/company/Blog";
+import BlogPost from "./pages/company/BlogPost";
 import Careers from "./pages/company/Careers";
 import Contact from "./pages/company/Contact";
 
@@ -109,6 +112,7 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/features" element={<Features />} />
               <Route path="/tools" element={<Tools />} />
+              <Route path="/tools/:slug" element={<ToolDetail />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/solutions" element={<Solutions />} />
               <Route path="/mcp" element={<Mcp />} />
@@ -118,6 +122,7 @@ const App = () => (
               <Route path="/b/:slug" element={<PublicBio />} />
               <Route path="/@:slug" element={<PublicBio />} />
               <Route path="/c/:slug" element={<PublicCampaign />} />
+              <Route path="/p/approve/:token" element={<PublicApproval />} />
 
               <Route path="/invite/:token" element={<AcceptInvite />} />
               <Route path="/referral/:code" element={<ReferralLanding />} />
@@ -129,6 +134,7 @@ const App = () => (
               <Route path="/legal/cookies" element={<Navigate to="/cookies" replace />} />
               <Route path="/about" element={<About />} />
               <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/contact" element={<Contact />} />
 

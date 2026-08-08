@@ -10,11 +10,13 @@ import {
   GitBranch,
   LayoutGrid,
   List,
+  MoreHorizontal,
   Pencil,
   PlayCircle,
   Plus,
   Power,
   Search,
+  Settings2,
   Share2,
   Sparkles,
   Trash2,
@@ -30,7 +32,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { useAutomationRules, type BotRule } from "@/hooks/useAutomationRules";
 import { isGuestSession } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
@@ -50,21 +51,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+/**
+ * Bot rules view — concise shell. The visual flow editor (BotFlowEditor) is
+ * the heart of the page; surrounding chrome is kept minimal so the focus
+ * stays on rules rather than on marketing surfaces.
+ */
+
 const seed: BotRule[] = [
   { id: "r1", name: "Welcome new followers", trigger: "New follower", action: "Send welcome DM", enabled: true, runs: 128 },
   { id: "r2", name: "Auto-like niche hashtags", trigger: 'Hashtag match "photography"', action: "Like recent posts", enabled: true, runs: 542 },
   { id: "r3", name: "Reply to keywords", trigger: 'Comment contains keyword "price"', action: "Reply to comment", enabled: false, runs: 34 },
 ];
-
-function Stat({ label, value, detail, tone }: { label: string; value: string; detail: string; tone: string }) {
-  return (
-    <div className="rounded-xl border border-border/60 bg-background/45 p-3 backdrop-blur-sm">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
-      <p className={cn("mt-1.5 text-xl font-semibold tracking-tight", tone)}>{value}</p>
-      <p className="mt-0.5 text-[10px] text-muted-foreground">{detail}</p>
-    </div>
-  );
-}
 
 export default function BotRulesView() {
   const [view, setView] = useViewMode("engage-bot", "grid");
@@ -161,38 +158,102 @@ export default function BotRulesView() {
 
   return (
     <div className="px-4 pb-8 sm:px-6 lg:px-8">
-      <section className="relative mb-5 overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/[0.12] via-card to-cyan-500/[0.06] p-5 sm:p-7">
-        <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full bg-cyan-500/10 blur-2xl" />
-        <div className="relative grid gap-6 lg:grid-cols-[1.25fr_1fr] lg:items-end">
-          <div>
-            <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary"><span className="grid h-5 w-5 place-items-center rounded-md bg-primary/10"><Sparkles className="h-3 w-3" /></span> Automation control plane</div>
-            <h2 className="max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">Your engagement system, in motion.</h2>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">Design event-driven bots, route conversations with intent, and hand off content to every social channel without losing the human voice.</p>
-            <div className="mt-5 flex flex-wrap gap-2"><Button onClick={() => { setEditing(null); setRuleDialogOpen(true); }}><Plus className="mr-1.5 h-4 w-4" /> New automation</Button><Button variant="outline" asChild><Link to="/dashboard/engage/reshare"><Share2 className="mr-1.5 h-4 w-4" /> Open reshare engine <ArrowUpRight className="ml-1 h-3 w-3" /></Link></Button></div>
+      {/* Compact header */}
+      <section className="mb-5 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-border/60 bg-card/60 p-4 sm:p-5">
+        <div className="min-w-0">
+          <div className="mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+            <span className="grid h-5 w-5 place-items-center rounded-md bg-primary/10"><Sparkles className="h-3 w-3" /></span>
+            Automation control plane
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2"><Stat label="Live automations" value={totals.active.toString()} detail={`${items.length} rules configured`} tone="text-primary" /><Stat label="Actions processed" value={totals.runs.toLocaleString()} detail="across your channels" tone="text-emerald-500" /><Stat label="Flow nodes" value={totals.nodes.toString()} detail="drag-and-drop logic" tone="text-amber-500" /><Stat label="Reshare routes" value={reshareFlows.length.toString()} detail="cross-platform flows" tone="text-pink-500" /></div>
+          <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Engagement rules & inbox automation</h2>
+          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">
+            Visual event-driven bots, plus ready-to-use inbox routing for DMs, comment keywords, triage and saved replies.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <Badge variant="secondary" className="gap-1 text-[10px]"><Activity className="h-2.5 w-2.5 text-emerald-500" /> {totals.active} live</Badge>
+            <Badge variant="secondary" className="gap-1 text-[10px]"><Power className="h-2.5 w-2.5" /> {totals.runs.toLocaleString()} runs</Badge>
+            <Badge variant="secondary" className="gap-1 text-[10px]"><GitBranch className="h-2.5 w-2.5" /> {totals.nodes} nodes</Badge>
+            <Badge variant="secondary" className="gap-1 text-[10px]"><Share2 className="h-2.5 w-2.5" /> {reshareFlows.length} reshare routes</Badge>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" asChild>
+            <Link to="/dashboard/engage/reshare">
+              <Share2 className="mr-1 h-4 w-4" /> Reshare engine <ArrowUpRight className="ml-1 h-3 w-3" />
+            </Link>
+          </Button>
+          <Button size="sm" onClick={() => { setEditing(null); setRuleDialogOpen(true); }}>
+            <Plus className="mr-1 h-4 w-4" /> New rule
+          </Button>
         </div>
       </section>
 
+      {/* Inbox automation (this is the headlining feature for "engage" in social media) */}
       <InboxAutomationPanel />
 
-      <div className="mb-3 flex items-end justify-between gap-3"><div><h2 className="text-base font-semibold">Engagement rules</h2><p className="mt-0.5 text-xs text-muted-foreground">Outbound automation: welcome DMs, keyword replies, AI branches, and safe actions.</p></div><div className="hidden items-center gap-1.5 text-[10px] text-muted-foreground sm:flex"><Activity className="h-3.5 w-3.5 text-emerald-500" /> Live event monitor connected</div></div>
+      {/* Bot rules */}
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold">Engagement rules</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">Outbound automation: welcome DMs, keyword replies, AI branches, and safe actions.</p>
+        </div>
+        <div className="hidden items-center gap-1.5 text-[10px] text-muted-foreground sm:flex">
+          <Activity className="h-3.5 w-3.5 text-emerald-500" /> Live event monitor connected
+        </div>
+      </div>
 
       <ToolbarBar
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search rules, triggers, or actions…"
-        viewToggle={<ViewToggle value={view} onChange={setView} options={[{ value: "grid", label: "Cards", icon: (props) => <LayoutGrid {...props} /> }, { value: "list", label: "List", icon: (props) => <List {...props} /> }, { value: "flow", label: "Flow", icon: (props) => <Workflow {...props} /> }]} />}
-        actions={<div className="flex items-center gap-2"><Button size="sm" variant="outline" onClick={() => setRunOpen(true)}><Zap className="mr-1 h-4 w-4" /><span className="hidden sm:inline">Run automation</span></Button><Button size="sm" onClick={() => { setEditing(null); setRuleDialogOpen(true); }}><Plus className="mr-1 h-4 w-4" /><span className="hidden sm:inline">New rule</span></Button></div>}
+        viewToggle={
+          <ViewToggle
+            value={view}
+            onChange={setView}
+            options={[
+              { value: "grid", label: "Cards", icon: (props) => <LayoutGrid {...props} /> },
+              { value: "list", label: "List", icon: (props) => <List {...props} /> },
+              { value: "flow", label: "Flow", icon: (props) => <Workflow {...props} /> },
+            ]}
+          />
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setRunOpen(true)}>
+              <Zap className="mr-1 h-4 w-4" /><span className="hidden sm:inline">Run automation</span>
+            </Button>
+            <Button size="sm" onClick={() => { setEditing(null); setRuleDialogOpen(true); }}>
+              <Plus className="mr-1 h-4 w-4" /><span className="hidden sm:inline">New rule</span>
+            </Button>
+          </div>
+        }
       />
 
       {items.length === 0 && !isGuestSession() ? (
-        accounts.length === 0 ? <EmptyState variant="connect-account" description="Connect an account so automations have somewhere to run." /> : <EmptyState variant="create-first" title="No automation rules yet" description="Automate welcome DMs, keyword replies, and more. Create your first rule to start saving hours every week." ctaLabel="New rule" onCta={() => { setEditing(null); setRuleDialogOpen(true); }} />
+        accounts.length === 0 ? (
+          <EmptyState variant="connect-account" description="Connect an account so automations have somewhere to run." />
+        ) : (
+          <EmptyState
+            variant="create-first"
+            title="No automation rules yet"
+            description="Automate welcome DMs, keyword replies, and more. Create your first rule to start saving hours every week."
+            ctaLabel="New rule"
+            onCta={() => { setEditing(null); setRuleDialogOpen(true); }}
+          />
+        )
       ) : view === "flow" ? (
         flowRule ? (
           <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2"><Select value={flowRule.id} onValueChange={setFlowRuleId}><SelectTrigger className="w-72"><SelectValue /></SelectTrigger><SelectContent>{items.map((rule) => <SelectItem key={rule.id} value={rule.id}>{rule.name}</SelectItem>)}</SelectContent></Select><span className="hidden text-xs text-muted-foreground sm:inline">Build trigger → logic → action → delivery flows.</span><Button size="sm" variant="outline" className="ml-auto" onClick={() => { setEditing(flowRule); setRuleDialogOpen(true); }}><Pencil className="mr-1 h-4 w-4" /> Edit details</Button></div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={flowRule.id} onValueChange={setFlowRuleId}>
+                <SelectTrigger className="w-72"><SelectValue /></SelectTrigger>
+                <SelectContent>{items.map((rule) => <SelectItem key={rule.id} value={rule.id}>{rule.name}</SelectItem>)}</SelectContent>
+              </Select>
+              <span className="hidden text-xs text-muted-foreground sm:inline">Build trigger → logic → action → delivery flows.</span>
+              <Button size="sm" variant="outline" className="ml-auto" onClick={() => { setEditing(flowRule); setRuleDialogOpen(true); }}>
+                <Pencil className="mr-1 h-4 w-4" /> Edit details
+              </Button>
+            </div>
             <BotFlowEditor
               key={flowRule.id}
               rule={flowRule}
@@ -200,10 +261,27 @@ export default function BotRulesView() {
               onStatusChange={(id, enabled) => update(id, { enabled })}
             />
           </div>
-        ) : <EmptyState variant="create-first" title="No rules yet" description="Create a rule to open the visual flow editor." ctaLabel="New rule" onCta={() => setRuleDialogOpen(true)} />
+        ) : (
+          <EmptyState
+            variant="create-first"
+            title="No rules yet"
+            description="Create a rule to open the visual flow editor."
+            ctaLabel="New rule"
+            onCta={() => setRuleDialogOpen(true)}
+          />
+        )
       ) : view === "grid" ? (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{filtered.map((rule) => <div key={rule.id} className="rounded-2xl border border-border/60 bg-card transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"><RuleCard rule={rule} /></div>)}{filtered.length === 0 && <div className="col-span-full rounded-xl border border-dashed border-border/60 py-12 text-center text-sm text-muted-foreground">No rules match your search.</div>}</div>
-      ) : <ListView items={filtered} getKey={(rule) => rule.id} renderItem={(rule) => <RuleCard rule={rule} dense />} />}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((rule) => (
+            <div key={rule.id} className="rounded-2xl border border-border/60 bg-card transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
+              <RuleCard rule={rule} />
+            </div>
+          ))}
+          {filtered.length === 0 && <div className="col-span-full rounded-xl border border-dashed border-border/60 py-12 text-center text-sm text-muted-foreground">No rules match your search.</div>}
+        </div>
+      ) : (
+        <ListView items={filtered} getKey={(rule) => rule.id} renderItem={(rule) => <RuleCard rule={rule} dense />} />
+      )}
 
       <NewRuleDialog open={ruleDialogOpen} onOpenChange={setRuleDialogOpen} initial={editing} onSubmit={handleSubmit} />
       <TestRuleDialog open={testOpen} onOpenChange={setTestOpen} rule={testing} />

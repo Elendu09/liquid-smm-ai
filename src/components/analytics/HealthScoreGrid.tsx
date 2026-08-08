@@ -4,6 +4,8 @@ import { CheckCircle2, AlertTriangle, XCircle, Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useGuest } from "@/hooks/useGuest";
+import { TimezoneSelector, TimezoneLabel } from "@/components/accounts/TimezoneSelector";
+import { ConnectionHealthPill } from "@/components/accounts/ConnectionHealthPill";
 
 const STATUS_META = {
   active: { label: "Healthy", tone: "text-emerald-500 bg-emerald-500/10", Icon: CheckCircle2 },
@@ -73,9 +75,13 @@ export function HealthScoreGrid() {
                 <PlatformIcon platform={a.platformId} size="md" showBackground />
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">@{a.username}</p>
-                  <p className="text-[11px] text-muted-foreground capitalize truncate">
-                    {a.platformId} · {lastSync != null ? `synced ${lastSync < 1 ? "just now" : lastSync + "m ago"}` : "never synced"}
-                  </p>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                    <span className="text-[11px] text-muted-foreground capitalize">
+                      {a.platformId} · {lastSync != null ? `synced ${lastSync < 1 ? "just now" : lastSync + "m ago"}` : "never synced"}
+                    </span>
+                    <ConnectionHealthPill account={a} compact />
+                    <TimezoneLabel accountId={a.id} />
+                  </div>
                 </div>
                 <div className="hidden md:flex items-center gap-2 shrink-0">
                   <div className="h-1.5 w-24 rounded-full bg-muted overflow-hidden">
@@ -93,10 +99,13 @@ export function HealthScoreGrid() {
                   <p className="tabular-nums font-semibold">{a.engagement.toFixed(1)}%</p>
                   <p className="text-[10px] text-muted-foreground">ER</p>
                 </div>
-                <span className={cn("inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full shrink-0", meta.tone)}>
-                  <StatusIcon className="h-3 w-3" />
-                  {meta.label}
-                </span>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className={cn("inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full", meta.tone)}>
+                    <StatusIcon className="h-3 w-3" />
+                    {meta.label}
+                  </span>
+                  <TimezoneSelector accountId={a.id} />
+                </div>
               </div>
             );
           })}

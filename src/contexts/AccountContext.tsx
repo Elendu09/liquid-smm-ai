@@ -20,6 +20,8 @@ export interface ConnectedAccount {
   status: "active" | "warning" | "error" | "disconnected";
   /** Workspace/brand this channel belongs to (null = unassigned). */
   brandId?: string | null;
+  /** Per-account reporting timezone (IANA). Charts axis labels use this. */
+  timezone?: string | null;
 }
 
 interface AccountContextType {

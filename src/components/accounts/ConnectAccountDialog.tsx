@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Check, ArrowRight, Shield, Search, Clock, ExternalLink, AlertCircle } from "lucide-react";
+import { Loader2, Check, ArrowRight, Shield, Search, Clock, ExternalLink, AlertCircle, History, Database, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import { platforms } from "@/config/platforms";
 import { getDefaultFeatures } from "@/config/platformFeatures";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
@@ -21,13 +23,15 @@ import { logRun } from "@/hooks/useRunHistory";
 
 import { supabase } from "@/integrations/supabase/client";
 import { isGuestSession, guardWrite } from "@/hooks/useGuest";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useAccountBackfill, type BackfillFacet } from "@/hooks/useAccountBackfill";
 
 interface ConnectAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-type Step = "platform" | "details" | "authorize";
+type Step = "platform" | "details" | "backfill" | "authorize";
 
 const REMINDER_KEY = "smmpilot:connect-later";
 
@@ -62,6 +66,8 @@ async function startProviderOAuth(platform: string): Promise<{ ok: boolean; mess
 
 export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialogProps) {
   const { addAccount, setActiveAccount } = useAccounts();
+  const { push } = useNotifications();
+  const backfill = useAccountBackfill();
   const [step, setStep] = useState<Step>("platform");
   const [platformId, setPlatformId] = useState<string>("");
   const [handle, setHandle] = useState("");
@@ -70,6 +76,20 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
   const [authorizing, setAuthorizing] = useState(false);
   const [query, setQuery] = useState("");
   const [readyProviders, setReadyProviders] = useState<Set<string>>(new Set());
+  const [pendingAccount, setPendingAccount] = useState<ConnectedAccount | null>(null);
+  const [facets, setFacets] = useState<Record<BackfillFacet, boolean>>({
+    posts: true,
+    followers: true,
+    comments: false,
+  });
+  const [facetDays, setFacetDays] = useState<Record<BackfillFacet, number>>({
+    posts: 90,
+    followers: 30,
+    comments: 7,
+  });
+  const [backfillState, setBackfillState] = useState<"idle" | "running" | "done">("idle");
+  const [backfillProgress, setBackfillProgress] = useState(0);
+  const [backfillDetail, setBackfillDetail] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -105,6 +125,10 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
     setAvatar("");
     setAuthorizing(false);
     setQuery("");
+    setPendingAccount(null);
+    setBackfillState("idle");
+    setBackfillProgress(0);
+    setBackfillDetail("");
   };
 
   const handleClose = (v: boolean) => {
@@ -152,7 +176,7 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
     setAuthorizing(true);
     setStep("authorize");
     // Manual handshake fallback for platforms without configured credentials.
-    await new Promise((r) => setTimeout(r, 1500));
+    await new Promise((r) => setTimeout(r, 1200));
 
     const cleanedHandle = handle.replace(/^@/, "").trim();
     const account: ConnectedAccount = {
@@ -174,6 +198,7 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
 
     addAccount(account);
     setActiveAccount(account);
+    setPendingAccount(account);
     logRun({
       toolKey: "accounts",
       action: "connect",
@@ -185,7 +210,58 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
     });
     toast.success(`${platform.name} account @${cleanedHandle} connected`);
     setAuthorizing(false);
-    handleClose(false);
+    // Move to the backfill step (fix 5.3) instead of closing immediately.
+    setStep("backfill");
+  };
+
+  const runBackfill = async () => {
+    if (!pendingAccount || !platform) return;
+    const enabledFacets = (Object.keys(facets) as BackfillFacet[]).filter((f) => facets[f]);
+    if (enabledFacets.length === 0) {
+      handleClose(false);
+      return;
+    }
+    setBackfillState("running");
+    setBackfillProgress(0);
+    setBackfillDetail("Starting…");
+    for (let i = 0; i < enabledFacets.length; i++) {
+      const facet = enabledFacets[i];
+      const days = facetDays[facet];
+      const estMs = Math.max(800, days * 30);
+      await backfill.run({
+        accountId: pendingAccount.id,
+        platformId: pendingAccount.platformId,
+        facet,
+        days,
+        onProgress: (pct) => {
+          setBackfillProgress(pct);
+          setBackfillDetail(`Backfilling ${facet} · last ${days} d`);
+        },
+      });
+      const facetProgress = ((i + 1) / enabledFacets.length) * 100;
+      setBackfillProgress(facetProgress);
+    }
+    setBackfillState("done");
+    setBackfillDetail("Backfill complete");
+    void push({
+      type: "system",
+      severity: "success",
+      title: "Historical data is ready",
+      message: `${platform.name} @${pendingAccount.username} is fully backfilled.`,
+      platformId: pendingAccount.platformId,
+      accountId: pendingAccount.id,
+      actionUrl: "/dashboard/analytics/overview",
+    });
+    logRun({
+      toolKey: "accounts",
+      action: "backfill",
+      platform: pendingAccount.platformId,
+      accountId: pendingAccount.id,
+      accountHandle: pendingAccount.username,
+      status: "success",
+      output: { facets: enabledFacets, days: facetDays },
+      durationMs: 0,
+    });
   };
 
   const isReal = platform ? isRealReady(platform.id) : false;
@@ -202,11 +278,18 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
                 Connect your {platform.name}
               </span>
             )}
+            {step === "backfill" && platform && (
+              <span className="flex items-center gap-2">
+                <History className="h-4 w-4 text-primary" />
+                Backfill history
+              </span>
+            )}
             {step === "authorize" && "Authorizing…"}
           </DialogTitle>
           <DialogDescription>
             {step === "platform" && "Choose the platform you want to link — 14 supported."}
             {step === "details" && "Enter the account details we'll use across the dashboard."}
+            {step === "backfill" && `Pull historical data so your @${pendingAccount?.username ?? "new account"} dashboard isn't empty on day 1.`}
             {step === "authorize" && "Completing secure authorization."}
           </DialogDescription>
         </DialogHeader>
@@ -328,6 +411,77 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
           </div>
         )}
 
+        {step === "backfill" && platform && (
+          <div className="px-6 py-4 space-y-4">
+            <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-3 text-xs">
+              <p className="inline-flex items-center gap-1.5 font-semibold text-primary">
+                <Database className="h-3.5 w-3.5" /> New account — pick what history to pull
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Other tools start at zero on day 1. We can import the last few months so the dashboard shows real trends from the first visit.
+              </p>
+            </div>
+            {backfillState === "running" ? (
+              <div className="space-y-2 rounded-xl border border-border/60 bg-muted/30 p-4">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-semibold">{backfillDetail}</span>
+                  <span className="tabular-nums text-muted-foreground">{Math.round(backfillProgress)}%</span>
+                </div>
+                <Progress value={backfillProgress} className="h-2" />
+              </div>
+            ) : backfillState === "done" ? (
+              <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-700 dark:text-emerald-300">
+                <Check className="h-4 w-4" />
+                <p className="text-xs font-semibold">Backfill complete — your analytics are ready to explore.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {([
+                  { key: "posts" as const, label: "Posts and metrics", icon: BarChart3, defaultDays: 90, max: 90 },
+                  { key: "followers" as const, label: "Follower history", icon: Database, defaultDays: 30, max: 90 },
+                  { key: "comments" as const, label: "Comments and DMs", icon: History, defaultDays: 7, max: 30 },
+                ]).map((row) => (
+                  <label
+                    key={row.key}
+                    className="flex items-start gap-3 rounded-xl border border-border/60 p-3 transition-colors hover:border-primary/30 hover:bg-primary/[0.03]"
+                  >
+                    <Checkbox
+                      checked={facets[row.key]}
+                      onCheckedChange={(v) => setFacets((f) => ({ ...f, [row.key]: !!v }))}
+                      className="mt-0.5"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold inline-flex items-center gap-1.5">
+                        <row.icon className="h-3.5 w-3.5 text-primary" /> {row.label}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground">
+                        Up to {row.max} days. Heavier pulls cost more API quota.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={row.max}
+                        value={facetDays[row.key]}
+                        onChange={(e) =>
+                          setFacetDays((d) => ({ ...d, [row.key]: Math.max(1, Math.min(row.max, Number(e.target.value))) }))
+                        }
+                        className="h-7 w-14 text-xs"
+                        disabled={!facets[row.key]}
+                      />
+                      <span className="text-[10px] text-muted-foreground">d</span>
+                    </div>
+                  </label>
+                ))}
+                <p className="text-[10px] text-muted-foreground">
+                  You can re-run backfill later from Settings → Connected accounts.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         <DialogFooter className="px-6 py-4 border-t bg-secondary/20 flex-col sm:flex-row gap-2 sm:gap-0">
           {step === "platform" && (
             <div className="flex flex-col-reverse sm:flex-row w-full gap-2 sm:justify-between">
@@ -351,6 +505,40 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
                 <Button onClick={startAuthorize} disabled={!handle.trim()}>
                   {isReal ? "Continue to OAuth" : "Authorize"}{" "}
                   {isReal ? <ExternalLink className="ml-2 h-4 w-4" /> : <ArrowRight className="ml-2 h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+          )}
+          {step === "backfill" && (
+            <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+              <Button variant="ghost" onClick={connectLater} className="gap-2">
+                <Clock className="h-4 w-4" /> Do this later
+              </Button>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => handleClose(false)}
+                  disabled={backfillState === "running"}
+                >
+                  {backfillState === "done" ? "Done" : "Skip"}
+                </Button>
+                <Button
+                  onClick={runBackfill}
+                  disabled={backfillState !== "idle"}
+                >
+                  {backfillState === "done" ? (
+                    <>
+                      <Check className="mr-1.5 h-4 w-4" /> Done
+                    </>
+                  ) : backfillState === "running" ? (
+                    <>
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Backfilling…
+                    </>
+                  ) : (
+                    <>
+                      <Database className="mr-1.5 h-4 w-4" /> Start backfill
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

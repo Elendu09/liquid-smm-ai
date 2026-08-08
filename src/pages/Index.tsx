@@ -13,6 +13,7 @@ import { CTASection } from "@/components/landing/CTASection";
 import { PillarsSection } from "@/components/landing/PillarsSection";
 import { SolutionsGrid } from "@/components/landing/SolutionsGrid";
 import { AnimatedStatsBanner } from "@/components/landing/AnimatedStatsBanner";
+import { CookieBanner } from "@/components/shared/CookieBanner";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
 const Index = () => {
@@ -74,6 +75,7 @@ const Index = () => {
       </main>
       
       <Footer />
+      <CookieBanner />
     </div>
   );
 };

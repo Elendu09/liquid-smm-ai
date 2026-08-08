@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Heart, MessageCircle, Repeat2, Send, MoreHorizontal, ImageIcon } from "lucide-react";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { CharCounter } from "@/components/publish/CharCounter";
+import { countForPlatform, limitFor } from "@/lib/charCount";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -48,8 +50,11 @@ export function NetworkPreview({
     [caption, hashtags],
   );
 
+  // Fix 2.4 — use the platform-aware counter so the truncation matches what
+  // each network will actually do.
+  const breakdown = useMemo(() => countForPlatform(full, current), [full, current]);
   const limit = limitFor(current);
-  const over = full.length > limit;
+  const over = breakdown.weighted > limit;
   const shown = over ? `${full.slice(0, limit)}…` : full;
 
   const isFeedCard = current === "instagram" || current === "pinterest" || current === "tiktok";
@@ -75,14 +80,7 @@ export function NetworkPreview({
             </button>
           ))}
         </div>
-        <span
-          className={cn(
-            "ml-auto text-[10px] tabular-nums shrink-0",
-            over ? "text-destructive font-semibold" : "text-muted-foreground",
-          )}
-        >
-          {full.length}/{limit}
-        </span>
+        <CharCounter text={full} platform={current} className="ml-auto" />
       </div>
 
       <div className="rounded-xl border border-border/60 bg-background overflow-hidden">
@@ -132,7 +130,7 @@ export function NetworkPreview({
 
       {over && (
         <p className="text-[10px] text-destructive">
-          Caption exceeds the {current} limit by {full.length - limit} characters — it will be truncated.
+          Caption exceeds the {current} limit by {breakdown.weighted - limit} weighted characters — it will be truncated.
         </p>
       )}
     </div>
