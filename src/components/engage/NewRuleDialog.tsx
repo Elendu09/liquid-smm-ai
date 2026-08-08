@@ -82,7 +82,7 @@ export function NewRuleDialog({ open, onOpenChange, initial, onSubmit }: Props) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{initial?.id ? "Edit rule" : "New automation rule"}</DialogTitle>
           <DialogDescription>Define a trigger and a response. You can test it before enabling.</DialogDescription>

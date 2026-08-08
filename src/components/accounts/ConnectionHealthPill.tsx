@@ -50,7 +50,7 @@ function formatRelative(d: Date | string | null | undefined): string {
   return `${day} d ago`;
 }
 
-function tokenExpiryDays(account: ConnectedAccount): number | null {
+function tokenExpiryDays(account: Pick<ConnectedAccount, "id" | "connectedAt">): number | null {
   // Real tokens aren't modelled yet, so we synthesise a stable per-account
   // countdown from the connectedAt date. This keeps the pill honest-looking
   // without inventing values that change on every render.

@@ -32,8 +32,12 @@ interface Asset {
 }
 
 const seed: Asset[] = [
-  { id: "a1", title: "Brand logo pack", subtitle: "SVG · 12 files", status: "active", type: "image", url: "", tags: ["brand", "logo"], createdAt: new Date().toISOString() },
-  { id: "a2", title: "Q3 hero video", subtitle: "1080p · MP4", status: "active", type: "video", url: "", tags: ["campaign", "q3"], createdAt: new Date().toISOString() },
+  { id: "a1", title: "Brand logo pack", subtitle: "SVG · 12 files", status: "active", type: "image", url: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400", tags: ["brand", "logo"], createdAt: new Date().toISOString() },
+  { id: "a2", title: "Q3 hero video", subtitle: "1080p · MP4", status: "active", type: "video", url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600", tags: ["campaign", "q3"], createdAt: new Date().toISOString() },
+  { id: "a3", title: "Social media templates", subtitle: "Canva · 24 files", status: "active", type: "image", url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400", tags: ["templates", "social"], createdAt: new Date().toISOString() },
+  { id: "a4", title: "Campaign brief — Spring", subtitle: "PDF · 2.4 MB", status: "review", type: "doc", url: "", tags: ["brief", "spring"], createdAt: new Date().toISOString() },
+  { id: "a5", title: "Product demo reel", subtitle: "4K · MP4 · 0:45", status: "active", type: "video", url: "https://images.unsplash.com/photo-1536243287037-7c2f5091c6de?w=600", tags: ["product", "reel"], createdAt: new Date().toISOString() },
+  { id: "a6", title: "UGC collage", subtitle: "JPG · 8 images", status: "active", type: "image", url: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=400", tags: ["ugc", "community"], createdAt: new Date().toISOString() },
 ];
 
 const ICONS = { image: ImageIcon, video: Film, doc: FileText } as const;

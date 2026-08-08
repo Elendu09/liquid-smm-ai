@@ -3,6 +3,7 @@ import { Calendar, Clock, Plus, ChevronLeft, ChevronRight, Trash2 } from "lucide
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { MediaField } from "@/components/publish/MediaField";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -233,7 +234,7 @@ function SchedulePostDialog({
   onSave: (post: { caption: string; mediaUrl?: string; scheduledAt: string; platformIds: string[] }) => void;
 }) {
   const [caption, setCaption] = useState(initialCaption);
-  const [mediaUrl, setMediaUrl] = useState("");
+  const [mediaUrl, setMediaUrl] = useState<string | undefined>(undefined);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [time, setTime] = useState("09:00");
   const [selected, setSelected] = useState<string[]>(platforms.map((p) => p.id));
@@ -262,8 +263,7 @@ function SchedulePostDialog({
             </p>
           </div>
           <div>
-            <Label htmlFor="post-media">Media URL (optional)</Label>
-            <Input id="post-media" value={mediaUrl} onChange={(e) => setMediaUrl(e.target.value)} placeholder="https://…" />
+            <MediaField value={mediaUrl} onChange={setMediaUrl} label="Media (optional)" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -303,7 +303,7 @@ function SchedulePostDialog({
               if (!selected.length) return toast.error("Select at least one platform");
               onSave({
                 caption: caption.trim(),
-                mediaUrl: mediaUrl.trim() || undefined,
+                mediaUrl: mediaUrl?.trim() || undefined,
                 scheduledAt: new Date(`${date}T${time}`).toISOString(),
                 platformIds: selected,
               });

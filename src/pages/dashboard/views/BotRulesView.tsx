@@ -42,6 +42,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { useAccounts } from "@/contexts/AccountContext";
 import { InboxAutomationPanel } from "@/components/engage/InboxAutomationPanel";
 import { BotFlowEditor } from "@/components/engage/BotFlowEditor";
+import { RateLimitDashboard } from "@/components/engage/RateLimitDashboard";
 import { useReshareFlows } from "@/hooks/useReshareFlows";
 import {
   Select,
@@ -158,6 +159,7 @@ export default function BotRulesView() {
 
   return (
     <div className="px-4 pb-8 sm:px-6 lg:px-8">
+      <RateLimitDashboard />
       {/* Compact header */}
       <section className="mb-5 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-border/60 bg-card/60 p-4 sm:p-5">
         <div className="min-w-0">

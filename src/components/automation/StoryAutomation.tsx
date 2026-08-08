@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useLocalCollection } from "@/hooks/useLocalCollection";
+import { MediaField } from "@/components/publish/MediaField";
 import type { Platform } from "@/config/platforms";
 
 const defaultTemplates = [
@@ -349,7 +350,7 @@ function StoryDialog({
   const [title, setTitle] = useState(state.editing?.title ?? "");
   const [time, setTime] = useState(state.editing?.time ?? "09:00");
   const [templateId, setTemplateId] = useState<string | undefined>(state.editing?.templateId);
-  const [mediaUrl, setMediaUrl] = useState(state.editing?.mediaUrl ?? "");
+  const [mediaUrl, setMediaUrl] = useState<string | undefined>(state.editing?.mediaUrl);
 
 
   return (
@@ -382,8 +383,7 @@ function StoryDialog({
             </Select>
           </div>
           <div>
-            <Label htmlFor="story-media">Media URL (optional)</Label>
-            <Input id="story-media" value={mediaUrl} onChange={(e) => setMediaUrl(e.target.value)} placeholder="https://…" />
+            <MediaField value={mediaUrl} onChange={setMediaUrl} label="Media (optional)" />
           </div>
         </div>
         <DialogFooter>
@@ -394,7 +394,7 @@ function StoryDialog({
                 toast.error("Title is required");
                 return;
               }
-              onSave({ title: title.trim(), time, templateId, mediaUrl: mediaUrl.trim() || undefined });
+              onSave({ title: title.trim(), time, templateId, mediaUrl: mediaUrl?.trim() || undefined });
             }}
           >
             {state.editing ? "Save changes" : "Schedule"}

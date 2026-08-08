@@ -7,6 +7,7 @@ import { PostingHeatmap } from "@/components/analytics/PostingHeatmap";
 import { FunnelCard } from "@/components/analytics/FunnelCard";
 import { AudienceMix } from "@/components/analytics/AudienceMix";
 import { AnomalyFeed } from "@/components/analytics/AnomalyFeed";
+import { BrandMentionsFeed } from "@/components/analytics/BrandMentionsFeed";
 import { BestTimeInsightsCard } from "@/components/analytics/BestTimeInsightsCard";
 import { HashtagPerformanceCard } from "@/components/analytics/HashtagPerformanceCard";
 import { CompetitorBenchmarkCard } from "@/components/audience/CompetitorBenchmarkCard";
@@ -30,6 +31,7 @@ export default function AnalyticsPage() {
           <HashtagPerformanceCard />
           <CompetitorBenchmarkCard />
           <AudienceMix />
+          <BrandMentionsFeed />
           <AnomalyFeed />
         </div>
       </div>

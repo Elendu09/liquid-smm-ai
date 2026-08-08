@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MediaField } from "@/components/publish/MediaField";
 
 /** One slide inside a multi-slide story. Kept flat/serializable for localStorage. */
 export interface StorySlide {
@@ -37,6 +38,8 @@ export interface StorySlide {
 export interface StoryItemFull {
   id: string;
   title: string;
+  /** Destination platform for the story. */
+  platform?: string;
   slides: StorySlide[];
   scheduledAt?: string;
   status: "idea" | "ready" | "scheduled" | "live";
@@ -143,13 +146,18 @@ export function NewStoryDialog({
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-                {(s.type === "image" || s.type === "cta") && (
+                {s.type === "cta" && (
                   <Input
-                    placeholder={s.type === "cta" ? "https://link.example" : "Image URL"}
-                    value={s.type === "cta" ? s.link ?? "" : s.mediaUrl ?? ""}
-                    onChange={(e) =>
-                      updateSlide(s.id, s.type === "cta" ? { link: e.target.value } : { mediaUrl: e.target.value })
-                    }
+                    placeholder="https://link.example"
+                    value={s.link ?? ""}
+                    onChange={(e) => updateSlide(s.id, { link: e.target.value })}
+                  />
+                )}
+                {s.type === "image" && (
+                  <MediaField
+                    value={s.mediaUrl}
+                    onChange={(url) => updateSlide(s.id, { mediaUrl: url })}
+                    label="Slide image"
                   />
                 )}
                 {(s.type === "poll" || s.type === "quiz") && (

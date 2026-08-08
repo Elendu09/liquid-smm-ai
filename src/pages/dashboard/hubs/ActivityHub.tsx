@@ -1,6 +1,6 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { Clock, Bell, Terminal, Sparkles } from "lucide-react";
-import { PageHeader, HubTabs, HeaderActionRow, sectionActions, type HubTab } from "@/components/dashboard/shell";
+import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import { ActivityFeedView } from "../views/ActivityFeedView";
 import { McpActivityView } from "../views/McpActivityView";
 import { NotificationsView } from "../views/NotificationsView";
@@ -14,16 +14,12 @@ const tabs: HubTab[] = [
 function ActivityLayout() {
   return (
     <div>
-      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 space-y-4">
         <PageHeader
           title="Activity"
           description="Every automation run and every notification, in order."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Activity" }]}
-          actions={
-            <HeaderActionRow actions={sectionActions(tabs)} />
-          }
         />
-
         <HubTabs tabs={tabs} />
       </div>
       <Outlet />

@@ -106,9 +106,9 @@ export function usePublishOutcome() {
       }
 
       try {
-        const result = await input.body();
-        const postId = result?.postId;
-        const url = result?.url;
+        const result = (await input.body()) as { postId?: string; url?: string } | void | undefined;
+        const postId = result ? result.postId : undefined;
+        const url = result ? result.url : undefined;
         dedupeRef.current.set(dedupeKey, { at: now, postId });
         logRun({
           toolKey: "publish",

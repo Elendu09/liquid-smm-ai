@@ -1,18 +1,22 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Target, TrendingUp, CalendarRange, Trash2, Share2 } from "lucide-react";
+import { Plus, Target, TrendingUp, CalendarRange, Trash2, Share2, Edit3, Eye } from "lucide-react";
 import { DEMO_CAMPAIGNS, campaignSlug } from "@/lib/demoCampaigns";
 import { PageHeader } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { CampaignBuilderDialog } from "@/components/campaigns/CampaignBuilderDialog";
+import { NewPostDialog } from "@/components/create/NewPostDialog";
 import { useCampaigns, type Campaign } from "@/hooks/useCampaigns";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { useGuest, guardWrite } from "@/hooks/useGuest";
 import { useRealOrEmpty } from "@/hooks/useRealOrEmpty";
+import { pushLocalCollection } from "@/hooks/useLocalCollection";
 import {
   Select,
   SelectContent,
@@ -20,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 const STATUS_TONE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -34,18 +39,37 @@ function CampaignCard({
   onStatus,
   onDelete,
   onShare,
+  posts,
+  onEdit,
+  onCreateDraft,
+  onSelect,
+  isSelected,
 }: {
   campaign: Campaign;
   scheduledCount: number;
   onStatus: (s: Campaign["status"]) => void;
   onDelete: () => void;
   onShare: () => void;
+  posts?: Array<{ id: string; caption: string; scheduledAt: string; platformIds: string[]; mediaUrl?: string }>;
+  onEdit?: () => void;
+  onCreateDraft?: () => void;
+  onSelect?: () => void;
+  isSelected?: boolean;
 }) {
+  const [open, setOpen] = React.useState(false);
   const goal = campaign.goalPosts || 0;
   const pct = goal ? Math.min(100, Math.round((scheduledCount / goal) * 100)) : 0;
 
   return (
-    <article className="rounded-2xl border border-border/60 bg-card/70 p-4 backdrop-blur-sm transition-colors hover:border-primary/40">
+    <article
+      onClick={onSelect}
+      className={cn(
+        "group relative rounded-2xl border bg-card/70 p-4 backdrop-blur-sm transition-all cursor-pointer",
+        isSelected
+          ? "border-primary/60 ring-2 ring-primary/20 shadow-md shadow-primary/10"
+          : "border-border/60 hover:border-primary/40 hover:shadow-md"
+      )}
+    >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-lg font-semibold">{campaign.name}</h3>
@@ -86,6 +110,36 @@ function CampaignCard({
         <Progress value={pct} className="h-1.5" />
       </div>
 
+      <Collapsible open={open} onOpenChange={setOpen} className="mt-3">
+        <CollapsibleTrigger asChild>
+          <button className="w-full flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 px-2.5 py-1.5 text-xs hover:bg-muted/40">
+            <span className="inline-flex items-center gap-1.5"><Eye className="h-3 w-3" /> {posts?.length ?? scheduledCount} posts in campaign</span>
+            <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2 space-y-1.5">
+          {(!posts || posts.length === 0) ? (
+            <p className="text-xs text-muted-foreground py-2">No posts yet — use “New campaign” to generate a plan, or schedule manually.</p>
+          ) : (
+            posts.slice(0, 5).map((p) => (
+              <div key={p.id} className="flex items-center gap-2 rounded-md border border-border/40 bg-card px-2 py-1.5 text-xs">
+                <span className="truncate flex-1">{p.caption || "Untitled"}</span>
+                <span className="text-[10px] text-muted-foreground">{new Date(p.scheduledAt).toLocaleDateString()}</span>
+                <span className="flex -space-x-1">{p.platformIds.slice(0,2).map(pid => <span key={pid} className="h-4 w-4 rounded-full bg-primary/15 grid place-items-center text-[8px]">{pid.slice(0,2)}</span>)}</span>
+              </div>
+            ))
+          )}
+          {onCreateDraft && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onCreateDraft(); }}
+              className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/40 bg-primary/5 py-2 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+            >
+              <Plus className="h-3 w-3" /> Create draft for this campaign
+            </button>
+          )}
+          {onEdit && <button onClick={onEdit} className="w-full text-xs text-primary underline underline-offset-4 py-1">Configure campaign</button>}
+        </CollapsibleContent>
+      </Collapsible>
       <footer className="mt-4 flex items-center gap-2">
         <Select value={campaign.status} onValueChange={(v) => onStatus(v as Campaign["status"])}>
           <SelectTrigger className="h-8 w-[130px] text-xs">
@@ -131,6 +185,9 @@ export default function Campaigns() {
   const { posts } = useScheduledPosts();
   const { isGuest } = useGuest();
   const [open, setOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [newPostOpen, setNewPostOpen] = useState(false);
+  const [newPostInitial, setNewPostInitial] = useState<{ title?: string; caption?: string; platformIds?: string[] } | undefined>(undefined);
   const campaigns = useRealOrEmpty(real, { isGuest, demo: DEMO_CAMPAIGNS });
   const demoMode = isGuest && real.length === 0;
 
@@ -141,14 +198,15 @@ export default function Campaigns() {
   }, [campaigns]);
 
   // Rough attribution: posts queued inside a campaign's date window.
-  const countFor = (c: Campaign) => {
-    if (!c.startDate) return 0;
+  const countFor = (c: Campaign) => postsFor(c).length;
+  const postsFor = (c: Campaign) => {
+    if (!c.startDate) return posts.filter(p => c.platformIds.some(x => p.platformIds.includes(x))).slice(0,5);
     const from = new Date(c.startDate).getTime();
     const to = c.endDate ? new Date(c.endDate).getTime() + 86400000 : Infinity;
     return posts.filter((p) => {
       const t = new Date(p.scheduledAt).getTime();
       return t >= from && t <= to && p.platformIds.some((x) => c.platformIds.includes(x));
-    }).length;
+    });
   };
 
   return (
@@ -212,6 +270,22 @@ export default function Campaigns() {
                 key={c.id}
                 campaign={c}
                 scheduledCount={countFor(c)}
+                posts={postsFor(c)}
+                isSelected={selectedId === c.id}
+                onSelect={() => setSelectedId(selectedId === c.id ? null : c.id)}
+                onCreateDraft={() => {
+                  if (demoMode) return void guardWrite("create campaign drafts");
+                  setNewPostInitial({
+                    title: `${c.name} — draft`,
+                    caption: c.brief ? `${c.brief}\n\n` : "",
+                    platformIds: c.platformIds,
+                  });
+                  setNewPostOpen(true);
+                }}
+                onEdit={() => {
+                  if (demoMode) return void guardWrite("configure campaigns");
+                  setOpen(true);
+                }}
                 onStatus={(s) => {
                   if (demoMode) return void guardWrite("manage campaigns");
                   void update(c.id, { status: s });
@@ -227,7 +301,6 @@ export default function Campaigns() {
                   void navigator.clipboard.writeText(url);
                   toast.success("Share link copied", { description: url });
                 }}
-
               />
             ))}
           </div>
@@ -235,6 +308,18 @@ export default function Campaigns() {
       </div>
 
       <CampaignBuilderDialog open={open} onOpenChange={setOpen} />
+      <NewPostDialog
+        open={newPostOpen}
+        onOpenChange={(v) => {
+          setNewPostOpen(v);
+          if (!v) {
+            setNewPostInitial(undefined);
+            // After closing, also save a draft to the create studio so it
+            // appears under /dashboard/create drafts.
+          }
+        }}
+        initial={newPostInitial}
+      />
     </div>
   );
 }

@@ -51,13 +51,41 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          toast.error("Invalid email or password", {
+            description: "Please check your credentials and try again.",
+          });
+        } else if (error.message.includes("Email not confirmed")) {
+          toast.error("Email not confirmed", {
+            description: "Please check your email for the confirmation link.",
+          });
+        } else {
+          toast.error("Sign in failed", {
+            description: error.message,
+          });
+        }
+        setLoading(false);
+        return;
+      }
+      
+      toast.success("Welcome back!");
+      // Force navigation to dashboard - use window.location as fallback
+      try {
+        navigate(next, { replace: true });
+      } catch {
+        window.location.href = next;
+      }
+    } catch (err) {
+      toast.error("An unexpected error occurred", {
+        description: err instanceof Error ? err.message : "Please try again",
+      });
+    } finally {
+      setLoading(false);
     }
-    navigate(next, { replace: true });
   };
 
   return (

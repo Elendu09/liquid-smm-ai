@@ -28,8 +28,12 @@ import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { useMcpInbox } from "@/hooks/useMcpInbox";
 import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { PlatformPicker } from "@/components/shared/PlatformPicker";
 import { useAccounts } from "@/contexts/AccountContext";
 import { NewPostDialog } from "@/components/create/NewPostDialog";
+import { AiRepurposeDialog } from "@/components/create/AiRepurposeDialog";
+import { MediaField } from "@/components/publish/MediaField";
+import { Shuffle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isGuestSession } from "@/hooks/useGuest";
 
@@ -188,6 +192,7 @@ export default function CreateStudio() {
   const [scheduleAt, setScheduleAt] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<Draft | null>(null);
   const [newPostOpen, setNewPostOpen] = useState(false);
+  const [repurposeOpen, setRepurposeOpen] = useState(false);
   const [previewing, setPreviewing] = useState<Draft | null>(null);
 
   const duplicateDraft = (d: Draft) => {
@@ -375,6 +380,10 @@ export default function CreateStudio() {
         viewToggle={<ViewToggle value={view} onChange={setView} />}
         actions={
           <div className="flex gap-1.5">
+            <Button size="sm" variant="outline" onClick={() => setRepurposeOpen(true)}>
+              <Shuffle className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Repurpose 5×</span>
+            </Button>
             <Button size="sm" variant="outline" onClick={() => setNewPostOpen(true)}>
               <Sparkles className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">AI post</span>
@@ -419,25 +428,14 @@ export default function CreateStudio() {
             <div className="flex-1 overflow-y-auto p-4 grid gap-6 md:grid-cols-2">
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Platform</label>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {["instagram", "twitter", "tiktok", "linkedin", "facebook"].map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => setEditing({ ...editing, platform: p })}
-                        aria-pressed={editing.platform === p}
-                        aria-label={`Preview as ${p}`}
-                        className={cn(
-                          "p-2 rounded-lg border transition-colors min-h-9 min-w-9",
-                          editing.platform === p
-                            ? "border-primary bg-primary/10"
-                            : "border-border/60 hover:bg-muted",
-                        )}
-                      >
-                        <PlatformIcon platform={p} size="xs" />
-                      </button>
-                    ))}
-                  </div>
+                  <PlatformPicker
+                    selected={[editing.platform]}
+                    onToggle={(id) => setEditing({ ...editing, platform: id })}
+                    available={["instagram", "twitter", "tiktok", "linkedin", "facebook"]}
+                    label="Platform"
+                    multi={false}
+                    size="sm"
+                  />
                 </div>
 
                 <div>
@@ -452,11 +450,10 @@ export default function CreateStudio() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Media URL (optional)</label>
-                  <Input
-                    value={editing.mediaUrl ?? ""}
-                    onChange={(e) => setEditing({ ...editing, mediaUrl: e.target.value })}
-                    placeholder="https://…"
+                  <MediaField
+                    value={editing.mediaUrl}
+                    onChange={(url) => setEditing({ ...editing, mediaUrl: url })}
+                    label="Media (optional)"
                   />
                 </div>
 
@@ -492,6 +489,7 @@ export default function CreateStudio() {
       )}
 
       <NewPostDialog open={newPostOpen} onOpenChange={setNewPostOpen} />
+      <AiRepurposeDialog open={repurposeOpen} onOpenChange={setRepurposeOpen} initialCaption={editing?.caption ?? ""} />
 
       {previewing && (
         <div

@@ -4,7 +4,7 @@
  * Custom). Values of `null` mean "unlimited / custom".
  */
 
-export type PlanId = "free" | "starter" | "professional" | "custom";
+export type PlanId = "free" | "starter" | "team" | "professional" | "custom";
 
 export type FeatureKey =
   | "inbox"
@@ -81,6 +81,29 @@ export const PLANS: Record<PlanId, PlanEntitlements> = {
     linkBioPages: 3,
     features: f(["competitors", "api", "reportExports", "smartlinks"]),
   },
+  team: {
+    id: "team",
+    name: "Team",
+    blurb: "For teams that approve together — fixed price, no seat tax.",
+    brands: 5,
+    channels: 25,
+    monthlyPosts: null,
+    analyticsRetentionDays: null,
+    competitorCap: 50,
+    seats: 5,
+    aiCredits: 5000,
+    linkBioPages: 25,
+    features: f([
+      "competitors",
+      "api",
+      "reportExports",
+      "smartlinks",
+      "inbox",
+      "approvals",
+      "automation",
+      "whiteLabel",
+    ]),
+  },
   professional: {
     id: "professional",
     name: "Professional",
@@ -130,7 +153,7 @@ export const PLANS: Record<PlanId, PlanEntitlements> = {
   },
 };
 
-export const PLAN_ORDER: PlanId[] = ["free", "starter", "professional", "custom"];
+export const PLAN_ORDER: PlanId[] = ["free", "starter", "team", "professional", "custom"];
 
 /** Human label for a limit, e.g. 15 → "15", null → "Unlimited". */
 export function limitLabel(v: number | null) {

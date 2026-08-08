@@ -6,12 +6,18 @@ const URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-engage`;
 async function post<T>(payload: Record<string, unknown>, quiet = false): Promise<T | null> {
   try {
     const { data: sess } = await supabase.auth.getSession();
-    const token = sess.session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const token = sess.session?.access_token;
+    if (!token) {
+      // No signed-in user: this endpoint requires a real session, don't send the anon key.
+      if (!quiet) toast.error("Sign in to use AI engagement.");
+      return null;
+    }
     const res = await fetch(URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
     });
+
     if (!res.ok) {
       if (!quiet) {
         const msg =
