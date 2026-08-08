@@ -64,6 +64,7 @@ import {
   Lock as LockIcon,
 } from "lucide-react";
 import { QuotaMeters } from "@/components/shared/QuotaMeters";
+import { DataPortabilityCard } from "@/components/settings/DataPortabilityCard";
 import { usePlan } from "@/hooks/usePlan";
 import { NotificationPreferencesMatrix } from "./NotificationPreferencesMatrix";
 
@@ -745,6 +746,8 @@ export function BillingPanel() {
         onSaved={savePm}
         initial={editing}
       />
+
+      <DataPortabilityCard />
     </div>
   );
 }

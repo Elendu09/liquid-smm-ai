@@ -251,6 +251,19 @@ function BlockRenderer({ block, accent }: { block: import("../state/bioConfig").
       ) : null;
     case "countdown":
       return <Countdown text={block.text ?? ""} target={block.target} accent={accent} />;
+    case "shopify":
+      return (
+        <a href={block.target ? block.target : undefined} target={block.target ? "_blank" : undefined} rel={block.target ? "noreferrer noopener" : undefined} className="block rounded-xl border border-border/60 overflow-hidden bg-card hover:border-primary/30 transition-colors">
+          <div className="flex gap-3 p-3">
+            {block.src && <img src={block.src} alt="" className="h-20 w-20 rounded-lg object-cover shrink-0" />}
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold truncate flex items-center gap-1.5">{block.text || "Shop product"} {block.badge && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground">{block.badge}</span>}</p>
+              {block.price && <p className="text-sm font-bold mt-1" style={{ color: accent }}>{block.price}</p>}
+              <p className="text-xs text-muted-foreground mt-1">Tap to shop → Shopify checkout</p>
+            </div>
+          </div>
+        </a>
+      );
     default:
       return null;
   }

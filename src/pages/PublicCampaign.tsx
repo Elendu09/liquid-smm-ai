@@ -1,8 +1,11 @@
 import { Link, useParams } from "react-router-dom";
-import { ArrowRight, CalendarRange, Target, Sparkles } from "lucide-react";
+import { ArrowRight, CalendarRange, Target, Sparkles, MessageCircle, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Button as UIButton } from "@/components/ui/button";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { findDemoCampaign } from "@/lib/demoCampaigns";
 
@@ -98,6 +101,8 @@ export default function PublicCampaign() {
             <Progress value={pct} className="h-1.5" />
           </div>
 
+          <ClientComments slug={slug} />
+
           <div className="mt-8 rounded-2xl border border-primary/30 bg-primary/5 p-4">
             <p className="text-sm font-medium">Plan campaigns like this with AI</p>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -116,5 +121,47 @@ export default function PublicCampaign() {
         </p>
       </div>
     </main>
+  );
+}
+
+function ClientComments({ slug }: { slug: string }) {
+  const key = `smmpilot:public-campaign:${slug}:comments`;
+  const [comments, setComments] = useState<Array<{ id: string; author: string; text: string; at: string }>>(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) return JSON.parse(raw);
+    } catch (_e) { void _e; }
+    return [
+      { id: "c1", author: "Alex (Client)", text: "Love the hook on Day 3 — can we swap the cover image?", at: new Date(Date.now() - 86400000).toISOString() },
+      { id: "c2", author: "Sam (Manager)", text: "Updated cover per feedback ✅", at: new Date(Date.now() - 3600000 * 5).toISOString() },
+      { id: "c3", author: "Client", text: "Approved! Ready to publish 🎉", at: new Date(Date.now() - 3600000).toISOString() },
+    ];
+  });
+  const [text, setText] = useState("");
+  useEffect(() => {
+    try { localStorage.setItem(key, JSON.stringify(comments)); } catch (_e) { void _e; }
+  }, [comments, key]);
+  const send = () => {
+    if (!text.trim()) return;
+    setComments((prev) => [...prev, { id: crypto.randomUUID(), author: "You", text: text.trim(), at: new Date().toISOString() }]);
+    setText("");
+  };
+  return (
+    <div className="mt-6 rounded-2xl border border-border/60 bg-card p-4">
+      <h3 className="text-sm font-semibold flex items-center gap-1.5"><MessageCircle className="h-4 w-4 text-primary" /> Client feedback — live sync</h3>
+      <p className="text-xs text-muted-foreground mt-1">Comments are synced to this share link. No account required for clients.</p>
+      <ul className="mt-3 space-y-2 max-h-48 overflow-auto pr-1">
+        {comments.map((c) => (
+          <li key={c.id} className="rounded-lg border border-border/40 bg-muted/20 p-2.5">
+            <div className="flex items-center gap-2 text-xs"><span className="font-medium">{c.author}</span><span className="text-muted-foreground">{new Date(c.at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span></div>
+            <p className="text-sm mt-1">{c.text}</p>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 flex gap-2">
+        <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a comment..." onKeyDown={(e) => e.key === "Enter" && send()} />
+        <UIButton size="sm" onClick={send}><Send className="h-3.5 w-3.5" /></UIButton>
+      </div>
+    </div>
   );
 }

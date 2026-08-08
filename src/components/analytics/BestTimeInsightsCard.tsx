@@ -1,7 +1,11 @@
-import { Sparkles, Clock, TrendingUp } from "lucide-react";
+import { Sparkles, Clock, TrendingUp, Zap } from "lucide-react";
 import { useBestTimeScoring } from "@/hooks/useBestTimeScoring";
 import { useGuest } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { WhyThisRecommendation } from "@/components/analytics/WhyThisRecommendation";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -20,6 +24,14 @@ export function BestTimeInsightsCard() {
     const hh = h % 12 === 0 ? 12 : h % 12;
     return `${hh}:00 ${period}`;
   };
+
+  const [autoSchedule, setAutoSchedule] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("smmpilot:auto-besttime") === "1";
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("smmpilot:auto-besttime", autoSchedule ? "1" : "0"); } catch {}
+  }, [autoSchedule]);
 
   return (
     <section className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5 space-y-4">
@@ -40,6 +52,14 @@ export function BestTimeInsightsCard() {
           </p>
         </div>
       </header>
+      <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-3 py-2">
+        <div className="flex items-center gap-2">
+          <Zap className="h-3.5 w-3.5 text-primary" />
+          <Label htmlFor="auto-best" className="text-xs font-medium">Auto-schedule at best times</Label>
+          <span className="text-[11px] text-muted-foreground hidden sm:inline">Drafts queue to top slots • live sync</span>
+        </div>
+        <Switch id="auto-best" checked={autoSchedule} onCheckedChange={(v) => { setAutoSchedule(v); toast.success(v ? "Auto-schedule enabled — live" : "Auto-schedule paused"); }} />
+      </div>
 
       {/* Heatmap */}
       <div className="overflow-x-auto">

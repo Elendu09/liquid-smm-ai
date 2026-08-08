@@ -16,6 +16,7 @@ import { ApprovalsPanel } from "@/components/settings/ApprovalsPanel";
 import { BrandsPanel } from "@/components/settings/BrandsPanel";
 import { FeatureGate } from "@/components/shared/FeatureGate";
 import { WebhooksPanel } from "@/components/settings/WebhooksPanel";
+import { SsoPanel } from "@/components/settings/SsoPanel";
 import Integrations from "../Integrations";
 import IntegrationDetail from "../IntegrationDetail";
 
@@ -29,6 +30,7 @@ const tabs: HubTab[] = [
   { label: "Webhooks", href: "/dashboard/settings/webhooks", icon: Webhook },
   { label: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
   { label: "Security", href: "/dashboard/settings/security", icon: Shield },
+  { label: "SSO", href: "/dashboard/settings/sso", icon: Shield },
   { label: "Approvals", href: "/dashboard/settings/approvals", icon: Shield },
   { label: "Roles", href: "/dashboard/settings/roles", icon: KeyRound },
   { label: "White-label", href: "/dashboard/settings/white-label", icon: Palette },
@@ -74,6 +76,7 @@ export default function SettingsHub() {
         <Route path="webhooks" element={<Wrap><WebhooksPanel /></Wrap>} />
         <Route path="billing" element={<Wrap><BillingPanel /></Wrap>} />
         <Route path="security" element={<Wrap><SecurityPanel /></Wrap>} />
+        <Route path="sso" element={<Wrap><SsoPanel /></Wrap>} />
         <Route path="team" element={<Navigate to="/dashboard/team" replace />} />
         <Route path="approvals" element={<Wrap><ApprovalsPanel /></Wrap>} />
         <Route path="roles" element={<Wrap><RolesMatrixPanel /></Wrap>} />
