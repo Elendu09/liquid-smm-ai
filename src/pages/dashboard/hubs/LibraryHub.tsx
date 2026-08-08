@@ -1,6 +1,6 @@
 import { Outlet, Route, Routes, Navigate, Link } from "react-router-dom";
 import { FolderOpen, Palette, FileText, Image as ImageIcon, Sparkles } from "lucide-react";
-import { PageHeader, HubTabs, HeaderActionRow, sectionActions, type HubTab } from "@/components/dashboard/shell";
+import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 
 import { useLocalCollection } from "@/hooks/useLocalCollection";
 import CaptionsBoard from "../views/CaptionsBoard";
@@ -53,12 +53,9 @@ function LibraryLayout() {
         <PageHeader
           title="Library"
           description="Reusable assets, captions, and platform presets."
-          actions={
-            <HeaderActionRow actions={sectionActions(tabs)} />
-          }
+          actions={<HubTabs tabs={tabs} />}
         />
         <LibraryStats />
-        <HubTabs tabs={tabs} />
 
       </div>
       <Outlet />

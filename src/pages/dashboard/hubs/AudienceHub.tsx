@@ -1,6 +1,6 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { Users, Target, Layers, Sparkles, BarChart3 } from "lucide-react";
-import { PageHeader, HubTabs, HeaderActionRow, sectionActions, type HubTab } from "@/components/dashboard/shell";
+import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import SegmentsBoard from "../views/SegmentsBoard";
 import CompetitorsBoard from "../views/CompetitorsBoard";
 import MyAudienceBoard from "../views/MyAudienceBoard";
@@ -19,12 +19,8 @@ function AudienceLayout() {
           title="Audience"
           description="Understand your followers and benchmark against competitors."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Audience" }]}
-          actions={
-            <HeaderActionRow actions={sectionActions(tabs)} />
-          }
+          actions={<HubTabs tabs={tabs} />}
         />
-
-        <HubTabs tabs={tabs} />
       </div>
       <Outlet />
     </div>
