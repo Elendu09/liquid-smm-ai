@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { isGuestSession } from "@/hooks/useGuest";
+import { DEMO_RUN_HISTORY } from "@/lib/demoSeeds";
 
 export type RunStatus = "success" | "failed" | "pending";
 
@@ -27,8 +28,16 @@ const emit = () => window.dispatchEvent(new Event(EVT));
 function readLocal(): RunRecord[] {
   try {
     const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as RunRecord[];
+      if (parsed.length > 0) return parsed;
+    }
+    if (typeof window !== "undefined" && isGuestSession()) {
+      try { localStorage.setItem(KEY, JSON.stringify(DEMO_RUN_HISTORY)); } catch {}
+      return DEMO_RUN_HISTORY;
+    }
     return raw ? (JSON.parse(raw) as RunRecord[]) : [];
-  } catch { return []; }
+  } catch { return isGuestSession() ? DEMO_RUN_HISTORY : []; }
 }
 function writeLocal(rows: RunRecord[]) {
   try { localStorage.setItem(KEY, JSON.stringify(rows.slice(0, MAX))); emit(); } catch { /* ignore */ }

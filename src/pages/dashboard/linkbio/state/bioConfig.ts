@@ -39,7 +39,8 @@ export type BioBlockType =
   | "embed"
   | "divider"
   | "countdown"
-  | "quote";
+  | "quote"
+  | "shopify";
 
 export interface BioBlock {
   id: string;
@@ -49,6 +50,8 @@ export interface BioBlock {
   src?: string;
   target?: string;
   align?: "left" | "center";
+  price?: string;
+  badge?: string;
 }
 
 export type EntranceAnimation = "none" | "fade" | "slide" | "scale";
@@ -256,6 +259,7 @@ export const bioStore = {
     const id = `b${Date.now()}`;
     const defaults: Record<BioBlockType, Partial<BioBlock>> = {
       header: { text: "New Section" },
+      shopify: { text: "Summer tee", src: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400", target: "https://shop.example.com/product", price: "$29", badge: "New" },
       text: { text: "Add a short description here." },
       image: { src: "https://images.unsplash.com/photo-1520975916090-3105956dac38?w=600" },
       video: { src: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },

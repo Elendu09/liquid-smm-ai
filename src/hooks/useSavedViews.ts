@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import { DEMO_SAVED_VIEWS } from "@/lib/demoSeeds";
 import { createRemoteCollection } from "./_remoteCollection";
 
 export type SavedView<F = Record<string, unknown>> = {
@@ -24,7 +25,7 @@ type Row = {
 const store = createRemoteCollection<SavedView, Row>({
   table: "saved_views",
   localKey: "smmpilot:views:__all__",
-  seed: [],
+  seed: DEMO_SAVED_VIEWS as any,
   orderBy: { column: "created_at", ascending: true },
   fromRow: (r) => ({
     id: r.id,

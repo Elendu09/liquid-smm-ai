@@ -118,6 +118,25 @@ export function WhiteLabelPanel() {
             <Switch checked={local.hideBadge} onCheckedChange={(v) => update("hideBadge", v)} />
           </div>
 
+          <div className="rounded-xl border border-border/60 p-3 space-y-3 bg-primary/[0.04]">
+            <p className="text-sm font-semibold">Email branding (white-label)</p>
+            <div className="grid gap-2">
+              <label className="text-xs font-medium">Support email</label>
+              <input value={local.supportEmail} onChange={(e) => update("supportEmail", e.target.value)} placeholder="support@yourbrand.com" className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" />
+              <p className="text-[11px] text-muted-foreground">Sender for magic-links and reports. Live sync.</p>
+            </div>
+            <div className="grid gap-2">
+              <label className="text-xs font-medium">Login tagline</label>
+              <input value={local.customLoginTagline} onChange={(e) => update("customLoginTagline", e.target.value)} placeholder="Your team's social OS" className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" />
+            </div>
+            <div className="rounded-lg border border-border/60 bg-card p-2.5 text-xs">
+              <p className="font-medium">Preview email</p>
+              <p className="text-muted-foreground mt-1">From: {local.brandName || "Your brand"} &lt;{local.supportEmail || "support@yourbrand.com"}&gt;</p>
+              <p className="mt-1">Subject: Your campaign needs approval</p>
+              <p className="text-muted-foreground">→ Magic-link via your domain</p>
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-2 justify-end pt-2 border-t border-border/60">
             <Button
               variant="ghost"

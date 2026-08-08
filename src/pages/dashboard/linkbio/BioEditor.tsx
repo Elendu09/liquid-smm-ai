@@ -1184,7 +1184,7 @@ function FontChooser({
 
 /* ------------------------------ Blocks Panel ------------------------------ */
 
-const blockTypes: Array<{ id: "header" | "text" | "image" | "video" | "embed" | "divider" | "countdown" | "quote"; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+const blockTypes: Array<{ id: "header" | "text" | "image" | "video" | "embed" | "divider" | "countdown" | "quote" | "shopify"; label: string; icon: React.ComponentType<{ className?: string }> }> = [
   { id: "header", label: "Header", icon: TypeIcon },
   { id: "text", label: "Text", icon: TypeIcon },
   { id: "quote", label: "Quote", icon: Quote },
@@ -1192,6 +1192,7 @@ const blockTypes: Array<{ id: "header" | "text" | "image" | "video" | "embed" | 
   { id: "video", label: "Video", icon: Video },
   { id: "embed", label: "Embed", icon: Code2 },
   { id: "countdown", label: "Countdown", icon: Timer },
+  { id: "shopify", label: "Shopify", icon: Layers },
   { id: "divider", label: "Divider", icon: Minus },
 ];
 
@@ -1241,6 +1242,17 @@ function BlocksPanel() {
               <div className="grid grid-cols-2 gap-2">
                 <Input value={b.text ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { text: e.target.value })} className="h-8 text-xs" placeholder="Label" />
                 <Input type="datetime-local" value={b.target ? b.target.slice(0, 16) : ""} onChange={(e) => bioStore.updateBlock(b.id, { target: e.target.value ? new Date(e.target.value).toISOString() : undefined })} className="h-8 text-xs" />
+              </div>
+            )}
+            {b.type === "shopify" && (
+              <div className="grid gap-2">
+                <Input value={b.text ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { text: e.target.value })} className="h-8 text-xs" placeholder="Product name" />
+                <Input value={b.src ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { src: e.target.value })} className="h-8 text-xs" placeholder="Image URL" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input value={b.target ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { target: e.target.value })} className="h-8 text-xs" placeholder="Shopify URL" />
+                  <Input value={b.price ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { price: e.target.value })} className="h-8 text-xs" placeholder="$29" />
+                </div>
+                <Input value={b.badge ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { badge: e.target.value })} className="h-8 text-xs" placeholder="Badge (New / Sale)" />
               </div>
             )}
           </div>

@@ -15,6 +15,21 @@ interface Props {
 }
 
 const CAPTIONS_KEY = "smmpilot:captions";
+export const ONBOARDING_FLAGS = {
+  inboxFlow: "smmpilot:onboarding:inbox-flow",
+  approvals: "smmpilot:onboarding:approvals",
+  timezone: "smmpilot:onboarding:timezone",
+} as const;
+
+function hasFlag(key: string): boolean {
+  if (typeof window === "undefined") return false;
+  try { return window.localStorage.getItem(key) === "1"; } catch { return false; }
+}
+
+export function markOnboardingFlag(key: string) {
+  if (typeof window === "undefined") return;
+  try { window.localStorage.setItem(key, "1"); window.dispatchEvent(new Event("smmpilot:onboarding-flag")); } catch { /* ignore */ }
+}
 
 function hasCaptions(): boolean {
   if (typeof window === "undefined") return false;
@@ -33,6 +48,17 @@ export function OnboardingChecklistCard({ onReopen }: Props) {
   const { posts } = useScheduledPosts();
   const { state, complete } = useOnboarding();
   const [open, setOpen] = useState(false);
+  const [flagTick, setFlagTick] = useState(0);
+  void flagTick;
+  useEffect(() => {
+    const h = () => setFlagTick((t) => t + 1);
+    window.addEventListener("smmpilot:onboarding-flag", h);
+    window.addEventListener("storage", h);
+    return () => {
+      window.removeEventListener("smmpilot:onboarding-flag", h);
+      window.removeEventListener("storage", h);
+    };
+  }, []);
 
   const items = [
     {
@@ -72,6 +98,39 @@ export function OnboardingChecklistCard({ onReopen }: Props) {
       action: (
         <Button asChild variant="secondary" size="sm">
           <Link to="/dashboard/publish/queue">Schedule</Link>
+        </Button>
+      ),
+    },
+    {
+      id: "inbox-flow",
+      label: "Create your first inbox flow",
+      hint: "Build a rule to auto-triage comments & DMs.",
+      done: hasFlag(ONBOARDING_FLAGS.inboxFlow),
+      action: (
+        <Button asChild variant="secondary" size="sm">
+          <Link to="/dashboard/engage">Build flow</Link>
+        </Button>
+      ),
+    },
+    {
+      id: "approvals",
+      label: "Set up an approval policy",
+      hint: "Require manager or client sign-off before publishing.",
+      done: hasFlag(ONBOARDING_FLAGS.approvals),
+      action: (
+        <Button asChild variant="secondary" size="sm">
+          <Link to="/dashboard/settings/approvals">Set up</Link>
+        </Button>
+      ),
+    },
+    {
+      id: "timezone",
+      label: "Set your reporting timezone",
+      hint: "Pick the timezone for your connected accounts so charts show the right hours.",
+      done: hasFlag(ONBOARDING_FLAGS.timezone),
+      action: (
+        <Button asChild variant="secondary" size="sm">
+          <Link to="/dashboard/settings/account">Set timezone</Link>
         </Button>
       ),
     },

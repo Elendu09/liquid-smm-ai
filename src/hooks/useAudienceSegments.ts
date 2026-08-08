@@ -54,6 +54,30 @@ const seed: AudienceSegment[] = [
     keywords: ["saas", "founder", "startup"],
     createdAt: new Date().toISOString(),
   },
+  {
+    id: "s3",
+    title: "E-commerce shoppers",
+    description: "Facebook + Instagram, deal hunters, beauty & fashion",
+    status: "active",
+    niche: "E-commerce",
+    platforms: ["facebook", "instagram"],
+    followerBucket: "50k",
+    engagementBucket: "high",
+    keywords: ["shop", "beauty", "fashion"],
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "s4",
+    title: "Local foodies",
+    description: "YouTube + TikTok, recipe & restaurant niche, local geo",
+    status: "paused",
+    niche: "Food & dining",
+    platforms: ["youtube", "tiktok"],
+    followerBucket: "10k",
+    engagementBucket: "mid",
+    keywords: ["food", "recipe", "restaurant"],
+    createdAt: new Date().toISOString(),
+  },
 ];
 
 const collection = createRemoteCollection<AudienceSegment, Row>({

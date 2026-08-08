@@ -53,9 +53,16 @@ interface CompetitorData {
   liveStats?: CompetitorLiveStats;
 }
 
+const DEMO_COMPETITORS: Competitor[] = [
+  { id: "comp-1", handle: "@rivalstudio", platform: "instagram", displayName: "Rival Studio", status: "priority", followers: 124000, followersHistory: [{at: new Date(Date.now()-86400000*7).toISOString(), followers: 119000}, {at: new Date().toISOString(), followers: 124000}], createdAt: new Date().toISOString() },
+  { id: "comp-2", handle: "@nichequeen", platform: "tiktok", displayName: "Niche Queen", status: "tracking", followers: 78000, createdAt: new Date().toISOString() },
+  { id: "comp-3", handle: "@growthlabs", platform: "linkedin", displayName: "Growth Labs", status: "tracking", followers: 45200, createdAt: new Date().toISOString() },
+  { id: "comp-4", handle: "@socialpilot", platform: "twitter", displayName: "SocialPilot", status: "archived", followers: 21000, createdAt: new Date().toISOString() },
+];
 const collection = createRemoteCollection<Competitor, Row>({
   table: "competitors",
   localKey: "collection:audience:competitors",
+  seed: DEMO_COMPETITORS,
   orderBy: { column: "created_at", ascending: false },
   fromRow: (r) => ({
     id: r.id,

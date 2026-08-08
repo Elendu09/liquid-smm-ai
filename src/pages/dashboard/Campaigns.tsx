@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, Target, TrendingUp, CalendarRange, Trash2, Share2 } from "lucide-react";
 import { DEMO_CAMPAIGNS, campaignSlug } from "@/lib/demoCampaigns";
@@ -6,6 +6,8 @@ import { PageHeader } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, Eye } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { CampaignBuilderDialog } from "@/components/campaigns/CampaignBuilderDialog";
@@ -34,13 +36,18 @@ function CampaignCard({
   onStatus,
   onDelete,
   onShare,
+  posts,
+  onEdit,
 }: {
   campaign: Campaign;
   scheduledCount: number;
   onStatus: (s: Campaign["status"]) => void;
   onDelete: () => void;
   onShare: () => void;
+  posts?: Array<{ id: string; caption: string; scheduledAt: string; platformIds: string[] }>;
+  onEdit?: () => void;
 }) {
+  const [open, setOpen] = React.useState(false);
   const goal = campaign.goalPosts || 0;
   const pct = goal ? Math.min(100, Math.round((scheduledCount / goal) * 100)) : 0;
 
@@ -86,6 +93,28 @@ function CampaignCard({
         <Progress value={pct} className="h-1.5" />
       </div>
 
+      <Collapsible open={open} onOpenChange={setOpen} className="mt-3">
+        <CollapsibleTrigger asChild>
+          <button className="w-full flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 px-2.5 py-1.5 text-xs hover:bg-muted/40">
+            <span className="inline-flex items-center gap-1.5"><Eye className="h-3 w-3" /> {posts?.length ?? scheduledCount} posts in campaign</span>
+            <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2 space-y-1.5">
+          {(!posts || posts.length === 0) ? (
+            <p className="text-xs text-muted-foreground py-2">No posts yet — use “New campaign” to generate a plan, or schedule manually.</p>
+          ) : (
+            posts.slice(0, 5).map((p) => (
+              <div key={p.id} className="flex items-center gap-2 rounded-md border border-border/40 bg-card px-2 py-1.5 text-xs">
+                <span className="truncate flex-1">{p.caption || "Untitled"}</span>
+                <span className="text-[10px] text-muted-foreground">{new Date(p.scheduledAt).toLocaleDateString()}</span>
+                <span className="flex -space-x-1">{p.platformIds.slice(0,2).map(pid => <span key={pid} className="h-4 w-4 rounded-full bg-primary/15 grid place-items-center text-[8px]">{pid.slice(0,2)}</span>)}</span>
+              </div>
+            ))
+          )}
+          {onEdit && <button onClick={onEdit} className="w-full text-xs text-primary underline underline-offset-4 py-1">Configure campaign</button>}
+        </CollapsibleContent>
+      </Collapsible>
       <footer className="mt-4 flex items-center gap-2">
         <Select value={campaign.status} onValueChange={(v) => onStatus(v as Campaign["status"])}>
           <SelectTrigger className="h-8 w-[130px] text-xs">
@@ -141,14 +170,15 @@ export default function Campaigns() {
   }, [campaigns]);
 
   // Rough attribution: posts queued inside a campaign's date window.
-  const countFor = (c: Campaign) => {
-    if (!c.startDate) return 0;
+  const countFor = (c: Campaign) => postsFor(c).length;
+  const postsFor = (c: Campaign) => {
+    if (!c.startDate) return posts.filter(p => c.platformIds.some(x => p.platformIds.includes(x))).slice(0,5);
     const from = new Date(c.startDate).getTime();
     const to = c.endDate ? new Date(c.endDate).getTime() + 86400000 : Infinity;
     return posts.filter((p) => {
       const t = new Date(p.scheduledAt).getTime();
       return t >= from && t <= to && p.platformIds.some((x) => c.platformIds.includes(x));
-    }).length;
+    });
   };
 
   return (
@@ -212,6 +242,12 @@ export default function Campaigns() {
                 key={c.id}
                 campaign={c}
                 scheduledCount={countFor(c)}
+                posts={postsFor(c)}
+                onEdit={() => {
+                  if (demoMode) return void guardWrite("configure campaigns");
+                  toast("Configure campaign — open builder");
+                  setOpen(true);
+                }}
                 onStatus={(s) => {
                   if (demoMode) return void guardWrite("manage campaigns");
                   void update(c.id, { status: s });

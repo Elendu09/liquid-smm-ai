@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ import {
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { InboxFlowEditor } from "@/components/engage/InboxFlowEditor";
 import { useSavedReplies } from "@/hooks/useSavedReplies";
+import { markOnboardingFlag, ONBOARDING_FLAGS } from "@/components/dashboard/OnboardingChecklistCard";
 
 const SENTIMENTS: Sentiment[] = ["positive", "neutral", "negative"];
 const INTENTS = Object.keys(INTENT_LABEL) as Intent[];
@@ -100,6 +102,7 @@ export function InboxRuleDialog({ open, onOpenChange, initial, onSubmit }: Props
       return;
     }
     onSubmit({ ...rule, name: rule.name.trim(), match: { ...rule.match, keywords } });
+    try { markOnboardingFlag(ONBOARDING_FLAGS.inboxFlow); } catch (_e) { void _e; }
     onOpenChange(false);
   };
 

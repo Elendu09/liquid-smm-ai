@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
+import { DEMO_WEBHOOKS } from "@/lib/demoSeeds";
 import { createRemoteCollection } from "./_remoteCollection";
 
 export type WebhookEvent =

@@ -35,6 +35,7 @@ import { Sparkline } from "@/components/shared/Sparkline";
 import { useFollowerSpark } from "@/hooks/useFollowerSpark";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useOnboardingContext } from "@/hooks/useOnboardingContext";
+import { WhatsNewPill } from "@/components/dashboard/WhatsNewPill";
 
 
 
@@ -135,6 +136,8 @@ export default function Dashboard() {
         }
 
       />
+
+      <div className="flex justify-start"><WhatsNewPill /></div>
 
       <HomeSummaryCard />
 

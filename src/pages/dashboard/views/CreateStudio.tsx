@@ -30,6 +30,8 @@ import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useAccounts } from "@/contexts/AccountContext";
 import { NewPostDialog } from "@/components/create/NewPostDialog";
+import { AiRepurposeDialog } from "@/components/create/AiRepurposeDialog";
+import { Shuffle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isGuestSession } from "@/hooks/useGuest";
 
@@ -188,6 +190,7 @@ export default function CreateStudio() {
   const [scheduleAt, setScheduleAt] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<Draft | null>(null);
   const [newPostOpen, setNewPostOpen] = useState(false);
+  const [repurposeOpen, setRepurposeOpen] = useState(false);
   const [previewing, setPreviewing] = useState<Draft | null>(null);
 
   const duplicateDraft = (d: Draft) => {
@@ -375,6 +378,10 @@ export default function CreateStudio() {
         viewToggle={<ViewToggle value={view} onChange={setView} />}
         actions={
           <div className="flex gap-1.5">
+            <Button size="sm" variant="outline" onClick={() => setRepurposeOpen(true)}>
+              <Shuffle className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Repurpose 5×</span>
+            </Button>
             <Button size="sm" variant="outline" onClick={() => setNewPostOpen(true)}>
               <Sparkles className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">AI post</span>
@@ -492,6 +499,7 @@ export default function CreateStudio() {
       )}
 
       <NewPostDialog open={newPostOpen} onOpenChange={setNewPostOpen} />
+      <AiRepurposeDialog open={repurposeOpen} onOpenChange={setRepurposeOpen} initialCaption={editing?.caption ?? ""} />
 
       {previewing && (
         <div
