@@ -360,12 +360,52 @@ function Socials({ config, className }: { config: BioConfig; className?: string 
 
 /* =============== LAYOUTS =============== */
 
+/** Rich profile header used across layouts — shows avatar, handle,
+ *  headline AND bio text so the preview looks like a real user profile. */
+function ProfileHeader({
+  config,
+  accent,
+  fontHeading,
+  compact,
+  layout = "stacked",
+}: {
+  config: BioConfig;
+  accent: string;
+  fontHeading: string;
+  compact: boolean;
+  layout?: "stacked" | "inline";
+}) {
+  if (layout === "inline") {
+    return (
+      <div className="flex items-start gap-3">
+        <Avatar config={config} accent={accent} size={compact ? 44 : 56} />
+        <div className="min-w-0 flex-1">
+          <p className={cn("font-bold leading-tight", fontHeading, compact ? "text-sm" : "text-base")}>{config.handle}</p>
+          <p className="text-[11px] opacity-80 mt-0.5 line-clamp-1">{config.headline}</p>
+          {config.bio && (
+            <p className="text-[11px] opacity-65 mt-1 line-clamp-2 leading-relaxed">{config.bio}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center text-center gap-1.5">
+      <Avatar config={config} accent={accent} size={compact ? 64 : 84} />
+      <p className={cn("font-bold leading-tight", fontHeading, compact ? "text-sm" : "text-lg")}>{config.handle}</p>
+      <p className="text-xs opacity-80">{config.headline}</p>
+      {config.bio && (
+        <p className="text-[11px] opacity-65 max-w-[280px] leading-relaxed mt-0.5">{config.bio}</p>
+      )}
+    </div>
+  );
+}
+
 function GlassList({ config, accent, links, compact, fontHeading }: Shared) {
   return (
     <div className="min-h-full flex flex-col items-center text-center px-5 py-6 gap-3">
-      <Avatar config={config} accent={accent} size={compact?60:84} />
-      <p className={cn("font-bold", fontHeading, compact ? "text-sm" : "text-lg")}>{config.handle}</p>
-      <p className="text-xs opacity-80">{config.headline}</p>
+      <ProfileHeader config={config} accent={accent} fontHeading={fontHeading} compact={compact} />
       <div className="w-full space-y-2 mt-2">
         {links.map((l) => (
           <a key={l.id} href={safeUrl(l.url)} data-bio-btn target="_blank" rel="noreferrer noopener"
@@ -379,16 +419,10 @@ function GlassList({ config, accent, links, compact, fontHeading }: Shared) {
   );
 }
 
-function RowDivider({ config, accent, links, fontHeading }: Shared) {
+function RowDivider({ config, accent, links, compact, fontHeading }: Shared) {
   return (
     <div className="min-h-full flex flex-col px-6 py-8 gap-4">
-      <div className="flex items-center gap-3">
-        <Avatar config={config} accent={accent} size={44} />
-        <div>
-          <p className={cn("font-semibold text-sm", fontHeading)}>{config.handle}</p>
-          <p className="text-[11px] text-slate-400">{config.headline}</p>
-        </div>
-      </div>
+      <ProfileHeader config={config} accent={accent} fontHeading={fontHeading} compact={compact} layout="inline" />
       <div className="mt-2 border-t border-white/10">
         {links.map((l) => (
           <a key={l.id} href={safeUrl(l.url)} data-bio-btn target="_blank" rel="noreferrer noopener"
@@ -477,16 +511,10 @@ function Brutal({ config, accent, links, fontHeading }: Shared) {
   );
 }
 
-function CardStack({ config, accent, links, fontHeading }: Shared) {
+function CardStack({ config, accent, links, compact, fontHeading }: Shared) {
   return (
     <div className="min-h-full px-4 py-5 space-y-3">
-      <div className="flex items-center gap-3">
-        <Avatar config={config} accent={accent} size={52} />
-        <div>
-          <p className={cn("font-bold text-base", fontHeading)}>{config.handle}</p>
-          <p className="text-[11px] opacity-70">{config.headline}</p>
-        </div>
-      </div>
+      <ProfileHeader config={config} accent={accent} fontHeading={fontHeading} compact={compact} layout="inline" />
       {links.map((l, i) => (
         <a key={l.id} href={safeUrl(l.url)} data-bio-btn target="_blank" rel="noreferrer noopener"
            className="block rounded-2xl overflow-hidden shadow-lg group border border-black/5">
@@ -504,17 +532,11 @@ function CardStack({ config, accent, links, fontHeading }: Shared) {
   );
 }
 
-function Bento({ config, accent, links, fontHeading }: Shared) {
+function Bento({ config, accent, links, compact, fontHeading }: Shared) {
   const [first, ...rest] = links;
   return (
     <div className="min-h-full px-4 py-5 space-y-3">
-      <div className="flex items-center gap-3">
-        <Avatar config={config} accent={accent} size={48} />
-        <div>
-          <p className={cn("font-bold text-sm", fontHeading)}>{config.handle}</p>
-          <p className="text-[10px] opacity-70">{config.headline}</p>
-        </div>
-      </div>
+      <ProfileHeader config={config} accent={accent} fontHeading={fontHeading} compact={compact} layout="inline" />
       {first && (
         <a href={safeUrl(first.url)} target="_blank" rel="noreferrer noopener"
            className="block rounded-2xl p-4 text-white shadow-md h-24 relative overflow-hidden"
@@ -537,13 +559,11 @@ function Bento({ config, accent, links, fontHeading }: Shared) {
   );
 }
 
-function Reels({ config, accent, links, fontHeading }: Shared) {
+function Reels({ config, accent, links, compact, fontHeading }: Shared) {
   return (
     <div className="min-h-full px-4 py-5">
       <div className="flex flex-col items-center gap-2">
-        <Avatar config={config} accent={accent} size={72} />
-        <p className={cn("font-bold text-sm", fontHeading)}>{config.handle}</p>
-        <p className="text-[11px] opacity-70 text-center">{config.headline}</p>
+        <ProfileHeader config={config} accent={accent} fontHeading={fontHeading} compact={compact} />
       </div>
       {/* Story circles */}
       <div className="mt-4 flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
@@ -672,17 +692,11 @@ function Luxe({ config, accent, links, fontHeading }: Shared) {
   );
 }
 
-function Tiles({ config, accent, links, fontHeading }: Shared) {
+function Tiles({ config, accent, links, compact, fontHeading }: Shared) {
   const palette = ["#fca5a5", "#fcd34d", "#86efac", "#93c5fd", "#c4b5fd", "#f9a8d4"];
   return (
     <div className="min-h-full px-4 py-5">
-      <div className="flex items-center gap-3">
-        <Avatar config={config} accent={accent} size={48} />
-        <div>
-          <p className={cn("font-bold text-sm", fontHeading)}>{config.handle}</p>
-          <p className="text-[10px] opacity-70">{config.headline}</p>
-        </div>
-      </div>
+      <ProfileHeader config={config} accent={accent} fontHeading={fontHeading} compact={compact} layout="inline" />
       <div className="grid grid-cols-2 gap-3 mt-4">
         {links.map((l, i) => (
           <a key={l.id} href={safeUrl(l.url)} data-bio-btn target="_blank" rel="noreferrer noopener"
@@ -749,16 +763,14 @@ function Botanical({ config, accent, links, fontHeading }: Shared) {
   );
 }
 
-function Widgets({ config, accent, links, fontHeading }: Shared) {
+function Widgets({ config, accent, links, compact, fontHeading }: Shared) {
   return (
     <div className="min-h-full px-4 py-5">
-      <div className="flex items-center gap-3">
-        <Avatar config={config} accent={accent} size={52} />
+      <div className="flex items-start gap-3">
         <div className="flex-1">
-          <p className={cn("font-semibold text-sm", fontHeading)}>{config.handle}</p>
-          <p className="text-[10px] opacity-70">{config.headline}</p>
+          <ProfileHeader config={config} accent={accent} fontHeading={fontHeading} compact={compact} layout="inline" />
         </div>
-        <span className="text-[9px] px-2 py-0.5 rounded-full border border-white/20 opacity-80">LIVE</span>
+        <span className="text-[9px] px-2 py-0.5 rounded-full border border-white/20 opacity-80 shrink-0 mt-1">LIVE</span>
       </div>
       <div className="grid grid-cols-2 gap-3 mt-4">
         {links.map((l, i) => (

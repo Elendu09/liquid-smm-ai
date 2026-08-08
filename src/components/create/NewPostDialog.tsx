@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, Loader2, Send, BookMarked, Repeat, X } from "lucide-react";
+import { Sparkles, Loader2, Send, BookMarked, Repeat, X, ImagePlus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,12 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { MediaField } from "@/components/publish/MediaField";
 import { aiCreate } from "@/hooks/useAiCreate";
 import { pushLocalCollection, useLocalCollection } from "@/hooks/useLocalCollection";
 import { useScheduledPosts, type Recurrence } from "@/hooks/useScheduledPosts";
 import { useAccounts } from "@/contexts/AccountContext";
 import { useContentCategories } from "@/hooks/useContentCategories";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { PlatformPicker } from "@/components/shared/PlatformPicker";
 import { cn } from "@/lib/utils";
 
 const PLATFORMS = ["instagram", "twitter", "tiktok", "linkedin", "facebook"];
@@ -50,6 +52,7 @@ export function NewPostDialog({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [topic, setTopic] = useState("");
   const [caption, setCaption] = useState(initial?.caption ?? "");
+  const [mediaUrl, setMediaUrl] = useState<string | undefined>(undefined);
   const [firstComment, setFirstComment] = useState("");
   const [categoryId, setCategoryId] = useState<string>("");
   const [selected, setSelected] = useState<string[]>(
@@ -110,7 +113,7 @@ export function NewPostDialog({
     if (!title.trim() || !caption.trim()) { toast.error("Title and caption required"); return; }
     pushLocalCollection("create", "drafts", [{
       id: crypto.randomUUID(), title: title.trim(), status: "draft",
-      caption, platform: selected[0] ?? "instagram",
+      caption, mediaUrl: mediaUrl?.trim() || undefined, platform: selected[0] ?? "instagram",
       createdAt: new Date().toISOString(),
     }]);
     persistTemplateIfRequested();
@@ -127,6 +130,7 @@ export function NewPostDialog({
     addScheduled(
       {
         caption,
+        mediaUrl: mediaUrl?.trim() || undefined,
         scheduledAt: new Date(scheduleAt).toISOString(),
         platformIds: selected,
         firstComment: firstComment.trim() || undefined,
@@ -141,16 +145,28 @@ export function NewPostDialog({
 
   const reset = () => {
     setTitle(""); setTopic(""); setCaption(""); setScheduleAt("");
-    setFirstComment(""); setCategoryId("");
+    setFirstComment(""); setCategoryId(""); setMediaUrl(undefined);
     setRecFreq("none"); setRecCount(4); setSaveTemplate(false); setTemplateName("");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto [&>button.absolute]:hidden">
-        <DialogHeader>
-          <div className="flex items-center justify-between gap-2">
-            <DialogTitle>New post</DialogTitle>
+        <DialogHeader className="pb-0">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 ring-1 ring-primary/20 shadow-lg shadow-primary/10">
+                <Send className="h-6 w-6 text-primary" />
+              </div>
+              <div className="min-w-0 pt-0.5">
+                <DialogTitle className="text-xl font-bold tracking-tight sm:text-2xl">
+                  Create a new post
+                </DialogTitle>
+                <p className="mt-1 text-sm text-muted-foreground leading-relaxed max-w-md">
+                  Compose your content, attach media, and schedule across all your platforms.
+                </p>
+              </div>
+            </div>
             <div className="flex items-center gap-2 shrink-0">
               <Popover>
                 <PopoverTrigger asChild>
@@ -190,6 +206,7 @@ export function NewPostDialog({
             </div>
           </div>
         </DialogHeader>
+        <div className="border-t border-border/40 mx-0" />
         <div className="space-y-4">
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Title</label>
@@ -209,6 +226,11 @@ export function NewPostDialog({
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Caption</label>
             <Textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={5} placeholder="Write your caption…" />
           </div>
+          <MediaField
+            value={mediaUrl}
+            onChange={(url) => setMediaUrl(url)}
+            label="Image / Video"
+          />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1 block">
@@ -236,21 +258,11 @@ export function NewPostDialog({
               </Select>
             </div>
           </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Platforms</label>
-            <div className="flex gap-1.5 flex-wrap">
-              {PLATFORMS.map((p) => (
-                <button key={p} onClick={() => toggle(p)}
-                  className={cn(
-                    "px-2.5 py-1.5 rounded-lg border text-xs inline-flex items-center gap-1.5 transition-colors",
-                    selected.includes(p) ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:bg-muted",
-                  )}>
-                  <PlatformIcon platform={p} size="xs" />
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
+          <PlatformPicker
+            selected={selected}
+            onToggle={toggle}
+            label="Platforms"
+          />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Schedule for</label>

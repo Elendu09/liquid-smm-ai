@@ -70,35 +70,79 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agreeTerms) return;
-    setLoading(true);
-    const emailRedirectTo = `${window.location.origin}/dashboard`;
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo, data: { full_name: name } },
-    });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
+    if (!agreeTerms) {
+      toast.error("Please accept the terms and privacy policy");
       return;
     }
-    // Prefill onboarding Step 1 with the signup name so the wizard opens pre-filled.
+    
+    // Validate password requirements
+    const reqs = [
+      { label: "8+ characters", met: password.length >= 8 },
+      { label: "Uppercase", met: /[A-Z]/.test(password) },
+      { label: "Lowercase", met: /[a-z]/.test(password) },
+      { label: "Number", met: /\d/.test(password) },
+    ];
+    const unmetReqs = reqs.filter((r) => !r.met);
+    if (unmetReqs.length > 0) {
+      toast.error("Password does not meet requirements", {
+        description: unmetReqs.map((r) => r.label).join(", "),
+      });
+      return;
+    }
+
+    setLoading(true);
     try {
-      const KEY = "smmpilot:onboarding";
-      const existing = JSON.parse(window.localStorage.getItem(KEY) ?? "{}");
-      const nextState = {
-        completed: !!existing.completed,
-        seen: !!existing.seen,
-        profile: { ...(existing.profile ?? {}), name: name.trim() || existing?.profile?.name || "" },
-      };
-      window.localStorage.setItem(KEY, JSON.stringify(nextState));
-    } catch { /* ignore */ }
-    if (data.session) {
-      navigate(next, { replace: true });
-    } else {
-      setSignedUpEmail(email);
-      toast.success("Sign up complete — confirm your email to continue.");
+      const emailRedirectTo = `${window.location.origin}/dashboard`;
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo, data: { full_name: name } },
+      });
+      
+      if (error) {
+        // Provide more user-friendly error messages
+        if (error.message.includes("already registered")) {
+          toast.error("Email already registered", {
+            description: "Please sign in instead or use a different email.",
+          });
+        } else if (error.message.includes("invalid")) {
+          toast.error("Invalid email or password", {
+            description: error.message,
+          });
+        } else {
+          toast.error("Sign up failed", {
+            description: error.message,
+          });
+        }
+        setLoading(false);
+        return;
+      }
+      
+      // Prefill onboarding Step 1 with the signup name so the wizard opens pre-filled.
+      try {
+        const KEY = "smmpilot:onboarding";
+        const existing = JSON.parse(window.localStorage.getItem(KEY) ?? "{}");
+        const nextState = {
+          completed: !!existing.completed,
+          seen: !!existing.seen,
+          profile: { ...(existing.profile ?? {}), name: name.trim() || existing?.profile?.name || "" },
+        };
+        window.localStorage.setItem(KEY, JSON.stringify(nextState));
+      } catch { /* ignore */ }
+      
+      if (data.session) {
+        toast.success("Account created successfully!");
+        navigate(next, { replace: true });
+      } else {
+        setSignedUpEmail(email);
+        toast.success("Sign up complete — confirm your email to continue.");
+      }
+    } catch (err) {
+      toast.error("An unexpected error occurred", {
+        description: err instanceof Error ? err.message : "Please try again",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 

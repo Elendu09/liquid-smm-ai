@@ -54,6 +54,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { MediaField } from "@/components/publish/MediaField";
 import { isGuestSession } from "@/hooks/useGuest";
 import BioPreview from "./BioPreview";
 import { bioStore, useBioConfig, useSyncLegacyTheme } from "./state/bioConfig";
@@ -593,8 +594,11 @@ function DesignPanel() {
           )}
           {o.bgType === "image" && (
             <div>
-              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Image URL</Label>
-              <Input value={o.bgImage ?? ""} placeholder="https://…" onChange={(e) => bioStore.patchOverrides({ bgImage: e.target.value })} className="h-9 mt-1 text-xs" />
+              <MediaField
+                value={o.bgImage}
+                onChange={(url) => bioStore.patchOverrides({ bgImage: url })}
+                label="Background image"
+              />
             </div>
           )}
           <div>
@@ -1247,7 +1251,11 @@ function BlocksPanel() {
             {b.type === "shopify" && (
               <div className="grid gap-2">
                 <Input value={b.text ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { text: e.target.value })} className="h-8 text-xs" placeholder="Product name" />
-                <Input value={b.src ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { src: e.target.value })} className="h-8 text-xs" placeholder="Image URL" />
+                <MediaField
+                  value={b.src}
+                  onChange={(url) => bioStore.updateBlock(b.id, { src: url })}
+                  label="Product image"
+                />
                 <div className="grid grid-cols-2 gap-2">
                   <Input value={b.target ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { target: e.target.value })} className="h-8 text-xs" placeholder="Shopify URL" />
                   <Input value={b.price ?? ""} onChange={(e) => bioStore.updateBlock(b.id, { price: e.target.value })} className="h-8 text-xs" placeholder="$29" />

@@ -113,7 +113,7 @@ export function InboxRuleDialog({ open, onOpenChange, initial, onSubmit }: Props
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] w-[min(96vw,72rem)] overflow-hidden p-0 sm:max-w-3xl">
+      <DialogContent className="max-h-[95vh] w-[min(98vw,90rem)] overflow-hidden p-0 sm:max-w-[90rem]">
         <DialogHeader className="border-b border-border/60 px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 flex-1">

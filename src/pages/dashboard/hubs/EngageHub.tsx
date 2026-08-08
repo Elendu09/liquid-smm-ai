@@ -21,13 +21,13 @@ function EngageLayout() {
 
   return (
     <div>
-      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 space-y-4">
         <PageHeader
           title="Engage"
           description="Reply, automate conversations, and route one idea across every connected channel."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Engage" }]}
-          actions={<HubTabs tabs={tabs} />}
         />
+        <HubTabs tabs={tabs} />
       </div>
       <Outlet />
     </div>

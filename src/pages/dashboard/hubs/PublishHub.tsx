@@ -16,13 +16,13 @@ const tabs: HubTab[] = [
 function PublishLayout() {
   return (
     <div>
-      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 space-y-4">
         <PageHeader
           title="Publish"
           description="Schedule, plan, and automate everything that goes out."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Publish" }]}
-          actions={<HubTabs tabs={tabs} />}
         />
+        <HubTabs tabs={tabs} />
       </div>
       <Outlet />
     </div>

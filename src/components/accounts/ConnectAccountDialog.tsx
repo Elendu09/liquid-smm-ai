@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { platforms } from "@/config/platforms";
 import { getDefaultFeatures } from "@/config/platformFeatures";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { MediaField } from "@/components/publish/MediaField";
 import { useAccounts, ConnectedAccount } from "@/contexts/AccountContext";
 import { logRun } from "@/hooks/useRunHistory";
 
@@ -72,7 +73,7 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
   const [platformId, setPlatformId] = useState<string>("");
   const [handle, setHandle] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [avatar, setAvatar] = useState("");
+  const [avatar, setAvatar] = useState<string | undefined>(undefined);
   const [authorizing, setAuthorizing] = useState(false);
   const [query, setQuery] = useState("");
   const [readyProviders, setReadyProviders] = useState<Set<string>>(new Set());
@@ -184,7 +185,7 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
       platformId,
       username: cleanedHandle,
       displayName: displayName.trim() || cleanedHandle,
-      avatar: avatar.trim() || `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanedHandle}`,
+      avatar: avatar?.trim() || `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanedHandle}`,
       isActive: true,
       followers: 0,
       following: 0,
@@ -382,13 +383,7 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="avatar">Avatar URL</Label>
-                <Input
-                  id="avatar"
-                  placeholder="Optional"
-                  value={avatar}
-                  onChange={(e) => setAvatar(e.target.value)}
-                />
+                <MediaField value={avatar} onChange={setAvatar} label="Avatar (optional)" />
               </div>
             </div>
           </div>

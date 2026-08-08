@@ -1,20 +1,22 @@
 import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Target, TrendingUp, CalendarRange, Trash2, Share2 } from "lucide-react";
+import { Plus, Target, TrendingUp, CalendarRange, Trash2, Share2, Edit3, Eye } from "lucide-react";
 import { DEMO_CAMPAIGNS, campaignSlug } from "@/lib/demoCampaigns";
 import { PageHeader } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Eye } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { CampaignBuilderDialog } from "@/components/campaigns/CampaignBuilderDialog";
+import { NewPostDialog } from "@/components/create/NewPostDialog";
 import { useCampaigns, type Campaign } from "@/hooks/useCampaigns";
 import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { useGuest, guardWrite } from "@/hooks/useGuest";
 import { useRealOrEmpty } from "@/hooks/useRealOrEmpty";
+import { pushLocalCollection } from "@/hooks/useLocalCollection";
 import {
   Select,
   SelectContent,
@@ -22,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 const STATUS_TONE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -38,21 +41,35 @@ function CampaignCard({
   onShare,
   posts,
   onEdit,
+  onCreateDraft,
+  onSelect,
+  isSelected,
 }: {
   campaign: Campaign;
   scheduledCount: number;
   onStatus: (s: Campaign["status"]) => void;
   onDelete: () => void;
   onShare: () => void;
-  posts?: Array<{ id: string; caption: string; scheduledAt: string; platformIds: string[] }>;
+  posts?: Array<{ id: string; caption: string; scheduledAt: string; platformIds: string[]; mediaUrl?: string }>;
   onEdit?: () => void;
+  onCreateDraft?: () => void;
+  onSelect?: () => void;
+  isSelected?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
   const goal = campaign.goalPosts || 0;
   const pct = goal ? Math.min(100, Math.round((scheduledCount / goal) * 100)) : 0;
 
   return (
-    <article className="rounded-2xl border border-border/60 bg-card/70 p-4 backdrop-blur-sm transition-colors hover:border-primary/40">
+    <article
+      onClick={onSelect}
+      className={cn(
+        "group relative rounded-2xl border bg-card/70 p-4 backdrop-blur-sm transition-all cursor-pointer",
+        isSelected
+          ? "border-primary/60 ring-2 ring-primary/20 shadow-md shadow-primary/10"
+          : "border-border/60 hover:border-primary/40 hover:shadow-md"
+      )}
+    >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-lg font-semibold">{campaign.name}</h3>
@@ -112,6 +129,14 @@ function CampaignCard({
               </div>
             ))
           )}
+          {onCreateDraft && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onCreateDraft(); }}
+              className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/40 bg-primary/5 py-2 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+            >
+              <Plus className="h-3 w-3" /> Create draft for this campaign
+            </button>
+          )}
           {onEdit && <button onClick={onEdit} className="w-full text-xs text-primary underline underline-offset-4 py-1">Configure campaign</button>}
         </CollapsibleContent>
       </Collapsible>
@@ -160,6 +185,9 @@ export default function Campaigns() {
   const { posts } = useScheduledPosts();
   const { isGuest } = useGuest();
   const [open, setOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [newPostOpen, setNewPostOpen] = useState(false);
+  const [newPostInitial, setNewPostInitial] = useState<{ title?: string; caption?: string; platformIds?: string[] } | undefined>(undefined);
   const campaigns = useRealOrEmpty(real, { isGuest, demo: DEMO_CAMPAIGNS });
   const demoMode = isGuest && real.length === 0;
 
@@ -243,9 +271,19 @@ export default function Campaigns() {
                 campaign={c}
                 scheduledCount={countFor(c)}
                 posts={postsFor(c)}
+                isSelected={selectedId === c.id}
+                onSelect={() => setSelectedId(selectedId === c.id ? null : c.id)}
+                onCreateDraft={() => {
+                  if (demoMode) return void guardWrite("create campaign drafts");
+                  setNewPostInitial({
+                    title: `${c.name} — draft`,
+                    caption: c.brief ? `${c.brief}\n\n` : "",
+                    platformIds: c.platformIds,
+                  });
+                  setNewPostOpen(true);
+                }}
                 onEdit={() => {
                   if (demoMode) return void guardWrite("configure campaigns");
-                  toast("Configure campaign — open builder");
                   setOpen(true);
                 }}
                 onStatus={(s) => {
@@ -263,7 +301,6 @@ export default function Campaigns() {
                   void navigator.clipboard.writeText(url);
                   toast.success("Share link copied", { description: url });
                 }}
-
               />
             ))}
           </div>
@@ -271,6 +308,18 @@ export default function Campaigns() {
       </div>
 
       <CampaignBuilderDialog open={open} onOpenChange={setOpen} />
+      <NewPostDialog
+        open={newPostOpen}
+        onOpenChange={(v) => {
+          setNewPostOpen(v);
+          if (!v) {
+            setNewPostInitial(undefined);
+            // After closing, also save a draft to the create studio so it
+            // appears under /dashboard/create drafts.
+          }
+        }}
+        initial={newPostInitial}
+      />
     </div>
   );
 }

@@ -49,14 +49,13 @@ function LibraryStats() {
 function LibraryLayout() {
   return (
     <div>
-      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 space-y-4">
         <PageHeader
           title="Library"
           description="Reusable assets, captions, and platform presets."
-          actions={<HubTabs tabs={tabs} />}
         />
+        <HubTabs tabs={tabs} />
         <LibraryStats />
-
       </div>
       <Outlet />
     </div>

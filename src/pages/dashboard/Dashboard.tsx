@@ -14,7 +14,10 @@ import {
   CircleCheck,
   CircleAlert,
   CircleX,
+  Plus,
 } from "lucide-react";
+import { NewPostDialog } from "@/components/create/NewPostDialog";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -95,6 +98,7 @@ export default function Dashboard() {
   const { accounts } = useScopedAccounts();
   const { state: onboarding } = useOnboarding();
   const { greeting, laneOrder } = useOnboardingContext();
+  const [newPostOpen, setNewPostOpen] = useState(false);
   const openTour = () => window.dispatchEvent(new Event("smmpilot:open-onboarding-tour"));
   const { rows: runs } = useRunHistory();
   const followerSpark = useFollowerSpark();
@@ -189,11 +193,22 @@ export default function Dashboard() {
               title="Upcoming posts"
               description={`Next ${upcoming.length} scheduled`}
               actions={
-                <Button asChild variant="ghost" size="sm">
-                  <Link to="/dashboard/publish/queue" aria-label="Open queue">
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setNewPostOpen(true)}
+                    aria-label="Create new post"
+                    className="h-7 w-7 p-0"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button asChild variant="ghost" size="sm">
+                    <Link to="/dashboard/publish/queue" aria-label="Open queue">
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                </div>
               }
             >
               <div className="flex items-center justify-between mb-2">
@@ -206,15 +221,29 @@ export default function Dashboard() {
                   title="Nothing scheduled yet"
                   description="Draft a post and schedule it to see it here."
                   action={
-                    <Button asChild size="sm">
-                      <Link to="/dashboard/publish/queue">Schedule a post</Link>
+                    <Button size="sm" onClick={() => setNewPostOpen(true)}>
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Schedule a post
                     </Button>
                   }
                 />
               ) : (
                 <ul className="space-y-2">
                   {upcoming.map((p) => (
-                    <li key={p.id} className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-2.5 hover:bg-muted/40 transition-colors">
+                    <li key={p.id} className="group flex items-center gap-3 rounded-lg border border-border/60 bg-card p-2.5 hover:bg-muted/40 transition-colors overflow-hidden">
+                      {/* Image preview */}
+                      {p.mediaUrl ? (
+                        <div className="flex-shrink-0 w-12 h-12 rounded-md overflow-hidden bg-muted border border-border/40">
+                          {/\.(mp4|webm|mov)(\?|$)/i.test(p.mediaUrl) ? (
+                            <video src={p.mediaUrl} className="w-full h-full object-cover" muted />
+                          ) : (
+                            <img src={p.mediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex-shrink-0 w-12 h-12 rounded-md bg-muted/50 border border-border/30 flex items-center justify-center">
+                          <Calendar className="h-4 w-4 text-muted-foreground/50" />
+                        </div>
+                      )}
                       <div className="flex -space-x-1.5 flex-shrink-0">
                         {p.platformIds.slice(0, 3).map((pid) => (
                           <div key={pid} className="ring-2 ring-card rounded-full">
@@ -234,6 +263,7 @@ export default function Dashboard() {
                 </ul>
               )}
             </SectionCard>
+            <NewPostDialog open={newPostOpen} onOpenChange={setNewPostOpen} />
           </div>
 
           {/* Account health lane */}
