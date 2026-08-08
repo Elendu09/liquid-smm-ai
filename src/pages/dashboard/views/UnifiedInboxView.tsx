@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { LayoutGrid, PanelsTopLeft } from "lucide-react";
 import { useInboxMessages } from "@/hooks/useInboxMessages";
 import { InboxBoard } from "./InboxBoard";
@@ -8,7 +8,7 @@ import { InboxTriageBar } from "@/components/engage/InboxTriageBar";
 import type { Intent, Sentiment } from "@/hooks/useInboxAnalysis";
 
 /**
- * Unified inbox. Defaults to the three-pane triage console (channel rail →
+ * Unified inbox. Defaults to the three-pane console (channel rail →
  * conversation list → thread) and keeps the classic kanban board available
  * as a secondary view.
  */
@@ -19,8 +19,6 @@ export function UnifiedInboxView() {
   const [intent, setIntent] = useState<Intent | "all">("all");
   const { items: comments } = useInboxMessages("comment");
   const { items: dms } = useInboxMessages("dm");
-
-  const items = useMemo(() => [...comments, ...dms], [comments, dms]);
 
   return (
     <div>
@@ -73,29 +71,30 @@ export function UnifiedInboxView() {
         </div>
       </div>
 
-      <InboxTriageBar
-        items={mode === "console" ? items : kind === "comment" ? comments : dms}
-        sentiment={sentiment}
-        intent={intent}
-        onSentiment={setSentiment}
-        onIntent={setIntent}
-      />
-
       {mode === "console" ? (
-        <InboxConsole sentiment={sentiment} intent={intent} />
+        <InboxConsole />
       ) : (
-        <InboxBoard
-          key={kind}
-          kind={kind}
-          sentiment={sentiment}
-          intent={intent}
-          title={kind === "comment" ? "Comments" : "Direct Messages"}
-          description={
-            kind === "comment"
-              ? "Every comment across your accounts in one board."
-              : "All inbound DMs, sorted by conversation state."
-          }
-        />
+        <>
+          <InboxTriageBar
+            items={kind === "comment" ? comments : dms}
+            sentiment={sentiment}
+            intent={intent}
+            onSentiment={setSentiment}
+            onIntent={setIntent}
+          />
+          <InboxBoard
+            key={kind}
+            kind={kind}
+            sentiment={sentiment}
+            intent={intent}
+            title={kind === "comment" ? "Comments" : "Direct Messages"}
+            description={
+              kind === "comment"
+                ? "Every comment across your accounts in one board."
+                : "All inbound DMs, sorted by conversation state."
+            }
+          />
+        </>
       )}
     </div>
   );

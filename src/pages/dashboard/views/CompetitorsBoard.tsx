@@ -25,7 +25,7 @@ const FILTER_PLATFORMS = ["all", "instagram", "tiktok", "youtube", "twitter", "l
 
 function profileUrl(c: Competitor): string | null {
   const h = c.handle.replace(/^@/, "");
-  switch (c.platform.toLowerCase()) {
+  switch ((c.platform ?? "").toLowerCase()) {
     case "instagram": return `https://instagram.com/${h}`;
     case "twitter": return `https://x.com/${h}`;
     case "youtube": return `https://youtube.com/@${h}`;
@@ -50,7 +50,7 @@ export default function CompetitorsBoard() {
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => items.filter((c) => {
-    if (platform !== "all" && c.platform.toLowerCase() !== platform) return false;
+    if (platform !== "all" && (c.platform ?? "").toLowerCase() !== platform) return false;
     if (search && !(c.handle + (c.displayName ?? "") + (c.notes ?? "")).toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   }), [items, platform, search]);
@@ -88,7 +88,7 @@ export default function CompetitorsBoard() {
       title: "Competitor added",
       message: `Now tracking ${v.username} on ${v.platform}.`,
       actionUrl: "/dashboard/audience/competitors",
-      groupKey: `competitor:${v.platform}:${v.username.toLowerCase()}`,
+      groupKey: `competitor:${v.platform}:${(v.username ?? "").toLowerCase()}`,
     });
   };
 
@@ -159,7 +159,7 @@ export default function CompetitorsBoard() {
                 <div className="flex items-start gap-2">
                   <Checkbox checked={checked} onCheckedChange={() => sel.toggle(c.id)} aria-label={`Select ${c.handle}`} className="mt-1" />
                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <PlatformIcon platform={c.platform.toLowerCase()} size="sm" />
+                    <PlatformIcon platform={c.platform} size="sm" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <button type="button" onClick={() => setDetail(c)} className="text-left w-full group" title="View details">
@@ -241,7 +241,7 @@ export default function CompetitorsBoard() {
             <>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <PlatformIcon platform={detail.platform.toLowerCase()} size="sm" />
+                  <PlatformIcon platform={detail.platform} size="sm" />
                   <span className="truncate">{detail.handle}</span>
                   {profileUrl(detail) && (
                     <a href={profileUrl(detail)!} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary">

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Outlet, useLocation, useNavigation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { DashboardHeader } from "./DashboardHeader";
 import { MobileHubNav } from "@/components/dashboard/shell/MobileHubNav";
@@ -21,23 +21,27 @@ import { PageShimmer } from "@/components/ui/shimmer";
 export function DashboardLayout() {
   const { state, markSeen } = useOnboarding();
   const [tourOpen, setTourOpen] = useState(false);
-  const navigation = useNavigation();
   const location = useLocation();
   const [isNavigating, setIsNavigating] = useState(false);
+  const isFirstRender = useRef(true);
   
   useSendSimulator();
   useClaimPendingReferral();
 
-  // Show shimmer when navigating between dashboard pages
+  // Show shimmer when navigating between dashboard pages.
+  // Note: we can't use `useNavigation()` here because the app uses a plain
+  // BrowserRouter (no data router), and that hook requires createBrowserRouter.
+  // Instead, we detect route changes via the location and briefly show the
+  // shimmer while the new page renders (skipped on first mount).
   useEffect(() => {
-    if (navigation.state === "loading") {
-      setIsNavigating(true);
-    } else {
-      // Small delay to ensure smooth transition
-      const timer = setTimeout(() => setIsNavigating(false), 150);
-      return () => clearTimeout(timer);
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
-  }, [navigation.state, location.pathname]);
+    setIsNavigating(true);
+    const timer = setTimeout(() => setIsNavigating(false), 150);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   // One-shot: open the setup wizard exactly once, on first dashboard visit for
   // a user who has neither completed nor previously dismissed it. After it

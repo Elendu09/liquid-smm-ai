@@ -330,6 +330,20 @@ export default function CreateStudio() {
           </p>
         </div>
       </div>
+      {d.mediaUrl && (
+        <div className="mt-2 overflow-hidden rounded-lg border border-border/40">
+          {/\.(mp4|webm|mov)(\?|$)/i.test(d.mediaUrl) ? (
+            <video src={d.mediaUrl} className="h-28 w-full object-cover" muted />
+          ) : (
+            <img
+              src={d.mediaUrl}
+              alt="Draft media preview"
+              loading="lazy"
+              className="h-28 w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            />
+          )}
+        </div>
+      )}
       {d.scheduledAt && (
         <p className="text-[11px] text-muted-foreground mt-2">
           {new Date(d.scheduledAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
