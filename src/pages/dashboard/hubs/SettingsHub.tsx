@@ -49,8 +49,8 @@ function SettingsLayout() {
           title="Settings"
           description="Profile, notifications, connected platforms, billing, security, and audit log."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Settings" }]}
+          actions={<HubTabs tabs={tabs} />}
         />
-        <HubTabs tabs={tabs} />
       </div>
       <Outlet />
     </div>
