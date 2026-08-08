@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ScrollToTopButton } from "@/components/layout/ScrollToTopButton";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AccountProvider } from "@/contexts/AccountContext";
 import { BrandProvider } from "@/contexts/BrandContext";
@@ -38,6 +39,7 @@ import Blog from "./pages/company/Blog";
 import BlogPost from "./pages/company/BlogPost";
 import Careers from "./pages/company/Careers";
 import Contact from "./pages/company/Contact";
+import Changelog from "./pages/Changelog";
 
 
 
@@ -102,6 +104,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ErrorBoundary>
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
@@ -133,6 +136,7 @@ const App = () => (
               <Route path="/legal/terms" element={<Navigate to="/terms" replace />} />
               <Route path="/legal/cookies" element={<Navigate to="/cookies" replace />} />
               <Route path="/about" element={<About />} />
+              <Route path="/changelog" element={<Changelog />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/careers" element={<Careers />} />
@@ -191,6 +195,7 @@ const App = () => (
 
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </ErrorBoundary>
             <MarketingScrollTop />
           </BrowserRouter>
         </TooltipProvider>

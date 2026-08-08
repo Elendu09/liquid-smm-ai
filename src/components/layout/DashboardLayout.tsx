@@ -12,6 +12,7 @@ import { PresetLandingBanner } from "@/components/dashboard/PresetLandingBanner"
 import { DemoBanner, DemoBannerInline } from "@/components/layout/DemoBanner";
 import { PublishEventsBridge } from "@/components/shared/PublishEventsBridge";
 import { CookieBanner } from "@/components/shared/CookieBanner";
+import { GracePeriodBanner } from "@/components/billing/GracePeriodBanner";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useSendSimulator } from "@/hooks/useSendSimulator";
 import { useClaimPendingReferral } from "@/hooks/useClaimPendingReferral";
@@ -51,6 +52,7 @@ export function DashboardLayout() {
       >
         <DashboardHeader variant="desktop" />
         <DemoBannerInline />
+        <GracePeriodBanner />
         <PresetLandingBanner />
         <Outlet />
         <div className="h-28 lg:hidden" aria-hidden />

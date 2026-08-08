@@ -18,6 +18,7 @@ import { ReplyDialog } from "@/components/engage/ReplyDialog";
 import { analyzeMessage, snippetFor, SENTIMENT_STYLE, INTENT_LABEL, type Intent, type Sentiment } from "@/hooks/useInboxAnalysis";
 import { useSavedReplies } from "@/hooks/useSavedReplies";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { RefinedInboxEmptyState } from "@/components/engage/RefinedInboxEmptyState";
 import { useAccounts } from "@/contexts/AccountContext";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useBulkSelection } from "@/hooks/useBulkSelection";
@@ -558,19 +559,8 @@ export function InboxBoard({ kind, title, description, sentiment = "all", intent
       />
 
       {items.length === 0 && !isGuestSession() ? (
-        accounts.length === 0 ? (
-          <EmptyState variant="connect-account" description={`Connect an account to receive ${kind === "comment" ? "comments" : "direct messages"} in your inbox.`} />
-        ) : (
-          <EmptyState
-            variant="create-first"
-            title={kind === "comment" ? "No comments yet" : "No messages yet"}
-            description={kind === "comment"
-              ? "New comments across your connected channels will appear here in real time."
-              : "New DMs across your connected channels will appear here in real time."}
-            ctaLabel="Refresh"
-            onCta={() => toast("Waiting for new activity…")}
-          />
-        )
+        <RefinedInboxEmptyState />
+
       ) : view === "kanban" ? (
         <KanbanBoard
           columns={columns}

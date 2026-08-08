@@ -2,6 +2,7 @@ import { Sparkles, Clock, TrendingUp } from "lucide-react";
 import { useBestTimeScoring } from "@/hooks/useBestTimeScoring";
 import { useGuest } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
+import { WhyThisRecommendation } from "@/components/analytics/WhyThisRecommendation";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -83,7 +84,26 @@ export function BestTimeInsightsCard() {
 
       {/* Top slots list */}
       <div className="space-y-1.5">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Top recommended slots</p>
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Top recommended slots</p>
+          <WhyThisRecommendation
+            variant="inline"
+            reasons={
+              hasRealData
+                ? [
+                    "Scores blend your observed post engagement (last 90 days) with baseline research.",
+                    "Learned slots use real samples; baseline slots use platform-level research.",
+                    "Higher engagement rate and more samples increase confidence.",
+                  ]
+                : [
+                    "Baseline research from platform publishing studies — no personal posts yet.",
+                    "Scores will refine as your posts collect engagement.",
+                    "Post at these times first to teach the model fastest.",
+                  ]
+            }
+            confidence={hasRealData ? Math.min(95, 40 + topSlots.reduce((a, s) => a + (s.samples ?? 0), 0) * 2) : 45}
+          />
+        </div>
         {topSlots.length === 0 ? (
           <p className="text-xs text-muted-foreground">Publish more posts to unlock personalised insights.</p>
         ) : (
@@ -103,6 +123,21 @@ export function BestTimeInsightsCard() {
               ) : (
                 <span className="text-[10px] text-muted-foreground/70 w-10 text-right">baseline</span>
               )}
+              <WhyThisRecommendation
+                variant="icon"
+                reasons={
+                  s.source === "learned"
+                    ? [
+                        `Learned from ${s.samples} post${(s.samples ?? 0) !== 1 ? "s" : ""} in this slot — ${s.avgEngagement ?? 0}% avg ER.`,
+                        "More samples in this slot will raise confidence.",
+                      ]
+                    : [
+                        "Baseline pattern — no observed posts yet in this slot.",
+                        "Publish here to start collecting learned data.",
+                      ]
+                }
+                confidence={s.source === "learned" ? Math.min(90, 50 + (s.samples ?? 0) * 8) : 35}
+              />
             </div>
           ))
         )}
