@@ -323,7 +323,7 @@ export function InboxConsole() {
     );
 
   const rail = (
-    <div className="flex h-full flex-col items-center gap-1 border-r border-border/60 bg-muted/20 py-3">
+    <div className="flex h-full flex-col items-center gap-1 border-r border-border/40 bg-muted/10 py-3">
       <button
         type="button"
         title="All channels"
@@ -393,7 +393,7 @@ export function InboxConsole() {
 
   const list = (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="border-b border-border/60 p-3">
+      <div className="border-b border-border/40 p-3">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -460,16 +460,16 @@ export function InboxConsole() {
   /* -------------------------------- render -------------------------------- */
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/50 backdrop-blur-sm">
+    <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-[var(--shadow-premium)]">
       {/* Panel header with colored stroke (stroke belongs to the container,
           not the cards below it) */}
       <header className="flex items-center gap-3 px-4 pb-3 pt-4">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
           <InboxIcon className="h-4 w-4" strokeWidth={1.75} />
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold leading-tight tracking-tight">Unified inbox</h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <h3 className="text-[13px] font-semibold leading-none tracking-tight">Unified inbox</h3>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
             {counts.unread} unread · {counts.comment} comments · {counts.dm} DMs
           </p>
         </div>
@@ -478,12 +478,12 @@ export function InboxConsole() {
           Live
         </span>
       </header>
-      <div className="h-[2px] w-full bg-gradient-to-r from-primary via-primary/50 to-primary/10" aria-hidden />
+      <div className="h-[2px] w-full bg-gradient-to-r from-primary via-primary/50 to-transparent" aria-hidden />
 
       {/* Desktop / tablet: three columns */}
       <div className="hidden grid-cols-[3.5rem_minmax(0,19rem)_minmax(0,1fr)] lg:grid lg:h-[calc(100dvh-var(--demo-banner-h,0px)-var(--mobile-header-h,0px)-21rem)] lg:min-h-[30rem]">
         {rail}
-        <div className="min-h-0 border-r border-border/60">{list}</div>
+        <div className="min-h-0 border-r border-border/40">{list}</div>
         <div className="min-h-0">{thread}</div>
       </div>
 
