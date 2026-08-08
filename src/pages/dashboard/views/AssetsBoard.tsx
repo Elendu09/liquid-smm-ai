@@ -35,7 +35,7 @@ interface Asset {
 
 const seed: Asset[] = [
   { id: "a1", title: "Brand logo pack", subtitle: "SVG · 12 files", status: "active", type: "image", url: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400", tags: ["brand", "logo"], createdAt: new Date().toISOString() },
-  { id: "a2", title: "Q3 hero video", subtitle: "1080p · MP4 · 0:45", status: "active", type: "video", url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", tags: ["campaign", "q3"], createdAt: new Date().toISOString() },
+  { id: "a2", title: "Q3 hero video", subtitle: "1080p · MP4", status: "active", type: "video", url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600", tags: ["campaign", "q3"], createdAt: new Date().toISOString() },
   { id: "a3", title: "Social media templates", subtitle: "Canva · 24 files", status: "active", type: "image", url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400", tags: ["templates", "social"], createdAt: new Date().toISOString() },
   { id: "a4", title: "Campaign brief — Spring", subtitle: "PDF · 2.4 MB", status: "review", type: "doc", url: "", tags: ["brief", "spring"], createdAt: new Date().toISOString() },
   { id: "a5", title: "Product demo reel", subtitle: "4K · MP4 · 0:45", status: "active", type: "video", url: "https://images.unsplash.com/photo-1536243287037-7c2f5091c6de?w=600", tags: ["product", "reel"], createdAt: new Date().toISOString() },
@@ -241,8 +241,8 @@ export default function AssetsBoard() {
               <div
                 key={a.id}
                 className={cn(
-                  "group overflow-hidden rounded-2xl border bg-card shadow-sm transition-all hover:shadow-[var(--shadow-premium)] hover:border-primary/20 hover:-translate-y-0.5 relative",
-                  isSelected ? "border-primary ring-2 ring-primary/40" : "border-border/50",
+                  "group rounded-xl border bg-card overflow-hidden hover:shadow-md transition-all relative",
+                  isSelected ? "border-primary ring-2 ring-primary/40" : "border-border/60 hover:border-border",
                 )}
               >
                 <div
@@ -260,7 +260,7 @@ export default function AssetsBoard() {
                 <button
                   onClick={() => toggle(a.id)}
                   aria-label="Toggle select"
-                  className="relative block aspect-[4/3] w-full bg-muted overflow-hidden"
+                  className="relative block aspect-square w-full bg-muted"
                 >
                   {a.url ? (
                     <MediaThumb
@@ -275,9 +275,9 @@ export default function AssetsBoard() {
                     </span>
                   )}
                 </button>
-                <div className="p-3">
+                <div className="p-2.5">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-[13px] font-semibold tracking-tight truncate flex-1 leading-none">{a.title}</p>
+                    <p className="text-xs font-semibold truncate flex-1">{a.title}</p>
                     {getVersionCount(a.id) > 0 && (
                       <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
                         v{getVersionCount(a.id)}
@@ -285,7 +285,7 @@ export default function AssetsBoard() {
                     )}
                   </div>
                   {a.subtitle && (
-                    <p className="text-[11px] text-muted-foreground truncate mt-1 leading-relaxed">{a.subtitle}</p>
+                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">{a.subtitle}</p>
                   )}
                   <div className="flex items-center gap-0.5 mt-2 opacity-70 group-hover:opacity-100 transition-opacity">
                     <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Copy URL" onClick={() => copyUrl(a)}>

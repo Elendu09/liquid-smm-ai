@@ -108,10 +108,10 @@ const platformSvgs: Record<string, React.ReactNode> = {
   ),
 };
 
-// Platform colors for background — TikTok is authentic black/white (white note on black circle)
+// Platform colors for background
 const platformColors: Record<string, string> = {
   instagram: "bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500",
-  tiktok: "bg-black text-white dark:bg-black dark:text-white border border-white/10 dark:border-white/10",
+  tiktok: "bg-black text-white dark:bg-white dark:text-black",
   youtube: "bg-red-600",
   twitter: "bg-black dark:bg-white dark:text-black",
   x: "bg-black dark:bg-white dark:text-black",
