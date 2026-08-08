@@ -339,6 +339,25 @@ export function useScheduledPosts() {
     } else {
       writeLocal([...items, ...cache]);
     }
+
+    // Fix 3.2 — surface the schedule so users never wonder "did that go in?"
+    try {
+      const first = items[0];
+      const when = new Date(first.scheduledAt).toLocaleString();
+      const platformCount = post.platformIds?.length ?? 0;
+      window.dispatchEvent(
+        new CustomEvent("smmpilot:publish:scheduled", {
+          detail: {
+            postId: first.id,
+            platformCount,
+            recurrence: opts?.recurrence?.count ?? 1,
+            scheduledAt: first.scheduledAt,
+            when,
+          },
+        }),
+      );
+    } catch { /* telemetry must never block a schedule */ }
+
     return items[0];
   };
 

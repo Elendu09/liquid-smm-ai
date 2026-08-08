@@ -25,6 +25,7 @@ import Solutions from "./pages/Solutions";
 import PublicCalendar from "./pages/PublicCalendar";
 import PublicBio from "./pages/PublicBio";
 import PublicCampaign from "./pages/PublicCampaign";
+import PublicApproval from "./pages/PublicApproval";
 import ReferralLanding from "./pages/ReferralLanding";
 import Mcp from "./pages/Mcp";
 import AcceptInvite from "./pages/AcceptInvite";
@@ -118,6 +119,7 @@ const App = () => (
               <Route path="/b/:slug" element={<PublicBio />} />
               <Route path="/@:slug" element={<PublicBio />} />
               <Route path="/c/:slug" element={<PublicCampaign />} />
+              <Route path="/p/approve/:token" element={<PublicApproval />} />
 
               <Route path="/invite/:token" element={<AcceptInvite />} />
               <Route path="/referral/:code" element={<ReferralLanding />} />

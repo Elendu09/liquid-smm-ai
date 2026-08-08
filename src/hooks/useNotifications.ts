@@ -328,6 +328,78 @@ export function useNotifications() {
     [notifications],
   );
 
+  /**
+   * Push a new notification. Always writes to the local cache so the bell
+   * updates instantly; persists remotely for signed-in users. Used by every
+   * publish path (3.2) so a successful or failed post is never silent.
+   */
+  const push = useCallback(
+    async (input: {
+      type?: NotificationType;
+      severity?: NotificationSeverity;
+      title: string;
+      message: string;
+      actionUrl?: string;
+      platformId?: string;
+      postId?: string;
+      accountId?: string;
+      groupKey?: string;
+      /** Show a toast alongside the persisted notification. Default true. */
+      toast?: boolean;
+    }) => {
+      const id = (typeof crypto !== "undefined" && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const type = input.type ?? "system";
+      const severity = input.severity ?? "info";
+      const n: Notification = {
+        id,
+        type,
+        severity,
+        title: input.title,
+        message: input.message,
+        timestamp: new Date(),
+        read: false,
+        actionUrl: input.actionUrl,
+        platformId: input.platformId,
+        postId: input.postId,
+        accountId: input.accountId,
+        groupKey: input.groupKey,
+      };
+      setNotifications((prev) => [n, ...prev].slice(0, 200));
+      // Surface the toast immediately (respecting user pref).
+      if (input.toast !== false) {
+        const ch = prefsRef.current.channels?.[type];
+        if (ch?.toast !== false) {
+          const fn = severity === "critical" || severity === "warning" ? toast.error : severity === "success" ? toast.success : toast;
+          fn(n.title, {
+            description: n.message,
+            action: n.actionUrl ? { label: "View", onClick: () => (window.location.href = n.actionUrl) } : undefined,
+          });
+        }
+      }
+      if (demoMode || !userId) return;
+      try {
+        await supabase.from("notifications").insert({
+          id,
+          user_id: userId,
+          type,
+          severity,
+          title: input.title,
+          message: input.message,
+          action_url: input.actionUrl ?? null,
+          platform_id: input.platformId ?? null,
+          post_id: input.postId ?? null,
+          account_id: input.accountId ?? null,
+          group_key: input.groupKey ?? null,
+        });
+      } catch {
+        // Local cache is the source of truth for this turn; we don't drop the row.
+      }
+    },
+    [demoMode, userId],
+  );
+
   return {
     notifications,
     unreadCount,
@@ -342,5 +414,6 @@ export function useNotifications() {
     snooze,
     pin,
     getNotificationsByType,
+    push,
   };
 }

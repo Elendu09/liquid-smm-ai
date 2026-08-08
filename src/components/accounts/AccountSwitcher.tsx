@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAccounts, ConnectedAccount } from "@/contexts/AccountContext";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { platforms } from "@/config/platforms";
+import { ConnectionHealthPill } from "@/components/accounts/ConnectionHealthPill";
 
 interface AccountSwitcherProps {
   collapsed?: boolean;
@@ -126,7 +127,7 @@ export function AccountSwitcher({ collapsed = false }: AccountSwitcherProps) {
                   )}
                 />
               </div>
-              <div className="flex flex-col items-start text-left">
+              <div className="flex flex-col items-start text-left gap-1">
                 <span className="text-sm font-medium truncate max-w-[120px]">
                   {activeAccount.displayName}
                 </span>
@@ -140,6 +141,7 @@ export function AccountSwitcher({ collapsed = false }: AccountSwitcherProps) {
                     @{activeAccount.username}
                   </span>
                 </div>
+                <ConnectionHealthPill account={activeAccount} compact />
               </div>
             </div>
           ) : (
@@ -230,6 +232,9 @@ function AccountSwitcherContent({
                       <span className="text-xs text-muted-foreground">
                         {formatFollowers(account.followers)} followers
                       </span>
+                      <div className="mt-1">
+                        <ConnectionHealthPill account={account} compact />
+                      </div>
                     </div>
                     <Badge
                       variant="secondary"
