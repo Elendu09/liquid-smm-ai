@@ -111,7 +111,7 @@ const platformSvgs: Record<string, React.ReactNode> = {
 // Platform colors for background
 const platformColors: Record<string, string> = {
   instagram: "bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500",
-  tiktok: "bg-gradient-to-br from-cyan-400 to-pink-500",
+  tiktok: "bg-black text-white dark:bg-white dark:text-black",
   youtube: "bg-red-600",
   twitter: "bg-black dark:bg-white dark:text-black",
   x: "bg-black dark:bg-white dark:text-black",

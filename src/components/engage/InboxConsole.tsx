@@ -460,16 +460,35 @@ export function InboxConsole() {
   /* -------------------------------- render -------------------------------- */
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border/60 lg:h-[calc(100dvh-var(--demo-banner-h,0px)-var(--mobile-header-h,0px)-15rem)] lg:min-h-[32rem]">
+    <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/50 backdrop-blur-sm">
+      {/* Panel header with colored stroke (stroke belongs to the container,
+          not the cards below it) */}
+      <header className="flex items-center gap-3 px-4 pb-3 pt-4">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+          <InboxIcon className="h-4 w-4" strokeWidth={1.75} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-semibold leading-tight tracking-tight">Unified inbox</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {counts.unread} unread · {counts.comment} comments · {counts.dm} DMs
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-medium text-emerald-600">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+          Live
+        </span>
+      </header>
+      <div className="h-[2px] w-full bg-gradient-to-r from-primary via-primary/50 to-primary/10" aria-hidden />
+
       {/* Desktop / tablet: three columns */}
-      <div className="hidden grid-cols-[3.5rem_minmax(0,19rem)_minmax(0,1fr)] lg:grid lg:h-full">
+      <div className="hidden grid-cols-[3.5rem_minmax(0,19rem)_minmax(0,1fr)] lg:grid lg:h-[calc(100dvh-var(--demo-banner-h,0px)-var(--mobile-header-h,0px)-21rem)] lg:min-h-[30rem]">
         {rail}
         <div className="min-h-0 border-r border-border/60">{list}</div>
         <div className="min-h-0">{thread}</div>
       </div>
 
       {/* Mobile: platform rail + list, thread in a bottom sheet */}
-      <div className="grid h-[calc(100dvh-var(--demo-banner-h,0px)-var(--mobile-header-h,0px)-17rem)] min-h-[26rem] grid-cols-[3.5rem_minmax(0,1fr)] lg:hidden">
+      <div className="grid h-[calc(100dvh-var(--demo-banner-h,0px)-var(--mobile-header-h,0px)-21rem)] min-h-[24rem] grid-cols-[3.5rem_minmax(0,1fr)] lg:hidden">
         {rail}
         {list}
       </div>

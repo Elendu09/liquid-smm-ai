@@ -1,7 +1,7 @@
 import { useMemo, useState, DragEvent } from "react";
 import { toast } from "sonner";
 import {
-  Upload, Trash2, Copy, Send, FileText, Film, Image as ImageIcon,
+  Upload, Trash2, Copy, Send, FileText, Film, FolderOpen, Image as ImageIcon,
   Search, Pencil, X, CheckSquare, History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ import { EditAssetDialog } from "@/components/library/EditAssetDialog";
 import { AssetVersionsDialog } from "@/components/library/AssetVersionsDialog";
 import { assetVersionsApi, getVersionCount } from "@/hooks/useAssetVersions";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { PanelSection } from "@/components/shared/PanelSection";
+import { MediaThumb } from "@/components/shared/MediaThumb";
 import { cn } from "@/lib/utils";
 
 interface Asset {
@@ -77,7 +79,8 @@ export default function AssetsBoard() {
   const toggle = (id: string) =>
     setSelected((s) => {
       const n = new Set(s);
-      n.has(id) ? n.delete(id) : n.add(id);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
       return n;
     });
 
@@ -164,7 +167,19 @@ export default function AssetsBoard() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 mb-4">
+      <PanelSection
+        icon={FolderOpen}
+        title="Asset library"
+        description="Everything you've uploaded across the app — imported images are saved here automatically."
+        accent="from-primary via-primary/50 to-primary/10"
+        action={
+          <Button size="sm" onClick={() => { setDroppedFile(null); setUpload(true); }}>
+            <Upload className="h-4 w-4 sm:mr-1.5" strokeWidth={1.75} />
+            <span className="hidden sm:inline">Upload</span>
+          </Button>
+        }
+      >
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-40 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
@@ -180,10 +195,6 @@ export default function AssetsBoard() {
             <span className="hidden sm:inline">{allVisibleSelected ? "Deselect" : "Select all"}</span>
           </Button>
         )}
-        <Button size="sm" onClick={() => { setDroppedFile(null); setUpload(true); }} className="ml-auto">
-          <Upload className="h-4 w-4 sm:mr-1.5" strokeWidth={1.75} />
-          <span className="hidden sm:inline">Upload</span>
-        </Button>
       </div>
 
       {tags.length > 0 && (
@@ -249,14 +260,19 @@ export default function AssetsBoard() {
                 <button
                   onClick={() => toggle(a.id)}
                   aria-label="Toggle select"
-                  className="aspect-square bg-muted flex items-center justify-center relative w-full"
+                  className="relative block aspect-square w-full bg-muted"
                 >
-                  {a.type === "image" && a.url ? (
-                    <img src={a.url} alt={a.title} className="w-full h-full object-cover" />
-                  ) : a.type === "video" && a.url ? (
-                    <video src={a.url} className="w-full h-full object-cover" muted />
+                  {a.url ? (
+                    <MediaThumb
+                      url={a.url}
+                      alt={a.title}
+                      onPlay={(u) => window.open(u, "_blank", "noopener")}
+                      className="h-full w-full"
+                    />
                   ) : (
-                    <Icon className="h-10 w-10 text-muted-foreground" strokeWidth={1.25} />
+                    <span className="grid h-full w-full place-items-center">
+                      <Icon className="h-10 w-10 text-muted-foreground" strokeWidth={1.25} />
+                    </span>
                   )}
                 </button>
                 <div className="p-2.5">
@@ -322,6 +338,7 @@ export default function AssetsBoard() {
           </div>
         </div>
       )}
+      </PanelSection>
 
       <UploadAssetDialog
         open={upload}

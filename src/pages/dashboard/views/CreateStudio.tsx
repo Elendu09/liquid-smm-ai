@@ -28,6 +28,7 @@ import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { useMcpInbox } from "@/hooks/useMcpInbox";
 import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { MediaThumb } from "@/components/shared/MediaThumb";
 import { PlatformPicker } from "@/components/shared/PlatformPicker";
 import { useAccounts } from "@/contexts/AccountContext";
 import { NewPostDialog } from "@/components/create/NewPostDialog";
@@ -64,6 +65,8 @@ const seed: Draft[] = [
     status: "draft",
     caption: "Something big is coming next week 👀 #stayTuned",
     platform: "instagram",
+    // Test image so card image previews are visible immediately in demo mode.
+    mediaUrl: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=600&q=80",
     createdAt: new Date().toISOString(),
   },
   {
@@ -331,18 +334,12 @@ export default function CreateStudio() {
         </div>
       </div>
       {d.mediaUrl && (
-        <div className="mt-2 overflow-hidden rounded-lg border border-border/40">
-          {/\.(mp4|webm|mov)(\?|$)/i.test(d.mediaUrl) ? (
-            <video src={d.mediaUrl} className="h-28 w-full object-cover" muted />
-          ) : (
-            <img
-              src={d.mediaUrl}
-              alt="Draft media preview"
-              loading="lazy"
-              className="h-28 w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-            />
-          )}
-        </div>
+        <MediaThumb
+          url={d.mediaUrl}
+          alt="Draft media preview"
+          onPlay={(url) => window.open(url, "_blank", "noopener")}
+          className="mt-2 h-28 w-full rounded-lg border border-border/40 transition-transform duration-300 group-hover:scale-[1.02]"
+        />
       )}
       {d.scheduledAt && (
         <p className="text-[11px] text-muted-foreground mt-2">
