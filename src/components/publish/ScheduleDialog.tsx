@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, Wand2 } from "lucide-react";
+import { Sparkles, Wand2, Eye } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useAccounts } from "@/contexts/AccountContext";
 import { useScheduledPosts, findConflicts } from "@/hooks/useScheduledPosts";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { PlatformPicker } from "@/components/shared/PlatformPicker";
+import { NetworkPreview } from "@/components/publish/NetworkPreview";
+import { NativeFeaturePicker, emptyNativeFeatureSelection } from "@/components/publish/NativeFeaturePicker";
+import type { NativeFeatureKey } from "@/lib/nativeFeatures";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 /**
@@ -88,6 +93,9 @@ export function ScheduleDialog({
     initialPlatformIds ?? (accounts[0]?.platformId ? [accounts[0].platformId] : ["instagram"]),
   );
   const [overrides, setOverrides] = useState<Record<string, string>>({});
+  const [nativeEnabled, setNativeEnabled] = useState(true); // default ON because of first comment
+  const [native, setNative] = useState<Record<NativeFeatureKey, boolean>>(emptyNativeFeatureSelection());
+  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
 
   const conflicts = useMemo(
     () =>
@@ -126,7 +134,9 @@ export function ScheduleDialog({
       timezone: tz,
       platformIds: selected,
       platformOverrides: Object.keys(platformOverrides).length ? platformOverrides : undefined,
-    });
+      // include native features when enabled
+      ...(nativeEnabled ? { nativeFeatures: native } as any : {}),
+    } as any);
     toast.success("Scheduled");
     onOpenChange(false);
     // Reset for next open
@@ -134,6 +144,8 @@ export function ScheduleDialog({
     setFirstComment("");
     setScheduledAt("");
     setOverrides({});
+    setNative(emptyNativeFeatureSelection());
+    setNativeEnabled(true);
   };
 
   return (
@@ -143,6 +155,12 @@ export function ScheduleDialog({
           <DialogTitle>Schedule post</DialogTitle>
           <DialogDescription>Timezone, per-platform caption overrides, and first comment.</DialogDescription>
         </DialogHeader>
+        <div className="h-[2px] w-full bg-gradient-to-r from-orange-500 via-pink-500 via-primary via-cyan-500 to-transparent rounded-full" aria-hidden />
+        <div className="flex md:hidden justify-end -mt-1">
+          <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setMobilePreviewOpen(true)}>
+            <Eye className="h-3.5 w-3.5" /> Preview
+          </Button>
+        </div>
 
         <div className="space-y-3">
           <div className="space-y-1.5">
@@ -173,32 +191,40 @@ export function ScheduleDialog({
             Use AI best-time (weekday · 10:00)
           </Button>
 
-          <div className="space-y-1.5">
-            <Label>Platforms</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {["instagram", "twitter", "tiktok", "linkedin", "facebook", "youtube", "threads", "pinterest"].map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => toggle(id)}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs transition-colors",
-                    selected.includes(id)
-                      ? "border-primary bg-primary/10 text-foreground"
-                      : "border-border/60 text-muted-foreground hover:border-primary/40",
-                  )}
-                >
-                  <PlatformIcon platform={id} size="xs" />
-                  <span className="capitalize">{id}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <PlatformPicker
+            selected={selected}
+            onToggle={toggle}
+            available={["instagram", "twitter", "tiktok", "linkedin", "facebook"]}
+            label="Platforms"
+            size="sm"
+          />
 
           <div className="space-y-1.5">
             <Label>First comment (optional)</Label>
             <Input value={firstComment} onChange={(e) => setFirstComment(e.target.value)} placeholder="e.g. link in bio ↗" />
           </div>
+
+          {selected.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 p-2.5">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  <div>
+                    <p className="text-[11px] font-semibold">Native features</p>
+                    <p className="text-[9px] text-muted-foreground">Per-platform extras · default ON because of first comment</p>
+                  </div>
+                </div>
+                <Switch checked={nativeEnabled} onCheckedChange={setNativeEnabled} aria-label="Toggle native features" />
+              </div>
+              {nativeEnabled && (
+                <NativeFeaturePicker
+                  platforms={selected}
+                  selected={native}
+                  onToggle={(k, v) => setNative((s) => ({ ...s, [k]: v }))}
+                />
+              )}
+            </div>
+          )}
 
           {selected.length > 1 && (
             <Accordion type="single" collapsible>
@@ -234,6 +260,17 @@ export function ScheduleDialog({
             </div>
           )}
         </div>
+
+        {/* Mobile/tablet preview */}
+        <Dialog open={mobilePreviewOpen} onOpenChange={setMobilePreviewOpen}>
+          <DialogContent className="max-w-sm max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><Eye className="h-4 w-4" /> Preview</DialogTitle>
+              <DialogDescription>Live preview across selected platforms</DialogDescription>
+            </DialogHeader>
+            <NetworkPreview caption={caption} hashtags={[]} platformIds={selected} />
+          </DialogContent>
+        </Dialog>
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>

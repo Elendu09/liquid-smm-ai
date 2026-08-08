@@ -9,16 +9,6 @@ interface SectionCardProps {
   className?: string;
   bodyClassName?: string;
   as?: "section" | "div";
-}
-
-interface SectionCardProps {
-  title?: string;
-  description?: string;
-  actions?: ReactNode;
-  children: ReactNode;
-  className?: string;
-  bodyClassName?: string;
-  as?: "section" | "div";
   /** Gradient classes for the colored stroke under the header (header stroke, not card). */
   accent?: string;
   /** Optional leading icon for Figma-style header */
@@ -33,9 +23,9 @@ export function SectionCard({
   className,
   bodyClassName,
   as: Tag = "section",
-  accent = "from-primary via-primary/60 to-transparent",
+  accent = "from-orange-500 via-pink-500 via-primary via-cyan-500 to-transparent",
   icon: Icon,
-}: SectionCardProps & { icon?: React.ComponentType<{ className?: string }> }) {
+}: SectionCardProps) {
   const hasHeader = !!(title || description || actions || Icon);
   return (
     <Tag

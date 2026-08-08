@@ -27,7 +27,7 @@ export function PanelSection({
   description,
   icon: Icon,
   action,
-  accent = "from-primary via-primary/50 to-transparent",
+  accent = "from-orange-500 via-pink-500 via-primary via-cyan-500 to-transparent",
   className,
   bodyClassName,
   children,
