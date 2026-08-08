@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Link2, History, Sparkles, ShieldCheck, Scissors, Repeat2 } from "lucide-react";
+import { Link2, History, Sparkles, ShieldCheck, Scissors, Repeat2, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,8 +69,10 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
   // Phase 4 additions:
   const [coverFrameSec, setCoverFrameSec] = useState<number | undefined>(undefined);
   const [native, setNative] = useState<Record<NativeFeatureKey, boolean>>(emptyNativeFeatureSelection());
+  const [nativeEnabled, setNativeEnabled] = useState(true); // default ON because of first comment
   const [autoAdapt, setAutoAdapt] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
   // Idempotency for double-click on Schedule / Save changes (fix 3.4).
   const publish = usePublishOutcome();
 
@@ -86,6 +88,7 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
       setDurationMin(getDurationMin?.(post) ?? 30);
       setCoverFrameSec((post as ScheduledPost & { coverFrameSec?: number }).coverFrameSec);
       setNative((post as ScheduledPost & { nativeFeatures?: Record<NativeFeatureKey, boolean> }).nativeFeatures ?? emptyNativeFeatureSelection());
+      setNativeEnabled(true);
     } else {
       const base = initialSlot ? new Date(initialSlot.date) : new Date();
       if (initialSlot) base.setHours(initialSlot.hour, 0, 0, 0);
@@ -98,6 +101,7 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
       setDurationMin(30);
       setCoverFrameSec(undefined);
       setNative(emptyNativeFeatureSelection());
+      setNativeEnabled(true);
     }
   }, [open, post, initialSlot, getDurationMin]);
 
@@ -180,7 +184,13 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
             {isEdit ? "Update caption, platforms, timing, native features, or cover frame." : "Fill in details for this slot. We pre-validate media and character counts per destination."}
           </DialogDescription>
         </DialogHeader>
+        <div className="h-[2px] w-full bg-gradient-to-r from-orange-500 via-pink-500 via-primary via-cyan-500 to-transparent rounded-full" aria-hidden />
 
+        <div className="flex md:hidden justify-end -mt-1">
+          <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setMobilePreviewOpen(true)}>
+            <Eye className="h-3.5 w-3.5" /> Preview
+          </Button>
+        </div>
         <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] max-h-[64vh] overflow-y-auto pr-1">
           <div className="space-y-4 py-2">
 
@@ -202,8 +212,9 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
             <PlatformPicker
               selected={platformIds}
               onToggle={toggle}
-              available={PLATFORMS.map((p) => p.id)}
+              available={["instagram", "twitter", "tiktok", "linkedin", "facebook"]}
               label="Platforms"
+              size="sm"
             />
 
             {activePlatforms.length > 0 && (
@@ -277,11 +288,27 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
             </div>
 
             {activePlatforms.length > 0 && (
-              <NativeFeaturePicker
-                platforms={activePlatforms}
-                selected={native}
-                onToggle={(k, v) => setNative((s) => ({ ...s, [k]: v }))}
-              />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 p-2.5">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    <div>
+                      <p className="text-[11px] font-semibold">Native features</p>
+                      <p className="text-[9px] text-muted-foreground">Per-platform extras · default ON because of first comment</p>
+                    </div>
+                  </div>
+                  <Switch checked={nativeEnabled} onCheckedChange={setNativeEnabled} aria-label="Toggle native features" />
+                </div>
+                {nativeEnabled && (
+                  <NativeFeaturePicker
+                    platforms={activePlatforms}
+                    selected={native}
+                    onToggle={(k, v) => {
+                      setNative((s) => ({ ...s, [k]: v }));
+                    }}
+                  />
+                )}
+              </div>
             )}
           </div>
 
@@ -305,6 +332,22 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
           </div>
         </div>
 
+
+        {/* Mobile/tablet preview */}
+        <Dialog open={mobilePreviewOpen} onOpenChange={setMobilePreviewOpen}>
+          <DialogContent className="max-w-sm max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><Eye className="h-4 w-4" /> Preview</DialogTitle>
+              <DialogDescription>Live preview across selected platforms</DialogDescription>
+            </DialogHeader>
+            <NetworkPreview
+              caption={caption}
+              mediaUrl={mediaUrl || undefined}
+              hashtags={hashtags.split(/\s+/).filter(Boolean)}
+              platformIds={platformIds}
+            />
+          </DialogContent>
+        </Dialog>
 
         <DialogFooter className="gap-2 sm:gap-2">
           {isEdit && onDelete && post && (
