@@ -22,12 +22,12 @@ export function HubTabs({ tabs, className, children }: HubTabsProps) {
   const anyActive = tabs.some((t) => isTabActive(t.href));
 
   return (
-    <div className={cn("space-y-6", className)}>
-      <div className="relative -mx-4 sm:mx-0">
+    <div className={cn("w-full min-w-0", children ? "space-y-6" : undefined, className)}>
+      <div className="relative w-full min-w-0">
         <div
           role="tablist"
           aria-label="Section tabs"
-          className="flex gap-1 p-1 mx-4 sm:mx-0 rounded-xl border border-border/60 bg-muted/40 w-fit max-w-full overflow-x-auto snap-x snap-mandatory scrollbar-none"
+          className="flex gap-1 p-1 rounded-xl border border-border/60 bg-muted/40 md:w-fit max-w-full overflow-x-auto snap-x snap-mandatory scrollbar-none"
         >
           {tabs.map((t, i) => {
             const active = isTabActive(t.href) || (!anyActive && i === 0);
