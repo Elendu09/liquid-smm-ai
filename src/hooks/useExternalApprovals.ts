@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+// These tables are not in the generated DB types yet; use an untyped view of the client.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
 import { isGuestSession } from "@/hooks/useGuest";
 
 /**
@@ -74,7 +78,7 @@ export function useExternalApprovals() {
     if (isGuestSession()) return;
     (async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await db
           .from("external_approvals")
           .select("*")
           .order("created_at", { ascending: false });
@@ -118,7 +122,7 @@ export function useExternalApprovals() {
         updatedAt: now.toISOString(),
       };
       writeLocal([next, ...items]);
-      void supabase.from("external_approvals").insert({
+      void db.from("external_approvals").insert({
         id: next.id,
         token: next.token,
         draft_id: next.draftId,
@@ -151,7 +155,7 @@ export function useExternalApprovals() {
       writeLocal(next);
       const cur = next.find((a) => a.id === id);
       if (cur) {
-        void supabase.from("external_approvals").update({
+        void db.from("external_approvals").update({
           status: cur.status,
           events: cur.events,
           updated_at: cur.updatedAt,

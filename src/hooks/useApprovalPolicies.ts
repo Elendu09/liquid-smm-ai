@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+// These tables are not in the generated DB types yet; use an untyped view of the client.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
 import { isGuestSession } from "@/hooks/useGuest";
 
 /**
@@ -124,7 +128,7 @@ export function useApprovalPolicies() {
     // For real users, try a future `approval_policies` table; fall back to local.
     (async () => {
       try {
-        const { data, error } = await supabase.from("approval_policies").select("*").order("created_at", { ascending: true });
+        const { data, error } = await db.from("approval_policies").select("*").order("created_at", { ascending: true });
         if (!error && data && data.length) {
           // Map remote → local shape.
           const remote = data.map((row: { id: string; name: string; description: string | null; brand_id: string | null; channel: string; tags: string[] | null; stages: ApprovalStage[]; enabled: boolean; created_at: string; updated_at: string }) => ({
@@ -149,7 +153,7 @@ export function useApprovalPolicies() {
     const now = new Date().toISOString();
     const next: ApprovalPolicy = { ...draft, id: uid(), createdAt: now, updatedAt: now };
     writeLocal([...items, next]);
-    void supabase.from("approval_policies").insert({
+    void db.from("approval_policies").insert({
       id: next.id,
       name: next.name,
       description: next.description ?? null,
@@ -169,7 +173,7 @@ export function useApprovalPolicies() {
     writeLocal(next);
     const cur = next.find((p) => p.id === id);
     if (cur) {
-      void supabase.from("approval_policies").update({
+      void db.from("approval_policies").update({
         name: cur.name,
         description: cur.description ?? null,
         brand_id: cur.brandId ?? null,
@@ -184,7 +188,7 @@ export function useApprovalPolicies() {
 
   const remove = (id: string) => {
     writeLocal(items.filter((p) => p.id !== id));
-    void supabase.from("approval_policies").delete().eq("id", id);
+    void db.from("approval_policies").delete().eq("id", id);
   };
 
   const forContext = (ctx: { brandId?: string | null; channel?: ApprovalChannel; tags?: string[] }) => {
