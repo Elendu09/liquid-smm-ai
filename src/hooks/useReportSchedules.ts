@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { DEMO_REPORT_SCHEDULES } from "@/lib/demoSeeds";
 import { createRemoteCollection } from "./_remoteCollection";
 
 export type Cadence = "daily" | "weekly-mon" | "weekly-fri" | "monthly";
@@ -47,7 +48,7 @@ interface Row {
 const store = createRemoteCollection<ReportSchedule, Row>({
   table: "report_schedules",
   localKey: "smmpilot:reports:schedules",
-  seed: [],
+  seed: DEMO_REPORT_SCHEDULES as any,
   orderBy: { column: "created_at", ascending: false },
   fromRow: (r) => {
     const cadence = (r.cadence as Cadence) ?? "weekly-mon";

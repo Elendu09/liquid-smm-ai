@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isGuestSession } from "@/hooks/useGuest";
 import {
   createDefaultReshareFlow,
   type ReshareFlow,
@@ -14,6 +15,11 @@ import {
  * isolated local preview and can still explore the full studio.
  */
 const STORAGE_KEY = "smmpilot:engage:reshare-flows";
+const DEMO_RESHARE_FLOWS: ReshareFlow[] = [
+  { id: "reshare-1", name: "Repurpose launch → X + LinkedIn", enabled: true, destinations: [{ platformId: "twitter", enabled: true, transform: "shorten", delayMinutes: 0 } as any, { platformId: "linkedin", enabled: true, transform: "professional", delayMinutes: 60 } as any], mode: "n8n", requireApproval: false, metrics: { runs: 12, delivered: 11, queued: 1, failed: 0, savedMinutes: 240 }, description: "One idea, two channels", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as unknown as ReshareFlow,
+  { id: "reshare-2", name: "Story → Reel repurpose", enabled: true, destinations: [{ platformId: "instagram", enabled: true, transform: "clip", delayMinutes: 30 } as any], mode: "n8n", requireApproval: true, metrics: { runs: 8, delivered: 6, queued: 2, failed: 0, savedMinutes: 120 }, description: "IG story to Reel", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as unknown as ReshareFlow,
+  { id: "reshare-3", name: "Evergreen recycle", enabled: false, destinations: [{ platformId: "facebook", enabled: true, transform: "recycle", delayMinutes: 1440 } as any], mode: "n8n", requireApproval: false, metrics: { runs: 20, delivered: 20, queued: 0, failed: 1, savedMinutes: 600 }, description: "Auto-recycle top posts", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as unknown as ReshareFlow,
+];
 const RULE_KIND = "reshare-flow";
 
 type Mode = "local" | "remote";
@@ -42,9 +48,17 @@ function readLocal(): ReshareFlow[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as ReshareFlow[];
+      if (parsed.length > 0) return parsed;
+    }
+    if (isGuestSession()) {
+      try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_RESHARE_FLOWS)); } catch {}
+      return DEMO_RESHARE_FLOWS;
+    }
     return raw ? (JSON.parse(raw) as ReshareFlow[]) : [];
   } catch {
-    return [];
+    return isGuestSession() ? DEMO_RESHARE_FLOWS : [];
   }
 }
 

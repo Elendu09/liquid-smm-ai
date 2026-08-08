@@ -1,6 +1,8 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { DEMO_SCHEDULED_POSTS } from "@/lib/demoSeeds";
+import { isGuestSession } from "@/hooks/useGuest";
 
 type ScheduledPostInsert = Database["public"]["Tables"]["scheduled_posts"]["Insert"];
 type ScheduledPostUpdate = Database["public"]["Tables"]["scheduled_posts"]["Update"];
@@ -71,9 +73,17 @@ function readLocal(): ScheduledPost[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as ScheduledPost[];
+      if (parsed.length > 0) return parsed;
+    }
+    if (isGuestSession()) {
+      try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_SCHEDULED_POSTS)); } catch {}
+      return DEMO_SCHEDULED_POSTS;
+    }
     return raw ? (JSON.parse(raw) as ScheduledPost[]) : [];
   } catch {
-    return [];
+    return isGuestSession() ? DEMO_SCHEDULED_POSTS : [];
   }
 }
 function writeLocal(next: ScheduledPost[]) {
