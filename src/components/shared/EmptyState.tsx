@@ -76,6 +76,8 @@ interface EmptyStateProps {
   ctaLabel?: string;
   ctaHref?: string;
   onCta?: () => void;
+  secondaryLabel?: string;
+  onSecondaryCta?: () => void;
   className?: string;
   compact?: boolean;
 }
@@ -93,6 +95,8 @@ export function EmptyState({
   ctaLabel,
   ctaHref,
   onCta,
+  secondaryLabel,
+  onSecondaryCta,
   className,
   compact,
 }: EmptyStateProps) {
@@ -126,6 +130,11 @@ export function EmptyState({
             {cl}
           </Button>
         )
+      )}
+      {secondaryLabel && onSecondaryCta && (
+        <Button size="sm" className="mt-1" onClick={onSecondaryCta}>
+          {secondaryLabel}
+        </Button>
       )}
     </div>
   );

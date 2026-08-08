@@ -49,6 +49,12 @@ export interface InboxItem {
   aiDraft?: string;
   /** Id of the automation rule that last routed this message. */
   autoRuleId?: string;
+  /** Conversation priority (set by automation rules). */
+  priority?: "low" | "normal" | "high" | "urgent";
+  /** Label/tag applied by an automation rule. */
+  label?: string;
+  /** Hidden by an automation rule (e.g. spam). */
+  hidden?: boolean;
 }
 
 
