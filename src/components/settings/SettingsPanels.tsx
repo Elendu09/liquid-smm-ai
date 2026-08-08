@@ -65,6 +65,7 @@ import {
 } from "lucide-react";
 import { QuotaMeters } from "@/components/shared/QuotaMeters";
 import { DataPortabilityCard } from "@/components/settings/DataPortabilityCard";
+import { CreditsUsageOverview } from "@/components/billing/CreditsUsageOverview";
 import { usePlan } from "@/hooks/usePlan";
 import { NotificationPreferencesMatrix } from "./NotificationPreferencesMatrix";
 
@@ -612,6 +613,7 @@ export function BillingPanel() {
         </CardContent>
       </Card>
 
+      <CreditsUsageOverview />
 
       <AddonMarketplace onSelect={(a) => toast.success(`${a.name} added to your next invoice`)} />
 

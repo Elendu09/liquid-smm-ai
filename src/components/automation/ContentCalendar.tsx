@@ -364,20 +364,21 @@ export const ContentCalendar = () => {
         "flex items-center gap-1 min-w-0 max-w-full overflow-hidden",
         dragId === p.id && "opacity-50",
       )}
+      title={`${p.caption} · ${p.platformIds.join(", ")}`}
     >
       <Clock className="h-2.5 w-2.5 shrink-0 opacity-70" strokeWidth={2} />
       <span className="tabular-nums font-medium shrink-0 truncate">{fmtTime(p.scheduledAt)}</span>
-      {!compact && (
-        <>
-          <div className="hidden sm:flex -space-x-1 shrink-0">
-            {p.platformIds.slice(0, 2).map((id) => (
-              <div key={id} className="rounded-full ring-1 ring-background">
-                <PlatformIcon platform={id} size="xs" showBackground />
-              </div>
-            ))}
+      {/* Always show platform visual logos — compact on month cells, plus caption on expanded */}
+      <div className={cn("flex -space-x-1 shrink-0", compact && "ml-0.5")}>
+        {p.platformIds.slice(0, 3).map((id) => (
+          <div key={id} className="rounded-full ring-1 ring-background shadow-sm">
+            <PlatformIcon platform={id} size="xs" showBackground />
           </div>
-          <span className="truncate text-foreground/80 min-w-0">{p.caption.slice(0, 24)}</span>
-        </>
+        ))}
+        {p.platformIds.length > 3 && <span className="text-[8px] font-bold bg-muted text-muted-foreground rounded-full h-[18px] min-w-[18px] px-0.5 grid place-items-center ring-1 ring-background">+{p.platformIds.length-3}</span>}
+      </div>
+      {!compact && (
+        <span className="truncate text-foreground/80 min-w-0 hidden sm:inline">{p.caption.slice(0, 24)}</span>
       )}
     </div>
   );
@@ -435,16 +436,17 @@ export const ContentCalendar = () => {
         </div>
 
 
-        {/* Mobile: compact dot row (chips overflow tiny cells) */}
+        {/* Mobile: compact platform-icon row — so users instantly see which network is targeted */}
         <div className="sm:hidden flex-1 flex items-end">
           {dayPosts.length > 0 && (
-            <div className="flex flex-wrap gap-0.5 w-full">
+            <div className="flex flex-wrap gap-1 w-full items-center">
               {dayPosts.slice(0, 6).map((p) => (
-                <span
-                  key={p.id}
-                  className="h-1.5 w-1.5 rounded-full bg-primary/70"
-                  title={fmtTime(p.scheduledAt)}
-                />
+                <span key={p.id} className="inline-flex items-center -space-x-1.5" title={`${p.caption.slice(0, 24)} · ${p.platformIds.join(", ")} · ${fmtTime(p.scheduledAt)}`}>
+                  {p.platformIds.slice(0, 3).map((pid) => (
+                    <PlatformIcon key={pid} platform={pid} size="xs" showBackground className="ring-1 ring-background" />
+                  ))}
+                  {p.platformIds.length > 3 && <span className="text-[8px] font-medium bg-muted text-muted-foreground rounded-full h-4 min-w-4 px-0.5 grid place-items-center ring-1 ring-background">+{p.platformIds.length -3}</span>}
+                </span>
               ))}
               {dayPosts.length > 6 && (
                 <span className="text-[9px] text-muted-foreground leading-none self-center">+{dayPosts.length - 6}</span>
