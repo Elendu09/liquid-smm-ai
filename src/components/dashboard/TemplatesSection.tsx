@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import {
   RefreshCw,
@@ -15,6 +15,7 @@ import {
   Send,
   Sparkles,
   Loader2,
+  Eye,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -183,6 +184,11 @@ export function TemplatesSection() {
 
   const active = TEMPLATES.find((t) => t.id === previewId) ?? null;
   const bodyValue = editing ? draft : active?.body ?? "";
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const scrollToPreview = () => {
+    setTimeout(() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  };
 
   const openPreview = (id: string) => {
     const t = TEMPLATES.find((x) => x.id === id);
@@ -293,7 +299,7 @@ export function TemplatesSection() {
       </div>
 
       <Dialog open={!!active} onOpenChange={(o) => { if (!o) closePreview(); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           {active && (
             <>
               <DialogHeader>
@@ -304,7 +310,20 @@ export function TemplatesSection() {
                 <DialogDescription>{active.short}</DialogDescription>
               </DialogHeader>
 
-              <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
+              {/* Mobile: jump-to-preview button */}
+              <div className="sm:hidden">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-9 rounded-xl text-[11px] gap-1.5 border-primary/30 text-primary"
+                  onClick={scrollToPreview}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  Jump to preview content
+                </Button>
+              </div>
+
+              <div ref={previewRef} className="rounded-lg border border-border/60 bg-muted/40 p-3">
                 {editing ? (
                   <Textarea
                     value={draft}
