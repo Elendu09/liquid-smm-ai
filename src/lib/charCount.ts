@@ -92,9 +92,9 @@ export function countForPlatform(text: string, platform: string): CountBreakdown
   if (!text) {
     return { weighted: 0, raw: 0, urls: 0, mentions: 0, hashtags: 0, emoji: 0, summary: `0 / ${rules.limit}` };
   }
-  const urls = text.match(URL_REGEX) ?? [];
-  const mentions = text.match(MENTION_REGEX) ?? [];
-  const hashtags = text.match(HASHTAG_REGEX) ?? [];
+  const urls: string[] = text.match(URL_REGEX) ?? [];
+  const mentions: string[] = text.match(MENTION_REGEX) ?? [];
+  const hashtags: string[] = text.match(HASHTAG_REGEX) ?? [];
 
   // Subtract counted substrings from the raw text to count the rest as
   // regular characters (weighted by emoji).

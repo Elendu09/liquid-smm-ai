@@ -1,4 +1,4 @@
-import { AlertCircle, AlertTriangle, CheckCircle2, Lightbulb, X } from "lucide-react";
+import { AlertCircle, AlertOctagon, AlertTriangle, CheckCircle2, Lightbulb, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { validateMedia, type MediaMeta, type IssueSeverity, type MediaIssue } from "@/lib/mediaValidator";

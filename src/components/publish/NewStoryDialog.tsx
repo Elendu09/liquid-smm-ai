@@ -37,6 +37,8 @@ export interface StorySlide {
 export interface StoryItemFull {
   id: string;
   title: string;
+  /** Destination platform for the story. */
+  platform?: string;
   slides: StorySlide[];
   scheduledAt?: string;
   status: "idea" | "ready" | "scheduled" | "live";

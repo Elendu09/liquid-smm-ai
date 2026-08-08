@@ -99,7 +99,6 @@ export function AiRepurposeDialog({ open, onOpenChange, initialCaption = "" }: {
         platformIds: [v.platform],
         hashtags: v.body.match(/#\w+/g)?.map((h) => h.replace("#", "")) ?? [],
         status: "queued",
-        createdAt: new Date().toISOString(),
       });
     });
     toast.success(`Scheduled ${variants.length} posts at best times • live sync • ${formatCost("create.captions")} used`);

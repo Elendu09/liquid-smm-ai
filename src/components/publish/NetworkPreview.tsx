@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Heart, MessageCircle, Repeat2, Send, MoreHorizontal, ImageIcon } from "lucide-react";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { CharCounter } from "@/components/publish/CharCounter";
-import { countForPlatform, limitFor } from "@/lib/charCount";
+import { countForPlatform } from "@/lib/charCount";
 import { cn } from "@/lib/utils";
 
 interface Props {

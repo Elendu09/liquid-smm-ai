@@ -173,7 +173,7 @@ export const DEFAULT_INBOX_RULES: InboxRule[] = [
     builtIn: true,
     enabled: false,
     runs: 0,
-    match: { kinds: ["dm"], platforms: [], sentiments: [], intents: ["question", "info"], keywords: ["help", "hi", "hello", "pricing"] },
+    match: { kinds: ["dm"], platforms: [], sentiments: [], intents: ["question", "other"], keywords: ["help", "hi", "hello", "pricing"] },
     actions: {
       ...emptyRule().actions,
       sendMenuDM: true,
@@ -188,7 +188,7 @@ export const DEFAULT_INBOX_RULES: InboxRule[] = [
     builtIn: true,
     enabled: true,
     runs: 0,
-    match: { kinds: ["comment"], platforms: [], sentiments: [], intents: ["question", "info"], keywords: ["price", "pricing", "link", "buy", "cost"] },
+    match: { kinds: ["comment"], platforms: [], sentiments: [], intents: ["question", "other"], keywords: ["price", "pricing", "link", "buy", "cost"] },
     actions: {
       ...emptyRule().actions,
       sendSavedReply: true,
@@ -228,7 +228,7 @@ export const DEFAULT_INBOX_RULES: InboxRule[] = [
     builtIn: true,
     enabled: true,
     runs: 0,
-    match: { kinds: ["comment"], platforms: [], sentiments: [], intents: ["spam", "promotion"], keywords: ["airdrop", "free crypto", "click my bio", "follow for follow"] },
+    match: { kinds: ["comment"], platforms: [], sentiments: [], intents: ["spam", "other"], keywords: ["airdrop", "free crypto", "click my bio", "follow for follow"] },
     actions: {
       ...emptyRule().actions,
       hide: true,
@@ -244,7 +244,7 @@ export const DEFAULT_INBOX_RULES: InboxRule[] = [
     builtIn: true,
     enabled: false,
     runs: 0,
-    match: { kinds: ["dm"], platforms: [], sentiments: ["positive"], intents: ["purchase", "demo"], keywords: ["quote", "demo", "trial", "pricing"] },
+    match: { kinds: ["dm"], platforms: [], sentiments: ["positive"], intents: ["lead", "collab"], keywords: ["quote", "demo", "trial", "pricing"] },
     actions: {
       ...emptyRule().actions,
       setStatus: "new",

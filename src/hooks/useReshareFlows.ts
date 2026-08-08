@@ -153,9 +153,9 @@ if (typeof window !== "undefined") {
   });
 }
 
-export interface ReshareFlowPatch extends Partial<ReshareFlow> {
+export type ReshareFlowPatch = Omit<Partial<ReshareFlow>, "metrics"> & {
   metrics?: Partial<ReshareFlow["metrics"]>;
-}
+};
 
 export function useReshareFlows() {
   const items = useSyncExternalStore(subscribe, () => cache, () => cache);
@@ -258,7 +258,7 @@ export function useReshareFlows() {
       requireApproval: false,
       metrics: { runs: 12, delivered: 46, queued: 0, failed: 0, savedMinutes: 390 },
     };
-    const next = [first, second];
+    const next = [first, second] as ReshareFlow[];
     if (mode === "remote") {
       next.forEach(add);
     } else {
