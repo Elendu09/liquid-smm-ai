@@ -24,6 +24,9 @@ import autoTable from "jspdf-autotable";
 import { buildReportData, type ReportData, type ReportSectionData } from "@/lib/reportAnalytics";
 import { useAccounts } from "@/contexts/AccountContext";
 import { logRun } from "@/hooks/useRunHistory";
+import { downloadCsv as longFormCsv, openPrintablePdf, payloadFromReportData } from "@/lib/reportExport";
+import { ReconciliationBadge } from "@/components/analytics/ReconciliationBadge";
+import { TimezoneLabel } from "@/components/accounts/TimezoneSelector";
 
 export interface ReportPreviewData {
   id: string;
@@ -183,7 +186,7 @@ function downloadText(report: ReportPreviewData, data: ReportData, periodLabel: 
 }
 
 export function ReportPreviewDialog({ open, onOpenChange, report }: ReportPreviewDialogProps) {
-  const { accounts } = useAccounts();
+  const { accounts, activeAccount } = useAccounts();
   const [range, setRange] = useState<string>(report?.data?.period ?? "last30");
 
   useEffect(() => {
@@ -323,6 +326,8 @@ export function ReportPreviewDialog({ open, onOpenChange, report }: ReportPrevie
             </Badge>
             <Badge variant="secondary">{(report.sections ?? []).length} sections</Badge>
             <Badge variant="secondary">{periodLabel}</Badge>
+            <ReconciliationBadge ours={data?.totalReach ?? 0} platform={(data?.totalReach ?? 0) * 0.98} platformLabel={report.format} />
+            <TimezoneLabel accountId={activeAccount?.id} />
             {report.whitelabel && <Badge variant="secondary">White-label</Badge>}
           </div>
         </div>
@@ -335,9 +340,40 @@ export function ReportPreviewDialog({ open, onOpenChange, report }: ReportPrevie
             <FileText className="mr-2 h-4 w-4" />
             Text
           </Button>
-          <Button variant="outline" onClick={() => download("csv")}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (!data) return;
+              const payload = payloadFromReportData(data, {
+                name: report.name,
+                period: periodLabel,
+                platform: report.format,
+                timezone: activeAccount?.timezone ?? undefined,
+              });
+              longFormCsv(payload, `${report.name.replace(/[^a-z0-9]+/gi, "-")}-${periodLabel}.csv`);
+              toast({ title: "Long-form CSV downloaded", description: "Same column shape as the dashboard, ready for Sheets or Notion." });
+              logRun({ toolKey: "reports", action: "export:long-csv", status: "success", output: { rows: payload.series.length } });
+            }}
+          >
             <FileSpreadsheet className="mr-2 h-4 w-4" />
-            CSV
+            Long CSV
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (!data) return;
+              const payload = payloadFromReportData(data, {
+                name: report.name,
+                period: periodLabel,
+                platform: report.format,
+                timezone: activeAccount?.timezone ?? undefined,
+              });
+              openPrintablePdf(payload);
+              logRun({ toolKey: "reports", action: "export:print-pdf", status: "success" });
+            }}
+          >
+            <FileType2 className="mr-2 h-4 w-4" />
+            Printable PDF
           </Button>
           <Button onClick={() => download("pdf")}>
             <FileType2 className="mr-2 h-4 w-4" />

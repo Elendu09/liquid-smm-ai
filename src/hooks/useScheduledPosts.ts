@@ -32,6 +32,10 @@ export interface ScheduledPost {
   recycleRuleId?: string;
   categoryId?: string;
   campaignId?: string;
+  /** Phase 4 — cover frame offset in seconds (Reels / TikTok / Shorts). */
+  coverFrameSec?: number;
+  /** Phase 4 — which native features the user enabled on this draft. */
+  nativeFeatures?: Record<string, boolean>;
 }
 
 
