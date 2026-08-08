@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   RefreshCw,
@@ -184,11 +184,6 @@ export function TemplatesSection() {
 
   const active = TEMPLATES.find((t) => t.id === previewId) ?? null;
   const bodyValue = editing ? draft : active?.body ?? "";
-  const previewRef = useRef<HTMLDivElement>(null);
-
-  const scrollToPreview = () => {
-    setTimeout(() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
-  };
 
   const openPreview = (id: string) => {
     const t = TEMPLATES.find((x) => x.id === id);
@@ -310,20 +305,29 @@ export function TemplatesSection() {
                 <DialogDescription>{active.short}</DialogDescription>
               </DialogHeader>
 
-              {/* Mobile: jump-to-preview button */}
+              {/* Mobile: Preview / Edit toggle */}
               <div className="sm:hidden">
                 <Button
                   variant="outline"
                   size="sm"
                   className="w-full h-9 rounded-xl text-[11px] gap-1.5 border-primary/30 text-primary"
-                  onClick={scrollToPreview}
+                  onClick={() => setEditing((e) => !e)}
                 >
-                  <Eye className="h-3.5 w-3.5" />
-                  Jump to preview content
+                  {editing ? (
+                    <>
+                      <Eye className="h-3.5 w-3.5" />
+                      Preview
+                    </>
+                  ) : (
+                    <>
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </>
+                  )}
                 </Button>
               </div>
 
-              <div ref={previewRef} className="rounded-lg border border-border/60 bg-muted/40 p-3">
+              <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
                 {editing ? (
                   <Textarea
                     value={draft}

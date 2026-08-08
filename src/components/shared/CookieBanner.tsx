@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Cookie, Shield, BarChart3, BadgeCheck, Eye, EyeOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCookieConsent } from "@/hooks/useCookieConsent";
+import { isGuestSession } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
 
 export function CookieBanner() {
@@ -11,6 +12,7 @@ export function CookieBanner() {
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
 
+  if (isGuestSession()) return null;
   if (record) return null;
   if (!open) return null;
 
