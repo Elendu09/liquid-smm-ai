@@ -41,6 +41,16 @@ import { buildThreaded, threadIndent, ThreadHeader, type ThreadedInboxItem } fro
 
 type InboxStatus = "new" | "replied" | "snoozed" | "resolved";
 
+function getSlo(item: InboxItem): { overdue: boolean; label: string; tone: string } | null {
+  if (item.status !== "new") return null;
+  const ageMin = (Date.now() - new Date(item.createdAt).getTime()) / 60000;
+  const isUrgent = item.priority === "urgent" || item.priority === "high";
+  const threshold = isUrgent ? 60 : 120; // 1h for urgent/high, 2h for normal
+  if (ageMin > threshold) return { overdue: true, label: `SLA ${threshold/60}h overdue`, tone: "bg-rose-500/15 text-rose-600 border-rose-500/30" };
+  if (ageMin > threshold * 0.75) return { overdue: false, label: `SLA due in ${Math.max(1, Math.round(threshold - ageMin))}m`, tone: "bg-amber-500/15 text-amber-600 border-amber-500/30" };
+  return null;
+}
+
 export interface InboxMedia {
   kind: "image" | "video" | "voice" | "sticker" | "carousel";
   url?: string;
@@ -318,8 +328,9 @@ function InboxCard({
         </div>
       )}
       <div className="flex items-center justify-between pt-1 border-t border-border/40">
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
           {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          {(() => { const slo = getSlo(item); return slo ? <span className={`px-1.5 py-0.5 rounded-full border text-[9px] font-medium ${slo.tone}`}>{slo.label}</span> : null; })()}
         </span>
         <div className="flex items-center gap-0.5">
           {item.status !== "replied" ? (

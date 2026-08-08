@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Button as UIButton } from "@/components/ui/button";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { findDemoCampaign } from "@/lib/demoCampaigns";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 const STATUS_TONE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -125,6 +127,7 @@ export default function PublicCampaign() {
 }
 
 function ClientComments({ slug }: { slug: string }) {
+  const { isGuest, user } = useAuthUser();
   const key = `smmpilot:public-campaign:${slug}:comments`;
   const [comments, setComments] = useState<Array<{ id: string; author: string; text: string; at: string }>>(() => {
     try {
@@ -138,13 +141,39 @@ function ClientComments({ slug }: { slug: string }) {
     ];
   });
   const [text, setText] = useState("");
+  // Hydrate from Supabase for signed-in users (with local fallback, live sync)
+  useEffect(() => {
+    if (isGuest) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await (supabase as any).from("campaign_comments").select("*").eq("slug", slug).order("created_at", { ascending: true }).limit(50);
+        if (!cancelled && data && data.length) {
+          setComments(data.map((r: any) => ({ id: r.id, author: r.author ?? "Client", text: r.text, at: r.created_at })));
+        }
+      } catch (_e) { void _e; }
+    })();
+    // Realtime for live sync
+    let channel: any = null;
+    try {
+      channel = supabase.channel(`campaign-comments:${slug}`).on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "campaign_comments", filter: `slug=eq.${slug}` }, (payload: any) => {
+        const r = payload.new;
+        setComments((prev) => [...prev, { id: r.id, author: r.author ?? "Client", text: r.text, at: r.created_at }]);
+      }).subscribe();
+    } catch (_e) { void _e; }
+    return () => { cancelled = true; if (channel) try { supabase.removeChannel(channel); } catch (_e) { void _e; } };
+  }, [isGuest, slug]);
   useEffect(() => {
     try { localStorage.setItem(key, JSON.stringify(comments)); } catch (_e) { void _e; }
   }, [comments, key]);
-  const send = () => {
+  const send = async () => {
     if (!text.trim()) return;
-    setComments((prev) => [...prev, { id: crypto.randomUUID(), author: "You", text: text.trim(), at: new Date().toISOString() }]);
+    const newComment = { id: crypto.randomUUID(), author: user?.email?.split("@")[0] ?? "You", text: text.trim(), at: new Date().toISOString() };
+    setComments((prev) => [...prev, newComment]);
     setText("");
+    if (!isGuest) {
+      try { await (supabase as any).from("campaign_comments").insert({ id: newComment.id, slug, author: newComment.author, text: newComment.text }); } catch (_e) { void _e; }
+    }
   };
   return (
     <div className="mt-6 rounded-2xl border border-border/60 bg-card p-4">

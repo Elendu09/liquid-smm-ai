@@ -7,6 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { pushHubItems } from "@/hooks/useHubItems";
+import { useScheduledPosts } from "@/hooks/useScheduledPosts";
+import { useBestTimes } from "@/hooks/useBestTimes";
+import { formatCost } from "@/config/aiCosts";
+import { Calendar } from "lucide-react";
 
 const PLATFORMS = [
   { id: "instagram", label: "Instagram", limit: 2200, tone: "visual + hashtags" },
@@ -39,6 +43,8 @@ export function AiRepurposeDialog({ open, onOpenChange, initialCaption = "" }: {
   const [busy, setBusy] = useState(false);
   const [variants, setVariants] = useState<ReturnType<typeof mockVariants>>([]);
   const [copied, setCopied] = useState<string | null>(null);
+  const { add } = useScheduledPosts();
+  const bestTimes = useBestTimes();
 
   const run = async () => {
     if (!caption.trim()) {
@@ -74,7 +80,29 @@ export function AiRepurposeDialog({ open, onOpenChange, initialCaption = "" }: {
       metadata: { body: v.body, platform: v.platform },
     }));
     await pushHubItems("create-captions", items);
-    toast.success(`Saved ${items.length} variants to Captions`);
+    toast.success(`Saved ${items.length} variants to Captions • ${formatCost("create.captions")} each`);
+    onOpenChange(false);
+  };
+
+  const scheduleAll = async () => {
+    if (variants.length === 0) return;
+    const now = new Date();
+    variants.forEach((v, idx) => {
+      // Use best time for platform if available, else stagger by 2h
+      const best = bestTimes.topHoursFor(new Date().getDay())?.[idx % 3] ?? (10 + idx * 2);
+      const when = new Date(now);
+      when.setDate(when.getDate() + Math.floor(idx / 3) + 1);
+      when.setHours(best, 0, 0, 0);
+      add({
+        caption: v.body,
+        scheduledAt: when.toISOString(),
+        platformIds: [v.platform],
+        hashtags: v.body.match(/#\w+/g)?.map((h) => h.replace("#", "")) ?? [],
+        status: "queued",
+        createdAt: new Date().toISOString(),
+      });
+    });
+    toast.success(`Scheduled ${variants.length} posts at best times • live sync • ${formatCost("create.captions")} used`);
     onOpenChange(false);
   };
 
@@ -122,8 +150,9 @@ export function AiRepurposeDialog({ open, onOpenChange, initialCaption = "" }: {
         </div>
 
         {variants.length > 0 && (
-          <div className="flex justify-end gap-2 pt-3 border-t">
+          <div className="flex justify-end gap-2 pt-3 border-t flex-wrap">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+            <Button variant="secondary" onClick={scheduleAll}><Calendar className="h-4 w-4 mr-1.5" /> Schedule 5 at best times</Button>
             <Button onClick={saveAll}><Sparkles className="h-4 w-4 mr-1.5" /> Save all to Captions</Button>
           </div>
         )}

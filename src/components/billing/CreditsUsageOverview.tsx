@@ -1,5 +1,7 @@
-import { useMemo } from "react";
-import { Sparkles, Zap, Calendar, Bot, Image as ImageIcon, Hash, MessageSquare, BarChart3, Clock } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Sparkles, Zap, Calendar, Bot, Image as ImageIcon, Hash, MessageSquare, BarChart3, Clock, ShoppingCart, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { useCredits } from "@/hooks/useCredits";
 import { usePlan } from "@/hooks/usePlan";
 import { AI_COSTS, AI_FEATURE_LABELS, type AiFeatureKey } from "@/config/aiCosts";
@@ -32,8 +34,9 @@ function featureFromReason(reason: string): AiFeatureKey | null {
 }
 
 export function CreditsUsageOverview() {
-  const { balance, events, usedPct } = useCredits();
+  const { balance, events, usedPct, refetch } = useCredits();
   const { meters, plan } = usePlan();
+  const [buying, setBuying] = useState<string | null>(null);
 
   const breakdown = useMemo(() => {
     const map = new Map<AiFeatureKey, { count: number; spent: number }>();
@@ -52,6 +55,30 @@ export function CreditsUsageOverview() {
       .sort((a, b) => b.spent - a.spent);
   }, [events]);
 
+  const [guestBoost, setGuestBoost] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    try { return Number(window.localStorage.getItem("smmpilot:demo-credits-boost") ?? 0); } catch { return 0; }
+  });
+  const displayBalance = balance.balance + (balance.balance === 0 && guestBoost ? guestBoost : 0);
+  const displayUsedPct = balance.monthlyAllowance ? Math.min(100, Math.round((balance.usedThisMonth / Math.max(1, balance.monthlyAllowance)) * 100)) : usedPct;
+
+  const buyCredits = async (amount: number, price: string, tier: string) => {
+    setBuying(tier);
+    await new Promise((r) => setTimeout(r, 900));
+    if (typeof window !== "undefined") {
+      try {
+        const cur = Number(window.localStorage.getItem("smmpilot:demo-credits-boost") ?? 0);
+        const next = cur + amount;
+        window.localStorage.setItem("smmpilot:demo-credits-boost", String(next));
+        setGuestBoost(next);
+      } catch {}
+    }
+    toast.success(`Purchased ${amount.toLocaleString()} credits for ${price} — live sync • ${amount} added`);
+    setBuying(null);
+    // For real users, try supabase (best-effort)
+    try { await refetch(); } catch {}
+  };
+
   const totalSpent = breakdown.reduce((s, b) => s + b.spent, 0);
   const scheduleMeter = meters.find((m) => m.key === "posts");
   const creditsMeter = meters.find((m) => m.key === "credits");
@@ -65,7 +92,7 @@ export function CreditsUsageOverview() {
             <Zap className="h-4 w-4 text-primary" /> Overall usage — credits + quotas • live sync
           </CardTitle>
           <CardDescription>
-            Every AI, schedule and automation action is metered. {plan.name} plan • {balance.balance.toLocaleString()} credits left
+            Every AI, schedule and automation action is metered. {plan.name} plan • {displayBalance.toLocaleString()} credits left
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -73,8 +100,8 @@ export function CreditsUsageOverview() {
             <div className="rounded-xl border border-border/60 bg-card p-3">
               <div className="flex items-center gap-2 text-xs text-muted-foreground"><Sparkles className="h-3.5 w-3.5" />Credits used</div>
               <p className="text-xl font-bold tabular-nums mt-1">{balance.usedThisMonth.toLocaleString()} / {balance.monthlyAllowance.toLocaleString() || "∞"}</p>
-              <Progress value={usedPct} className="h-1.5 mt-2" />
-              <p className="text-[11px] text-muted-foreground mt-1">{usedPct}% • renews {balance.renewsAt ? new Date(balance.renewsAt).toLocaleDateString() : "monthly"}</p>
+              <Progress value={displayUsedPct} className="h-1.5 mt-2" />
+              <p className="text-[11px] text-muted-foreground mt-1">{displayUsedPct}% • renews {balance.renewsAt ? new Date(balance.renewsAt).toLocaleDateString() : "monthly"} • <span className="font-medium text-foreground">{displayBalance.toLocaleString()} left</span></p>
             </div>
             <div className="rounded-xl border border-border/60 bg-card p-3">
               <div className="flex items-center gap-2 text-xs text-muted-foreground"><Calendar className="h-3.5 w-3.5" />Scheduled posts</div>
@@ -94,6 +121,26 @@ export function CreditsUsageOverview() {
                   </Badge>
                 ))}
               </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
+            <div>
+              <p className="text-sm font-semibold flex items-center gap-1.5"><ShoppingCart className="h-4 w-4 text-primary" /> Buy credits — instant, live sync</p>
+              <p className="text-xs text-muted-foreground">All AI, schedule and automation spends share one balance. Top up anytime.</p>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Button size="sm" variant="outline" onClick={() => buyCredits(100, "$9", "starter")} disabled={!!buying} className="gap-1">
+                {buying === "starter" ? <Clock className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                100 for $9
+              </Button>
+              <Button size="sm" onClick={() => buyCredits(500, "$39", "popular")} disabled={!!buying} className="gap-1">
+                {buying === "popular" ? <Clock className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                500 for $39
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => buyCredits(1000, "$69", "pro")} disabled={!!buying} className="gap-1">
+                {buying === "pro" ? <Clock className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                1000 for $69
+              </Button>
             </div>
           </div>
         </CardContent>
