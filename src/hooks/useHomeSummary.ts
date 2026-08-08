@@ -106,8 +106,7 @@ export function useHomeSummary() {
   // Auto-fetch once per day when no cache present.
   useEffect(() => {
     if (!summary && accounts.length > 0) refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [summary, accounts.length, refresh]);
 
 
   return { summary, loading, error, refresh, aggregate };

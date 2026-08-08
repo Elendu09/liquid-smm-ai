@@ -101,15 +101,15 @@ export function Navbar() {
         )}
       >
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 lg:h-20">
+          <div className="flex items-center justify-between h-14 lg:h-16">
             <Link to="/" className="flex items-center gap-2 group">
-              <span className="font-['Instrument_Serif'] text-3xl lg:text-4xl leading-none tracking-tight text-foreground">
+              <span className="font-['Instrument_Serif'] text-2xl lg:text-3xl leading-none tracking-tight text-foreground">
                 SMMSAAS<span className="italic text-primary">.</span>
               </span>
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-7">
+            <nav className="hidden lg:flex items-center gap-5">
               {navItems.map((item) =>
                 item.children ? (
                   <div
@@ -138,13 +138,21 @@ export function Navbar() {
                     </button>
 
                     {openMenu === item.label && (
-                      <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 animate-fade-in">
-                        <div className="w-[22rem] rounded-2xl border border-border bg-popover/95 backdrop-blur-xl p-2 shadow-2xl">
+                      <div
+                        className={cn(
+                          "absolute top-full pt-3 animate-fade-in",
+                          // Align left for left-side items, right for the last one
+                          item.label === "Company"
+                            ? "right-0"
+                            : "left-0",
+                        )}
+                      >
+                        <div className="w-[20rem] rounded-2xl border border-border bg-popover/95 backdrop-blur-xl p-2 shadow-2xl">
                           {item.children.map((child) => (
                             <button
                               key={child.label}
                               onClick={() => go(child.href)}
-                              className="w-full text-left px-4 py-3 rounded-xl transition-colors hover:bg-muted group/item"
+                              className="w-full text-left px-4 py-2.5 rounded-xl transition-colors hover:bg-muted group/item"
                             >
                               <span className="flex items-center gap-2 text-sm font-medium text-foreground">
                                 {child.label}
@@ -286,7 +294,7 @@ export function Navbar() {
         )}
       </header>
       {/* Spacer */}
-      <div className="h-16 lg:h-20" />
+      <div className="h-14 lg:h-16" />
     </>
   );
 }

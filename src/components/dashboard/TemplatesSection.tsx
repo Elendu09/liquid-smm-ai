@@ -15,6 +15,7 @@ import {
   Send,
   Sparkles,
   Loader2,
+  Eye,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -293,7 +294,7 @@ export function TemplatesSection() {
       </div>
 
       <Dialog open={!!active} onOpenChange={(o) => { if (!o) closePreview(); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           {active && (
             <>
               <DialogHeader>
@@ -303,6 +304,28 @@ export function TemplatesSection() {
                 <DialogTitle className="text-xl leading-snug">{active.title}</DialogTitle>
                 <DialogDescription>{active.short}</DialogDescription>
               </DialogHeader>
+
+              {/* Mobile: Preview / Edit toggle */}
+              <div className="sm:hidden">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-9 rounded-xl text-[11px] gap-1.5 border-primary/30 text-primary"
+                  onClick={() => setEditing((e) => !e)}
+                >
+                  {editing ? (
+                    <>
+                      <Eye className="h-3.5 w-3.5" />
+                      Preview
+                    </>
+                  ) : (
+                    <>
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </>
+                  )}
+                </Button>
+              </div>
 
               <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
                 {editing ? (

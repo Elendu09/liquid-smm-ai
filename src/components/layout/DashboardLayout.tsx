@@ -11,7 +11,6 @@ import { PresetHandler } from "@/components/support/PresetHandler";
 import { PresetLandingBanner } from "@/components/dashboard/PresetLandingBanner";
 import { DemoBanner, DemoBannerInline } from "@/components/layout/DemoBanner";
 import { PublishEventsBridge } from "@/components/shared/PublishEventsBridge";
-import { CookieBanner } from "@/components/shared/CookieBanner";
 import { GracePeriodBanner } from "@/components/billing/GracePeriodBanner";
 import { DemoSeeder } from "@/components/demo/DemoSeeder";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -82,7 +81,6 @@ export function DashboardLayout() {
       <AiAssistantDrawer />
       <PresetHandler />
       <PublishEventsBridge />
-      <CookieBanner />
     </div>
   );
 }

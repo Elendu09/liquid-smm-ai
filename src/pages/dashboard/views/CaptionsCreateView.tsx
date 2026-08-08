@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Sparkles, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StatusBoard } from "@/components/dashboard/shell";
+import { StatusBoard } from "@/components/dashboard/shell/StatusBoard";
 import { GenerateCaptionsDialog } from "@/components/create/GenerateCaptionsDialog";
 import { TranslateCaptionDialog } from "@/components/create/TranslateCaptionDialog";
 import { ComposeVariantsDialog } from "@/components/create/ComposeVariantsDialog";
