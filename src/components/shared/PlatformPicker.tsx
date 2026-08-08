@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Plus } from "lucide-react";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { platforms as ALL_PLATFORMS } from "@/config/platforms";
 import { cn } from "@/lib/utils";
 
@@ -72,11 +74,15 @@ export function PlatformPicker({
   const navigate = useNavigate();
   const ids = available ?? DEFAULT_VISIBLE;
   const s = sizeMap[size];
+  const [addOpen, setAddOpen] = useState(false);
 
   const handleAdd = () => {
     if (onAddMore) return onAddMore();
-    navigate("/dashboard/settings/integrations");
+    setAddOpen((o) => !o);
   };
+
+  // Platforms not in the visible row — shown in the + popover (small connect-channel UI)
+  const extraIds = ALL_PLATFORMS.map((p) => p.id).filter((id) => !ids.includes(id)).slice(0, 8);
 
   return (
     <div className={cn("space-y-1.5", className)}>
@@ -129,24 +135,68 @@ export function PlatformPicker({
         })}
 
         {showAdd && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={handleAdd}
-                aria-label="Connect more platforms"
-                className={cn(
-                  "grid place-items-center rounded-full border-2 border-dashed border-border/70 text-muted-foreground transition-all hover:border-primary/50 hover:text-primary hover:bg-primary/5 hover:scale-105",
-                  s.plus,
-                )}
-              >
-                <Plus className={size === "sm" ? "h-4 w-4" : size === "lg" ? "h-6 w-6" : "h-5 w-5"} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-[11px]">
-              Connect more platforms
-            </TooltipContent>
-          </Tooltip>
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={handleAdd}
+                    aria-label="Connect more platforms"
+                    className={cn(
+                      "grid place-items-center rounded-full border-2 border-dashed border-border/70 text-muted-foreground transition-all hover:border-primary/50 hover:text-primary hover:bg-primary/5 hover:scale-105",
+                      s.plus,
+                    )}
+                  >
+                    <Plus className={size === "sm" ? "h-4 w-4" : size === "lg" ? "h-6 w-6" : "h-5 w-5"} />
+                  </button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[11px]">
+                Add platform
+              </TooltipContent>
+            </Tooltip>
+            <PopoverContent align="end" side="top" className="w-64 p-2">
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold tracking-tight">Add a channel</p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  Pick a platform to add. This mirrors the Connect Channel flow, but compact — beside the +.
+                </p>
+                <div className="grid grid-cols-4 gap-1.5 pt-1">
+                  {extraIds.map((id) => {
+                    const isSel = selected.includes(id);
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => {
+                          onToggle(id);
+                          setAddOpen(false);
+                        }}
+                        className={cn(
+                          "flex flex-col items-center gap-1 rounded-lg border p-1.5 transition-colors",
+                          isSel ? "border-primary bg-primary/10" : "border-border/50 hover:bg-muted/40",
+                        )}
+                      >
+                        <PlatformIcon platform={id} size="sm" showBackground />
+                        <span className="text-[9px] font-medium capitalize truncate max-w-full">{id}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddOpen(false);
+                    navigate("/dashboard/settings/integrations");
+                  }}
+                  className="w-full text-center text-[11px] text-primary hover:underline pt-1"
+                >
+                  Open Connect Channel →
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
         )}
       </div>
       {selected.length > 0 && (

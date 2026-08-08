@@ -33,6 +33,8 @@ import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { isGuestSession } from "@/hooks/useGuest";
 import { cn } from "@/lib/utils";
+import { PanelSection } from "@/components/shared/PanelSection";
+import { MediaThumb } from "@/components/shared/MediaThumb";
 
 type CaptionStatus = "draft" | "ready" | "archived";
 
@@ -87,6 +89,25 @@ const seed: Caption[] = [
 ];
 
 const PLATFORM_OPTIONS = ["instagram", "tiktok", "youtube", "twitter", "facebook", "linkedin"];
+
+// Figma-style test preview images — proves image preview renders in card
+const CAPTION_PREVIEWS: Record<string, string> = {
+  c1: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=600&auto=format&fit=crop&q=60",
+  c2: "https://images.unsplash.com/photo-1590650046871-92c887180603?w=600&auto=format&fit=crop&q=60", // studio / video vibe
+  c3: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=60",
+};
+const FALLBACK_PREVIEW = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=60";
+
+function captionPreviewUrl(c: Caption): string | undefined {
+  if ((c as unknown as { imageUrl?: string }).imageUrl) return (c as unknown as { imageUrl: string }).imageUrl;
+  return CAPTION_PREVIEWS[c.id] ?? FALLBACK_PREVIEW;
+}
+function isVideoPreview(c: Caption): boolean {
+  // demo: c2 is a reel — show as video with play overlay
+  if (c.id === "c2") return true;
+  const v = (c as unknown as { imageUrl?: string }).imageUrl;
+  return !!v && /\.(mp4|webm|mov)(?:\?|#|$)/i.test(v);
+}
 
 export default function CaptionsBoard() {
   const navigate = useNavigate();
@@ -255,58 +276,89 @@ export default function CaptionsBoard() {
 
   const card = (c: Caption, dense = false) => {
     const isSelected = selected.has(c.id);
+    const preview = captionPreviewUrl(c);
+    const isVideo = isVideoPreview(c);
+    // For dense list, we keep image small; for grid kanban, full preview
     return (
-      <div className={cn(dense ? "p-3" : "p-3", isSelected && "ring-2 ring-primary/50 rounded-lg")}>
-        <div className="flex items-start gap-2">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => toggleSelect(c.id)}
-            aria-label={`Select ${c.title}`}
-            className="mt-1 shrink-0"
-          />
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <FileText className="h-4 w-4 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate">{c.title}</p>
-            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{c.body || "No text yet"}</p>
-            <div className="flex flex-wrap items-center gap-1 mt-2">
-              {c.platformIds.slice(0, 4).map((p) => (
-                <PlatformIcon key={p} platform={p} size="xs" showBackground />
-              ))}
-              {c.tags.slice(0, 3).map((t) => (
-                <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                  {t}
-                </Badge>
-              ))}
+      <div className={cn("group overflow-hidden flex flex-col", isSelected && "ring-2 ring-primary/50")}>
+        {/* Image preview header — test image proves preview renders; video gets Play overlay */}
+        {preview && (
+          <button
+            type="button"
+            onClick={() => setEditing(c)}
+            className={cn(
+              "relative block w-full overflow-hidden bg-muted/30 text-left",
+              dense ? "h-20" : "aspect-[16/10]",
+            )}
+            aria-label={`Preview ${c.title}`}
+          >
+            <MediaThumb
+              url={isVideo ? "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" : preview}
+              alt={c.title}
+              className="h-full w-full"
+              onPlay={(u) => window.open(u, "_blank", "noopener")}
+            />
+            {/* subtle top fade */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          </button>
+        )}
+        <div className={cn(dense ? "p-2.5" : "p-3")}>
+          <div className="flex items-start gap-2">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => toggleSelect(c.id)}
+              aria-label={`Select ${c.title}`}
+              className="mt-0.5 shrink-0"
+            />
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 ring-1 ring-primary/10">
+              <FileText className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold tracking-tight truncate leading-none">{c.title}</p>
+              <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed">{c.body || "No text yet"}</p>
+              <div className="flex flex-wrap items-center gap-1 mt-2">
+                {c.platformIds.slice(0, 4).map((p) => (
+                  <PlatformIcon key={p} platform={p} size="xs" showBackground />
+                ))}
+                {c.tags.slice(0, 3).map((t) => (
+                  <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-normal">
+                    {t}
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex justify-end gap-1 mt-2">
-          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Copy caption" onClick={() => copy(c)}>
-            <Copy className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Insert into queue" onClick={() => insertIntoQueue(c)}>
-            <Send className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Send to studio" onClick={() => sendToStudio(c)}>
-            <Sparkles className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditing(c)}>
-            Edit
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-destructive hover:text-destructive"
-            aria-label="Delete caption"
-            onClick={() => {
-              remove(c.id);
-              toast.success("Deleted");
-            }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <div className="flex items-center justify-between gap-1 mt-3 border-t border-border/40 pt-2">
+            <span className="text-[10px] text-muted-foreground tabular-nums">
+              {new Date(c.createdAt).toLocaleDateString()}
+            </span>
+            <div className="flex items-center gap-0.5">
+              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Copy caption" onClick={() => copy(c)}>
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Insert into queue" onClick={() => insertIntoQueue(c)}>
+                <Send className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Send to studio" onClick={() => sendToStudio(c)}>
+                <Sparkles className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="sm" className="h-7 text-[11px] px-2" onClick={() => setEditing(c)}>
+                Edit
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive hover:text-destructive"
+                aria-label="Delete caption"
+                onClick={() => {
+                  remove(c.id);
+                  toast.success("Deleted");
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -314,35 +366,42 @@ export default function CaptionsBoard() {
 
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 pb-8">
-      <ToolbarBar
-        search={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Search captions…"
-        viewToggle={<ViewToggle value={view} onChange={setView} />}
-        actions={
+    <div className="px-4 sm:px-6 lg:px-8 pb-8 space-y-4">
+      <PanelSection
+        icon={FileText}
+        title="Captions"
+        description="Reusable copy — every card shows a live image preview on top; videos get a Play overlay."
+        accent="from-violet-500 via-violet-500/50 to-transparent"
+        action={
           <Button size="sm" onClick={startNew} aria-label="New caption">
             <Plus className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">New caption</span>
           </Button>
         }
-      />
-
-      {view === "kanban" ? (
-        <KanbanBoard
-          columns={columns}
-          items={filtered}
-          getKey={(c) => c.id}
-          getStatus={(c) => c.status}
-          onMove={(item, _from, to) => {
-            update(item.id, { status: to });
-            toast.success(`Moved to ${to}`);
-          }}
-          renderItem={(c) => card(c)}
+      >
+        <ToolbarBar
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search captions…"
+          viewToggle={<ViewToggle value={view} onChange={setView} />}
         />
-      ) : (
-        <ListView items={filtered} getKey={(c) => c.id} renderItem={(c) => card(c, true)} />
-      )}
+
+        {view === "kanban" ? (
+          <KanbanBoard
+            columns={columns}
+            items={filtered}
+            getKey={(c) => c.id}
+            getStatus={(c) => c.status}
+            onMove={(item, _from, to) => {
+              update(item.id, { status: to });
+              toast.success(`Moved to ${to}`);
+            }}
+            renderItem={(c) => card(c)}
+          />
+        ) : (
+          <ListView items={filtered} getKey={(c) => c.id} renderItem={(c) => card(c, true)} />
+        )}
+      </PanelSection>
 
       {/* Sticky bulk-action bar */}
       {selected.size > 0 && (

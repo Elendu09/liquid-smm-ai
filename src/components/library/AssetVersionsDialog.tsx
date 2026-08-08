@@ -52,13 +52,14 @@ export function AssetVersionsDialog({ open, onOpenChange, asset, onRestore }: Pr
 
   const restore = () => {
     if (!current || !asset) return;
+    // Snapshot the CURRENT asset state before overwriting, so history remains undoable
     snapshot({
-      title: current.title,
-      subtitle: current.subtitle,
-      tags: current.tags,
-      url: current.url,
-      type: current.type,
-      note: note || `Restored to v${current.version}`,
+      title: asset.title,
+      subtitle: asset.subtitle,
+      tags: asset.tags,
+      url: asset.url,
+      type: asset.type,
+      note: note || `Before restore → v${current.version}`,
       reason: "restore",
     });
     onRestore?.({
@@ -66,6 +67,7 @@ export function AssetVersionsDialog({ open, onOpenChange, asset, onRestore }: Pr
       subtitle: current.subtitle,
       tags: current.tags,
       url: current.url,
+      type: current.type,
     });
     toast.success(`Restored to v${current.version}`);
     setNote("");
