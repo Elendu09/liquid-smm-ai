@@ -19,11 +19,7 @@ export function LoadingState({
       className={cn("space-y-3", className)}
     >
       {Array.from({ length: rows }).map((_, i) => (
-        <div
-          key={i}
-          className="h-14 rounded-xl bg-muted/40 animate-pulse"
-          aria-hidden="true"
-        />
+        <div key={i} className="h-14 rounded-xl shimmer" aria-hidden="true" />
       ))}
       <span className="sr-only">{label}…</span>
     </div>

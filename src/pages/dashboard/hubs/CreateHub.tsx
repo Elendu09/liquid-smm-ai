@@ -1,6 +1,6 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { Sparkles, Hash, PenLine, Mic2, LayoutTemplate, Plus } from "lucide-react";
-import { PageHeader, HubTabs, HeaderActionRow, sectionActions, type HubTab } from "@/components/dashboard/shell";
+import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import UnifiedStudio from "../views/UnifiedStudio";
 import CaptionsCreateView from "../views/CaptionsCreateView";
 import HashtagsCreateView from "../views/HashtagsCreateView";
@@ -21,12 +21,8 @@ function CreateLayout() {
           title="Create"
           description="Draft, edit, and preview posts before they hit the queue."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Create" }]}
-          actions={
-            <HeaderActionRow actions={sectionActions(tabs)} />
-          }
+          actions={<HubTabs tabs={tabs} />}
         />
-
-        <HubTabs tabs={tabs} />
       </div>
       <Outlet />
     </div>

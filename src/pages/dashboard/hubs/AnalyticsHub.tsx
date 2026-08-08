@@ -1,6 +1,6 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { BarChart3, FileText, Activity, LayoutDashboard, Trophy, Sparkles } from "lucide-react";
-import { PageHeader, HubTabs, HeaderActionRow, sectionActions, type HubTab } from "@/components/dashboard/shell";
+import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import Analytics from "../Analytics";
 import Reports from "../Reports";
 import CustomReportsView from "../views/CustomReportsView";
@@ -24,12 +24,8 @@ function AnalyticsLayout() {
           title="Analytics"
           description="Growth, reporting, and account health in one place."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Analytics" }]}
-          actions={
-            <HeaderActionRow actions={sectionActions(tabs)} />
-          }
+          actions={<HubTabs tabs={tabs} />}
         />
-
-        <HubTabs tabs={tabs} />
       </div>
       <Outlet />
     </div>

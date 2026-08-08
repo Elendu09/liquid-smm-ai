@@ -15,7 +15,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <Button variant="ghost" size="icon" className="relative w-9 h-9">
-        <div className="w-5 h-5 bg-muted rounded-full animate-pulse" />
+        <div className="w-5 h-5 rounded-full shimmer" />
       </Button>
     );
   }

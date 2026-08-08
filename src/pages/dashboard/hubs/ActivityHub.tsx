@@ -1,6 +1,6 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { Clock, Bell, Terminal, Sparkles } from "lucide-react";
-import { PageHeader, HubTabs, HeaderActionRow, sectionActions, type HubTab } from "@/components/dashboard/shell";
+import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import { ActivityFeedView } from "../views/ActivityFeedView";
 import { McpActivityView } from "../views/McpActivityView";
 import { NotificationsView } from "../views/NotificationsView";
@@ -19,12 +19,8 @@ function ActivityLayout() {
           title="Activity"
           description="Every automation run and every notification, in order."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Activity" }]}
-          actions={
-            <HeaderActionRow actions={sectionActions(tabs)} />
-          }
+          actions={<HubTabs tabs={tabs} />}
         />
-
-        <HubTabs tabs={tabs} />
       </div>
       <Outlet />
     </div>
