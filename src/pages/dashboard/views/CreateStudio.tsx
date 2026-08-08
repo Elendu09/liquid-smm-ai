@@ -28,6 +28,7 @@ import { useLocalCollection } from "@/hooks/useLocalCollection";
 import { useMcpInbox } from "@/hooks/useMcpInbox";
 import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { MediaThumb } from "@/components/shared/MediaThumb";
 import { PlatformPicker } from "@/components/shared/PlatformPicker";
 import { useAccounts } from "@/contexts/AccountContext";
 import { NewPostDialog } from "@/components/create/NewPostDialog";
@@ -64,6 +65,8 @@ const seed: Draft[] = [
     status: "draft",
     caption: "Something big is coming next week 👀 #stayTuned",
     platform: "instagram",
+    // Test image so card image previews are visible immediately in demo mode.
+    mediaUrl: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=600&q=80",
     createdAt: new Date().toISOString(),
   },
   {
@@ -330,6 +333,14 @@ export default function CreateStudio() {
           </p>
         </div>
       </div>
+      {d.mediaUrl && (
+        <MediaThumb
+          url={d.mediaUrl}
+          alt="Draft media preview"
+          onPlay={(url) => window.open(url, "_blank", "noopener")}
+          className="mt-2 h-28 w-full rounded-lg border border-border/40 transition-transform duration-300 group-hover:scale-[1.02]"
+        />
+      )}
       {d.scheduledAt && (
         <p className="text-[11px] text-muted-foreground mt-2">
           {new Date(d.scheduledAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}

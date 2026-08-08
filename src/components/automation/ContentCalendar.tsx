@@ -122,7 +122,7 @@ function getPlatformGradient(platform: string): string {
     whatsapp: "bg-gradient-to-br from-green-500 to-green-400",
     bluesky: "bg-gradient-to-br from-sky-400 to-sky-300",
   };
-  return gradients[platform.toLowerCase()] || "bg-gradient-to-br from-primary/20 to-primary/10";
+  return gradients[(platform ?? "").toLowerCase()] || "bg-gradient-to-br from-primary/20 to-primary/10";
 }
 
 /** Platform-colored border classes for calendar chips */
@@ -143,7 +143,7 @@ function getPlatformBorderClass(platform: string): string {
     whatsapp: "border-green-400/40",
     bluesky: "border-sky-400/40",
   };
-  return borders[platform.toLowerCase()] || "border-primary/30";
+  return borders[(platform ?? "").toLowerCase()] || "border-primary/30";
 }
 
 /** Platform-colored background classes for calendar chips */
@@ -164,7 +164,7 @@ function getPlatformBgClass(platform: string): string {
     whatsapp: "bg-green-400/15",
     bluesky: "bg-sky-400/15",
   };
-  return bgs[platform.toLowerCase()] || "bg-primary/10";
+  return bgs[(platform ?? "").toLowerCase()] || "bg-primary/10";
 }
 
 export const ContentCalendar = () => {

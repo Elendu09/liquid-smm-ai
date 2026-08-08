@@ -16,6 +16,7 @@ import {
   Sparkles,
   Loader2,
   Eye,
+  ArrowUpRight,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ import { useContentTemplates } from "@/hooks/useContentTemplates";
 import { useBrandVoices, serializeVoice, PLATFORM_LABELS, type PlatformKey } from "@/hooks/useBrandVoices";
 import { aiCreate } from "@/hooks/useAiCreate";
 import { cn } from "@/lib/utils";
+import { PanelSection } from "@/components/shared/PanelSection";
 
 export interface PromptTemplate {
   id: string;
@@ -155,11 +157,25 @@ const DATA_SOURCES = [
   { id: "audience-insights", label: "Audience insights" },
 ] as const;
 
+const CATEGORY_ACCENT: Record<PromptTemplate["category"], string> = {
+  Reflection: "text-violet-500 bg-violet-500/10 ring-violet-500/20",
+  Discovery: "text-sky-500 bg-sky-500/10 ring-sky-500/20",
+  Learning: "text-amber-500 bg-amber-500/10 ring-amber-500/20",
+  Playbook: "text-emerald-500 bg-emerald-500/10 ring-emerald-500/20",
+  Engagement: "text-rose-500 bg-rose-500/10 ring-rose-500/20",
+  Announcement: "text-indigo-500 bg-indigo-500/10 ring-indigo-500/20",
+};
+
 function CategoryBadge({ label }: { label: PromptTemplate["category"] }) {
   return (
-    <Badge variant="secondary" className="text-[10px] font-medium px-1.5 py-0.5">
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ring-1",
+        CATEGORY_ACCENT[label],
+      )}
+    >
       {label}
-    </Badge>
+    </span>
   );
 }
 
@@ -257,16 +273,13 @@ export function TemplatesSection() {
 
   return (
     <div className="block">
-      <div className="flex items-baseline justify-between mb-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Templates
-        </h2>
-        <span className="hidden sm:inline text-xs text-muted-foreground">
-          Prompt-ready starters for your next post
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <PanelSection
+        icon={Lightbulb}
+        title="Prompt templates"
+        description="Prompt-ready starters for your next post — pick one, remix it, ship it."
+        accent="from-violet-500 via-fuchsia-500/50 to-transparent"
+      >
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {TEMPLATES.map((t) => {
           const Icon = t.icon;
           return (
@@ -275,23 +288,32 @@ export function TemplatesSection() {
               type="button"
               onClick={() => openPreview(t.id)}
               className={cn(
-                "group text-left rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-4",
-                "hover:border-primary/50 hover:-translate-y-0.5 transition-all",
+                "group relative flex flex-col rounded-xl border border-border/60 bg-card p-3.5 text-left transition-all",
+                "hover:border-primary/40 hover:shadow-md hover:shadow-primary/5",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
               )}
             >
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/15 transition-colors">
-                <Icon className="h-4 w-4 text-primary" strokeWidth={1.75} />
+              <div className="flex items-start justify-between gap-2">
+                <span className={cn("grid h-8 w-8 place-items-center rounded-lg ring-1", CATEGORY_ACCENT[t.category])}>
+                  <Icon className="h-4 w-4" strokeWidth={1.75} />
+                </span>
+                <span className="grid h-6 w-6 -translate-x-1 translate-y-1 place-items-center rounded-full bg-muted text-muted-foreground opacity-0 transition-all group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100">
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </span>
               </div>
-              <h3 className="text-sm font-semibold leading-snug line-clamp-3">{t.title}</h3>
-              <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{t.short}</p>
-              <div className="mt-3">
+              <h3 className="mt-2.5 line-clamp-2 text-[13px] font-semibold leading-snug">{t.title}</h3>
+              <p className="mt-1 line-clamp-2 flex-1 text-xs leading-relaxed text-muted-foreground">{t.short}</p>
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/40 pt-2.5">
                 <CategoryBadge label={t.category} />
+                <span className="text-[10px] font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                  Use template
+                </span>
               </div>
             </button>
           );
         })}
       </div>
+      </PanelSection>
 
       <Dialog open={!!active} onOpenChange={(o) => { if (!o) closePreview(); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">

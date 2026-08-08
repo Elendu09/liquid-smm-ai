@@ -42,7 +42,8 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { useAccounts } from "@/contexts/AccountContext";
 import { InboxAutomationPanel } from "@/components/engage/InboxAutomationPanel";
 import { BotFlowEditor } from "@/components/engage/BotFlowEditor";
-import { RateLimitDashboard } from "@/components/engage/RateLimitDashboard";
+import { BotHistoryLogs } from "@/components/engage/BotHistoryLogs";
+import { PanelSection } from "@/components/shared/PanelSection";
 import { useReshareFlows } from "@/hooks/useReshareFlows";
 import {
   Select,
@@ -159,7 +160,7 @@ export default function BotRulesView() {
 
   return (
     <div className="px-4 pb-8 sm:px-6 lg:px-8">
-      <RateLimitDashboard />
+      <BotHistoryLogs />
       {/* Compact header */}
       <section className="mb-5 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-border/60 bg-card/60 p-4 sm:p-5">
         <div className="min-w-0">
@@ -194,16 +195,17 @@ export default function BotRulesView() {
       <InboxAutomationPanel />
 
       {/* Bot rules */}
-      <div className="mb-3 flex items-end justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold">Engagement rules</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">Outbound automation: welcome DMs, keyword replies, AI branches, and safe actions.</p>
-        </div>
-        <div className="hidden items-center gap-1.5 text-[10px] text-muted-foreground sm:flex">
-          <Activity className="h-3.5 w-3.5 text-emerald-500" /> Live event monitor connected
-        </div>
-      </div>
-
+      <PanelSection
+        icon={Bot}
+        title="Engagement rules"
+        description="Outbound automation: welcome DMs, keyword replies, AI branches, and safe actions."
+        accent="from-emerald-500 via-emerald-500/50 to-transparent"
+        action={
+          <span className="hidden items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-medium text-emerald-600 sm:inline-flex">
+            <Activity className="h-3 w-3" /> Live event monitor connected
+          </span>
+        }
+      >
       <ToolbarBar
         search={search}
         onSearchChange={setSearch}
@@ -284,6 +286,7 @@ export default function BotRulesView() {
       ) : (
         <ListView items={filtered} getKey={(rule) => rule.id} renderItem={(rule) => <RuleCard rule={rule} dense />} />
       )}
+      </PanelSection>
 
       <NewRuleDialog open={ruleDialogOpen} onOpenChange={setRuleDialogOpen} initial={editing} onSubmit={handleSubmit} />
       <TestRuleDialog open={testOpen} onOpenChange={setTestOpen} rule={testing} />

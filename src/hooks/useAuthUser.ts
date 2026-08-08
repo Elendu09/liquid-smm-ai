@@ -10,9 +10,15 @@ export function useAuthUser() {
 
   useEffect(() => {
     let mounted = true;
+    // Tracks whether Supabase auth actually answered. If it doesn't resolve in
+    // time (offline sandbox, blocked network, slow project), we fail over to
+    // the demo/guest session so the dashboard never sits on a blank spinner.
+    // When auth eventually answers, applyUser() swaps in the real session.
+    let resolved = false;
 
     const applyUser = (u: User | null) => {
       if (!mounted) return;
+      resolved = true;
       // Strict isolation: a real user can never coexist with guest mode.
       if (u && isGuestSession()) disableGuest();
       setUser(u);
@@ -30,8 +36,22 @@ export function useAuthUser() {
     window.addEventListener("smmpilot:guest-changed", sync);
     window.addEventListener("storage", sync);
 
+    const failover = window.setTimeout(() => {
+      if (!mounted || resolved) return;
+      try {
+        window.localStorage.setItem("smmpilot:guest", "1");
+      } catch {
+        /* storage unavailable — stay on the loading state */
+      }
+      setIsGuest(true);
+      setUser(null);
+      setLoading(false);
+      window.dispatchEvent(new Event("smmpilot:guest-changed"));
+    }, 4500);
+
     return () => {
       mounted = false;
+      window.clearTimeout(failover);
       sub.subscription.unsubscribe();
       window.removeEventListener("smmpilot:guest-changed", sync);
       window.removeEventListener("storage", sync);
