@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation, useNavigation } from "react-router-dom";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { DashboardHeader } from "./DashboardHeader";
 import { MobileHubNav } from "@/components/dashboard/shell/MobileHubNav";
@@ -17,12 +17,28 @@ import { DemoSeeder } from "@/components/demo/DemoSeeder";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useSendSimulator } from "@/hooks/useSendSimulator";
 import { useClaimPendingReferral } from "@/hooks/useClaimPendingReferral";
+import { PageShimmer } from "@/components/ui/shimmer";
 
 export function DashboardLayout() {
   const { state, markSeen } = useOnboarding();
   const [tourOpen, setTourOpen] = useState(false);
+  const navigation = useNavigation();
+  const location = useLocation();
+  const [isNavigating, setIsNavigating] = useState(false);
+  
   useSendSimulator();
   useClaimPendingReferral();
+
+  // Show shimmer when navigating between dashboard pages
+  useEffect(() => {
+    if (navigation.state === "loading") {
+      setIsNavigating(true);
+    } else {
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => setIsNavigating(false), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [navigation.state, location.pathname]);
 
   // One-shot: open the setup wizard exactly once, on first dashboard visit for
   // a user who has neither completed nor previously dismissed it. After it
@@ -56,7 +72,7 @@ export function DashboardLayout() {
         <DemoBannerInline />
         <GracePeriodBanner />
         <PresetLandingBanner />
-        <Outlet />
+        {isNavigating ? <PageShimmer /> : <Outlet />}
         <div className="h-28 lg:hidden" aria-hidden />
       </main>
       <MobileHubNav />

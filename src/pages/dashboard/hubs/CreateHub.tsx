@@ -16,13 +16,13 @@ const tabs: HubTab[] = [
 function CreateLayout() {
   return (
     <div>
-      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 space-y-4">
         <PageHeader
           title="Create"
           description="Draft, edit, and preview posts before they hit the queue."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Create" }]}
-          actions={<HubTabs tabs={tabs} />}
         />
+        <HubTabs tabs={tabs} />
       </div>
       <Outlet />
     </div>

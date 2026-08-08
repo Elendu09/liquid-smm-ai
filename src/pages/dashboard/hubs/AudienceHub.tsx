@@ -14,13 +14,13 @@ const tabs: HubTab[] = [
 function AudienceLayout() {
   return (
     <div>
-      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 space-y-4">
         <PageHeader
           title="Audience"
           description="Understand your followers and benchmark against competitors."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Audience" }]}
-          actions={<HubTabs tabs={tabs} />}
         />
+        <HubTabs tabs={tabs} />
       </div>
       <Outlet />
     </div>

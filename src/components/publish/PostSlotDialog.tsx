@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { PlatformPicker } from "@/components/shared/PlatformPicker";
 import { NetworkPreview } from "@/components/publish/NetworkPreview";
 import { MediaField } from "@/components/publish/MediaField";
 import { MediaValidatorBanner } from "@/components/publish/MediaValidatorBanner";
@@ -198,32 +199,18 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
 
             <LinkPreviewCard caption={caption} />
 
-            <div>
-              <Label className="text-xs uppercase tracking-wide">Platforms</Label>
-              <div className="flex flex-wrap gap-1.5 mt-1.5">
-                {PLATFORMS.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => toggle(p.id)}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors",
-                      platformIds.includes(p.id)
-                        ? "bg-primary/15 border-primary/40 text-primary"
-                        : "border-border/60 text-muted-foreground hover:border-primary/40",
-                    )}
-                  >
-                    <PlatformIcon platform={p.id} size="xs" />
-                    <span className="capitalize">{p.name ?? p.id}</span>
-                  </button>
-                ))}
+            <PlatformPicker
+              selected={platformIds}
+              onToggle={toggle}
+              available={PLATFORMS.map((p) => p.id)}
+              label="Platforms"
+            />
+
+            {activePlatforms.length > 0 && (
+              <div className="mt-1.5">
+                <MediaFitRow meta={mediaMeta} platforms={activePlatforms} />
               </div>
-              {activePlatforms.length > 0 && (
-                <div className="mt-1.5">
-                  <MediaFitRow meta={mediaMeta} platforms={activePlatforms} />
-                </div>
-              )}
-            </div>
+            )}
 
             {activePlatforms.length > 0 && mediaMeta && (
               <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 p-2.5">

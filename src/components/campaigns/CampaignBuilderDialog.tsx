@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { PlatformPicker } from "@/components/shared/PlatformPicker";
 import { useAccounts } from "@/contexts/AccountContext";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useCampaignPlanner, type CampaignPlan } from "@/hooks/useCampaignPlanner";
@@ -226,27 +227,12 @@ export function CampaignBuilderDialog({
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label>Platforms</Label>
-              <div className="flex flex-wrap gap-2">
-                {available.map((id) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => togglePlatform(id)}
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors",
-                      chosen.includes(id)
-                        ? "border-primary/60 bg-primary/10 text-foreground"
-                        : "border-border/60 text-muted-foreground hover:bg-muted/50",
-                    )}
-                  >
-                    <PlatformIcon platform={id} className="h-3.5 w-3.5" />
-                    <span className="capitalize">{id}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <PlatformPicker
+              selected={chosen}
+              onToggle={togglePlatform}
+              available={available}
+              label="Platforms"
+            />
 
             {result && (
               <div className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-3">

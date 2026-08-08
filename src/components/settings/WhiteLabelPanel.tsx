@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Palette, Upload, RotateCcw, Eye } from "lucide-react";
+import { Palette, RotateCcw, Eye } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { MediaField } from "@/components/publish/MediaField";
 import { useWhiteLabel } from "@/hooks/useWhiteLabel";
 import { toast } from "sonner";
 
@@ -49,19 +50,11 @@ export function WhiteLabelPanel() {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="logoUrl">Logo URL</Label>
-            <div className="flex gap-2">
-              <Input
-                id="logoUrl"
-                value={local.logoUrl}
-                onChange={(e) => update("logoUrl", e.target.value)}
-                placeholder="https://cdn.example.com/logo.svg"
-                className="flex-1"
-              />
-              <Button variant="outline" size="icon" title="Upload (coming soon)">
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
+            <MediaField
+              value={local.logoUrl}
+              onChange={(url) => update("logoUrl", url ?? "")}
+              label="Logo"
+            />
           </div>
 
           <div className="space-y-2">

@@ -44,13 +44,13 @@ function SettingsLayout() {
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-primary/[0.07] via-accent/[0.04] to-transparent"
       />
-      <div className="relative px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+      <div className="relative px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 space-y-4">
         <PageHeader
           title="Settings"
           description="Profile, notifications, connected platforms, billing, security, and audit log."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Settings" }]}
-          actions={<HubTabs tabs={tabs} />}
         />
+        <HubTabs tabs={tabs} />
       </div>
       <Outlet />
     </div>
