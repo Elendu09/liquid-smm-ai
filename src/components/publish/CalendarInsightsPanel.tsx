@@ -27,6 +27,7 @@ export function CalendarInsightsPanel({ onClose, onOpenInbox }: Props) {
   const engagement = useAnalyticsSeries("engagement", "90D");
   const { items: comments } = useInboxMessages("comment");
   const { items: dms } = useInboxMessages("dm");
+  const { posts: topPosts, loading: topLoading } = useTopPosts({ days: 30, limit: 4 });
 
   const unresolved = useMemo(() => {
     return [...comments, ...dms]
