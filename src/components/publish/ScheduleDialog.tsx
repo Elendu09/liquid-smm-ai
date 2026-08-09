@@ -210,7 +210,7 @@ export function ScheduleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 [&>button.absolute]:hidden">
         <DialogHeader className="px-6 pt-5 pb-4 border-b border-border/40 shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3 min-w-0">
@@ -222,12 +222,11 @@ export function ScheduleDialog({
                 <DialogDescription className="mt-0.5">Caption, media, platforms, timezone, native features & preview.</DialogDescription>
               </div>
             </div>
-            <button type="button" onClick={()=>onOpenChange(false)} className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"><X className="h-4 w-4"/> Close</button>
+            <button type="button" onClick={()=>onOpenChange(false)} className="inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted shrink-0"><X className="h-4 w-4"/> <span className="hidden sm:inline">Close</span></button>
           </div>
           <div className="flex md:hidden items-center gap-1 mt-3 p-1 rounded-full bg-muted/40 border border-border/40 w-fit">
-            <button type="button" onClick={()=>setMobileTab("edit")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${mobileTab==="edit"?"bg-background shadow border border-border/60":"text-muted-foreground"}`}><Pencil className="h-3.5 w-3.5"/> Edit</button>
-            <button type="button" onClick={()=>setMobileTab("preview")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${mobileTab==="preview"?"bg-background shadow border border-border/60":"text-muted-foreground"}`}><Eye className="h-3.5 w-3.5"/> Preview</button>
-            <button type="button" onClick={()=>onOpenChange(false)} className="ml-1 inline-flex items-center gap-1 px-2 py-1.5 rounded-full text-xs text-muted-foreground"><X className="h-3.5 w-3.5"/> Close</button>
+            <button type="button" onClick={()=>setMobileTab("edit")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${mobileTab==="edit"?"bg-background shadow border border-border/60 text-foreground":"text-muted-foreground"}`}><Pencil className="h-3.5 w-3.5"/> Edit</button>
+            <button type="button" onClick={()=>setMobileTab("preview")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${mobileTab==="preview"?"bg-background shadow border border-border/60 text-foreground":"text-muted-foreground"}`}><Eye className="h-3.5 w-3.5"/> Preview</button>
           </div>
         </DialogHeader>
 

@@ -369,28 +369,25 @@ export function CaptionField({
             </PopoverContent>
           </Popover>
 
-          {(platform ? SUPPORTS_BOLD(platform) : true) && (
-            <>
-              <button
-                type="button"
-                aria-label="Bold"
-                onClick={() => wrapSelection("bold")}
-                className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground font-bold"
-                title={platform && SUPPORTS_BOLD(platform) ? "Bold (unicode) — Facebook/LinkedIn/Threads" : "Bold (**text**)"}
-              >
-                <Bold className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                aria-label="Italic"
-                onClick={() => wrapSelection("italic")}
-                className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground italic"
-                title={platform && SUPPORTS_BOLD(platform) ? "Italic (unicode) — Facebook/LinkedIn/Threads" : "Italic (*text*)"}
-              >
-                <Italic className="h-4 w-4" />
-              </button>
-            </>
-          )}
+          {/* Bold / Italic — always visible; applies unicode on supported platforms, markdown elsewhere */}
+          <button
+            type="button"
+            aria-label="Bold"
+            onClick={() => wrapSelection("bold")}
+            className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground font-bold"
+            title={platform && SUPPORTS_BOLD(platform) ? "Bold (unicode) — Facebook/LinkedIn/Threads" : "Bold (**text**)"}
+          >
+            <Bold className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Italic"
+            onClick={() => wrapSelection("italic")}
+            className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground italic"
+            title={platform && SUPPORTS_BOLD(platform) ? "Italic (unicode) — Facebook/LinkedIn/Threads" : "Italic (*text*)"}
+          >
+            <Italic className="h-4 w-4" />
+          </button>
           {onAi && (
             <button
               type="button"

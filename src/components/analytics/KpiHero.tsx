@@ -21,7 +21,6 @@ type KpiDef = {
 const KPIS: KpiDef[] = [
   { id: "followers", label: "Followers", icon: Users, accent: "hsl(var(--primary))" },
   { id: "engagement", label: "Engagement", icon: Heart, unit: "%", accent: "#ec4899" },
-  { id: "reach", label: "Reach", icon: Eye, accent: "#10b981" },
   { id: "impressions", label: "Impressions", icon: TrendingUp, accent: "#f59e0b" },
   { id: "replies", label: "Replies", icon: MessageSquare, accent: "#8b5cf6" },
   { id: "ctr", label: "CTR", icon: MousePointerClick, unit: "%", accent: "#06b6d4" },
@@ -99,7 +98,7 @@ export function KpiHero({ range, onRangeChange }: KpiHeroProps) {
       {noAccounts ? (
         <EmptyState variant="connect-account" />
       ) : (
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
         {cards.map((c) => {
           const Icon = c.icon;
           const positive = c.delta >= 0;

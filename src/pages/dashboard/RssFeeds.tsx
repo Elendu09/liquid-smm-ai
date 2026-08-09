@@ -416,9 +416,9 @@ export default function RssFeedsPage() {
                 </div>
                 <Button size="sm" onClick={() => (window.location.href = "/signup")}>Sign up</Button>
               </div>
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory md:grid md:grid-cols-3 md:overflow-visible">
                 {DEMO_FEEDS.map((f) => (
-                  <Card key={f.name} className={`overflow-hidden bg-gradient-to-br ${f.tone} border-border/60`}>
+                  <Card key={f.name} className={`min-w-[260px] snap-start shrink-0 md:min-w-0 overflow-hidden bg-gradient-to-br ${f.tone} border-border/60`}>
                     <CardContent className="p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <div className={`h-9 w-9 rounded-xl bg-background/70 flex items-center justify-center ring-1 ring-border/60 ${f.color}`}>

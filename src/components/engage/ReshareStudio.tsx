@@ -99,48 +99,48 @@ export function ReshareStudio() {
   };
 
   return (
-    <div className="space-y-6 px-4 pb-8 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-5 px-4 pb-8 sm:px-6 lg:px-8">
+      {/* Header - reduced size */}
+      <div className="flex flex-row items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Reshare Studio</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="text-xl font-bold tracking-tight">Reshare Studio</h1>
+          <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
             Automatically distribute content across multiple platforms
           </p>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button size="sm" onClick={handleCreate}>
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
           New Flow
         </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Active Flows</CardDescription>
-            <CardTitle className="text-2xl">{stats.enabled}</CardTitle>
+      {/* Stats - horizontal 3 cards even on mobile */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <Card className="overflow-hidden">
+          <CardHeader className="p-3 pb-1">
+            <CardDescription className="text-[11px]">Active Flows</CardDescription>
+            <CardTitle className="text-lg sm:text-2xl">{stats.enabled}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">{stats.total} total flows</p>
+          <CardContent className="p-3 pt-0">
+            <p className="text-[11px] text-muted-foreground truncate">{stats.total} total</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Posts Delivered</CardDescription>
-            <CardTitle className="text-2xl">{stats.delivered}</CardTitle>
+        <Card className="overflow-hidden">
+          <CardHeader className="p-3 pb-1">
+            <CardDescription className="text-[11px]">Posts Delivered</CardDescription>
+            <CardTitle className="text-lg sm:text-2xl">{stats.delivered}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">Across all platforms</p>
+          <CardContent className="p-3 pt-0">
+            <p className="text-[11px] text-muted-foreground truncate">All platforms</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Connected Channels</CardDescription>
-            <CardTitle className="text-2xl">{connectedIds.length}</CardTitle>
+        <Card className="overflow-hidden">
+          <CardHeader className="p-3 pb-1">
+            <CardDescription className="text-[11px]">Connected</CardDescription>
+            <CardTitle className="text-lg sm:text-2xl">{connectedIds.length}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">Ready to receive content</p>
+          <CardContent className="p-3 pt-0">
+            <p className="text-[11px] text-muted-foreground truncate">Ready</p>
           </CardContent>
         </Card>
       </div>

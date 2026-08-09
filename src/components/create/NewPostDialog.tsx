@@ -5,12 +5,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { MediaField } from "@/components/publish/MediaField";
 import { CaptionField } from "@/components/publish/CaptionField";
+import { CharCounter } from "@/components/publish/CharCounter";
 import { NetworkPreview } from "@/components/publish/NetworkPreview";
 import { aiCreate } from "@/hooks/useAiCreate";
 import { pushLocalCollection, useLocalCollection } from "@/hooks/useLocalCollection";
@@ -103,7 +105,6 @@ export function NewPostDialog({ open, onOpenChange, initial }: { open: boolean; 
           <div className="flex md:hidden items-center gap-1 mt-3 p-1 rounded-full bg-muted/40 border border-border/40 w-fit">
             <button type="button" onClick={()=>setMobileTab("edit")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition ${mobileTab==="edit"?"bg-background shadow border border-border/60 text-foreground":"text-muted-foreground"}`}><Pencil className="h-3.5 w-3.5"/> Edit</button>
             <button type="button" onClick={()=>setMobileTab("preview")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition ${mobileTab==="preview"?"bg-background shadow border border-border/60 text-foreground":"text-muted-foreground"}`}><Eye className="h-3.5 w-3.5"/> Preview</button>
-            <button type="button" onClick={()=>onOpenChange(false)} className="ml-1 inline-flex items-center gap-1 px-2 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5"/> Close</button>
           </div>
         </DialogHeader>
 
@@ -115,7 +116,15 @@ export function NewPostDialog({ open, onOpenChange, initial }: { open: boolean; 
             <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Topic (for AI)</label>
               <div className="flex gap-2"><Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="What's the post about?" /><Button variant="outline" size="sm" onClick={aiAssist} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}<span className="ml-1.5 hidden sm:inline">AI assist</span></Button></div>
             </div>
-            <div><label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">Caption</label><CaptionField value={caption} onChange={setCaption} platform={selected[0]} onAi={aiAssist} aiBusy={busy} /></div>
+            <div>
+              <Label htmlFor="draft-caption" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">Caption</Label>
+              <CaptionField id="draft-caption" value={caption} onChange={setCaption} platform={selected[0]} onAi={aiAssist} aiBusy={busy} rows={4} placeholder="What's the post about?" />
+              {selected.length > 0 && (
+                <div className="mt-1.5">
+                  <CharCounter text={caption} platform={selected[0]} />
+                </div>
+              )}
+            </div>
             <MediaField value={mediaUrl} onChange={(url) => setMediaUrl(url)} label="Image / Video" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><label className="text-xs font-medium text-muted-foreground mb-1 block">First comment <span className="text-muted-foreground/70">(auto-posts after publish)</span></label><Textarea value={firstComment} onChange={(e) => setFirstComment(e.target.value)} rows={2} placeholder="Drop hashtags or a link so they don't clutter the caption…" /></div>
