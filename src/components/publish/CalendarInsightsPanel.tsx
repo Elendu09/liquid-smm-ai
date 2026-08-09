@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useAnalyticsSeries } from "@/hooks/useAnalyticsSeries";
 import { useInboxMessages } from "@/hooks/useInboxMessages";
+import { useTopPosts } from "@/hooks/useTopPosts";
 import { cn } from "@/lib/utils";
 
 interface Props {
