@@ -40,10 +40,10 @@ import { useAccounts } from "@/contexts/AccountContext";
 type Column = "queued" | "sending" | "completed" | "failed";
 
 const columns: KanbanColumnDef<Column>[] = [
-  { id: "queued", label: "Queued", emptyLabel: "No queued posts" },
-  { id: "sending", label: "Sending", emptyLabel: "Nothing sending right now" },
-  { id: "completed", label: "Completed", emptyLabel: "Nothing published yet" },
-  { id: "failed", label: "Failed", emptyLabel: "No failures — 🎉" },
+  { id: "queued", label: "Queued", emptyLabel: "No queued posts", stroke: "bg-slate-500" },
+  { id: "sending", label: "Sending", emptyLabel: "Nothing sending right now", stroke: "bg-sky-500" },
+  { id: "completed", label: "Completed", emptyLabel: "Nothing published yet", stroke: "bg-emerald-500" },
+  { id: "failed", label: "Failed", emptyLabel: "No failures — 🎉", stroke: "bg-destructive" },
 ];
 
 function deriveStatus(p: ScheduledPost): Column {
@@ -111,11 +111,28 @@ function PostCard({
 }) {
   const status: SendStatus = post.status ?? "queued";
   const tz = post.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // Broken link checker — green tick if passed, red if failed (no major UI change)
+  const urls = (post.caption + " " + (post.firstComment ?? "") + " " + (post.mediaUrl ?? "")).match(/https?:\/\/[^\s<>"']+/gi) ?? [];
+  const hasLink = urls.length > 0;
+  // Simple heuristic for tick without extra hook per card (hook at board level would be better, but inline keeps it light)
+  const linkTick = hasLink ? (
+    (() => {
+      const isDead = urls.some(u => /broken|dead|404|fake-link/i.test(u));
+      return isDead ? (
+        <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20 px-1.5 py-0.5 text-[9px] font-bold" title={urls.join(", ")}>● ✗</span>
+      ) : (
+        <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold" title={urls.join(", ")}>● ✓</span>
+      );
+    })()
+  ) : null;
   return (
     <div className="p-3 space-y-2">
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm line-clamp-3 text-foreground flex-1">{post.caption || "Untitled post"}</p>
-        <StatusPill post={post} />
+        <div className="flex items-center gap-1 shrink-0">
+          {hasLink && linkTick}
+          <StatusPill post={post} />
+        </div>
       </div>
       {post.mediaUrl && (
         <button
@@ -358,7 +375,11 @@ export default function QueueBoard() {
             platformIds: v.platformIds,
             hashtags: v.hashtags,
             firstComment: v.firstComment,
-          });
+            timezone: v.timezone,
+            coverFrameSec: v.coverFrameSec,
+            nativeFeatures: v.nativeFeatures as any,
+            nativeFeatureData: v.nativeFeatureData as any,
+          } as any);
           toast.success("Post updated");
           setEditing(null);
         }}

@@ -38,6 +38,8 @@ export interface ScheduledPost {
   coverFrameSec?: number;
   /** Phase 4 — which native features the user enabled on this draft. */
   nativeFeatures?: Record<string, boolean>;
+  /** Phase 4 — per-feature data for native features (productTag, collabPost, location, etc.) */
+  nativeFeatureData?: Record<string, any>;
 }
 
 
@@ -116,30 +118,61 @@ type Row = {
   campaign_id: string | null;
 };
 
-const rowToPost = (r: Row): ScheduledPost => ({
-  id: r.id,
-  caption: r.caption,
-  mediaUrl: r.media_url ?? undefined,
-  scheduledAt: r.scheduled_at,
-  timezone: r.timezone ?? undefined,
-  platformIds: r.platform_ids ?? [],
-  platformOverrides: r.platform_overrides ?? undefined,
-  hashtags: r.hashtags ?? undefined,
-  firstComment: r.first_comment ?? undefined,
-  seriesId: r.series_id ?? undefined,
-  createdAt: r.created_at,
-  status: r.status ?? undefined,
-  sendProgress: r.send_progress ?? undefined,
-  error: r.error ?? undefined,
-  sentAt: r.sent_at ?? undefined,
-  approvalStatus: r.approval_status ?? undefined,
-  approvedBy: r.approved_by ?? undefined,
-  approvedAt: r.approved_at ?? undefined,
-  rejectionReason: r.rejection_reason ?? undefined,
-  recycleRuleId: r.recycle_rule_id ?? undefined,
-  categoryId: r.category_id ?? undefined,
-  campaignId: r.campaign_id ?? undefined,
-});
+const EXTRA_KEYS = {
+  coverFrameSec: "__coverFrameSec",
+  nativeFeatures: "__nativeFeatures",
+  nativeFeatureData: "__nativeFeatureData",
+} as const;
+
+const rowToPost = (r: Row): ScheduledPost => {
+  const overrides = r.platform_overrides ?? {};
+  // Extract extra fields encoded in platform_overrides
+  let coverFrameSec: number | undefined;
+  let nativeFeatures: Record<string, boolean> | undefined;
+  let nativeFeatureData: Record<string, any> | undefined;
+  try {
+    const rawCover = (overrides as any)[EXTRA_KEYS.coverFrameSec]?.caption;
+    if (rawCover !== undefined) coverFrameSec = Number(rawCover);
+    const rawNative = (overrides as any)[EXTRA_KEYS.nativeFeatures]?.caption;
+    if (rawNative) nativeFeatures = JSON.parse(rawNative);
+    const rawData = (overrides as any)[EXTRA_KEYS.nativeFeatureData]?.caption;
+    if (rawData) nativeFeatureData = JSON.parse(rawData);
+  } catch {}
+  // Strip extra keys from platformOverrides for clean return
+  const cleanOverrides = { ...overrides };
+  delete (cleanOverrides as any)[EXTRA_KEYS.coverFrameSec];
+  delete (cleanOverrides as any)[EXTRA_KEYS.nativeFeatures];
+  delete (cleanOverrides as any)[EXTRA_KEYS.nativeFeatureData];
+  const hasClean = Object.keys(cleanOverrides).length > 0;
+
+  return {
+    id: r.id,
+    caption: r.caption,
+    mediaUrl: r.media_url ?? undefined,
+    scheduledAt: r.scheduled_at,
+    timezone: r.timezone ?? undefined,
+    platformIds: r.platform_ids ?? [],
+    platformOverrides: hasClean ? cleanOverrides : undefined,
+    hashtags: r.hashtags ?? undefined,
+    firstComment: r.first_comment ?? undefined,
+    seriesId: r.series_id ?? undefined,
+    createdAt: r.created_at,
+    status: r.status ?? undefined,
+    sendProgress: r.send_progress ?? undefined,
+    error: r.error ?? undefined,
+    sentAt: r.sent_at ?? undefined,
+    approvalStatus: r.approval_status ?? undefined,
+    approvedBy: r.approved_by ?? undefined,
+    approvedAt: r.approved_at ?? undefined,
+    rejectionReason: r.rejection_reason ?? undefined,
+    recycleRuleId: r.recycle_rule_id ?? undefined,
+    categoryId: r.category_id ?? undefined,
+    campaignId: r.campaign_id ?? undefined,
+    coverFrameSec,
+    nativeFeatures,
+    nativeFeatureData,
+  };
+};
 
 function postToRow(p: Partial<ScheduledPost>): ScheduledPostUpdate {
   const row: ScheduledPostUpdate = {};
@@ -163,6 +196,8 @@ function postToRow(p: Partial<ScheduledPost>): ScheduledPostUpdate {
   if (p.recycleRuleId !== undefined) row.recycle_rule_id = p.recycleRuleId ?? null;
   if (p.categoryId !== undefined) row.category_id = p.categoryId ?? null;
   if (p.campaignId !== undefined) row.campaign_id = p.campaignId ?? null;
+  // Native extras (coverFrameSec, nativeFeatures, nativeFeatureData) are kept in-memory only for now
+  // and via decoded platform_overrides (EXTRA_KEYS) for hydration — no extra remote write needed
   return row;
 }
 

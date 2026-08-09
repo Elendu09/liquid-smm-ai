@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Link2, History, Sparkles, ShieldCheck, Scissors, Repeat2, CalendarClock } from "lucide-react";
+import { Link2, History, Sparkles, ShieldCheck, Scissors, Repeat2, CalendarClock, Globe2, MessageCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { PlatformPicker } from "@/components/shared/PlatformPicker";
 import { NetworkPreview } from "@/components/publish/NetworkPreview";
@@ -15,7 +16,7 @@ import { CaptionField } from "@/components/publish/CaptionField";
 import { MediaValidatorBanner } from "@/components/publish/MediaValidatorBanner";
 import { MediaFitRow } from "@/components/publish/MediaFitBadge";
 import { LinkPreviewCard } from "@/components/publish/LinkPreviewCard";
-import { NativeFeaturePicker, emptyNativeFeatureSelection } from "@/components/publish/NativeFeaturePicker";
+import { NativeFeaturePicker, emptyNativeFeatureSelection, emptyNativeFeatureData, type NativeFeatureData } from "@/components/publish/NativeFeaturePicker";
 import type { NativeFeatureKey } from "@/lib/nativeFeatures";
 import { CoverFramePicker } from "@/components/publish/CoverFramePicker";
 import { CharCounter } from "@/components/publish/CharCounter";
@@ -26,6 +27,25 @@ import type { ScheduledPost } from "@/hooks/useScheduledPosts";
 import { cn } from "@/lib/utils";
 import type { MediaMeta } from "@/lib/mediaValidator";
 
+const TIMEZONES = [
+  "UTC",
+  "America/Los_Angeles",
+  "America/New_York",
+  "America/Chicago",
+  "America/Sao_Paulo",
+  "Europe/London",
+  "Europe/Berlin",
+  "Europe/Madrid",
+  "Europe/Paris",
+  "Africa/Lagos",
+  "Africa/Cairo",
+  "Asia/Dubai",
+  "Asia/Kolkata",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+];
+
 export interface SlotDialogValue {
   id?: string;
   caption: string;
@@ -34,10 +54,13 @@ export interface SlotDialogValue {
   platformIds: string[];
   hashtags?: string[];
   firstComment?: string;
-  durationMin: number;
+  /** Deprecated: kept for backwards compat with calendar resize */
+  durationMin?: number;
+  timezone?: string;
   /** New Phase 4 fields. */
   coverFrameSec?: number;
   nativeFeatures?: Record<NativeFeatureKey, boolean>;
+  nativeFeatureData?: Partial<NativeFeatureData>;
 }
 
 interface Props {
@@ -60,16 +83,19 @@ function toLocalInput(iso: string) {
 
 export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit, onDelete, getDurationMin }: Props) {
   const isEdit = !!post;
+  const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [caption, setCaption] = useState("");
   const [mediaUrl, setMediaUrl] = useState("");
   const [when, setWhen] = useState(toLocalInput(new Date().toISOString()));
+  const [timezone, setTimezone] = useState(browserTz);
   const [platformIds, setPlatformIds] = useState<string[]>([]);
   const [hashtags, setHashtags] = useState("");
   const [firstComment, setFirstComment] = useState("");
-  const [durationMin, setDurationMin] = useState(30);
   // Phase 4 additions:
   const [coverFrameSec, setCoverFrameSec] = useState<number | undefined>(undefined);
   const [native, setNative] = useState<Record<NativeFeatureKey, boolean>>(emptyNativeFeatureSelection());
+  const [nativeData, setNativeData] = useState<Partial<NativeFeatureData>>(emptyNativeFeatureData());
+  const [nativeEnabled, setNativeEnabled] = useState(true);
   const [autoAdapt, setAutoAdapt] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   // Idempotency for double-click on Schedule / Save changes (fix 3.4).
@@ -81,26 +107,39 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
       setCaption(post.caption);
       setMediaUrl(post.mediaUrl ?? "");
       setWhen(toLocalInput(post.scheduledAt));
+      setTimezone((post as ScheduledPost & { timezone?: string }).timezone ?? browserTz);
       setPlatformIds(post.platformIds);
       setHashtags((post.hashtags ?? []).join(" "));
       setFirstComment(post.firstComment ?? "");
-      setDurationMin(getDurationMin?.(post) ?? 30);
       setCoverFrameSec((post as ScheduledPost & { coverFrameSec?: number }).coverFrameSec);
-      setNative((post as ScheduledPost & { nativeFeatures?: Record<NativeFeatureKey, boolean> }).nativeFeatures ?? emptyNativeFeatureSelection());
+      const storedNative = (post as ScheduledPost & { nativeFeatures?: Record<NativeFeatureKey, boolean> }).nativeFeatures;
+      if (storedNative) {
+        setNative({ ...emptyNativeFeatureSelection(), ...storedNative });
+        const anyOn = Object.values(storedNative).some(Boolean);
+        // default ON unless explicitly all-off after user disabled
+        setNativeEnabled(anyOn || Object.keys(storedNative).length === 0 ? true : anyOn);
+      } else {
+        setNative(emptyNativeFeatureSelection());
+        setNativeEnabled(true);
+      }
+      const storedData = (post as ScheduledPost & { nativeFeatureData?: Partial<NativeFeatureData> }).nativeFeatureData;
+      setNativeData(storedData ?? emptyNativeFeatureData());
     } else {
       const base = initialSlot ? new Date(initialSlot.date) : new Date();
       if (initialSlot) base.setHours(initialSlot.hour, 0, 0, 0);
       setCaption("");
       setMediaUrl("");
       setWhen(toLocalInput(base.toISOString()));
+      setTimezone(browserTz);
       setPlatformIds([]);
       setHashtags("");
       setFirstComment("");
-      setDurationMin(30);
       setCoverFrameSec(undefined);
       setNative(emptyNativeFeatureSelection());
+      setNativeData(emptyNativeFeatureData());
+      setNativeEnabled(true);
     }
-  }, [open, post, initialSlot, getDurationMin]);
+  }, [open, post, initialSlot, getDurationMin, browserTz]);
 
   const toggle = (id: string) =>
     setPlatformIds((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -130,30 +169,22 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
     if (!guardWrite(isEdit ? "edit scheduled posts" : "schedule posts")) return;
     if (!caption.trim()) return toast.error("Caption is required");
     if (platformIds.length === 0) return toast.error("Pick at least one platform");
-    if (submitting) return; // belt-and-suspenders for 3.4
+    if (submitting) return;
     setSubmitting(true);
     try {
       const iso = new Date(when).toISOString();
-      // Fix 3.4 — wrap the schedule in usePublishOutcome so a second
-      // tap within 8 s is detected and skipped, and a notification
-      // surfaces for the action.
       const draftId = post?.id ?? (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `d_${Date.now()}`);
-      // We can't actually publish a "schedule" event through the publish
-      // outcome (it expects a network body), so we use a no-op body and
-      // rely on the dedupe window + run-history record. The actual
-      // onSubmit below still drives persistence.
       const result = await publish({
         draftId,
         platform: platformIds[0] ?? "instagram",
         body: async () => ({ postId: draftId }),
       });
       if (result.duplicate) {
-        // The user double-clicked. The first call already added the post;
-        // we skip the duplicate onSubmit to avoid double-queueing.
         toast.info("Already scheduled — we skipped the duplicate.");
         onOpenChange(false);
         return;
       }
+      const durationToPersist = getDurationMin?.(post as ScheduledPost) ?? 30;
       onSubmit({
         id: post?.id,
         caption: caption.trim(),
@@ -161,10 +192,12 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
         scheduledAt: iso,
         platformIds,
         hashtags: hashtags.split(/\s+/).map((h) => h.trim()).filter(Boolean),
-        firstComment: firstComment.trim() || undefined,
-        durationMin,
-        coverFrameSec,
-        nativeFeatures: native,
+        firstComment: nativeEnabled && native.firstComment ? (firstComment.trim() || undefined) : undefined,
+        durationMin: durationToPersist,
+        timezone,
+        coverFrameSec: nativeEnabled && native.coverFrame ? coverFrameSec : undefined,
+        nativeFeatures: nativeEnabled ? native : emptyNativeFeatureSelection(),
+        nativeFeatureData: nativeEnabled ? nativeData : undefined,
       });
       onOpenChange(false);
     } finally {
@@ -172,15 +205,17 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
     }
   };
 
+  const showCoverFrame = activePlatforms.some((p) => ["instagram", "tiktok", "youtube"].includes(p)) && mediaMeta?.kind === "video" && nativeEnabled && native.coverFrame;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogHeader className="px-6 pt-5 pb-4 border-b border-border/40 shrink-0">
           <div className="flex items-start gap-3">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border/60 bg-primary/10">
               <CalendarClock className="h-4.5 w-4.5 text-primary" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <DialogTitle className="text-lg font-semibold tracking-tight sm:text-xl">
                 {isEdit ? "Edit scheduled post" : "New scheduled post"}
               </DialogTitle>
@@ -191,8 +226,8 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
           </div>
         </DialogHeader>
 
-        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] max-h-[64vh] overflow-y-auto pr-1">
-          <div className="space-y-4 py-2">
+        <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_340px] flex-1 min-h-0">
+          <div className="space-y-4 py-4 px-6 overflow-y-auto max-h-[62vh] md:max-h-[64vh] pr-3">
 
             <div>
               <Label htmlFor="pd-caption" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">Caption</Label>
@@ -211,17 +246,25 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
               )}
             </div>
 
-            <div className="rounded-xl border border-border/60 bg-muted/10 px-3 py-2">
-              <Textarea
-                id="pd-first"
-                rows={1}
-                value={firstComment}
-                onChange={(e) => setFirstComment(e.target.value)}
-                placeholder="Add a first comment (optional)"
-                className="min-h-0 resize-none border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-            </div>
-
+            {nativeEnabled && native.firstComment ? (
+              <div className="rounded-xl border border-primary/20 bg-primary/[0.04] px-3 py-2">
+                <Label htmlFor="pd-first" className="text-[11px] font-medium flex items-center gap-1.5 mb-1">
+                  <MessageCircle className="h-3 w-3 text-primary" /> First comment <span className="text-muted-foreground font-normal">(auto-posts after publish)</span>
+                </Label>
+                <Textarea
+                  id="pd-first"
+                  rows={2}
+                  value={firstComment}
+                  onChange={(e) => setFirstComment(e.target.value)}
+                  placeholder="Drop hashtags or a link so they don't clutter the caption…"
+                  className="min-h-[56px] resize-none border border-border/50 bg-background focus-visible:ring-1"
+                />
+              </div>
+            ) : nativeEnabled && !native.firstComment ? (
+              <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 px-3 py-2.5 text-center">
+                <p className="text-[11px] text-muted-foreground">First comment disabled — toggle it on in Native features to add one</p>
+              </div>
+            ) : null}
 
             <LinkPreviewCard caption={caption} />
 
@@ -261,19 +304,26 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="pd-when">Date & time</Label>
+                <Label htmlFor="pd-when" className="mb-1.5 block">Date & time</Label>
                 <Input id="pd-when" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
               </div>
               <div>
-                <Label htmlFor="pd-dur">Duration (min)</Label>
-                <Input
-                  id="pd-dur"
-                  type="number"
-                  min={15}
-                  step={15}
-                  value={durationMin}
-                  onChange={(e) => setDurationMin(Math.max(15, Number(e.target.value) || 30))}
-                />
+                <Label htmlFor="pd-tz" className="mb-1.5 flex items-center gap-1.5">
+                  <Globe2 className="h-3 w-3 text-primary" /> Timezone
+                </Label>
+                <Select value={timezone} onValueChange={setTimezone}>
+                  <SelectTrigger id="pd-tz" className="h-9">
+                    <SelectValue placeholder="Select timezone" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {[browserTz, ...TIMEZONES.filter((t) => t !== browserTz)].map((tz) => (
+                      <SelectItem key={tz} value={tz} className="text-xs">
+                        {tz}
+                        {tz === browserTz && " · (local)"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -283,31 +333,81 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
               label="Image / video"
             />
 
-            {activePlatforms.some((p) => ["instagram", "tiktok", "youtube"].includes(p)) && mediaMeta?.kind === "video" && (
+            {showCoverFrame && (
               <CoverFramePicker
                 videoUrl={mediaUrl}
                 valueSec={coverFrameSec}
                 onChange={setCoverFrameSec}
-                durationSec={Math.max(15, durationMin * 60)}
+                durationSec={Math.max(15, (getDurationMin?.(post as ScheduledPost) ?? 30) * 60)}
               />
             )}
 
             <div>
-              <Label htmlFor="pd-tags">Hashtags (space-separated)</Label>
+              <Label htmlFor="pd-tags" className="mb-1.5 block">Hashtags (space-separated)</Label>
               <Input id="pd-tags" value={hashtags} onChange={(e) => setHashtags(e.target.value)} placeholder="#launch #product" />
             </div>
 
+            {/* Native features switch + picker */}
+            <div className="rounded-2xl border border-border/60 bg-card/50 overflow-hidden">
+              <div className="flex items-center justify-between gap-3 p-3 border-b border-border/40 bg-muted/20">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="grid h-7 w-7 place-items-center rounded-lg bg-primary/10 border border-primary/20">
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold leading-tight">Native features</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Per-platform enhancements</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={cn("text-[11px] font-medium", nativeEnabled ? "text-primary" : "text-muted-foreground")}>
+                    {nativeEnabled ? "ON" : "OFF"}
+                  </span>
+                  <Switch
+                    checked={nativeEnabled}
+                    onCheckedChange={(v) => {
+                      setNativeEnabled(!!v);
+                      if (v) toast.success("Native features enabled");
+                      else toast.info("Native features hidden");
+                    }}
+                    aria-label="Toggle native features"
+                  />
+                </div>
+              </div>
 
-            {activePlatforms.length > 0 && (
-              <NativeFeaturePicker
-                platforms={activePlatforms}
-                selected={native}
-                onToggle={(k, v) => setNative((s) => ({ ...s, [k]: v }))}
-              />
-            )}
+              {nativeEnabled ? (
+                <div className="p-3">
+                  {activePlatforms.length > 0 ? (
+                    <NativeFeaturePicker
+                      platforms={activePlatforms}
+                      selected={native}
+                      onToggle={(k, v) => setNative((s) => ({ ...s, [k]: v }))}
+                      data={nativeData}
+                      onDataChange={(k, val) => setNativeData((d) => ({ ...d, [k]: val }))}
+                    />
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-border/60 p-4 text-center">
+                      <p className="text-xs text-muted-foreground">Pick at least one platform to configure native features.</p>
+                      <p className="text-[10px] text-muted-foreground/70 mt-1">Product tag, collab, location, poll, link card and more.</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-6 text-center">
+                  <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-muted text-muted-foreground mb-2">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground">Native features disabled</p>
+                  <p className="text-[11px] text-muted-foreground/70 mt-1 max-w-[260px] mx-auto">Turn the switch on to configure product tags, collaborations, location, trending audio, alt text, polls and link cards per platform.</p>
+                  <Button size="sm" variant="outline" className="mt-3 h-7 text-xs" onClick={() => setNativeEnabled(true)}>
+                    Enable native features
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="py-2 space-y-3">
+          <div className="py-4 px-4 space-y-3 border-t md:border-t-0 md:border-l border-border/40 bg-muted/5 overflow-y-auto max-h-[64vh]">
             <NetworkPreview
               caption={caption}
               mediaUrl={mediaUrl || undefined}
@@ -323,12 +423,17 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
                 Double-click protection is on. If you tap Schedule twice within a few seconds we'll
                 keep the first one and recover the duplicate.
               </p>
+              {timezone && (
+                <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-background border border-border/60 px-2 py-0.5 text-[10px]">
+                  <Globe2 className="h-3 w-3" /> {timezone}
+                </p>
+              )}
             </div>
           </div>
         </div>
 
 
-        <DialogFooter className="gap-2 sm:gap-2">
+        <DialogFooter className="px-6 py-4 border-t border-border/40 bg-background shrink-0 gap-2 sm:gap-2">
           {isEdit && onDelete && post && (
             <Button
               variant="outline"

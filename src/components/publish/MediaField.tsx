@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useWhiteLabel } from "@/hooks/useWhiteLabel";
 import { pushLocalCollection } from "@/hooks/useLocalCollection";
 import {
   downscaleForLibrary,
@@ -46,6 +47,12 @@ function saveToLibrary(file: File, url: string) {
  *  Every upload is also saved to Library → Assets, and a "Use from library"
  *  picker lets you reuse anything you imported before. */
 export function MediaField({ value, onChange, className, label = "Media" }: Props) {
+  const { config } = useWhiteLabel();
+  const watermarkEnabled = !!(config as any).watermarkEnabled;
+  const watermarkPos = (config as any).watermarkPosition ?? "bottom-right";
+  const watermarkOpacity = (config as any).watermarkOpacity ?? 0.7;
+  const watermarkSize = (config as any).watermarkSize ?? 18;
+  const watermarkLogo = (config as any).watermarkLogoUrl || (config as any).logoUrl;
   const [busy, setBusy] = useState(false);
   const [drag, setDrag] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
@@ -112,6 +119,28 @@ export function MediaField({ value, onChange, className, label = "Media" }: Prop
             <video src={value} className="h-40 w-full object-cover" controls />
           ) : (
             <img src={value} alt="Post media preview" className="h-40 w-full object-cover" loading="lazy" />
+          )}
+          {watermarkEnabled && (
+            <div
+              className="absolute bg-white/90 backdrop-blur rounded-md border border-black/10 shadow-sm flex items-center gap-1 px-1.5 py-1 pointer-events-none"
+              style={{
+                opacity: watermarkOpacity,
+                width: `${watermarkSize}%`,
+                ...(watermarkPos==="top-left" ? { top: 8, left: 8 } : {}),
+                ...(watermarkPos==="top-right" ? { top: 8, right: 8 } : {}),
+                ...(watermarkPos==="top-center" ? { top: 8, left: "50%", transform: "translateX(-50%)" } : {}),
+                ...(watermarkPos==="bottom-left" ? { bottom: 8, left: 8 } : {}),
+                ...(watermarkPos==="bottom-right" ? { bottom: 8, right: 8 } : {}),
+                ...(watermarkPos==="center" ? { top: "50%", left: "50%", transform: "translate(-50%,-50%)" } : {}),
+              } as any}
+            >
+              {watermarkLogo ? (
+                <img src={watermarkLogo} alt="" className="h-3 w-3 object-contain" />
+              ) : (
+                <div className="h-3 w-3 rounded bg-primary" />
+              )}
+              <span className="text-[7px] font-bold truncate">{(config as any).brandName || "BRAND"}</span>
+            </div>
           )}
           <div className="absolute right-2 top-2 flex gap-1.5">
             <Button

@@ -273,8 +273,39 @@ function ClassicForm({
   members: Array<{ id: string; name: string }>;
   replies: Array<{ id: string; name: string; body: string }>;
 }) {
+  const isAutoDM = (rule.match.keywords?.length ?? 0) > 0 && (rule.actions.sendWelcomeDM || rule.actions.sendSavedReply);
   return (
     <div className="space-y-4">
+      {/* Auto-DM Funnel — keyword triggers private DM */}
+      <div className="rounded-xl border border-primary/30 bg-primary/[0.04] p-4 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold flex items-center gap-1.5">💬 Auto-DM Funnel <Badge variant="secondary" className="text-[9px]">Triggers DM on keyword</Badge></p>
+            <p className="text-[11px] text-muted-foreground mt-1">When a user comments a specific keyword, automatically sends a private message. Works with bot rules — ensure keyword is set in this rule or linked flow.</p>
+          </div>
+          <Switch checked={rule.actions.sendWelcomeDM || rule.actions.sendSavedReply} onCheckedChange={(v)=> setActions({ sendWelcomeDM: v })} />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Trigger keyword(s)</Label>
+            <Input value={keywordText} onChange={(e)=> setKeywordText(e.target.value)} placeholder="e.g. guide, price, demo, link" />
+            <p className="text-[10px] text-muted-foreground">Comma-separated. Case-insensitive. Example: comment "guide" → DM.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">DM template</Label>
+            <Textarea value={rule.actions.welcomeTemplate ?? ""} onChange={(e)=> setActions({ welcomeTemplate: e.target.value })} placeholder="Hey {{author}}! You commented '{{keyword}}' — here's your link: https://..." rows={2} className="text-xs" />
+            <p className="text-[10px] text-muted-foreground">Variables: {"{{author}}"}, {"{{keyword}}"}</p>
+          </div>
+        </div>
+        {isAutoDM && (
+          <div className="flex items-center gap-2 text-[11px] rounded-lg bg-card border border-border/60 p-2.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-medium">Funnel active</span>
+            <span className="text-muted-foreground">“{keywordText}” → private DM via bot rule</span>
+          </div>
+        )}
+        <p className="text-[10px] text-muted-foreground">Tip: Pair with comment auto-reply + DM flow in <span className="font-medium">Bot Flow Editor</span> for multi-step funnels.</p>
+      </div>
       <div className="rounded-xl border border-border/60 p-4 space-y-4">
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-[10px]">WHEN</Badge>

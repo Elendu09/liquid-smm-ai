@@ -10,7 +10,35 @@ export interface KanbanColumnDef<S extends string = string> {
   emptyLabel?: string;
 }
 
-/** Default stroke palette applied by column index when none is supplied. */
+/** Semantic stroke palette — maps status id to meaningful color. Failed must be red, not yellow. */
+const SEMANTIC_STROKES: Record<string, string> = {
+  // Queue / Publish
+  queued: "bg-slate-500",
+  scheduled: "bg-slate-500",
+  sending: "bg-sky-500",
+  completed: "bg-emerald-500",
+  sent: "bg-emerald-500",
+  failed: "bg-destructive",
+  error: "bg-destructive",
+  paused: "bg-amber-500",
+  // Create / Captions / Drafts
+  draft: "bg-slate-400",
+  review: "bg-amber-500",
+  "in review": "bg-amber-500",
+  ready: "bg-sky-500",
+  archived: "bg-zinc-400",
+  published: "bg-emerald-500",
+  // Inbox / Engage
+  new: "bg-primary",
+  replied: "bg-sky-500",
+  snoozed: "bg-amber-500",
+  resolved: "bg-emerald-500",
+  pending: "bg-amber-500",
+  approved: "bg-emerald-500",
+  rejected: "bg-destructive",
+};
+
+/** Fallback palette when no semantic match (by index) */
 const DEFAULT_STROKES = [
   "bg-primary",
   "bg-sky-500",
@@ -19,6 +47,16 @@ const DEFAULT_STROKES = [
   "bg-destructive",
   "bg-violet-500",
 ];
+
+function resolveStroke(col: KanbanColumnDef<string>, index: number): string {
+  if (col.stroke) return col.stroke;
+  const key = col.id.toLowerCase().trim();
+  if (SEMANTIC_STROKES[key]) return SEMANTIC_STROKES[key];
+  // also try label
+  const labelKey = col.label.toLowerCase().trim();
+  if (SEMANTIC_STROKES[labelKey]) return SEMANTIC_STROKES[labelKey];
+  return DEFAULT_STROKES[index % DEFAULT_STROKES.length];
+}
 
 
 interface KanbanBoardProps<T, S extends string> {
@@ -51,7 +89,7 @@ export function KanbanBoard<T, S extends string>({
     >
       {columns.map((col, ci) => {
         const colItems = items.filter((i) => getStatus(i) === col.id);
-        const stroke = col.stroke ?? DEFAULT_STROKES[ci % DEFAULT_STROKES.length];
+        const stroke = resolveStroke(col as KanbanColumnDef<string>, ci);
         return (
           <section
             key={col.id}
