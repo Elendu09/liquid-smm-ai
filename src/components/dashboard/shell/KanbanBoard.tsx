@@ -82,7 +82,7 @@ export function KanbanBoard<T, S extends string>({
               </div>
             </header>
 
-            <div className="flex-1 p-2 space-y-2 min-h-[120px]">
+            <div className="flex-1 px-0.5 pb-2 space-y-2 min-h-[120px]">
               {colItems.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-6">
                   {col.emptyLabel ?? "Nothing here"}
