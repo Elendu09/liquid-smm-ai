@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Palette, RotateCcw, Eye } from "lucide-react";
+import { Palette, RotateCcw, Eye, Droplets, Move } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MediaField } from "@/components/publish/MediaField";
 import { useWhiteLabel } from "@/hooks/useWhiteLabel";
 import { toast } from "sonner";
@@ -128,6 +130,96 @@ export function WhiteLabelPanel() {
               <p className="mt-1">Subject: Your campaign needs approval</p>
               <p className="text-muted-foreground">→ Magic-link via your domain</p>
             </div>
+          </div>
+
+          {/* Advanced Brand & Asset Tools — Dynamic Watermarker */}
+          <div className="rounded-xl border border-border/60 p-3 space-y-4 bg-card">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold flex items-center gap-1.5"><Droplets className="h-4 w-4 text-primary" /> Dynamic Watermarker</p>
+                <p className="text-[11px] text-muted-foreground mt-1">Overlays brand logos onto uploaded videos & images automatically. Preview shows small overlay in chosen corner.</p>
+              </div>
+              <Switch checked={!!(local as any).watermarkEnabled} onCheckedChange={(v) => update("watermarkEnabled" as any, v as any)} />
+            </div>
+            {(local as any).watermarkEnabled && (
+              <div className="space-y-4">
+                <MediaField
+                  value={(local as any).watermarkLogoUrl || local.logoUrl}
+                  onChange={(url) => update("watermarkLogoUrl" as any, (url ?? "") as any)}
+                  label="Watermark logo (falls back to brand logo)"
+                />
+                <div className="grid gap-2">
+                  <Label className="text-xs flex items-center gap-1"><Move className="h-3 w-3" /> Position</Label>
+                  <Select value={(local as any).watermarkPosition || "bottom-right"} onValueChange={(v) => update("watermarkPosition" as any, v as any)}>
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="top-left">Top left</SelectItem>
+                      <SelectItem value="top-center">Top center</SelectItem>
+                      <SelectItem value="top-right">Top right</SelectItem>
+                      <SelectItem value="bottom-left">Bottom left</SelectItem>
+                      <SelectItem value="bottom-right">Bottom right</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["top-left","top-right","bottom-left","bottom-right","center","top-center"] as const).map((pos) => (
+                      <button
+                        key={pos}
+                        type="button"
+                        onClick={() => update("watermarkPosition" as any, pos as any)}
+                        className={`h-16 rounded-lg border-2 relative overflow-hidden bg-muted/30 text-[10px] font-medium capitalize ${((local as any).watermarkPosition===pos ? "border-primary bg-primary/5 text-primary" : "border-border/60 hover:border-primary/30")}`}
+                      >
+                        <div className={`absolute h-5 w-8 rounded bg-primary/80 flex items-center justify-center text-[7px] text-primary-foreground font-bold
+                          ${pos==="top-left" ? "top-1 left-1" : ""}
+                          ${pos==="top-right" ? "top-1 right-1" : ""}
+                          ${pos==="top-center" ? "top-1 left-1/2 -translate-x-1/2" : ""}
+                          ${pos==="bottom-left" ? "bottom-1 left-1" : ""}
+                          ${pos==="bottom-right" ? "bottom-1 right-1" : ""}
+                          ${pos==="center" ? "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" : ""}
+                        `}>LOGO</div>
+                        {pos.replace("-"," ")}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label className="text-xs">Opacity — {Math.round(((local as any).watermarkOpacity ?? 0.7)*100)}%</Label>
+                  <Slider value={[Math.round(((local as any).watermarkOpacity ?? 0.7)*100)]} min={10} max={100} step={5} onValueChange={([v])=> update("watermarkOpacity" as any, (v/100) as any)} />
+                </div>
+                <div className="grid gap-2">
+                  <Label className="text-xs">Size — {((local as any).watermarkSize ?? 18)}% width</Label>
+                  <Slider value={[(local as any).watermarkSize ?? 18]} min={8} max={30} step={1} onValueChange={([v])=> update("watermarkSize" as any, v as any)} />
+                  <p className="text-[10px] text-muted-foreground">Small overlay as requested — upper/lower corners show tiny badge.</p>
+                </div>
+                <div className="rounded-lg border border-dashed border-border/60 p-2.5">
+                  <p className="text-xs font-medium mb-2">Preview — watermark overlay</p>
+                  <div className="relative rounded-lg overflow-hidden bg-muted h-40 border border-border/60">
+                    <img src="https://images.unsplash.com/photo-1611162616805-e7e1dd64fe4e?w=600&h=400&fit=crop" alt="" className="w-full h-full object-cover" />
+                    <div
+                      className="absolute bg-white/90 backdrop-blur rounded-md border border-black/10 shadow-sm flex items-center gap-1 px-1.5 py-1"
+                      style={{
+                        opacity: (local as any).watermarkOpacity ?? 0.7,
+                        width: `${(local as any).watermarkSize ?? 18}%`,
+                        ...(((local as any).watermarkPosition==="top-left") ? { top: 8, left: 8 } as any : {}),
+                        ...(((local as any).watermarkPosition==="top-right") ? { top: 8, right: 8 } as any : {}),
+                        ...(((local as any).watermarkPosition==="top-center") ? { top: 8, left: "50%", transform: "translateX(-50%)" } as any : {}),
+                        ...(((local as any).watermarkPosition==="bottom-left") ? { bottom: 8, left: 8 } as any : {}),
+                        ...(((local as any).watermarkPosition==="bottom-right") ? { bottom: 8, right: 8 } as any : {}),
+                        ...(((local as any).watermarkPosition==="center") ? { top: "50%", left: "50%", transform: "translate(-50%,-50%)" } as any : {}),
+                      } as any}
+                    >
+                      {((local as any).watermarkLogoUrl || local.logoUrl) ? (
+                        <img src={(local as any).watermarkLogoUrl || local.logoUrl} alt="" className="h-4 w-4 object-contain" />
+                      ) : (
+                        <div className="h-4 w-4 rounded bg-primary" />
+                      )}
+                      <span className="text-[8px] font-bold truncate">{local.brandName || "BRAND"}</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1.5 text-center">Apply automatically to all new uploads — videos + images.</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2 justify-end pt-2 border-t border-border/60">

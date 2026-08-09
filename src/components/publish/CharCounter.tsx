@@ -13,13 +13,15 @@ export function CharCounter({
   text,
   platform,
   className,
+  tier,
 }: {
   text: string;
   platform: string;
   className?: string;
+  tier?: "free" | "pro";
 }) {
-  const breakdown = useMemo(() => countForPlatform(text, platform), [text, platform]);
-  const limit = limitFor(platform);
+  const breakdown = useMemo(() => countForPlatform(text, platform, tier), [text, platform, tier]);
+  const limit = limitFor(platform, tier);
   const over = breakdown.weighted > limit;
   const pct = Math.min(100, Math.round((breakdown.weighted / limit) * 100));
   // Choose tone.
@@ -29,9 +31,10 @@ export function CharCounter({
     ? "text-amber-500"
     : "text-muted-foreground";
 
+  const supportsBold = ["facebook","linkedin","threads"].includes(platform.toLowerCase());
   return (
     <div
-      title={describeRules(platform)}
+      title={describeRules(platform, tier)}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full border bg-card/95 px-2 py-0.5 text-[10px] font-medium",
         over ? "border-rose-500/30" : "border-border/60",
@@ -42,6 +45,8 @@ export function CharCounter({
       <span className="tabular-nums">
         {breakdown.weighted} / {limit}
       </span>
+      {supportsBold && <span className="hidden sm:inline text-[8px] px-1 py-0 rounded bg-primary/10 text-primary font-bold">B/I</span>}
+      {tier && <span className="text-[8px] uppercase tracking-wide px-1 py-0 rounded bg-muted text-muted-foreground">{tier}</span>}
       <div className="h-1 w-12 overflow-hidden rounded-full bg-muted">
         <div
           className={cn(

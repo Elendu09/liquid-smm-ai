@@ -8,6 +8,12 @@ export interface WhiteLabelConfig {
   hideBadge: boolean;
   customLoginTagline: string;
   supportEmail: string;
+  /** Dynamic Watermarker */
+  watermarkEnabled?: boolean;
+  watermarkPosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center" | "top-center";
+  watermarkOpacity?: number;
+  watermarkSize?: number;
+  watermarkLogoUrl?: string;
 }
 
 const STORAGE_KEY = "smmpilot:white-label";
@@ -19,6 +25,11 @@ const DEFAULTS: WhiteLabelConfig = {
   hideBadge: false,
   customLoginTagline: "",
   supportEmail: "",
+  watermarkEnabled: false,
+  watermarkPosition: "bottom-right",
+  watermarkOpacity: 0.7,
+  watermarkSize: 18,
+  watermarkLogoUrl: "",
 };
 
 function readLocal(): WhiteLabelConfig {
@@ -79,6 +90,11 @@ async function hydrateFromRemote() {
       hideBadge: row.hide_badge ?? false,
       customLoginTagline: row.custom_login_tagline ?? "",
       supportEmail: row.support_email ?? "",
+      watermarkEnabled: (row as any).watermark_enabled ?? false,
+      watermarkPosition: (row as any).watermark_position ?? "bottom-right",
+      watermarkOpacity: (row as any).watermark_opacity ?? 0.7,
+      watermarkSize: (row as any).watermark_size ?? 18,
+      watermarkLogoUrl: (row as any).watermark_logo_url ?? "",
     });
   }
 }
@@ -111,8 +127,13 @@ export function useWhiteLabel() {
           hide_badge: next.hideBadge,
           custom_login_tagline: next.customLoginTagline,
           support_email: next.supportEmail,
+          watermark_enabled: next.watermarkEnabled ?? false,
+          watermark_position: next.watermarkPosition ?? "bottom-right",
+          watermark_opacity: next.watermarkOpacity ?? 0.7,
+          watermark_size: next.watermarkSize ?? 18,
+          watermark_logo_url: next.watermarkLogoUrl ?? "",
           updated_at: new Date().toISOString(),
-        },
+        } as any,
         { onConflict: "user_id" },
       );
     }

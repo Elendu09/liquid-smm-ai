@@ -42,7 +42,48 @@ export const CHAR_RULES: Record<PlatformId, CharRules> = {
   tiktok:   { limit: 2200,  urlWeight: 0,  mentionDiscount: 0, hashtagFullText: true,  emojiWeight: 1 },
   youtube:  { limit: 5000,  urlWeight: 0,  mentionDiscount: 0, hashtagFullText: true,  emojiWeight: 1 },
   pinterest:{ limit: 500,   urlWeight: 0,  mentionDiscount: 0, hashtagFullText: true,  emojiWeight: 1 },
+  // Reddit varies — use 40000 as practical max
+  reddit:   { limit: 40000, urlWeight: 0, mentionDiscount: 0, hashtagFullText: true, emojiWeight: 1 } as any,
 };
+
+// Free tier has slightly tighter limits for some platforms (X free 280, Threads 500, etc. — pro unlocks extended where applicable)
+export const FREE_TIER_LIMITS: Partial<Record<PlatformId, number>> = {
+  x: 280,
+  twitter: 280,
+  threads: 500,
+  instagram: 2200,
+  facebook: 63206,
+  linkedin: 3000,
+  tiktok: 2200,
+  youtube: 5000,
+  pinterest: 500,
+};
+
+// Platforms that support rich text bold/italic via unicode / markdown
+export const BOLD_ITALIC_PLATFORMS: PlatformId[] = ["facebook", "linkedin", "threads"];
+export const SUPPORTS_BOLD = (p: string) => BOLD_ITALIC_PLATFORMS.includes(p as PlatformId);
+
+// Unicode bold/italic maps (Mathematical Alphanumeric Symbols)
+const BOLD_MAP: Record<string, string> = (() => {
+  const m: Record<string,string> = {};
+  const A_bold = 0x1D400, a_bold = 0x1D41A, zero_bold = 0x1D7CE;
+  for(let i=0;i<26;i++){ m[String.fromCharCode(65+i)] = String.fromCodePoint(A_bold+i); m[String.fromCharCode(97+i)] = String.fromCodePoint(a_bold+i); }
+  for(let i=0;i<10;i++) m[String.fromCharCode(48+i)] = String.fromCodePoint(zero_bold+i);
+  return m;
+})();
+const ITALIC_MAP: Record<string, string> = (() => {
+  const m: Record<string,string> = {};
+  const A_italic = 0x1D434, a_italic = 0x1D44E;
+  for(let i=0;i<26;i++){ m[String.fromCharCode(65+i)] = String.fromCodePoint(A_italic+i); m[String.fromCharCode(97+i)] = String.fromCodePoint(a_italic+i); }
+  return m;
+})();
+export function toBoldUnicode(text: string): string { return text.split("").map(c=> BOLD_MAP[c] ?? c).join(""); }
+export function toItalicUnicode(text: string): string { return text.split("").map(c=> ITALIC_MAP[c] ?? c).join(""); }
+export function stripFormatting(text: string): string { return text; } // placeholder
+export function formatForPlatform(text: string, platform: string, style: "bold" | "italic"): string {
+  if (!SUPPORTS_BOLD(platform)) return style==="bold" ? `**${text}**` : `*${text}*`;
+  return style==="bold" ? toBoldUnicode(text) : toItalicUnicode(text);
+}
 
 const URL_REGEX = /\bhttps?:\/\/[^\s<>"']+|\bwww\.[^\s<>"']+|\b[a-z0-9-]+\.[a-z]{2,}\/[^\s<>"']*/gi;
 const MENTION_REGEX = /(?:^|\s)@[A-Za-z0-9_.]+/g;
@@ -80,15 +121,20 @@ export interface CountBreakdown {
   summary: string;
 }
 
-function rulesFor(platform: string): CharRules {
+export type Tier = "free" | "pro";
+
+function rulesFor(platform: string, tier: Tier = "pro"): CharRules {
   const key = platform as PlatformId;
-  if (CHAR_RULES[key]) return CHAR_RULES[key];
-  // Sensible default for unknown platforms.
-  return { limit: 2200, urlWeight: 0, hashtagFullText: true, emojiWeight: 1 };
+  const base = CHAR_RULES[key];
+  if (!base) return { limit: 2200, urlWeight: 0, hashtagFullText: true, emojiWeight: 1 };
+  if (tier === "free" && FREE_TIER_LIMITS[key] !== undefined) {
+    return { ...base, limit: FREE_TIER_LIMITS[key]! };
+  }
+  return base;
 }
 
-export function countForPlatform(text: string, platform: string): CountBreakdown {
-  const rules = rulesFor(platform);
+export function countForPlatform(text: string, platform: string, tier: Tier = "pro"): CountBreakdown {
+  const rules = rulesFor(platform, tier);
   if (!text) {
     return { weighted: 0, raw: 0, urls: 0, mentions: 0, hashtags: 0, emoji: 0, summary: `0 / ${rules.limit}` };
   }
@@ -152,15 +198,27 @@ export function countForPlatform(text: string, platform: string): CountBreakdown
   };
 }
 
-export function limitFor(platform: string): number {
-  return rulesFor(platform).limit;
+export function limitFor(platform: string, tier: Tier = "pro"): number {
+  return rulesFor(platform, tier).limit;
 }
 
-export function describeRules(platform: string): string {
-  const r = rulesFor(platform);
+export function describeRules(platform: string, tier: Tier = "pro"): string {
+  const r = rulesFor(platform, tier);
   const bits: string[] = [`${r.limit} chars`];
   if (r.urlWeight > 0) bits.push(`URLs count as ${r.urlWeight}`);
   if (r.hashtagFullText) bits.push("hashtags full text");
   if (r.emojiWeight && r.emojiWeight > 1) bits.push(`emoji × ${r.emojiWeight}`);
+  if (tier === "free") bits.push("free tier");
   return bits.join(" · ");
 }
+
+export const PLATFORM_LIMITS_TABLE: Array<{ platform: string; limit: string; note?: string }> = [
+  { platform: "X (Twitter)", limit: "280 characters for standard posts" },
+  { platform: "Instagram", limit: "2,200 characters for captions" },
+  { platform: "Facebook", limit: "Very large limit; practical limits depend on the post type (63,206)" },
+  { platform: "LinkedIn", limit: "3,000 characters for posts" },
+  { platform: "Threads", limit: "500 characters for standard posts" },
+  { platform: "TikTok", limit: "Captions can be much longer than they used to be (2,200)" },
+  { platform: "YouTube", limit: "5,000 characters for video descriptions" },
+  { platform: "Reddit", limit: "Limits vary by post/comment and subreddit (40,000)" },
+];

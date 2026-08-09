@@ -55,15 +55,15 @@ function withDuration(
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-type ViewMode = "month" | "week" | "columns" | "feed" | "autolists";
+type ViewMode = "month" | "week" | "day" | "columns" | "feed" | "autolists";
 
 type ColumnStatus = "queued" | "sending" | "completed" | "failed" | "paused";
 const KANBAN_COLUMNS: KanbanColumnDef<ColumnStatus>[] = [
-  { id: "queued",    label: "Scheduled", emptyLabel: "Nothing queued" },
-  { id: "sending",   label: "Sending",   emptyLabel: "Nothing sending" },
-  { id: "completed", label: "Sent",      emptyLabel: "Nothing sent yet" },
-  { id: "paused",    label: "Paused",    emptyLabel: "Nothing paused" },
-  { id: "failed",    label: "Failed",    emptyLabel: "No failures" },
+  { id: "queued",    label: "Scheduled", emptyLabel: "Nothing queued", stroke: "bg-slate-500" },
+  { id: "sending",   label: "Sending",   emptyLabel: "Nothing sending", stroke: "bg-sky-500" },
+  { id: "completed", label: "Sent",      emptyLabel: "Nothing sent yet", stroke: "bg-emerald-500" },
+  { id: "paused",    label: "Paused",    emptyLabel: "Nothing paused", stroke: "bg-amber-500" },
+  { id: "failed",    label: "Failed",    emptyLabel: "No failures", stroke: "bg-destructive" },
 ];
 
 function sameDay(a: Date, b: Date) {
@@ -275,6 +275,10 @@ export const ContentCalendar = () => {
       const d = new Date(cursor);
       d.setDate(d.getDate() + delta * 7);
       setCursor(d);
+    } else if (view === "day") {
+      const d = new Date(cursor);
+      d.setDate(d.getDate() + delta);
+      setCursor(d);
     } else {
       setCursor(new Date(year, month + delta, 1));
     }
@@ -378,6 +382,8 @@ export const ContentCalendar = () => {
   const handleSlotSubmit = (v: SlotDialogValue) => {
     if (v.id) {
       const existing = posts.find((p) => p.id === v.id);
+      // Preserve time-grid duration while also persisting new fields like timezone & native features
+      const baseOverrides = v.durationMin !== undefined ? withDuration(existing?.platformOverrides, v.durationMin) : existing?.platformOverrides;
       update(v.id, {
         caption: v.caption,
         mediaUrl: v.mediaUrl,
@@ -385,8 +391,12 @@ export const ContentCalendar = () => {
         platformIds: v.platformIds,
         hashtags: v.hashtags,
         firstComment: v.firstComment,
-        platformOverrides: withDuration(existing?.platformOverrides, v.durationMin),
-      });
+        timezone: v.timezone,
+        coverFrameSec: v.coverFrameSec,
+        nativeFeatures: v.nativeFeatures as any,
+        nativeFeatureData: v.nativeFeatureData as any,
+        platformOverrides: baseOverrides,
+      } as any);
       toast.success("Post updated");
     } else {
       add({
@@ -396,8 +406,12 @@ export const ContentCalendar = () => {
         platformIds: v.platformIds,
         hashtags: v.hashtags,
         firstComment: v.firstComment,
-        platformOverrides: withDuration(undefined, v.durationMin),
-      });
+        timezone: v.timezone,
+        coverFrameSec: v.coverFrameSec,
+        nativeFeatures: v.nativeFeatures as any,
+        nativeFeatureData: v.nativeFeatureData as any,
+        platformOverrides: v.durationMin !== undefined ? withDuration(undefined, v.durationMin) : undefined,
+      } as any);
       toast.success("Post scheduled");
     }
   };
@@ -448,6 +462,183 @@ export const ContentCalendar = () => {
         <span className="truncate text-foreground/80 min-w-0 hidden sm:inline">{p.caption.slice(0, 24)}</span>
       )}
     </div>
+    );
+  };
+
+
+  // ===== Day View Component =====
+  const DayView = ({
+    date,
+    posts: dayPosts,
+    allPosts,
+    onSelect,
+    onDropAtHour,
+    onDragStart,
+    onDragEnd,
+    dragId,
+    onResize,
+    onCellClick,
+    getDurationMin,
+    bestTimes,
+    showBestTimes,
+  }: {
+    date: Date;
+    posts: ScheduledPost[];
+    allPosts: ScheduledPost[];
+    onSelect: (p: ScheduledPost) => void;
+    onDropAtHour: (h: number) => void;
+    onDragStart: (id: string) => void;
+    onDragEnd: () => void;
+    dragId: string | null;
+    onResize: (id: string, iso: string, dur: number) => void;
+    onCellClick: (h: number) => void;
+    getDurationMin: (p: ScheduledPost) => number;
+    bestTimes: ReturnType<typeof useBestTimes>;
+    showBestTimes: boolean;
+  }) => {
+    const hours = Array.from({ length: 18 }, (_, i) => i + 6); // 6am - 11pm
+    const isToday = sameDay(date, new Date());
+    const dayHourMap = useMemo(() => {
+      const m = new Map<number, ScheduledPost[]>();
+      dayPosts.forEach((p) => {
+        const d = new Date(p.scheduledAt);
+        const h = d.getHours();
+        if (!m.has(h)) m.set(h, []);
+        m.get(h)!.push(p);
+      });
+      m.forEach((arr) => arr.sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt)));
+      return m;
+    }, [dayPosts]);
+
+    const bestHours = bestTimes.topHoursFor(date.getDay());
+
+    return (
+      <div className="space-y-3">
+        {/* Day header summary */}
+        <div className="rounded-xl border border-border/60 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 p-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className={cn("grid h-12 w-12 place-items-center rounded-xl border font-bold", isToday ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60 text-foreground")}>
+              <span className="text-lg leading-none">{date.getDate()}</span>
+              <span className="text-[10px] uppercase tracking-wide -mt-1">{date.toLocaleDateString([], { month: "short" })}</span>
+            </div>
+            <div>
+              <p className="text-sm font-semibold leading-tight">{date.toLocaleDateString([], { weekday: "long", month: "long", year: "numeric" })}</p>
+              <p className="text-xs text-muted-foreground">{dayPosts.length} post{dayPosts.length===1?"":"s"} scheduled · {allPosts.length} total</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {showBestTimes && bestHours.length > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 px-2.5 py-1 text-xs font-medium">
+                <Star className="h-3 w-3 fill-amber-500 text-amber-500" /> Best: {bestHours.map((h)=> `${h}:00`).join(", ")}
+              </span>
+            )}
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openSlotForNew(date, new Date().getHours())}>
+              <Plus className="h-3 w-3 mr-1" /> Add at now
+            </Button>
+          </div>
+        </div>
+
+        {/* Timeline */}
+        <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+          <div className="max-h-[560px] overflow-y-auto">
+            <div className="divide-y divide-border/30">
+              {hours.map((h) => {
+                const items = dayHourMap.get(h) ?? [];
+                const isBest = showBestTimes && bestHours.includes(h);
+                const hourLabel = h === 0 ? "12 am" : h < 12 ? `${h} am` : h === 12 ? "12 pm" : `${h - 12} pm`;
+                const isCurrentHour = isToday && new Date().getHours() === h;
+                return (
+                  <div
+                    key={h}
+                    onDragOver={(e) => { if (dragId) e.preventDefault(); }}
+                    onDrop={() => onDropAtHour(h)}
+                    onClick={() => { if (items.length===0) onCellClick(h); }}
+                    className={cn(
+                      "grid gap-0 group/hour cursor-pointer transition-colors",
+                      "grid-cols-[64px_1fr]",
+                      isBest ? "bg-amber-500/[0.06] hover:bg-amber-500/[0.10]" : "hover:bg-muted/30",
+                      isCurrentHour && "bg-primary/[0.04] ring-1 ring-primary/20 ring-inset"
+                    )}
+                    style={{ minHeight: items.length ? "auto" : 56 }}
+                  >
+                    <div className={cn(
+                      "flex flex-col items-end justify-start pr-3 py-3 border-r border-border/30 text-right",
+                      isCurrentHour && "bg-primary/5"
+                    )}>
+                      <span className={cn("text-xs font-semibold tabular-nums", isCurrentHour ? "text-primary" : "text-foreground/80")}>{hourLabel}</span>
+                      {isBest && <span className="text-[9px] font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide">Best</span>}
+                      {isCurrentHour && <span className="h-1 w-1 rounded-full bg-primary animate-pulse mt-1" />}
+                    </div>
+                    <div className="p-1.5 min-h-[56px] relative">
+                      {items.length === 0 ? (
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/hour:opacity-100 transition-opacity pointer-events-none">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-primary/40 bg-primary/5 px-2.5 py-1 text-xs font-medium text-primary">
+                            <Plus className="h-3 w-3" /> {hourLabel} — schedule
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {items.map((p) => {
+                            const dur = getDurationMin(p);
+                            return (
+                              <div
+                                key={p.id}
+                                draggable
+                                onDragStart={() => onDragStart(p.id)}
+                                onDragEnd={onDragEnd}
+                                onClick={(e) => { e.stopPropagation(); onSelect(p); }}
+                                className={cn(
+                                  "group/card relative flex items-stretch gap-2 rounded-xl border bg-card p-2.5 shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-grab active:cursor-grabbing",
+                                  getPlatformBorderClass(p.platformIds[0]),
+                                  getPlatformBgClass(p.platformIds[0]),
+                                  dragId===p.id && "opacity-40"
+                                )}
+                              >
+                                <div className={cn("w-1 self-stretch rounded-full", statusBar(p))} />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold tabular-nums text-foreground">
+                                      <Clock className="h-3 w-3 text-muted-foreground" /> {fmtTime(p.scheduledAt)} · {dur}m
+                                    </span>
+                                    <StatusPill post={p} />
+                                    {p.platformIds.map((id)=> (
+                                      <span key={id} className="inline-flex items-center gap-1 rounded-full bg-background/80 border border-border/50 px-1.5 py-0.5 text-[10px]">
+                                        <PlatformIcon platform={id} size="xs" /> <span className="capitalize hidden sm:inline">{id}</span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <p className="text-sm font-medium leading-snug line-clamp-2">{p.caption || "(no caption)"}</p>
+                                  {p.mediaUrl && (
+                                    <div className="mt-2 rounded-lg overflow-hidden border border-border/40 max-h-24">
+                                      <img src={p.mediaUrl} alt="" className="w-full h-20 object-cover" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex flex-col gap-1 shrink-0">
+                                  <Button size="icon" variant="ghost" className="h-6 w-6 opacity-60 group-hover/card:opacity-100" onClick={(e)=>{e.stopPropagation(); duplicatePost(p);}}>
+                                    <Copy className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive opacity-60 group-hover/card:opacity-100" onClick={(e)=>{e.stopPropagation(); remove(p.id); toast.success("Deleted");}}>
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="px-3 py-2 bg-muted/20 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" /> {hours.length} slots · drag to reschedule</span>
+            <span className="hidden sm:inline">Tip: click empty hour to schedule</span>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -558,7 +749,7 @@ export const ContentCalendar = () => {
         </div>
 
         <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/40">
-          {(["month", "week", "feed", "autolists"] as ViewMode[]).map((v) => (
+          {(["month", "week", "day", "feed", "autolists"] as ViewMode[]).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -735,7 +926,7 @@ export const ContentCalendar = () => {
       </div>
 
       {/* Nav header */}
-      {(view === "month" || view === "week") && (
+      {(view === "month" || view === "week" || view === "day") && (
         <div className="flex gap-4">
           <div className="flex-1 min-w-0 rounded-2xl border border-border/60 bg-card p-3 sm:p-4">
             <div className="flex items-center justify-between mb-3 gap-2">
@@ -745,7 +936,9 @@ export const ContentCalendar = () => {
               <h4 className="text-sm sm:text-base font-semibold flex-1 text-center">
                 {view === "month"
                   ? `${months[month]} ${year}`
-                  : `${weekCells[0].toLocaleDateString([], { month: "short", day: "numeric" })} – ${weekCells[6].toLocaleDateString([], { month: "short", day: "numeric" })}`}
+                  : view === "day"
+                    ? cursor.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+                    : `${weekCells[0].toLocaleDateString([], { month: "short", day: "numeric" })} – ${weekCells[6].toLocaleDateString([], { month: "short", day: "numeric" })}`}
               </h4>
               {view === "week" && (
                 <div className="inline-flex rounded-lg border border-border/60 p-0.5 bg-muted/40">
@@ -771,6 +964,11 @@ export const ContentCalendar = () => {
                   </button>
                 </div>
               )}
+              {view === "day" && (
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                  <Clock className="h-3 w-3" /> {getPostsForDate(cursor).length} posts
+                </span>
+              )}
               <Button variant="ghost" size="icon" onClick={() => shift(1)} aria-label="Next">
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -788,6 +986,22 @@ export const ContentCalendar = () => {
                 onResize={handleResize}
                 onCellClick={openSlotForNew}
                 getDurationMin={getDurationMin}
+              />
+            ) : view === "day" ? (
+              <DayView
+                date={cursor}
+                posts={getPostsForDate(cursor)}
+                allPosts={filtered}
+                onSelect={openSlotForEdit}
+                onDropAtHour={(h) => handleDropAtHour(cursor, h)}
+                onDragStart={setDragId}
+                onDragEnd={() => setDragId(null)}
+                dragId={dragId}
+                onResize={handleResize}
+                onCellClick={(h) => openSlotForNew(cursor, h)}
+                getDurationMin={getDurationMin}
+                bestTimes={bestTimes}
+                showBestTimes={showBestTimes}
               />
             ) : (
               <>
