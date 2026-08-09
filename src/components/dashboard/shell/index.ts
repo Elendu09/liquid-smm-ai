@@ -19,3 +19,4 @@ export { StatusBoard } from "./StatusBoard";
 export type { StatusItem } from "./StatusBoard";
 export { TimelineView } from "./TimelineView";
 export type { TimelineEvent, TimelineCategory, TimelineStatus } from "./TimelineView";
+export { HubContent, HubContentShimmer } from "./HubContent";

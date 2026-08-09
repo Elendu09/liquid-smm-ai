@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Link2, History, Sparkles, ShieldCheck, Scissors, Repeat2 } from "lucide-react";
+import { Link2, History, Sparkles, ShieldCheck, Scissors, Repeat2, CalendarClock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { PlatformPicker } from "@/components/shared/PlatformPicker";
 import { NetworkPreview } from "@/components/publish/NetworkPreview";
 import { MediaField } from "@/components/publish/MediaField";
+import { CaptionField } from "@/components/publish/CaptionField";
 import { MediaValidatorBanner } from "@/components/publish/MediaValidatorBanner";
 import { MediaFitRow } from "@/components/publish/MediaFitBadge";
 import { LinkPreviewCard } from "@/components/publish/LinkPreviewCard";
@@ -175,27 +176,52 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit scheduled post" : "New scheduled post"}</DialogTitle>
-          <DialogDescription>
-            {isEdit ? "Update caption, platforms, timing, native features, or cover frame." : "Fill in details for this slot. We pre-validate media and character counts per destination."}
-          </DialogDescription>
+          <div className="flex items-start gap-3">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border/60 bg-primary/10">
+              <CalendarClock className="h-4.5 w-4.5 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-semibold tracking-tight sm:text-xl">
+                {isEdit ? "Edit scheduled post" : "New scheduled post"}
+              </DialogTitle>
+              <DialogDescription className="mt-0.5">
+                {isEdit ? "Update caption, platforms, timing, native features, or cover frame." : "Fill in details for this slot. We pre-validate media and character counts per destination."}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] max-h-[64vh] overflow-y-auto pr-1">
           <div className="space-y-4 py-2">
 
             <div>
-              <div className="mb-1 flex items-center justify-between">
-                <Label htmlFor="pd-caption">Caption</Label>
-                {platformIds.length === 1 && <CharCounter text={caption} platform={platformIds[0]} />}
-              </div>
-              <Textarea id="pd-caption" rows={4} value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Write something great…" />
-              {platformIds.length > 1 && (
+              <Label htmlFor="pd-caption" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">Caption</Label>
+              <CaptionField
+                id="pd-caption"
+                value={caption}
+                onChange={setCaption}
+                rows={4}
+                platform={platformIds[0]}
+                placeholder="Write something great…"
+              />
+              {platformIds.length > 0 && (
                 <div className="mt-1.5">
                   <CharCounter text={caption} platform={platformIds[0]} />
                 </div>
               )}
             </div>
+
+            <div className="rounded-xl border border-border/60 bg-muted/10 px-3 py-2">
+              <Textarea
+                id="pd-first"
+                rows={1}
+                value={firstComment}
+                onChange={(e) => setFirstComment(e.target.value)}
+                placeholder="Add a first comment (optional)"
+                className="min-h-0 resize-none border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+            </div>
+
 
             <LinkPreviewCard caption={caption} />
 
@@ -271,10 +297,6 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
               <Input id="pd-tags" value={hashtags} onChange={(e) => setHashtags(e.target.value)} placeholder="#launch #product" />
             </div>
 
-            <div>
-              <Label htmlFor="pd-first">First comment (optional)</Label>
-              <Textarea id="pd-first" rows={2} value={firstComment} onChange={(e) => setFirstComment(e.target.value)} />
-            </div>
 
             {activePlatforms.length > 0 && (
               <NativeFeaturePicker

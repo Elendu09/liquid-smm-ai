@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useAnalyticsSeries } from "@/hooks/useAnalyticsSeries";
 import { useInboxMessages } from "@/hooks/useInboxMessages";
+import { useTopPosts } from "@/hooks/useTopPosts";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -27,6 +28,7 @@ export function CalendarInsightsPanel({ onClose, onOpenInbox }: Props) {
   const engagement = useAnalyticsSeries("engagement", "90D");
   const { items: comments } = useInboxMessages("comment");
   const { items: dms } = useInboxMessages("dm");
+  const { posts: topPosts, loading: topLoading } = useTopPosts({ days: 30, limit: 4 });
 
   const unresolved = useMemo(() => {
     return [...comments, ...dms]
@@ -151,6 +153,44 @@ export function CalendarInsightsPanel({ onClose, onOpenInbox }: Props) {
           )}
         </div>
       </div>
+
+      {/* Top performing posts */}
+      <div className="border-t border-border/50">
+        <div className="flex items-center gap-1.5 px-4 py-3">
+          <TrendingUp className="h-3.5 w-3.5 text-primary" />
+          <span className="text-xs font-semibold uppercase tracking-wider">Top performing posts</span>
+        </div>
+        <div className="px-3 pb-3 space-y-1.5 max-h-56 overflow-y-auto">
+          {topLoading ? (
+            <div className="text-center py-6 text-[11px] text-muted-foreground">Loading…</div>
+          ) : topPosts.length === 0 ? (
+            <div className="text-center py-6 text-[11px] text-muted-foreground">
+              No performance data yet
+            </div>
+          ) : (
+            topPosts.map((p, i) => (
+              <div
+                key={p.id}
+                className="flex items-start gap-2.5 rounded-xl border border-border/50 bg-background/60 p-2.5"
+              >
+                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md bg-primary/10 text-[10px] font-bold text-primary tabular-nums">
+                  {i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] leading-snug line-clamp-2">{p.caption || "Untitled post"}</p>
+                  <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground tabular-nums">
+                    {p.account?.platformId && <PlatformIcon platform={p.account.platformId} size="xs" />}
+                    <span>{p.engagement.toLocaleString()} eng</span>
+                    <span>·</span>
+                    <span>{p.reach.toLocaleString()} reach</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
     </aside>
   );
 }

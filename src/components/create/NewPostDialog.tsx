@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, Loader2, Send, BookMarked, Repeat, X, ImagePlus } from "lucide-react";
+import { Sparkles, Loader2, Send, BookMarked, Repeat, X, ImagePlus, SquarePen } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { MediaField } from "@/components/publish/MediaField";
+import { CaptionField } from "@/components/publish/CaptionField";
 import { aiCreate } from "@/hooks/useAiCreate";
 import { pushLocalCollection, useLocalCollection } from "@/hooks/useLocalCollection";
 import { useScheduledPosts, type Recurrence } from "@/hooks/useScheduledPosts";
@@ -153,19 +154,18 @@ export function NewPostDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto [&>button.absolute]:hidden">
         <DialogHeader className="pb-0">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 ring-1 ring-primary/20 shadow-lg shadow-primary/10">
-                <Send className="h-6 w-6 text-primary" />
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border/60 bg-muted/30">
+                <SquarePen className="h-4.5 w-4.5 text-foreground" />
               </div>
-              <div className="min-w-0 pt-0.5">
-                <DialogTitle className="text-xl font-bold tracking-tight sm:text-2xl">
-                  Create a new post
-                </DialogTitle>
-                <p className="mt-1 text-sm text-muted-foreground leading-relaxed max-w-md">
-                  Compose your content, attach media, and schedule across all your platforms.
-                </p>
-              </div>
+              <DialogTitle className="text-lg font-semibold tracking-tight sm:text-xl truncate">
+                Create draft
+              </DialogTitle>
+              <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                Autosaved
+              </span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <Popover>
@@ -199,15 +199,22 @@ export function NewPostDialog({
                 )}
               </PopoverContent>
               </Popover>
-              <DialogClose className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/70 text-muted-foreground backdrop-blur transition hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <DialogClose className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur transition hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <span className="hidden sm:inline">Close</span>
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>
               </DialogClose>
             </div>
           </div>
         </DialogHeader>
+
         <div className="border-t border-border/40 mx-0" />
         <div className="space-y-4">
+          <PlatformPicker
+            selected={selected}
+            onToggle={toggle}
+            label="Platforms"
+          />
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Title</label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Launch teaser" />
@@ -223,9 +230,16 @@ export function NewPostDialog({
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Caption</label>
-            <Textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={5} placeholder="Write your caption…" />
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">Caption</label>
+            <CaptionField
+              value={caption}
+              onChange={setCaption}
+              platform={selected[0]}
+              onAi={aiAssist}
+              aiBusy={busy}
+            />
           </div>
+
           <MediaField
             value={mediaUrl}
             onChange={(url) => setMediaUrl(url)}
@@ -258,11 +272,6 @@ export function NewPostDialog({
               </Select>
             </div>
           </div>
-          <PlatformPicker
-            selected={selected}
-            onToggle={toggle}
-            label="Platforms"
-          />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Schedule for</label>

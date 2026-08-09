@@ -563,9 +563,11 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
       >
         <div className="mx-auto max-w-5xl px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="flex-shrink-0">
-              Skip
-            </Button>
+            {step > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="flex-shrink-0">
+                Skip
+              </Button>
+            )}
             {!canProceed && step < totalSteps - 1 && (
               <span className="hidden sm:inline text-[11px] text-muted-foreground truncate">{stepHint(step)}</span>
             )}
