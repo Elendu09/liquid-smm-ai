@@ -36,3 +36,7 @@ For board columns in Publish, Create, Library and Activity: replace the card-sty
 - Files: `src/components/create/NewPostDialog.tsx`, `src/components/publish/PostSlotDialog.tsx`, `src/components/dashboard/shell/PageHeader.tsx`, `HubTabs.tsx`, `KanbanBoard.tsx`, `StatusBoard.tsx`, all `src/pages/dashboard/hubs/*.tsx` except `SettingsHub.tsx`, `src/components/layout/DashboardLayout.tsx`, `src/components/onboarding/OnboardingWizard.tsx`, `src/components/publish/CalendarInsightsPanel.tsx`.
 - `KanbanColumnDef` gains an optional accent token so each hub can set stroke colors; all colors come from semantic tokens, no hardcoded hex.
 - Frontend/presentation only — no schema, backend, or data-flow changes.
+
+## 0. Build fix (blocking)
+`CookieBanner.tsx` passes `strokeWidth` to an icon typed as `{ className?: string }`. Widen the icon prop type to `LucideIcon` (or drop the `strokeWidth` prop) so the project typechecks.
+
