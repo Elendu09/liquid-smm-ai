@@ -106,7 +106,7 @@ export function PlatformPicker({
                   aria-pressed={isSelected}
                   aria-label={platformLabel(id)}
                   className={cn(
-                    "relative grid place-items-center rounded-full border-2 transition-all",
+                    "relative grid place-items-center rounded-xl border-2 transition-all",
                     s.ring,
                     isSelected
                       ? "border-primary ring-2 ring-primary/25 scale-105 shadow-md shadow-primary/15"
@@ -136,7 +136,7 @@ export function PlatformPicker({
                 onClick={handleAdd}
                 aria-label="Connect more platforms"
                 className={cn(
-                  "grid place-items-center rounded-full border-2 border-dashed border-border/70 text-muted-foreground transition-all hover:border-primary/50 hover:text-primary hover:bg-primary/5 hover:scale-105",
+                  "grid place-items-center rounded-xl border-2 border-dashed border-border/70 text-muted-foreground transition-all hover:border-primary/50 hover:text-primary hover:bg-primary/5 hover:scale-105",
                   s.plus,
                 )}
               >

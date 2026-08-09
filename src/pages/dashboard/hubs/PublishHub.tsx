@@ -1,6 +1,7 @@
-import { Outlet, Route, Routes, Navigate } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import { Calendar, CalendarDays, Film, Rss, Plus, Sparkles } from "lucide-react";
 import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
+import { HubContent } from "@/components/dashboard/shell/HubContent";
 import QueueBoard from "../views/QueueBoard";
 import ContentCalendar from "../ContentCalendar";
 import StoryBoard from "../views/StoryBoard";
@@ -21,10 +22,10 @@ function PublishLayout() {
           title="Publish"
           description="Schedule, plan, and automate everything that goes out."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Publish" }]}
+          actions={<HubTabs tabs={tabs} />}
         />
-        <HubTabs tabs={tabs} />
       </div>
-      <Outlet />
+      <HubContent />
     </div>
   );
 }
