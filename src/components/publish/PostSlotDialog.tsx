@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Link2, History, Sparkles, ShieldCheck, Scissors, Repeat2, CalendarClock, Globe2, MessageCircle } from "lucide-react";
+import { Link2, History, Sparkles, ShieldCheck, Scissors, Repeat2, CalendarClock, Globe2, MessageCircle, Eye, Pencil, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,6 +98,7 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
   const [nativeEnabled, setNativeEnabled] = useState(true);
   const [autoAdapt, setAutoAdapt] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
   // Idempotency for double-click on Schedule / Save changes (fix 3.4).
   const publish = usePublishOutcome();
 
@@ -209,25 +210,32 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 [&>button.absolute]:hidden">
         <DialogHeader className="px-6 pt-5 pb-4 border-b border-border/40 shrink-0">
-          <div className="flex items-start gap-3">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border/60 bg-primary/10">
-              <CalendarClock className="h-4.5 w-4.5 text-primary" />
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border/60 bg-primary/10">
+                <CalendarClock className="h-4.5 w-4.5 text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <DialogTitle className="text-lg font-semibold tracking-tight sm:text-xl">
+                  {isEdit ? "Edit scheduled post" : "New scheduled post"}
+                </DialogTitle>
+                <DialogDescription className="mt-0.5">
+                  {isEdit ? "Update caption, platforms, timing, native features, or cover frame." : "Fill in details for this slot. We pre-validate media and character counts per destination."}
+                </DialogDescription>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <DialogTitle className="text-lg font-semibold tracking-tight sm:text-xl">
-                {isEdit ? "Edit scheduled post" : "New scheduled post"}
-              </DialogTitle>
-              <DialogDescription className="mt-0.5">
-                {isEdit ? "Update caption, platforms, timing, native features, or cover frame." : "Fill in details for this slot. We pre-validate media and character counts per destination."}
-              </DialogDescription>
-            </div>
+            <button type="button" onClick={() => onOpenChange(false)} className="inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted shrink-0"><X className="h-4 w-4" /> <span className="hidden sm:inline">Close</span></button>
+          </div>
+          <div className="flex md:hidden items-center gap-1 mt-3 p-1 rounded-full bg-muted/40 border border-border/40 w-fit">
+            <button type="button" onClick={() => setMobileTab("edit")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${mobileTab === "edit" ? "bg-background shadow border border-border/60 text-foreground" : "text-muted-foreground"}`}><Pencil className="h-3.5 w-3.5" /> Edit</button>
+            <button type="button" onClick={() => setMobileTab("preview")} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${mobileTab === "preview" ? "bg-background shadow border border-border/60 text-foreground" : "text-muted-foreground"}`}><Eye className="h-3.5 w-3.5" /> Preview</button>
           </div>
         </DialogHeader>
 
         <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_340px] flex-1 min-h-0">
-          <div className="space-y-4 py-4 px-6 overflow-y-auto max-h-[62vh] md:max-h-[64vh] pr-3">
+          <div className={`${mobileTab === "preview" ? "hidden md:block" : "block"} space-y-4 py-4 px-6 overflow-y-auto max-h-[62vh] md:max-h-[64vh] pr-3`}>
 
             <div>
               <Label htmlFor="pd-caption" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">Caption</Label>
@@ -407,7 +415,7 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
             </div>
           </div>
 
-          <div className="py-4 px-4 space-y-3 border-t md:border-t-0 md:border-l border-border/40 bg-muted/5 overflow-y-auto max-h-[64vh]">
+          <div className={`${mobileTab === "edit" ? "hidden md:block" : "block"} py-4 px-4 space-y-3 border-t md:border-t-0 md:border-l border-border/40 bg-muted/5 overflow-y-auto max-h-[64vh]`}>
             <NetworkPreview
               caption={caption}
               mediaUrl={mediaUrl || undefined}
