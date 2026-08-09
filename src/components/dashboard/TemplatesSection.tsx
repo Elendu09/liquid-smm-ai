@@ -316,15 +316,20 @@ export function TemplatesSection() {
       </PanelSection>
 
       <Dialog open={!!active} onOpenChange={(o) => { if (!o) closePreview(); }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0 gap-0 [&>button.absolute]:hidden">
           {active && (
             <>
-              <DialogHeader>
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
-                  <active.icon className="h-5 w-5 text-primary" strokeWidth={1.75} />
+              <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/40">
+                <div className="flex items-start gap-3">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border/60 bg-primary/10">
+                    <active.icon className="h-5 w-5 text-primary" strokeWidth={1.75} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <DialogTitle className="text-[18px] font-semibold leading-tight tracking-tight">{active.title}</DialogTitle>
+                    <DialogDescription className="mt-1 text-xs leading-relaxed">{active.short}</DialogDescription>
+                  </div>
+                  <button type="button" onClick={closePreview} className="grid h-8 w-8 place-items-center rounded-full border border-border/60 bg-background text-muted-foreground hover:bg-muted shrink-0"><span className="sr-only">Close</span>×</button>
                 </div>
-                <DialogTitle className="text-xl leading-snug">{active.title}</DialogTitle>
-                <DialogDescription>{active.short}</DialogDescription>
               </DialogHeader>
 
               {/* Mobile: Preview / Edit toggle */}
@@ -349,7 +354,8 @@ export function TemplatesSection() {
                 </Button>
               </div>
 
-              <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
+              <div className="px-6 py-4 space-y-3">
+              <div className="rounded-xl border border-border/60 bg-muted/30 p-3.5">
                 {editing ? (
                   <Textarea
                     value={draft}
@@ -362,48 +368,13 @@ export function TemplatesSection() {
                     {bodyValue}
                   </p>
                 )}
-
-                <div className="mt-3 flex flex-wrap items-center justify-end gap-1.5">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 gap-1.5"
-                    onClick={() => setEditing((e) => !e)}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                    <span className="text-xs">{editing ? "Done editing" : "Edit"}</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 gap-1.5"
-                    onClick={copyToClipboard}
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                    <span className="text-xs">Copy</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 gap-1.5"
-                    onClick={saveAsReusable}
-                  >
-                    <BookmarkPlus className="h-3.5 w-3.5" />
-                    <span className="text-xs">Save</span>
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="h-8 gap-1.5"
-                    onClick={() => setRemixOpen(true)}
-                  >
-                    <Wand2 className="h-3.5 w-3.5" />
-                    <span className="text-xs">AI remix</span>
-                  </Button>
-                  <Button size="sm" className="h-8 gap-1.5" onClick={openInComposer}>
-                    <Send className="h-3.5 w-3.5" />
-                    <span className="text-xs">Use template</span>
-                  </Button>
+              </div>
+                <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full border-border/60" onClick={() => setEditing((e) => !e)}><Pencil className="h-3.5 w-3.5" /><span className="text-xs">{editing ? "Done editing" : "Edit"}</span></Button>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={copyToClipboard}><Copy className="h-3.5 w-3.5" /><span className="text-xs">Copy</span></Button>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full" onClick={saveAsReusable}><BookmarkPlus className="h-3.5 w-3.5" /><span className="text-xs">Save</span></Button>
+                  <Button variant="secondary" size="sm" className="h-8 gap-1.5 rounded-full" onClick={() => setRemixOpen(true)}><Wand2 className="h-3.5 w-3.5" /><span className="text-xs">AI remix</span></Button>
+                  <Button size="sm" className="h-8 gap-1.5 rounded-full shadow" onClick={openInComposer}><Send className="h-3.5 w-3.5" /><span className="text-xs">Use template</span></Button>
                 </div>
               </div>
 

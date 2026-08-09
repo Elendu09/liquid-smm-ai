@@ -7,7 +7,6 @@ import {
   ChevronRight,
   ChevronDown,
   Menu,
-  Sparkles,
   Calendar,
   Bot,
   BarChart3,
@@ -41,6 +40,21 @@ import {
   Rss,
   Share2,
 } from "lucide-react";
+
+// Custom Create (pencil) and Campaign (megaphone) icons matching attached reference
+const CreateIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
+  </svg>
+);
+const CampaignIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+    <path d="M3 11l18-5v12L3 13z" />
+    <path d="M11.5 13a3.5 3.5 0 01-3.5 3.5H7a1 1 0 01-1-1v-5a1 1 0 011-1h1a3.5 3.5 0 013.5 3.5z" />
+    <path d="M16 6a5 5 0 015 5c0 2.2-1.4 4.1-3.5 4.8" />
+  </svg>
+);
 import { ConnectChannelsSection } from "./ConnectChannelsSection";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -69,14 +83,14 @@ const navItems: NavItem[] = [
   {
     label: "Create",
     href: "/dashboard/create",
-    icon: Sparkles,
+    icon: CreateIcon,
     children: [
       { label: "Studio", href: "/dashboard/create/studio", icon: Wand2 },
       { label: "Captions", href: "/dashboard/create/captions", icon: Type },
       { label: "Hashtags", href: "/dashboard/create/hashtags", icon: Hash },
     ],
   },
-  { label: "Campaigns", href: "/dashboard/campaigns", icon: Target },
+  { label: "Campaigns", href: "/dashboard/campaigns", icon: CampaignIcon },
   {
     label: "Publish",
 

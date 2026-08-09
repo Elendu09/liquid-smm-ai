@@ -23,7 +23,7 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
     } else if (token.startsWith("`")) {
       nodes.push(<code key={key} className="px-1 py-0.5 rounded bg-muted text-[0.85em] font-mono">{token.slice(1, -1)}</code>);
     } else {
-      nodes.push(<em key={key}>{token.slice(1, -1)}</em>);
+      nodes.push(<em key={key} className="italic font-[450] tracking-[-0.01em] text-foreground/90">{token.slice(1, -1)}</em>);
     }
     lastIdx = match.index + token.length;
   }
