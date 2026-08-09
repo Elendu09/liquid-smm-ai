@@ -179,7 +179,7 @@ export function CalendarInsightsPanel({ onClose, onOpenInbox }: Props) {
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] leading-snug line-clamp-2">{p.caption || "Untitled post"}</p>
                   <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground tabular-nums">
-                    {p.account?.platform && <PlatformIcon platform={p.account.platform} size="xs" />}
+                    {p.account?.platformId && <PlatformIcon platform={p.account.platformId} size="xs" />}
                     <span>{p.engagement.toLocaleString()} eng</span>
                     <span>·</span>
                     <span>{p.reach.toLocaleString()} reach</span>
