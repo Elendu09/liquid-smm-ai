@@ -1,6 +1,8 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { DEMO_SCHEDULED_POSTS } from "@/lib/demoSeeds";
+import { isGuestSession } from "@/hooks/useGuest";
 
 type ScheduledPostInsert = Database["public"]["Tables"]["scheduled_posts"]["Insert"];
 type ScheduledPostUpdate = Database["public"]["Tables"]["scheduled_posts"]["Update"];
@@ -71,9 +73,17 @@ function readLocal(): ScheduledPost[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as ScheduledPost[];
+      if (parsed.length > 0) return parsed;
+    }
+    if (isGuestSession()) {
+      try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_SCHEDULED_POSTS)); } catch {}
+      return DEMO_SCHEDULED_POSTS;
+    }
     return raw ? (JSON.parse(raw) as ScheduledPost[]) : [];
   } catch {
-    return [];
+    return isGuestSession() ? DEMO_SCHEDULED_POSTS : [];
   }
 }
 function writeLocal(next: ScheduledPost[]) {
@@ -288,7 +298,7 @@ export function useScheduledPosts() {
 
   useEffect(() => { void ensureAuthMode(); }, []);
 
-  const add = (
+  const add = useCallback((
     post: Omit<ScheduledPost, "id" | "createdAt" | "seriesId">,
     opts?: { recurrence?: Recurrence; scheduledAts?: string[] },
   ) => {
@@ -363,27 +373,27 @@ export function useScheduledPosts() {
     } catch { /* telemetry must never block a schedule */ }
 
     return items[0];
-  };
+  }, []);
 
-  const remove = (id: string) => {
+  const remove = useCallback((id: string) => {
     if (mode === "remote") {
       setCache(cache.filter((p) => p.id !== id));
       void supabase.from("scheduled_posts").delete().eq("id", id);
     } else {
       writeLocal(cache.filter((p) => p.id !== id));
     }
-  };
+  }, []);
 
-  const removeSeries = (seriesId: string) => {
+  const removeSeries = useCallback((seriesId: string) => {
     if (mode === "remote") {
       setCache(cache.filter((p) => p.seriesId !== seriesId));
       void supabase.from("scheduled_posts").delete().eq("series_id", seriesId);
     } else {
       writeLocal(cache.filter((p) => p.seriesId !== seriesId));
     }
-  };
+  }, []);
 
-  const update = (id: string, patch: Partial<ScheduledPost>) => {
+  const update = useCallback((id: string, patch: Partial<ScheduledPost>) => {
     const next = cache.map((p) => (p.id === id ? { ...p, ...patch } : p));
     if (mode === "remote") {
       setCache(next);
@@ -392,9 +402,9 @@ export function useScheduledPosts() {
     } else {
       writeLocal(next);
     }
-  };
+  }, []);
 
-  const pauseAll = () => {
+  const pauseAll = useCallback(() => {
     const next = cache.map((p) =>
       p.status === "queued" ? { ...p, status: "paused" as SendStatus } : p,
     );
@@ -407,9 +417,9 @@ export function useScheduledPosts() {
     } else {
       writeLocal(next);
     }
-  };
+  }, []);
 
-  const resumeAll = () => {
+  const resumeAll = useCallback(() => {
     const next = cache.map((p) =>
       p.status === "paused" ? { ...p, status: "queued" as SendStatus } : p,
     );
@@ -422,7 +432,7 @@ export function useScheduledPosts() {
     } else {
       writeLocal(next);
     }
-  };
+  }, []);
 
   return { posts, add, remove, removeSeries, update, pauseAll, resumeAll };
 }

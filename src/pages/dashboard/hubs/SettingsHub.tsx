@@ -12,9 +12,11 @@ import {
 import { AuditPanel } from "@/components/settings/AuditPanel";
 import { RolesMatrixPanel } from "@/components/settings/RolesMatrixPanel";
 import { WhiteLabelPanel } from "@/components/settings/WhiteLabelPanel";
+import { ApprovalsPanel } from "@/components/settings/ApprovalsPanel";
 import { BrandsPanel } from "@/components/settings/BrandsPanel";
 import { FeatureGate } from "@/components/shared/FeatureGate";
 import { WebhooksPanel } from "@/components/settings/WebhooksPanel";
+import { SsoPanel } from "@/components/settings/SsoPanel";
 import Integrations from "../Integrations";
 import IntegrationDetail from "../IntegrationDetail";
 
@@ -28,6 +30,8 @@ const tabs: HubTab[] = [
   { label: "Webhooks", href: "/dashboard/settings/webhooks", icon: Webhook },
   { label: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
   { label: "Security", href: "/dashboard/settings/security", icon: Shield },
+  { label: "SSO", href: "/dashboard/settings/sso", icon: Shield },
+  { label: "Approvals", href: "/dashboard/settings/approvals", icon: Shield },
   { label: "Roles", href: "/dashboard/settings/roles", icon: KeyRound },
   { label: "White-label", href: "/dashboard/settings/white-label", icon: Palette },
   { label: "Audit log", href: "/dashboard/settings/audit", icon: ScrollText },
@@ -40,7 +44,7 @@ function SettingsLayout() {
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-primary/[0.07] via-accent/[0.04] to-transparent"
       />
-      <div className="relative px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+      <div className="relative px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 space-y-4">
         <PageHeader
           title="Settings"
           description="Profile, notifications, connected platforms, billing, security, and audit log."
@@ -72,7 +76,9 @@ export default function SettingsHub() {
         <Route path="webhooks" element={<Wrap><WebhooksPanel /></Wrap>} />
         <Route path="billing" element={<Wrap><BillingPanel /></Wrap>} />
         <Route path="security" element={<Wrap><SecurityPanel /></Wrap>} />
+        <Route path="sso" element={<Wrap><SsoPanel /></Wrap>} />
         <Route path="team" element={<Navigate to="/dashboard/team" replace />} />
+        <Route path="approvals" element={<Wrap><ApprovalsPanel /></Wrap>} />
         <Route path="roles" element={<Wrap><RolesMatrixPanel /></Wrap>} />
         <Route
           path="white-label"

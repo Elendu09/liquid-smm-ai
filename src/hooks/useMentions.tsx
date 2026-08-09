@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import type { TeamMember } from "@/hooks/useTeamMembers";
 

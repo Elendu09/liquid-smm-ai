@@ -4,7 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { ScrollToTopButton } from "@/components/layout/ScrollToTopButton";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AccountProvider } from "@/contexts/AccountContext";
 import { BrandProvider } from "@/contexts/BrandContext";
@@ -38,6 +40,7 @@ import Blog from "./pages/company/Blog";
 import BlogPost from "./pages/company/BlogPost";
 import Careers from "./pages/company/Careers";
 import Contact from "./pages/company/Contact";
+import Changelog from "./pages/Changelog";
 
 
 
@@ -46,16 +49,16 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import Dashboard from "@/pages/dashboard/Dashboard";
 
-// Hubs
-import CreateHub from "@/pages/dashboard/hubs/CreateHub";
-import PublishHub from "@/pages/dashboard/hubs/PublishHub";
-import EngageHub from "@/pages/dashboard/hubs/EngageHub";
-import AudienceHub from "@/pages/dashboard/hubs/AudienceHub";
-import AnalyticsHub from "@/pages/dashboard/hubs/AnalyticsHub";
-import LibraryHub from "@/pages/dashboard/hubs/LibraryHub";
-import LinkInBioHub from "@/pages/dashboard/hubs/LinkInBioHub";
-import ActivityHub from "@/pages/dashboard/hubs/ActivityHub";
-import SettingsHub from "@/pages/dashboard/hubs/SettingsHub";
+// Hubs — code-split heavy hubs for 3.5MB → smaller initial
+const CreateHub = lazy(() => import("@/pages/dashboard/hubs/CreateHub"));
+const PublishHub = lazy(() => import("@/pages/dashboard/hubs/PublishHub"));
+const EngageHub = lazy(() => import("@/pages/dashboard/hubs/EngageHub"));
+const AudienceHub = lazy(() => import("@/pages/dashboard/hubs/AudienceHub"));
+const AnalyticsHub = lazy(() => import("@/pages/dashboard/hubs/AnalyticsHub"));
+const LibraryHub = lazy(() => import("@/pages/dashboard/hubs/LibraryHub"));
+const LinkInBioHub = lazy(() => import("@/pages/dashboard/hubs/LinkInBioHub"));
+const ActivityHub = lazy(() => import("@/pages/dashboard/hubs/ActivityHub"));
+const SettingsHub = lazy(() => import("@/pages/dashboard/hubs/SettingsHub"));
 import Support from "@/pages/dashboard/Support";
 import Campaigns from "@/pages/dashboard/Campaigns";
 import Team from "@/pages/dashboard/Team";
@@ -102,6 +105,8 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ErrorBoundary>
+            <Suspense fallback={<div className="min-h-dvh grid place-items-center bg-background"><div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>}>
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
@@ -133,6 +138,7 @@ const App = () => (
               <Route path="/legal/terms" element={<Navigate to="/terms" replace />} />
               <Route path="/legal/cookies" element={<Navigate to="/cookies" replace />} />
               <Route path="/about" element={<About />} />
+              <Route path="/changelog" element={<Changelog />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/careers" element={<Careers />} />
@@ -191,6 +197,8 @@ const App = () => (
 
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
+            </ErrorBoundary>
             <MarketingScrollTop />
           </BrowserRouter>
         </TooltipProvider>

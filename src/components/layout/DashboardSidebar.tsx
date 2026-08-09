@@ -178,26 +178,28 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
   const [activeIdx, setActiveIdx] = useState(0);
   const [signOutOpen, setSignOutOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    const init: Record<string, boolean> = {};
+  // Single-open accordion: only one dropdown at a time
+  const findParentForPath = (path: string) => {
     for (const it of navItems) {
-      if (it.children && pathname.startsWith(it.href) && it.href !== "/dashboard") {
-        init[it.href] = true;
-      }
+      if (it.children && path.startsWith(it.href) && it.href !== "/dashboard") return it.href;
     }
-    return init;
+    return null;
+  };
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const parent = findParentForPath(pathname);
+    return parent ? { [parent]: true } : {};
   });
 
   useEffect(() => {
-    setOpenGroups((prev) => {
-      const next = { ...prev };
-      for (const it of navItems) {
-        if (it.children && pathname.startsWith(it.href) && it.href !== "/dashboard") {
-          next[it.href] = true;
-        }
-      }
-      return next;
-    });
+    const parent = findParentForPath(pathname);
+    if (parent) {
+      setOpenGroups({ [parent]: true });
+    } else {
+      // No dropdown parent for this route — close all to avoid clutter
+      // Keep Dashboard etc. collapsed
+      setOpenGroups({});
+    }
   }, [pathname]);
 
   // Global ⌘K / Ctrl+K to focus search (desktop only — never pop the
@@ -414,8 +416,12 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                     type="button"
                     onClick={() => {
                       navigate(item.href);
-                      if (hasKids && showLabels) {
-                        setOpenGroups((p) => ({ ...p, [item.href]: true }));
+                      if (showLabels) {
+                        if (hasKids) {
+                          setOpenGroups({ [item.href]: true });
+                        } else {
+                          setOpenGroups({});
+                        }
                       }
                       onNavigate?.();
                     }}
@@ -434,7 +440,10 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate, isMobile }: Sideb
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenGroups((p) => ({ ...p, [item.href]: !p[item.href] }));
+                        setOpenGroups((prev) => {
+                          const isOpen = !!prev[item.href];
+                          return isOpen ? {} : { [item.href]: true };
+                        });
                       }}
                       className={cn(
                         "h-full px-2 flex items-center rounded-r-lg opacity-70 hover:opacity-100 hover:bg-black/10",

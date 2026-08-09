@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { DEMO_REPORT_RUNS } from "@/lib/demoSeeds";
 import { createRemoteCollection } from "./_remoteCollection";
 import type { ReportData } from "@/lib/reportAnalytics";
 
@@ -57,7 +58,7 @@ function humanSize(bytes: number) {
 const store = createRemoteCollection<ReportRun, Row>({
   table: "report_runs",
   localKey: "smmpilot:reports:runs",
-  seed: [],
+  seed: DEMO_REPORT_RUNS as any,
   orderBy: { column: "created_at", ascending: false },
   fromRow: (r) => ({
     id: r.id,

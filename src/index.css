@@ -377,6 +377,26 @@
     100% { background-position: 200% 0; }
   }
 
+  /* Skeleton shimmer surface */
+  @keyframes shimmer-sweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+    background: hsl(var(--muted) / 0.55);
+  }
+
+  .shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.07), transparent);
+    animation: shimmer-sweep 1.6s infinite;
+  }
+
   .animate-shimmer {
     background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.1), transparent);
     background-size: 200% 100%;
@@ -488,4 +508,13 @@
 }
 @media (min-width: 1024px) {
   :root { --mobile-header-h: 0px; }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }

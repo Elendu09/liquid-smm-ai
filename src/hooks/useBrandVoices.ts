@@ -35,15 +35,36 @@ export const PLATFORM_LABELS: Record<PlatformKey, string> = {
   instagram: "Instagram", tiktok: "TikTok", twitter: "X", facebook: "Facebook", linkedin: "LinkedIn",
 };
 
-export const DEFAULT_VOICES: BrandVoice[] = [{
-  id: "voice-default", name: "Balanced",
-  tone: "friendly, clear, confident",
-  audience: "general audience",
-  emojis: "minimal", length: "medium",
-  dos: ["Lead with the hook", "Use plain language"],
-  donts: ["Avoid corporate jargon", "No hard sell"],
-  samples: [], createdAt: new Date().toISOString(), isDefault: true,
-}];
+export const DEFAULT_VOICES: BrandVoice[] = [
+  {
+    id: "voice-default", name: "Balanced",
+    tone: "friendly, clear, confident",
+    audience: "general audience",
+    emojis: "minimal", length: "medium",
+    dos: ["Lead with the hook", "Use plain language"],
+    donts: ["Avoid corporate jargon", "No hard sell"],
+    samples: ["Behind the scenes 🎥 Our studio today", "3 tips that doubled our saves"], createdAt: new Date().toISOString(), isDefault: true,
+  },
+  {
+    id: "voice-bold", name: "Bold & Punchy",
+    tone: "bold, punchy, energetic",
+    audience: "creators & founders",
+    emojis: "expressive", length: "short",
+    dos: ["Hook in 5 words", "Use strong verbs"],
+    donts: ["No long sentences", "No hedging"],
+    samples: ["This launch will break the feed 🚀", "Steal this hook →"], createdAt: new Date().toISOString(), isDefault: false,
+    platformOverrides: { instagram: { tone: "punchy for Reels", length: "short", emojis: "expressive" }, linkedin: { tone: "professional concise", emojis: "none" } }
+  },
+  {
+    id: "voice-friendly", name: "Friendly Guide",
+    tone: "warm, helpful, approachable",
+    audience: "small brands & shops",
+    emojis: "minimal", length: "medium",
+    dos: ["Add a question", "Give one clear CTA"],
+    donts: ["No jargon", "No pushy sales"],
+    samples: ["Quick Q: which cover do you prefer? 👇", "Save this for your next launch"], createdAt: new Date().toISOString(), isDefault: false,
+  },
+];
 
 type Row = {
   id: string; name: string; tone: string; audience: string;

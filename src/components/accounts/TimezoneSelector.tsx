@@ -5,6 +5,7 @@ import {
 } from "@/components/ui/select";
 import { useAccounts } from "@/contexts/AccountContext";
 import { cn } from "@/lib/utils";
+import { markOnboardingFlag, ONBOARDING_FLAGS } from "@/components/dashboard/OnboardingChecklistCard";
 
 /**
  * TimezoneSelector
@@ -52,6 +53,7 @@ export function TimezoneSelector({
   const onChange = (next: string) => {
     setTz(next);
     void updateAccount(accountId, { timezone: next });
+    try { markOnboardingFlag(ONBOARDING_FLAGS.timezone); } catch (_e) { void _e; }
   };
 
   return (

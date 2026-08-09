@@ -22,8 +22,23 @@ const Index = () => {
   // Signed-in users land here after OAuth / email-confirmation redirects to the
   // origin. Send them to their dashboard instead of the marketing homepage.
   useEffect(() => {
-    if (!loading && user && !isGuest) navigate("/dashboard", { replace: true });
+    if (!loading && user && !isGuest) {
+      // Use immediate redirect to avoid homepage flash
+      window.location.replace("/dashboard");
+    }
   }, [user, isGuest, loading, navigate]);
+
+  // Show nothing while redirecting to avoid flash of homepage
+  if (!loading && user && !isGuest) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <span className="text-xs uppercase tracking-[0.3em]">Loading dashboard</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

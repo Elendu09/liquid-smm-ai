@@ -162,26 +162,42 @@ export function useOnboarding() {
     [user],
   );
 
+  const updateProfile = useCallback(
+    (patch: Partial<OnboardingProfile>) =>
+      persist({ ...state, profile: { ...state.profile, ...patch } }),
+    [persist, state],
+  );
+
+  const complete = useCallback(async () => {
+    const next = { ...state, completed: true, seen: true, completedAt: new Date().toISOString() };
+    await persist(next);
+    // Turn the onboarding answers into real workspace setup (brand, content
+    // categories, brand voice, AI blueprint). Fire-and-forget; idempotent.
+    if (user) {
+      try {
+        await supabase.functions.invoke("onboarding-setup", {
+          body: { profile: next.profile },
+        });
+      } catch { /* non-fatal */ }
+    }
+  }, [persist, state, user]);
+
+  const markSeen = useCallback(
+    () => persist({ ...state, seen: true }),
+    [persist, state],
+  );
+
+  const reset = useCallback(
+    () => persist({ completed: false, seen: false, profile: defaultProfile }),
+    [persist],
+  );
+
   return {
     state,
     blueprint: state.meta?.blueprint,
-    updateProfile: (patch: Partial<OnboardingProfile>) =>
-      persist({ ...state, profile: { ...state.profile, ...patch } }),
-    complete: async () => {
-      const next = { ...state, completed: true, seen: true, completedAt: new Date().toISOString() };
-      await persist(next);
-      // Turn the onboarding answers into real workspace setup (brand, content
-      // categories, brand voice, AI blueprint). Fire-and-forget; idempotent.
-      if (user) {
-        try {
-          await supabase.functions.invoke("onboarding-setup", {
-            body: { profile: next.profile },
-          });
-        } catch { /* non-fatal */ }
-      }
-    },
-    markSeen: () => persist({ ...state, seen: true }),
-    reset: () => persist({ completed: false, seen: false, profile: defaultProfile }),
-
+    updateProfile,
+    complete,
+    markSeen,
+    reset,
   };
 }

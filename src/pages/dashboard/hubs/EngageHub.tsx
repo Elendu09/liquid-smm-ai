@@ -1,6 +1,6 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { Bot, Inbox, MessageSquare, MessageCircle, Share2 } from "lucide-react";
-import { PageHeader, HubTabs, HeaderActionRow, sectionActions, type HubTab } from "@/components/dashboard/shell";
+import { PageHeader, HubTabs, type HubTab } from "@/components/dashboard/shell";
 import { FeatureGate } from "@/components/shared/FeatureGate";
 import { useUnreadInbox } from "@/hooks/useUnreadInbox";
 import BotRulesView from "../views/BotRulesView";
@@ -21,14 +21,11 @@ function EngageLayout() {
 
   return (
     <div>
-      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+      <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 space-y-4">
         <PageHeader
           title="Engage"
           description="Reply, automate conversations, and route one idea across every connected channel."
           breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Engage" }]}
-          actions={
-            <HeaderActionRow actions={sectionActions(tabs)} />
-          }
         />
         <HubTabs tabs={tabs} />
       </div>

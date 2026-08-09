@@ -1,11 +1,18 @@
 import { useRef, useState, type DragEvent } from "react";
 import { toast } from "sonner";
-import { ImagePlus, Loader2, Trash2, ExternalLink, Link as LinkIcon } from "lucide-react";
+import { ImagePlus, Loader2, Trash2, ExternalLink, Link as LinkIcon, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { pushLocalCollection } from "@/hooks/useLocalCollection";
+import {
+  downscaleForLibrary,
+  readAsDataUrl,
+  type LibraryAsset,
+} from "@/hooks/useImageAttachments";
+import { LibraryImagePicker } from "@/components/library/LibraryImagePicker";
 
 const YEAR = 60 * 60 * 24 * 365;
 
@@ -16,10 +23,32 @@ interface Props {
   label?: string;
 }
 
-/** Image/media picker with drag & drop upload to the private post-media bucket. */
+/** Save any uploaded media into the user's Library → Assets for reuse. */
+function saveToLibrary(file: File, url: string) {
+  try {
+    const asset: LibraryAsset = {
+      id: crypto.randomUUID(),
+      title: file.name.replace(/\.[^.]+$/, ""),
+      subtitle: "Uploaded media",
+      status: "active",
+      type: file.type.startsWith("image/") ? "image" : "video",
+      url,
+      tags: ["imported"],
+      createdAt: new Date().toISOString(),
+    };
+    pushLocalCollection<LibraryAsset>("library", "assets", [asset]);
+  } catch {
+    /* library persistence is best-effort */
+  }
+}
+
+/** Image/media picker with drag & drop upload to the private post-media bucket.
+ *  Every upload is also saved to Library → Assets, and a "Use from library"
+ *  picker lets you reuse anything you imported before. */
 export function MediaField({ value, onChange, className, label = "Media" }: Props) {
   const [busy, setBusy] = useState(false);
   const [drag, setDrag] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const upload = async (file: File) => {
@@ -36,12 +65,16 @@ export function MediaField({ value, onChange, className, label = "Media" }: Prop
       const { data: auth } = await supabase.auth.getUser();
       const uid = auth.user?.id;
       if (!uid) {
-        // Demo / signed-out: keep a local object URL so the preview still works.
-        onChange(URL.createObjectURL(file));
-        toast.info("Demo preview only", { description: "Sign in to store media permanently." });
+        // Demo / signed-out: persist the image locally (downscaled) so the
+        // preview survives reloads AND it lands in the user's library.
+        const dataUrl = await readAsDataUrl(file);
+        const libUrl = await downscaleForLibrary(dataUrl, file.type);
+        onChange(libUrl);
+        saveToLibrary(file, libUrl);
+        toast.success("Added to media & library");
         return;
       }
-      const path = `${uid}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
+      const path = `${uid}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
       const { error } = await supabase.storage.from("post-media").upload(path, file, {
         cacheControl: "3600",
         upsert: false,
@@ -53,7 +86,8 @@ export function MediaField({ value, onChange, className, label = "Media" }: Prop
         .createSignedUrl(path, YEAR);
       if (sErr) throw sErr;
       onChange(signed.signedUrl);
-      toast.success("Media uploaded");
+      saveToLibrary(file, signed.signedUrl);
+      toast.success("Media uploaded & saved to library");
     } catch (e) {
       toast.error("Upload failed", { description: e instanceof Error ? e.message : undefined });
     } finally {
@@ -153,7 +187,24 @@ export function MediaField({ value, onChange, className, label = "Media" }: Prop
           placeholder="…or paste a media URL"
           className="h-8 text-xs"
         />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 shrink-0 gap-1.5 rounded-full px-3 text-xs"
+          onClick={() => setLibraryOpen(true)}
+          title="Use an image from your library"
+        >
+          <FolderOpen className="h-3.5 w-3.5" />
+          Library
+        </Button>
       </div>
+
+      <LibraryImagePicker
+        open={libraryOpen}
+        onOpenChange={setLibraryOpen}
+        onSelect={(url) => onChange(url)}
+      />
     </div>
   );
 }

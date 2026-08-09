@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StatusBoard } from "@/components/dashboard/shell";
+import { StatusBoard } from "@/components/dashboard/shell/StatusBoard";
 import { HashtagResearchDialog } from "@/components/create/HashtagResearchDialog";
 
 const seed = [

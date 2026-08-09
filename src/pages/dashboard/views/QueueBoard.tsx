@@ -34,6 +34,7 @@ import { RescheduleDialog } from "@/components/publish/RescheduleDialog";
 import { PostSlotDialog } from "@/components/publish/PostSlotDialog";
 import { PauseAllDialog } from "@/components/publish/PauseAllDialog";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { MediaThumb } from "@/components/shared/MediaThumb";
 import { useAccounts } from "@/contexts/AccountContext";
 
 type Column = "queued" | "sending" | "completed" | "failed";
@@ -123,11 +124,12 @@ function PostCard({
           className="block w-full overflow-hidden rounded-lg border border-border/60"
           aria-label="View and edit post media"
         >
-          {/\.(mp4|webm|mov)(\?|$)/i.test(post.mediaUrl) ? (
-            <video src={post.mediaUrl} className="h-28 w-full object-cover" muted />
-          ) : (
-            <img src={post.mediaUrl} alt="Scheduled post media" loading="lazy" className="h-28 w-full object-cover" />
-          )}
+          <MediaThumb
+            url={post.mediaUrl}
+            alt="Scheduled post media"
+            onPlay={(url) => window.open(url, "_blank", "noopener")}
+            className="h-28 w-full"
+          />
         </button>
       )}
       {status === "sending" && (

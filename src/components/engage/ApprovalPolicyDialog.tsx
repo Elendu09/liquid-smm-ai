@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useApprovalPolicies, type ApprovalPolicy, type ApprovalRole, type ApprovalStage, type ApprovalChannel } from "@/hooks/useApprovalPolicies";
 import { useBrands } from "@/contexts/BrandContext";
+import { markOnboardingFlag, ONBOARDING_FLAGS } from "@/components/dashboard/OnboardingChecklistCard";
 import { platforms } from "@/config/platforms";
 
 /**
@@ -126,6 +127,7 @@ export function ApprovalPolicyDialog({ open, onOpenChange, initial, onSubmit }: 
       const created = add(payload);
       onSubmit?.(created);
     }
+    try { markOnboardingFlag(ONBOARDING_FLAGS.approvals); } catch (_e) { void _e; }
     onOpenChange(false);
   };
 

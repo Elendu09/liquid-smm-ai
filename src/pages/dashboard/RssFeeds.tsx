@@ -469,25 +469,61 @@ export default function RssFeedsPage() {
             </div>
           )}
           {!loading && !isGuest && feeds.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center space-y-3">
-                <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500/15 to-amber-500/5 flex items-center justify-center">
-                  <Rss className="h-7 w-7 text-orange-500" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold">No feeds yet</h3>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto mt-1">
-                    Pipe any RSS or Atom URL — blogs, YouTube channels, podcasts, subreddits — and we'll import new items automatically.
+            <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/50 backdrop-blur-sm">
+              <header className="flex items-center gap-3 px-4 pb-3 pt-4">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-orange-500/10 text-orange-500">
+                  <Rss className="h-4 w-4" strokeWidth={1.75} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-semibold leading-tight tracking-tight">Add your first feed</h3>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                    Pipe any RSS or Atom URL — blogs, YouTube channels, podcasts, subreddits.
                   </p>
                 </div>
-                <div className="flex gap-2 justify-center flex-wrap">
-                  <Button onClick={() => openAdd()}><Plus className="h-4 w-4 mr-2" />Add feed</Button>
-                  <Button variant="outline" onClick={() => setTab("discover")}>
-                    <Compass className="h-4 w-4 mr-2" />Explore
+                <Button size="sm" variant="outline" onClick={() => setTab("discover")}>
+                  <Compass className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Explore feeds</span>
+                </Button>
+              </header>
+              <div className="h-[2px] w-full bg-gradient-to-r from-orange-500 via-amber-500/60 to-transparent" aria-hidden />
+              <CardContent className="p-4 sm:p-5">
+                <form
+                  className="flex flex-col gap-2 sm:flex-row"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const u = (e.currentTarget.elements.namedItem("first-feed-url") as HTMLInputElement)?.value;
+                    if (u?.trim()) openAdd({ url: u.trim(), name: "" });
+                    else toast.error("Paste a feed URL first");
+                  }}
+                >
+                  <Input
+                    name="first-feed-url"
+                    placeholder="https://example.com/feed.xml"
+                    className="h-10 flex-1"
+                    aria-label="Feed URL"
+                  />
+                  <Button type="submit" className="h-10">
+                    <Plus className="h-4 w-4 sm:mr-1.5" /> Add first feed
                   </Button>
+                </form>
+                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                  {[
+                    { icon: Radio, title: "Auto-import", text: "New items become drafts on a schedule you set." },
+                    { icon: Sparkles, title: "AI rewrite", text: "Turn headlines into on-brand posts per platform." },
+                    { icon: Send, title: "Auto-publish", text: "Route items straight to your queue when you want." },
+                  ].map(({ icon: StepIcon, title, text }) => (
+                    <div key={title} className="flex items-start gap-2.5 rounded-xl border border-border/50 bg-muted/30 p-3">
+                      <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-background text-primary ring-1 ring-border/60">
+                        <StepIcon className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold">{title}</p>
+                        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{text}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
-            </Card>
+            </div>
           )}
           {feeds.map((f) => {
             const isSyncing = syncingFeedId === f.id;

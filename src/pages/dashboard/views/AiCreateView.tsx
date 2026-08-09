@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StatusBoard } from "@/components/dashboard/shell";
+import { StatusBoard } from "@/components/dashboard/shell/StatusBoard";
 import { AiBriefDialog } from "@/components/create/AiBriefDialog";
 
 const seed = [

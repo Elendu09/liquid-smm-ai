@@ -17,6 +17,8 @@ export type MediaKind = "image" | "video";
 
 export interface MediaMeta {
   kind: MediaKind;
+  /** Source URL of the media, when known. */
+  url?: string;
   /** Width in pixels. */
   width?: number;
   /** Height in pixels. */
@@ -158,8 +160,8 @@ function checkOne(meta: MediaMeta, platform: PlatformId, spec: RatioSpec): Media
   if (meta.width && meta.height) {
     const actual = meta.width / meta.height;
     const ok = spec.ratios.some((r) => ratioMatches(actual, 1, r.w / r.h));
+    const labels = spec.ratios.map((r) => r.label).join(" / ");
     if (!ok) {
-      const labels = spec.ratios.map((r) => r.label).join(" / ");
       issues.push({
         id: id("ratio"),
         severity: "error",

@@ -104,6 +104,69 @@ function StatusPill({ post }: { post: ScheduledPost }) {
   );
 }
 
+/** Returns a gradient background class for platform-colored calendar cells */
+function getPlatformGradient(platform: string): string {
+  const gradients: Record<string, string> = {
+    instagram: "bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500",
+    tiktok: "bg-gradient-to-br from-cyan-400 to-pink-500",
+    youtube: "bg-gradient-to-br from-red-600 to-red-500",
+    twitter: "bg-gradient-to-br from-gray-900 to-gray-700",
+    facebook: "bg-gradient-to-br from-blue-600 to-blue-500",
+    linkedin: "bg-gradient-to-br from-blue-700 to-blue-600",
+    threads: "bg-gradient-to-br from-gray-900 to-gray-800",
+    pinterest: "bg-gradient-to-br from-red-600 to-red-500",
+    snapchat: "bg-gradient-to-br from-yellow-400 to-yellow-300",
+    reddit: "bg-gradient-to-br from-orange-500 to-orange-400",
+    telegram: "bg-gradient-to-br from-sky-500 to-sky-400",
+    discord: "bg-gradient-to-br from-indigo-500 to-indigo-400",
+    whatsapp: "bg-gradient-to-br from-green-500 to-green-400",
+    bluesky: "bg-gradient-to-br from-sky-400 to-sky-300",
+  };
+  return gradients[(platform ?? "").toLowerCase()] || "bg-gradient-to-br from-primary/20 to-primary/10";
+}
+
+/** Platform-colored border classes for calendar chips */
+function getPlatformBorderClass(platform: string): string {
+  const borders: Record<string, string> = {
+    instagram: "border-pink-400/40",
+    tiktok: "border-cyan-400/40",
+    youtube: "border-red-500/40",
+    twitter: "border-gray-500/40",
+    facebook: "border-blue-500/40",
+    linkedin: "border-blue-600/40",
+    threads: "border-gray-600/40",
+    pinterest: "border-red-500/40",
+    snapchat: "border-yellow-400/40",
+    reddit: "border-orange-500/40",
+    telegram: "border-sky-400/40",
+    discord: "border-indigo-400/40",
+    whatsapp: "border-green-400/40",
+    bluesky: "border-sky-400/40",
+  };
+  return borders[(platform ?? "").toLowerCase()] || "border-primary/30";
+}
+
+/** Platform-colored background classes for calendar chips */
+function getPlatformBgClass(platform: string): string {
+  const bgs: Record<string, string> = {
+    instagram: "bg-gradient-to-r from-pink-500/15 via-red-500/10 to-yellow-500/15",
+    tiktok: "bg-gradient-to-r from-cyan-500/15 to-pink-500/15",
+    youtube: "bg-red-500/15",
+    twitter: "bg-gray-500/10",
+    facebook: "bg-blue-500/15",
+    linkedin: "bg-blue-600/15",
+    threads: "bg-gray-600/10",
+    pinterest: "bg-red-500/15",
+    snapchat: "bg-yellow-400/15",
+    reddit: "bg-orange-500/15",
+    telegram: "bg-sky-400/15",
+    discord: "bg-indigo-400/15",
+    whatsapp: "bg-green-400/15",
+    bluesky: "bg-sky-400/15",
+  };
+  return bgs[(platform ?? "").toLowerCase()] || "bg-primary/10";
+}
+
 export const ContentCalendar = () => {
   const { posts, update, remove, add } = useScheduledPosts();
   const [cursor, setCursor] = useState(new Date());
@@ -351,7 +414,11 @@ export const ContentCalendar = () => {
     toast.success("Post duplicated");
   };
 
-  const renderChip = (p: ScheduledPost, compact = false) => (
+  const renderChip = (p: ScheduledPost, compact = false) => {
+    const primaryPlatform = p.platformIds[0];
+    const chipBorder = primaryPlatform ? getPlatformBorderClass(primaryPlatform) : "border-primary/30";
+    const chipBg = primaryPlatform ? getPlatformBgClass(primaryPlatform) : "bg-primary/10";
+    return (
     <div
       key={p.id}
       draggable
@@ -360,27 +427,29 @@ export const ContentCalendar = () => {
       onClick={(e) => { e.stopPropagation(); setDetailsPost(p); }}
       className={cn(
         "group text-[10px] sm:text-[11px] rounded-md px-1 sm:px-1.5 py-0.5 sm:py-1 border cursor-grab active:cursor-grabbing",
-        "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15 transition-colors",
+        chipBg, chipBorder, "text-foreground hover:brightness-110 transition-all",
         "flex items-center gap-1 min-w-0 max-w-full overflow-hidden",
         dragId === p.id && "opacity-50",
       )}
+      title={`${p.caption} · ${p.platformIds.join(", ")}`}
     >
       <Clock className="h-2.5 w-2.5 shrink-0 opacity-70" strokeWidth={2} />
       <span className="tabular-nums font-medium shrink-0 truncate">{fmtTime(p.scheduledAt)}</span>
-      {!compact && (
-        <>
-          <div className="hidden sm:flex -space-x-1 shrink-0">
-            {p.platformIds.slice(0, 2).map((id) => (
-              <div key={id} className="rounded-full ring-1 ring-background">
-                <PlatformIcon platform={id} size="xs" showBackground />
-              </div>
-            ))}
+      {/* Always show platform visual logos — compact on month cells, plus caption on expanded */}
+      <div className={cn("flex -space-x-1 shrink-0", compact && "ml-0.5")}>
+        {p.platformIds.slice(0, 3).map((id) => (
+          <div key={id} className="rounded-full ring-1 ring-background shadow-sm">
+            <PlatformIcon platform={id} size="xs" showBackground />
           </div>
-          <span className="truncate text-foreground/80 min-w-0">{p.caption.slice(0, 24)}</span>
-        </>
+        ))}
+        {p.platformIds.length > 3 && <span className="text-[8px] font-bold bg-muted text-muted-foreground rounded-full h-[18px] min-w-[18px] px-0.5 grid place-items-center ring-1 ring-background">+{p.platformIds.length-3}</span>}
+      </div>
+      {!compact && (
+        <span className="truncate text-foreground/80 min-w-0 hidden sm:inline">{p.caption.slice(0, 24)}</span>
       )}
     </div>
-  );
+    );
+  };
 
   const DayCell = ({ date }: { date: Date | null }) => {
     if (!date) return <div className="min-h-[100px] rounded-lg border border-dashed border-border/30 bg-muted/10" />;
@@ -393,6 +462,11 @@ export const ContentCalendar = () => {
     const heatBg = showBestTimes && heat > 0
       ? (heat >= 3 ? "bg-amber-500/[0.10]" : heat === 2 ? "bg-amber-500/[0.07]" : "bg-amber-500/[0.04]")
       : "";
+    
+    // Determine dominant platform color for this day
+    const dominantPlatform = dayPosts.length > 0 ? dayPosts[0].platformIds[0] : null;
+    const platformGradient = dominantPlatform ? getPlatformGradient(dominantPlatform) : "";
+    
     return (
       <div
         onClick={() => setSelectedDay(date)}
@@ -408,6 +482,10 @@ export const ContentCalendar = () => {
           dropTarget === key && "border-primary bg-primary/10 ring-2 ring-primary/40",
         )}
       >
+        {/* Platform color background indicator */}
+        {platformGradient && !isSelected && (
+          <div className={cn("absolute inset-0 opacity-10 pointer-events-none", platformGradient)} />
+        )}
         <div className="flex items-center justify-between">
           <span className={cn(
             "text-[11px] sm:text-xs font-semibold h-5 min-w-5 px-1 inline-flex items-center justify-center rounded-full",
@@ -435,16 +513,17 @@ export const ContentCalendar = () => {
         </div>
 
 
-        {/* Mobile: compact dot row (chips overflow tiny cells) */}
+        {/* Mobile: compact platform-icon row — so users instantly see which network is targeted */}
         <div className="sm:hidden flex-1 flex items-end">
           {dayPosts.length > 0 && (
-            <div className="flex flex-wrap gap-0.5 w-full">
+            <div className="flex flex-wrap gap-1 w-full items-center">
               {dayPosts.slice(0, 6).map((p) => (
-                <span
-                  key={p.id}
-                  className="h-1.5 w-1.5 rounded-full bg-primary/70"
-                  title={fmtTime(p.scheduledAt)}
-                />
+                <span key={p.id} className="inline-flex items-center -space-x-1.5" title={`${p.caption.slice(0, 24)} · ${p.platformIds.join(", ")} · ${fmtTime(p.scheduledAt)}`}>
+                  {p.platformIds.slice(0, 3).map((pid) => (
+                    <PlatformIcon key={pid} platform={pid} size="xs" showBackground className="ring-1 ring-background" />
+                  ))}
+                  {p.platformIds.length > 3 && <span className="text-[8px] font-medium bg-muted text-muted-foreground rounded-full h-4 min-w-4 px-0.5 grid place-items-center ring-1 ring-background">+{p.platformIds.length -3}</span>}
+                </span>
               ))}
               {dayPosts.length > 6 && (
                 <span className="text-[9px] text-muted-foreground leading-none self-center">+{dayPosts.length - 6}</span>

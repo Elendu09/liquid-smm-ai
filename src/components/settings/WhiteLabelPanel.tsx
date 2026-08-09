@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Palette, Upload, RotateCcw, Eye } from "lucide-react";
+import { Palette, RotateCcw, Eye } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { MediaField } from "@/components/publish/MediaField";
 import { useWhiteLabel } from "@/hooks/useWhiteLabel";
 import { toast } from "sonner";
 
@@ -49,19 +50,11 @@ export function WhiteLabelPanel() {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="logoUrl">Logo URL</Label>
-            <div className="flex gap-2">
-              <Input
-                id="logoUrl"
-                value={local.logoUrl}
-                onChange={(e) => update("logoUrl", e.target.value)}
-                placeholder="https://cdn.example.com/logo.svg"
-                className="flex-1"
-              />
-              <Button variant="outline" size="icon" title="Upload (coming soon)">
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
+            <MediaField
+              value={local.logoUrl}
+              onChange={(url) => update("logoUrl", url ?? "")}
+              label="Logo"
+            />
           </div>
 
           <div className="space-y-2">
@@ -116,6 +109,25 @@ export function WhiteLabelPanel() {
               <p className="text-[11px] text-muted-foreground">Removes the vendor badge from public share pages.</p>
             </div>
             <Switch checked={local.hideBadge} onCheckedChange={(v) => update("hideBadge", v)} />
+          </div>
+
+          <div className="rounded-xl border border-border/60 p-3 space-y-3 bg-primary/[0.04]">
+            <p className="text-sm font-semibold">Email branding (white-label)</p>
+            <div className="grid gap-2">
+              <label className="text-xs font-medium">Support email</label>
+              <input value={local.supportEmail} onChange={(e) => update("supportEmail", e.target.value)} placeholder="support@yourbrand.com" className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" />
+              <p className="text-[11px] text-muted-foreground">Sender for magic-links and reports. Live sync.</p>
+            </div>
+            <div className="grid gap-2">
+              <label className="text-xs font-medium">Login tagline</label>
+              <input value={local.customLoginTagline} onChange={(e) => update("customLoginTagline", e.target.value)} placeholder="Your team's social OS" className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" />
+            </div>
+            <div className="rounded-lg border border-border/60 bg-card p-2.5 text-xs">
+              <p className="font-medium">Preview email</p>
+              <p className="text-muted-foreground mt-1">From: {local.brandName || "Your brand"} &lt;{local.supportEmail || "support@yourbrand.com"}&gt;</p>
+              <p className="mt-1">Subject: Your campaign needs approval</p>
+              <p className="text-muted-foreground">→ Magic-link via your domain</p>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2 justify-end pt-2 border-t border-border/60">

@@ -74,12 +74,34 @@ const plans = [
     limitations: ["No engagement automation", "No team seats"],
   },
   {
+    name: "Team",
+    icon: Users,
+    description: "For teams that approve together — fixed price, no seat tax.",
+    monthlyPrice: 99,
+    annualPrice: 79,
+    popular: true,
+    custom: false,
+    cta: "Start free trial",
+    ctaHref: "/signup",
+    highlight: "5 seats included · FLAT",
+    features: [
+      "Everything in Professional, plus:",
+      "5 seats included — extra seats $6/seat",
+      "Multi-stage approvals & external magic-link approvals",
+      "90-day backfill on new accounts",
+      "White-label reports & client share links",
+      "Priority chat support (4h response)",
+      "Unlimited publishing & 5,000 AI credits/mo",
+    ],
+    limitations: [],
+  },
+  {
     name: "Professional",
     icon: Crown,
     description: "For brands publishing everywhere, every day.",
     monthlyPrice: 49,
     annualPrice: 39,
-    popular: true,
+    popular: false,
     custom: false,
     cta: "Start free trial",
     ctaHref: "/signup",
@@ -122,22 +144,23 @@ const plans = [
 ];
 
 const featureComparison = [
-  { feature: "Social channels", free: "3", starter: "10", professional: "15", business: "Custom", icon: Users },
-  { feature: "Scheduled posts", free: "20/mo", starter: "500/mo", professional: "Unlimited", business: "Unlimited", icon: Calendar },
-  { feature: "AI credits included", free: "50/mo", starter: "200/mo", professional: "2,000/mo", business: "Custom", icon: Sparkles },
-  { feature: "Analytics history", free: "30 days", starter: "Unlimited", professional: "Unlimited", business: "Unlimited", icon: BarChart3 },
-  { feature: "Reports & exports", free: false, starter: "PDF & PPT", professional: "Templates", business: "White-label", icon: BarChart3 },
-  { feature: "Hashtag research", free: "Basic", starter: "Basic", professional: "Advanced", business: "Premium", icon: Hash },
-  { feature: "Engagement automation", free: false, starter: false, professional: true, business: "Premium", icon: Bot },
-  { feature: "Unified inbox & moderation", free: false, starter: false, professional: true, business: true, icon: MessageSquare },
-  { feature: "Stories & RSS autolists", free: false, starter: true, professional: true, business: true, icon: Rss },
-  { feature: "Approval workflow", free: false, starter: false, professional: true, business: true, icon: ShieldCheck },
-  { feature: "Link-in-bio & smartlinks", free: "1 page", starter: "Multiple", professional: "Standard", business: "Custom domain", icon: Link2 },
-  { feature: "Competitor tracking", free: "5", starter: "100", professional: "100", business: "Unlimited", icon: Eye },
-  { feature: "DM automation", free: false, starter: false, professional: true, business: true, icon: MessageSquare },
-  { feature: "Team seats", free: "1", starter: "1", professional: "3", business: "Unlimited", icon: Users },
-  { feature: "API, MCP & webhooks", free: "MCP only", starter: "MCP only", professional: true, business: true, icon: Workflow },
-  { feature: "Support", free: "Community", starter: "Email", professional: "Priority", business: "24/7 dedicated", icon: Headphones },
+  { feature: "Social channels", free: "3", starter: "10", team: "25", professional: "15", business: "Custom", icon: Users },
+  { feature: "Scheduled posts", free: "20/mo", starter: "500/mo", team: "Unlimited", professional: "Unlimited", business: "Unlimited", icon: Calendar },
+  { feature: "AI credits included", free: "50/mo", starter: "200/mo", team: "5,000/mo", professional: "2,000/mo", business: "Custom", icon: Sparkles },
+  { feature: "Analytics history", free: "30 days", starter: "Unlimited", team: "Unlimited", professional: "Unlimited", business: "Unlimited", icon: BarChart3 },
+  { feature: "Reports & exports", free: false, starter: "PDF & PPT", team: "White-label", professional: "Templates", business: "White-label", icon: BarChart3 },
+  { feature: "Hashtag research", free: "Basic", starter: "Basic", team: "Premium", professional: "Advanced", business: "Premium", icon: Hash },
+  { feature: "Engagement automation", free: false, starter: false, team: true, professional: true, business: "Premium", icon: Bot },
+  { feature: "Unified inbox & moderation", free: false, starter: false, team: true, professional: true, business: true, icon: MessageSquare },
+  { feature: "Stories & RSS autolists", free: false, starter: true, team: true, professional: true, business: true, icon: Rss },
+  { feature: "Approval workflow", free: false, starter: false, team: "Multi-stage + external", professional: true, business: true, icon: ShieldCheck },
+  { feature: "Link-in-bio & smartlinks", free: "1 page", starter: "Multiple", team: "Custom domain", professional: "Standard", business: "Custom domain", icon: Link2 },
+  { feature: "Competitor tracking", free: "5", starter: "100", team: "50", professional: "100", business: "Unlimited", icon: Eye },
+  { feature: "DM automation", free: false, starter: false, team: true, professional: true, business: true, icon: MessageSquare },
+  { feature: "Team seats", free: "1", starter: "1", team: "5 (FLAT)", professional: "3", business: "Unlimited", icon: Users },
+  { feature: "API, MCP & webhooks", free: "MCP only", starter: "MCP only", team: true, professional: true, business: true, icon: Workflow },
+  { feature: "Support", free: "Community", starter: "Email", team: "Priority chat (4h)", professional: "Priority", business: "24/7 dedicated", icon: Headphones },
+  { feature: "Backfill", free: "—", starter: "30 days", team: "90 days", professional: "30 days", business: "90 days", icon: Calendar },
 ];
 
 
@@ -199,7 +222,7 @@ const Pricing = () => {
       {/* Plans */}
       <section className="border-b border-border/60">
         <div className="container mx-auto px-4 py-16 lg:py-20">
-          <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-6">
+          <div className="grid sm:grid-cols-2 xl:grid-cols-5 gap-6 lg:gap-6">
             {plans.map((plan) => (
               <div
                 key={plan.name}
@@ -212,6 +235,11 @@ const Pricing = () => {
                 {plan.popular && (
                   <span className="absolute -top-3 left-8 rounded-full border border-primary/40 bg-background px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-primary">
                     Most popular
+                  </span>
+                )}
+                {plan.name === "Team" && (
+                  <span className="absolute -top-3 right-8 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+                    FLAT
                   </span>
                 )}
 
@@ -307,7 +335,10 @@ const Pricing = () => {
                   <TableHead className="w-[280px] text-[11px] uppercase tracking-[0.18em]">Feature</TableHead>
                   <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Free</TableHead>
                   <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Starter</TableHead>
-                  <TableHead className="text-center text-[11px] uppercase tracking-[0.18em] bg-primary/5">Professional</TableHead>
+                  <TableHead className="text-center text-[11px] uppercase tracking-[0.18em] bg-primary/5">
+                    <span className="inline-flex items-center gap-1">Team <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] tracking-normal">FLAT</span></span>
+                  </TableHead>
+                  <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Professional</TableHead>
                   <TableHead className="text-center text-[11px] uppercase tracking-[0.18em]">Custom</TableHead>
                 </TableRow>
               </TableHeader>
@@ -320,7 +351,7 @@ const Pricing = () => {
                         {row.feature}
                       </div>
                     </TableCell>
-                    {([row.free, row.starter, row.professional, row.business] as const).map((value, i) => (
+                    {([row.free, row.starter, row.team, row.professional, row.business] as const).map((value, i) => (
                       <TableCell key={i} className={`text-center ${i === 2 ? "bg-primary/5" : ""}`}>
                         {typeof value === "boolean" ? (
                           value ? (
