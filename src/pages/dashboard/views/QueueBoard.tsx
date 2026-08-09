@@ -35,7 +35,6 @@ import { PostSlotDialog } from "@/components/publish/PostSlotDialog";
 import { PauseAllDialog } from "@/components/publish/PauseAllDialog";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { MediaThumb } from "@/components/shared/MediaThumb";
-import { PanelSection } from "@/components/shared/PanelSection";
 import { useAccounts } from "@/contexts/AccountContext";
 
 type Column = "queued" | "sending" | "completed" | "failed";
@@ -112,93 +111,83 @@ function PostCard({
 }) {
   const status: SendStatus = post.status ?? "queued";
   const tz = post.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
-  // Test image fallback — proves preview renders even when no mediaUrl yet
-  const previewUrl = post.mediaUrl || "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&auto=format&fit=crop&q=60";
-  const isVideoUrl = previewUrl ? /\.(mp4|webm|mov|m4v)(?:\?|#|$)/i.test(previewUrl) : false;
   return (
-    <div className="group overflow-hidden flex flex-col">
-      {/* Always show preview — test image when no real media, video with Play overlay */}
-      <button
-        type="button"
-        onClick={onEdit}
-        className="relative block w-full overflow-hidden bg-muted/30 aspect-[16/10]"
-        aria-label="Preview post media"
-      >
-        <MediaThumb
-          url={post.mediaUrl ? post.mediaUrl : previewUrl}
-          alt={post.caption?.slice(0, 40) || "Post preview"}
-          onPlay={(url) => window.open(url, "_blank", "noopener")}
-          className="h-full w-full"
-        />
-        {!post.mediaUrl && (
-          <span className="pointer-events-none absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-white backdrop-blur">Preview</span>
-        )}
-        {isVideoUrl && post.mediaUrl && (
-          <span className="pointer-events-none absolute bottom-1.5 right-1.5 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-black">▶ Video</span>
-        )}
-      </button>
-      <div className="p-3 space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-[13px] line-clamp-3 text-foreground flex-1 leading-relaxed font-medium">{post.caption || "Untitled post"}</p>
-          <StatusPill post={post} />
-        </div>
-        {status === "sending" && (
-          <Progress value={post.sendProgress ?? 0} className="h-1" />
-        )}
-        {status === "failed" && post.error && (
-          <p className="text-[11px] text-destructive/90">{post.error}</p>
-        )}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {post.platformIds?.slice(0, 4).map((id) => (
-            <PlatformIcon key={id} platform={id} size="xs" showBackground />
-          ))}
-        </div>
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40 pt-2">
-          <span className="flex items-center gap-1" title={tz}>
-            <Clock className="h-3 w-3" />
-            {post.scheduledAt ? format(parseISO(post.scheduledAt), "MMM d, HH:mm") : "No date"}
-            <span className="opacity-60">· {tz.split("/").pop()}</span>
-          </span>
-          <div className="flex items-center gap-0.5">
-            {status === "failed" && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                aria-label="Retry send"
-                onClick={onRetry}
-              >
-                <RotateCw className="h-3.5 w-3.5" />
-              </Button>
-            )}
+    <div className="p-3 space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm line-clamp-3 text-foreground flex-1">{post.caption || "Untitled post"}</p>
+        <StatusPill post={post} />
+      </div>
+      {post.mediaUrl && (
+        <button
+          type="button"
+          onClick={onEdit}
+          className="block w-full overflow-hidden rounded-lg border border-border/60"
+          aria-label="View and edit post media"
+        >
+          <MediaThumb
+            url={post.mediaUrl}
+            alt="Scheduled post media"
+            onPlay={(url) => window.open(url, "_blank", "noopener")}
+            className="h-28 w-full"
+          />
+        </button>
+      )}
+      {status === "sending" && (
+        <Progress value={post.sendProgress ?? 0} className="h-1" />
+      )}
+      {status === "failed" && post.error && (
+        <p className="text-[11px] text-destructive/90">{post.error}</p>
+      )}
+      <div className="flex items-center gap-2 flex-wrap">
+        {post.platformIds?.slice(0, 4).map((id) => (
+          <PlatformIcon key={id} platform={id} className="h-4 w-4" />
+        ))}
+      </div>
+      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+        <span className="flex items-center gap-1" title={tz}>
+          <Clock className="h-3 w-3" />
+          {post.scheduledAt ? format(parseISO(post.scheduledAt), "MMM d, HH:mm") : "No date"}
+          <span className="opacity-60">· {tz.split("/").pop()}</span>
+        </span>
+        <div className="flex items-center gap-1">
+          {status === "failed" && (
             <Button
               variant="ghost"
               size="icon"
               className="h-7 w-7"
-              aria-label="Edit post"
-              onClick={onEdit}
+              aria-label="Retry send"
+              onClick={onRetry}
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <RotateCw className="h-3.5 w-3.5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              aria-label="Reschedule post"
-              onClick={onReschedule}
-            >
-              <CalendarIcon className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-destructive hover:text-destructive"
-              aria-label="Delete post"
-              onClick={onDelete}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            aria-label="Edit post"
+            onClick={onEdit}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            aria-label="Reschedule post"
+            onClick={onReschedule}
+          >
+            <CalendarIcon className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-destructive hover:text-destructive"
+            aria-label="Delete post"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </div>
     </div>
@@ -276,13 +265,13 @@ export default function QueueBoard() {
   const anyQueuedOrPaused = posts.some((p) => p.status === "queued" || p.status === "paused");
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 pb-8 space-y-4">
-      <PanelSection
-        icon={Clock}
-        title="Publishing queue"
-        description="Every card shows a live preview — images render inline, videos show a Play overlay."
-        accent="from-blue-500 via-sky-500/50 to-transparent"
-        action={
+    <div className="px-4 sm:px-6 lg:px-8 pb-8">
+      <ToolbarBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search posts…"
+        viewToggle={<ViewToggle value={view} onChange={setView} />}
+        actions={
           <div className="flex items-center gap-1.5">
             {anyQueuedOrPaused && (
               <Button size="sm" variant="outline" onClick={() => setPauseOpen(true)} className="min-h-9">
@@ -296,13 +285,7 @@ export default function QueueBoard() {
             </Button>
           </div>
         }
-      >
-        <ToolbarBar
-          search={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search posts…"
-          viewToggle={<ViewToggle value={view} onChange={setView} />}
-        />
+      />
 
       {posts.length === 0 ? (
         accounts.length === 0 ? (
@@ -360,7 +343,6 @@ export default function QueueBoard() {
           )}
         />
       )}
-      </PanelSection>
 
       <ScheduleDialog open={scheduleOpen} onOpenChange={setScheduleOpen} />
       <PostSlotDialog

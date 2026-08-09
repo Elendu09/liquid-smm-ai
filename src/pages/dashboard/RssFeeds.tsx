@@ -475,9 +475,9 @@ export default function RssFeedsPage() {
                   <Rss className="h-4 w-4" strokeWidth={1.75} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-[13px] font-semibold leading-none tracking-tight">Add your first feed</h3>
-                  <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-                    Pipe any RSS or Atom URL — blogs, YouTube channels, podcasts, subreddits. Test image shows preview works for every new item.
+                  <h3 className="text-sm font-semibold leading-tight tracking-tight">Add your first feed</h3>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                    Pipe any RSS or Atom URL — blogs, YouTube channels, podcasts, subreddits.
                   </p>
                 </div>
                 <Button size="sm" variant="outline" onClick={() => setTab("discover")}>
@@ -530,8 +530,8 @@ export default function RssFeedsPage() {
             const isError = f.last_status === "error";
             const isOk = f.last_status === "ok";
             return (
-              <Card key={f.id} className={`overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5 transition-all ${isError ? "border-destructive/30" : ""}`}>
-                <div className={`h-[2px] w-full ${isError ? "bg-gradient-to-r from-destructive via-destructive/60 to-transparent" : isOk ? "bg-gradient-to-r from-emerald-500 via-emerald-500/60 to-transparent" : "bg-gradient-to-r from-primary via-primary/60 to-transparent"}`} />
+              <Card key={f.id} className={`overflow-hidden hover:border-primary/40 transition-colors ${isError ? "border-destructive/30" : ""}`}>
+                <div className={`h-1 w-full ${isError ? "bg-gradient-to-r from-destructive to-destructive/40" : isOk ? "bg-gradient-to-r from-emerald-500 to-emerald-500/40" : "bg-gradient-to-r from-primary to-primary/30"}`} />
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className={`h-11 w-11 shrink-0 rounded-xl flex items-center justify-center ring-1 ${isError ? "bg-destructive/10 text-destructive ring-destructive/20" : isOk ? "bg-emerald-500/10 text-emerald-600 ring-emerald-500/20" : "bg-primary/10 text-primary ring-primary/20"}`}>
@@ -634,66 +634,31 @@ export default function RssFeedsPage() {
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {filteredItems.map((it) => (
-              <Card key={it.id} className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm group hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5 transition-all">
-                <div className="aspect-[16/10] overflow-hidden bg-muted relative rounded-t-2xl">
-                  {(() => {
-                    const img = it.thumbnail_url || it.image_url;
-                    const isVideo = img ? /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(img) : false;
-                    if (img) {
-                      if (isVideo) {
-                        return (
-                          <video src={img} muted playsInline preload="metadata" className="w-full h-full object-cover" />
-                        );
-                      }
-                      return (
-                        <img
-                          src={img}
-                          alt=""
-                          className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
-                          loading="lazy"
-                          onError={(e) => {
-                            const el = e.currentTarget;
-                            if (it.image_url && el.src !== it.image_url) {
-                              el.src = it.image_url;
-                            } else {
-                              el.style.display = "none";
-                              const fb = el.nextElementSibling as HTMLElement | null;
-                              if (fb) fb.style.display = "grid";
-                            }
-                          }}
-                        />
-                      );
-                    }
-                    return null;
-                  })()}
-                  {(it.thumbnail_url || it.image_url) && /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(it.thumbnail_url || it.image_url || "") && (
-                    <button
-                      type="button"
-                      onClick={() => window.open((it.thumbnail_url || it.image_url) as string, "_blank", "noopener")}
-                      className="absolute inset-0 grid place-items-center bg-black/20 hover:bg-black/30 transition-colors"
-                      aria-label="Play video"
-                    >
-                      <span className="grid h-9 w-9 place-items-center rounded-full bg-white text-black shadow-lg">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="ml-0.5"><path d="M8 5v14l11-7z"/></svg>
-                      </span>
-                    </button>
-                  )}
-                  {!(it.thumbnail_url || it.image_url) && (
-                    <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-orange-500/10 via-amber-500/5 to-primary/5">
-                      <img
-                        src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=60"
-                        alt="Preview test image"
-                        className="absolute inset-0 w-full h-full object-cover opacity-40"
-                      />
-                      <div className="relative flex flex-col items-center gap-1.5 rounded-xl bg-background/80 backdrop-blur px-3 py-2 border border-border/50">
-                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-[10px] uppercase tracking-wider font-medium">Preview image</span>
-                        <span className="text-[9px] text-muted-foreground">Test image — live preview</span>
+              <Card key={it.id} className="overflow-hidden group hover:border-primary/40 transition-colors">
+                <div className="aspect-video overflow-hidden bg-muted relative">
+                  {it.thumbnail_url || it.image_url ? (
+                    <img
+                      src={it.thumbnail_url ?? it.image_url ?? ""}
+                      alt=""
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      loading="lazy"
+                      onError={(e) => {
+                        const el = e.currentTarget;
+                        // Fall back to raw image if the cached thumbnail 404s
+                        if (it.image_url && el.src !== it.image_url) {
+                          el.src = it.image_url;
+                        } else {
+                          el.style.display = "none";
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-500/15 via-amber-500/10 to-primary/10">
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                        <ImageIcon className="h-6 w-6" />
+                        <span className="text-[10px] uppercase tracking-wider">No image</span>
                       </div>
                     </div>
-                  )}
-                  {(it.thumbnail_url || it.image_url) && !/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(it.thumbnail_url || it.image_url || "") && (
-                    <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-medium text-white backdrop-blur">Image</span>
                   )}
                 </div>
                 <CardContent className="p-4 space-y-2">

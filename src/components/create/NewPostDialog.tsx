@@ -153,7 +153,6 @@ export function NewPostDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto [&>button.absolute]:hidden">
         <DialogHeader className="pb-0">
-          <div className="h-[2px] w-full bg-gradient-to-r from-orange-500 via-pink-500 via-primary via-cyan-500 to-transparent rounded-full mb-3" aria-hidden />
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 ring-1 ring-primary/20 shadow-lg shadow-primary/10">
@@ -262,9 +261,7 @@ export function NewPostDialog({
           <PlatformPicker
             selected={selected}
             onToggle={toggle}
-            available={["instagram", "twitter", "tiktok", "linkedin", "facebook"]}
             label="Platforms"
-            size="md"
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
