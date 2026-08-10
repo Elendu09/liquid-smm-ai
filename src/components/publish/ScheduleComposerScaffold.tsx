@@ -61,6 +61,7 @@ export function ScheduleComposerScaffold({
   description,
   onInsertTemplate,
   children,
+  mediaPane,
   preview,
   footer,
 }: ScheduleComposerScaffoldProps) {
@@ -137,9 +138,24 @@ export function ScheduleComposerScaffold({
       }
       footer={footer}
     >
-      <div className="grid min-h-0 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,340px)]">
+      <div
+        className={cn(
+          "grid min-h-0 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,340px)]",
+          mediaPane && "xl:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,340px)]",
+        )}
+      >
+        {/* Media column — desktop only; folds into the form column below xl */}
+        {mediaPane && (
+          <div className={cn("hidden min-w-0 space-y-3 xl:block", mobilePanel && "xl:hidden")}>
+            {mediaPane}
+          </div>
+        )}
+
         {/* Form column — hides on mobile when slid to preview/panel */}
-        <div className={cn("min-w-0 space-y-4", mobilePanel && "hidden md:block")}>{children}</div>
+        <div className={cn("min-w-0 space-y-4", mobilePanel && "hidden md:block")}>
+          {mediaPane && <div className="space-y-3 xl:hidden">{mediaPane}</div>}
+          {children}
+        </div>
 
         {/* Side column — preview or templates browser */}
         <div className={cn(!mobilePanel && "hidden md:block")}>
