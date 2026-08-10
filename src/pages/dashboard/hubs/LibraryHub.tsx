@@ -11,7 +11,7 @@ import PresetsView from "../views/PresetsView";
 const tabs: HubTab[] = [
   { label: "Captions", href: "/dashboard/library/captions", icon: FileText },
   { label: "Assets", href: "/dashboard/library/assets", icon: FolderOpen },
-  { label: "Presets & Templates", href: "/dashboard/library/presets", icon: Palette },
+  { label: "Presets", href: "/dashboard/library/presets", icon: Palette },
 ];
 
 function LibraryStats() {

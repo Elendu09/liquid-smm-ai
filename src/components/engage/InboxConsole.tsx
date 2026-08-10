@@ -2,11 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Check,
-  Eye,
   Inbox as InboxIcon,
   MessageCircle,
   MessageSquare,
-  Pencil,
   RotateCcw,
   Search,
   Send,
@@ -48,8 +46,8 @@ type Kind = "comment" | "dm";
  *
  * Deliberately minimal (Figma-style): no section headers, no stat tiles, no
  * sentiment/intent chips in the console. On mobile the list takes the full
- * width and the thread opens in a bottom sheet with an Edit/Preview toggle,
- * mirroring the create flow.
+ * width and the complete thread (header + conversation + composer) opens in
+ * a bottom sheet — identical contents to the desktop thread pane.
  */
 export function InboxConsole() {
   const comments = useInboxMessages("comment");
@@ -61,7 +59,6 @@ export function InboxConsole() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mobileMode, setMobileMode] = useState<"preview" | "edit">("preview");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [kindFilter, setKindFilter] = useState<Kind | "all">("all");
 
@@ -129,7 +126,6 @@ export function InboxConsole() {
 
   const openItem = (item: InboxItem) => {
     setActiveId(item.id);
-    setMobileMode("preview");
     setMobileOpen(true);
   };
 
@@ -496,56 +492,9 @@ export function InboxConsole() {
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="bottom" className="h-[92vh] p-0 lg:hidden">
           {active && (
-            <div className="flex h-full flex-col pt-6">
-              {/* Edit / Preview toggle — same pattern as the create flow on mobile */}
-              <div className="flex items-center justify-between border-b border-border/60 px-4 py-2">
-                <p className="truncate text-xs font-medium text-muted-foreground">
-                  {active.author} · {active.platform}
-                </p>
-                <div className="flex rounded-full border border-border/60 bg-muted/40 p-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setMobileMode("preview")}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
-                      mobileMode === "preview" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
-                    )}
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                    Preview
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMobileMode("edit")}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
-                      mobileMode === "edit" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
-                    )}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                    Edit
-                  </button>
-                </div>
-              </div>
-
-              {mobileMode === "preview" ? (
-                <div className="flex min-h-0 flex-1 flex-col">
-                  {threadHeader}
-                  {threadBubbles}
-                </div>
-              ) : (
-                <div className="flex min-h-0 flex-1 flex-col">
-                  {threadHeader}
-                  <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-                    <p className="text-xs text-muted-foreground">Replying to {active.handle}:</p>
-                    <div className="mt-2 max-w-[85%] rounded-2xl rounded-tl-sm border border-border/60 bg-muted/40 p-3">
-                      <p className="line-clamp-3 whitespace-pre-wrap text-sm">{active.message}</p>
-                    </div>
-                  </div>
-                  {threadComposer}
-                </div>
-              )}
-            </div>
+            /* Same full thread as desktop — header, conversation and
+               composer in one sheet (no Edit/Preview switcher) */
+            <div className="flex h-full flex-col pt-6">{thread}</div>
           )}
         </SheetContent>
       </Sheet>

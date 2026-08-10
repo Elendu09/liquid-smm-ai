@@ -93,6 +93,9 @@ const BUILT_INS: BuiltInTemplate[] = [
 const tryEmoji = (t: PostTemplate, i: number) =>
   (t as BuiltInTemplate).emoji ?? ["🥳", "🎉", "🚀", "💡", "🔥", "✨", "🎯", "📣"][i % 8];
 
+/** Templates shown before the “Show more” affordance kicks in. */
+const DEFAULT_VISIBLE_COUNT = 6;
+
 const descriptionFor = (t: PostTemplate): string => {
   const built = (t as BuiltInTemplate).description;
   if (built) return built;
@@ -131,6 +134,7 @@ export function TemplatePanel({
   const [query, setQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const pool = tab === "discover" ? (BUILT_INS as PostTemplate[]) : templates;
   const active = pool.find((t) => t.id === activeId) ?? null;
@@ -154,6 +158,10 @@ export function TemplatePanel({
       return matchesQuery && matchesPlatform;
     });
   }, [pool, query, platformFilter]);
+
+  // Default to 6 cards; "Show more" reveals the rest.
+  const visibleTemplates = showAll ? filtered : filtered.slice(0, DEFAULT_VISIBLE_COUNT);
+  const hiddenCount = filtered.length - visibleTemplates.length;
 
   const copyCaption = async (t: PostTemplate) => {
     try {
@@ -198,7 +206,7 @@ export function TemplatePanel({
               <button
                 key={t}
                 type="button"
-                onClick={() => { setTab(t); setActiveId(null); }}
+                onClick={() => { setTab(t); setActiveId(null); setShowAll(false); }}
                 className={cn(
                   "relative -mb-px pb-2 capitalize transition-colors",
                   tab === t ? "text-foreground" : "text-muted-foreground hover:text-foreground",
@@ -291,7 +299,7 @@ export function TemplatePanel({
             </div>
           ) : (
             <div className="space-y-2.5">
-              {filtered.map((t, i) => (
+              {visibleTemplates.map((t, i) => (
                 <div
                   key={t.id}
                   className="group relative rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:border-primary/40"
@@ -326,6 +334,18 @@ export function TemplatePanel({
                   )}
                 </div>
               ))}
+              {/* 6 by default — reveal the rest via Show more */}
+              {(hiddenCount > 0 || showAll) && filtered.length > DEFAULT_VISIBLE_COUNT && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-full rounded-lg text-xs"
+                  onClick={() => setShowAll((s) => !s)}
+                >
+                  {showAll ? "Show less" : `Show more (${hiddenCount} more)`}
+                </Button>
+              )}
             </div>
           )}
         </>

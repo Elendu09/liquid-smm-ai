@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Trash2, Plus, Copy, CalendarPlus, Target } from "lucide-react";
+import { Trash2, Plus, Copy, CalendarPlus, Target, MessageCircle } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -174,14 +174,21 @@ export default function CreateStudio() {
       return;
     }
     const when = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    // First comment + every selected channel ride along into the queue entry.
+    const platformIds = d.platformIds?.length ? d.platformIds : [d.platform];
     addScheduled({
       caption: d.caption,
       mediaUrl: d.mediaUrl,
       scheduledAt: when,
-      platformIds: [d.platform],
+      platformIds,
+      firstComment: d.firstComment?.trim() || undefined,
     });
     update(d.id, { status: "scheduled", scheduledAt: when });
-    toast.success("Sent to queue (in 1h)");
+    toast.success(
+      platformIds.length > 1
+        ? `Sent to queue (in 1h) · ${platformIds.length} platforms${d.firstComment?.trim() ? " · first comment attached" : ""}`
+        : `Sent to queue (in 1h)${d.firstComment?.trim() ? " · first comment attached" : ""}`,
+    );
   };
 
 
@@ -285,6 +292,8 @@ export default function CreateStudio() {
       status: "scheduled",
       scheduledAt: when,
       platform: extras.platformIds[0] ?? editing.platform,
+      platformIds: extras.platformIds.length ? extras.platformIds : editing.platformIds ?? [editing.platform],
+      firstComment: extras.firstComment ?? editing.firstComment,
     };
     if (drafts.some((d) => d.id === finalDraft.id)) update(finalDraft.id, finalDraft);
     else add(finalDraft);
@@ -309,9 +318,27 @@ export default function CreateStudio() {
       onKeyDown={(e) => { if (e.key === "Enter") setPreviewing(d); }}
     >
       <div className="flex items-start gap-2">
-        <PlatformIcon platform={d.platform} size="xs" />
+        {/* Every selected channel is shown (they all sync to the queue) */}
+        <div className="flex items-center shrink-0 -space-x-0.5 pt-0.5">
+          {(d.platformIds?.length ? d.platformIds : [d.platform]).slice(0, 4).map((pid) => (
+            <PlatformIcon key={pid} platform={pid} size="xs" />
+          ))}
+          {(d.platformIds?.length ?? 0) > 4 && (
+            <span className="text-[9px] font-semibold text-muted-foreground">+{(d.platformIds?.length ?? 0) - 4}</span>
+          )}
+        </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate">{d.title}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-semibold truncate">{d.title}</p>
+            {d.firstComment?.trim() && (
+              <span
+                className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium text-primary shrink-0"
+                title={`First comment: ${d.firstComment}`}
+              >
+                <MessageCircle className="h-2.5 w-2.5" /> 1st
+              </span>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
             {d.caption || "No caption yet"}
           </p>

@@ -387,7 +387,8 @@ export function InboxBoard({ kind, title, description, sentiment = "all", intent
   const { replies: savedReplies, incrementUsage, render } = useSavedReplies();
   const { accounts } = useAccounts();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<InboxStatus | "all">("all");
+  // Status filter chips were removed from the UI — the columns themselves
+  // are the status buckets (drag between them), so no extra filter row.
   const [variants, setVariants] = useState<Record<string, number>>({});
   const [replyTarget, setReplyTarget] = useState<InboxItem | null>(null);
   const [notesFor, setNotesFor] = useState<InboxItem | null>(null);
@@ -407,7 +408,6 @@ export function InboxBoard({ kind, title, description, sentiment = "all", intent
 
   const filtered = useMemo(() => {
     let out = items;
-    if (filter !== "all") out = out.filter((i) => i.status === filter);
     if (onlyAds) out = out.filter((i) => i.isAd);
     if (search) {
       const q = search.toLowerCase();
@@ -420,7 +420,7 @@ export function InboxBoard({ kind, title, description, sentiment = "all", intent
       });
     }
     return out;
-  }, [items, filter, search, sentiment, intent, onlyAds]);
+  }, [items, search, sentiment, intent, onlyAds]);
 
   const threadedItems = useMemo<ThreadedInboxItem[]>(() => buildThreaded(filtered), [filtered]);
 
@@ -481,22 +481,16 @@ export function InboxBoard({ kind, title, description, sentiment = "all", intent
     },
   });
 
-  const filterChips: [InboxStatus | "all", string][] = [
-    ["all", "All"],
-    ["new", "New"],
-    ["replied", "Replied"],
-    ["snoozed", "Snoozed"],
-    ["resolved", "Resolved"],
-  ];
-
   return (
     <div className="px-4 sm:px-6 lg:px-8 pb-8">
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold">{title}</h2>
-          {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
-        </div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <h2 className="truncate text-xl font-semibold">{title}</h2>
+        {/* Sync status sits right beside the title on mobile; on
+            tablet/desktop it stays at the far right of the header */}
         <InboxSyncFooter lastSync={lastSync ?? new Date().toISOString()} />
+        {description && (
+          <p className="w-full -mt-0.5 text-sm text-muted-foreground">{description}</p>
+        )}
       </div>
       <ToolbarBar
         search={search}
@@ -530,12 +524,13 @@ export function InboxBoard({ kind, title, description, sentiment = "all", intent
                 <MessagesSquare className="h-3 w-3" />
               </button>
             </div>
+            {/* List/columns stays beside the search bar on every screen */}
             <ViewToggle value={view} onChange={setView} />
           </div>
         }
         filters={
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filters">
-            {kind === "comment" && (
+          kind === "comment" ? (
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filters">
               <button
                 onClick={() => setOnlyAds((v) => !v)}
                 aria-pressed={onlyAds}
@@ -549,23 +544,8 @@ export function InboxBoard({ kind, title, description, sentiment = "all", intent
               >
                 <Megaphone className="h-3 w-3" /> Ad comments{adCount > 0 && <span className="ml-1 rounded-full bg-background/40 px-1 text-[9px]">{adCount}</span>}
               </button>
-            )}
-            {filterChips.map(([val, label]) => (
-              <button
-                key={val}
-                onClick={() => setFilter(val)}
-                aria-pressed={filter === val}
-                className={cn(
-                  "px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors min-h-8 border",
-                  filter === val
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-muted/60 text-muted-foreground border-transparent hover:text-foreground",
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+            </div>
+          ) : undefined
         }
       />
 

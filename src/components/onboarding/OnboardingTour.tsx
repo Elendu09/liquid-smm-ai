@@ -9,14 +9,12 @@ import { useViewportMode } from "@/hooks/useViewportMode";
 import { useTourState, TOUR_OPEN_EVENT } from "@/hooks/useOnboardingTour";
 
 interface Rect { top: number; left: number; width: number; height: number }
-type Placement = "top" | "bottom" | "left" | "right" | "center";
 
 const PAD_DESKTOP = 8;
 const PAD_MOBILE = 12;
-const TOOLTIP_W_DESKTOP = 380;
-const TOOLTIP_W_TABLET = 340;
-const TOOLTIP_H_EST = 240;
-const GAP = 14;
+// One tooltip width for every viewport — the tour sheet looks the same on
+// desktop, tablet and mobile.
+const TOOLTIP_W = 420;
 
 async function waitForEl(selector: string, timeout = 1500): Promise<HTMLElement | null> {
   const start = performance.now();
@@ -183,7 +181,7 @@ export function OnboardingTour() {
   }, [open, close, next, back]);
 
   useEffect(() => {
-    if (!open || mode !== "mobile") return;
+    if (!open || mode === "desktop") return;
     const el = tooltipRef.current;
     if (!el) return;
     let startX = 0;
@@ -211,16 +209,15 @@ export function OnboardingTour() {
   if (!open || !step) return null;
 
   const vw = typeof window !== "undefined" ? window.innerWidth : 1280;
-  const vh = typeof window !== "undefined" ? window.innerHeight : 800;
-  const bottomLimit = vh - (hasBottomNav ? safeBottomPx : 0) - 8;
 
-  const isMobileMode = mode === "mobile";
-  const tooltipW = mode === "desktop" ? TOOLTIP_W_DESKTOP : TOOLTIP_W_TABLET;
+  // Same sheet UI on desktop, tablet & mobile: centered intro card for
+  // centered steps, otherwise a bottom sheet hugging the lower edge
+  // (lifted above the bottom nav on touch devices). The spotlight ring
+  // still points at the resolved target.
+  const tooltipW = Math.min(vw - 16, TOOLTIP_W);
   const forceCentered = !!step.centered;
 
-  let tooltipStyle: React.CSSProperties = {};
-  let placement: Placement = "center";
-  let arrowStyle: React.CSSProperties | null = null;
+  let tooltipStyle: React.CSSProperties;
 
   if (forceCentered) {
     tooltipStyle = {
@@ -228,114 +225,17 @@ export function OnboardingTour() {
       left: "50%",
       top: "50%",
       transform: "translate(-50%, -50%)",
-      width: isMobileMode ? Math.min(vw - 16, tooltipW) : tooltipW,
+      width: tooltipW,
       maxWidth: "calc(100vw - 16px)",
     };
-    placement = "center";
-  } else if (isMobileMode && !step.preferPlacement) {
-    tooltipStyle = {
-      position: "fixed",
-      left: 8,
-      right: 8,
-      bottom: (hasBottomNav ? safeBottomPx : 0) + 8,
-    };
-    placement = "bottom";
-  } else if (rect) {
-    const spaceBelow = bottomLimit - (rect.top + rect.height);
-    const spaceAbove = rect.top;
-    const spaceRight = vw - (rect.left + rect.width);
-    const spaceLeft = rect.left;
-    let top: number;
-    let left: number;
-    const wantTop =
-      step.preferPlacement === "top" && spaceAbove > TOOLTIP_H_EST * 0.6;
-    const wantBottom =
-      step.preferPlacement === "bottom" && spaceBelow > TOOLTIP_H_EST * 0.6;
-    if (wantTop) {
-      top = Math.max(8, rect.top - GAP - TOOLTIP_H_EST);
-      left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left + rect.width / 2 - tooltipW / 2));
-      placement = "top";
-    } else if (wantBottom) {
-      top = rect.top + rect.height + GAP;
-      left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left + rect.width / 2 - tooltipW / 2));
-      placement = "bottom";
-    } else if (spaceBelow > TOOLTIP_H_EST) {
-      top = rect.top + rect.height + GAP;
-      left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left + rect.width / 2 - tooltipW / 2));
-      placement = "bottom";
-    } else if (spaceAbove > TOOLTIP_H_EST) {
-      top = Math.max(8, rect.top - GAP - TOOLTIP_H_EST);
-      left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left + rect.width / 2 - tooltipW / 2));
-      placement = "top";
-    } else if (spaceRight > tooltipW + GAP) {
-      top = Math.max(8, Math.min(bottomLimit - TOOLTIP_H_EST, rect.top + rect.height / 2 - TOOLTIP_H_EST / 2));
-      left = rect.left + rect.width + GAP;
-      placement = "right";
-    } else if (spaceLeft > tooltipW + GAP) {
-      top = Math.max(8, Math.min(bottomLimit - TOOLTIP_H_EST, rect.top + rect.height / 2 - TOOLTIP_H_EST / 2));
-      left = rect.left - tooltipW - GAP;
-      placement = "left";
-    } else {
-      top = Math.max(8, Math.min(bottomLimit - TOOLTIP_H_EST, rect.top - GAP - TOOLTIP_H_EST));
-      left = Math.max(8, Math.min(vw - tooltipW - 8, rect.left));
-      placement = "top";
-    }
-    top = Math.min(top, bottomLimit - TOOLTIP_H_EST);
-    const effectiveW = isMobileMode ? Math.min(vw - 16, tooltipW) : tooltipW;
-    if (isMobileMode) {
-      left = Math.max(8, Math.min(vw - effectiveW - 8, left));
-    }
-    tooltipStyle = { position: "fixed", top, left, width: effectiveW };
-
-    // Arrow relative to tooltip
-    const targetCx = rect.left + rect.width / 2;
-    const targetCy = rect.top + rect.height / 2;
-    const arrowSize = 10;
-    const arrowBase: React.CSSProperties = {
-      position: "absolute",
-      width: arrowSize * 2,
-      height: arrowSize * 2,
-      transform: "rotate(45deg)",
-      background: "hsl(var(--card))",
-      borderColor: "hsl(var(--border))",
-      borderStyle: "solid",
-    };
-    if (placement === "bottom") {
-      arrowStyle = {
-        ...arrowBase,
-        top: -arrowSize,
-        left: Math.max(12, Math.min(effectiveW - 28, targetCx - left - arrowSize)),
-        borderWidth: "1px 0 0 1px",
-      };
-    } else if (placement === "top") {
-      arrowStyle = {
-        ...arrowBase,
-        bottom: -arrowSize,
-        left: Math.max(12, Math.min(effectiveW - 28, targetCx - left - arrowSize)),
-        borderWidth: "0 1px 1px 0",
-      };
-    } else if (placement === "right") {
-      arrowStyle = {
-        ...arrowBase,
-        left: -arrowSize,
-        top: Math.max(12, Math.min(TOOLTIP_H_EST - 28, targetCy - top - arrowSize)),
-        borderWidth: "0 0 1px 1px",
-      };
-    } else if (placement === "left") {
-      arrowStyle = {
-        ...arrowBase,
-        right: -arrowSize,
-        top: Math.max(12, Math.min(TOOLTIP_H_EST - 28, targetCy - top - arrowSize)),
-        borderWidth: "1px 1px 0 0",
-      };
-    }
   } else {
     tooltipStyle = {
       position: "fixed",
       left: "50%",
-      top: "50%",
-      transform: "translate(-50%, -50%)",
-      width: isMobileMode ? Math.min(vw - 16, tooltipW) : tooltipW,
+      transform: "translateX(-50%)",
+      bottom: (hasBottomNav ? safeBottomPx : 0) + 8,
+      width: tooltipW,
+      maxWidth: "calc(100vw - 16px)",
     };
   }
 
@@ -396,15 +296,12 @@ export function OnboardingTour() {
         ref={tooltipRef}
         style={tooltipStyle}
         className={cn(
-          "bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-4 sm:p-5 relative",
+          "bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-5 relative",
           "animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-300",
         )}
       >
-        {arrowStyle && <div style={arrowStyle} aria-hidden />}
-
-        {isMobileMode && (
-          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/30" aria-hidden />
-        )}
+        {/* Sheet handle — same small-dash chrome on every screen size */}
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/30" aria-hidden />
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/25 to-primary/10 ring-1 ring-primary/20 flex items-center justify-center flex-shrink-0">
             <StepIcon className="h-5 w-5 text-primary" />
@@ -423,7 +320,7 @@ export function OnboardingTour() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <h2 id="tour-title" className="text-base sm:text-lg font-semibold text-foreground mt-1 leading-snug">
+            <h2 id="tour-title" className="text-lg font-semibold text-foreground mt-1 leading-snug">
               {step.title}
             </h2>
             <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
@@ -445,7 +342,7 @@ export function OnboardingTour() {
               type="button"
               onClick={() => setStepIndex(i)}
               className={cn(
-                "h-1 flex-1 rounded-full transition-all cursor-pointer",
+                "touch-skip h-1 flex-1 rounded-full transition-all cursor-pointer",
                 i < stepIndex && "bg-primary/70",
                 i === stepIndex && "bg-primary",
                 i > stepIndex && "bg-muted hover:bg-muted-foreground/30",
@@ -460,27 +357,16 @@ export function OnboardingTour() {
             <Button variant="ghost" size="sm" onClick={() => close(true)}>
               Skip
             </Button>
-            {!isMobileMode && (
-              <div className="hidden md:flex items-center gap-1 ml-1 text-[10px] text-muted-foreground/70">
-                <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5">Esc</kbd>
-              </div>
-            )}
           </div>
           <div className="flex items-center gap-2">
-            {!isMobileMode && (
-              <div className="hidden md:flex items-center gap-1 mr-1 text-[10px] text-muted-foreground/70">
-                <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5">←</kbd>
-                <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5">→</kbd>
-              </div>
-            )}
             <Button
               variant="outline"
               size="sm"
               onClick={back}
               disabled={stepIndex === 0}
             >
-              <ArrowLeft className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Back</span>
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              <span>Back</span>
             </Button>
             {isLast ? (
               <Button size="sm" onClick={finish}>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   RefreshCw,
@@ -180,6 +181,7 @@ function CategoryBadge({ label }: { label: PromptTemplate["category"] }) {
 }
 
 export function TemplatesSection() {
+  const navigate = useNavigate();
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -314,6 +316,18 @@ export function TemplatesSection() {
         })}
       </div>
       </PanelSection>
+
+      {/* Show more → opens the AI Idea generator page */}
+      <div className="mt-3 flex justify-center">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate("/dashboard/create/studio?section=ai")}
+        >
+          <Lightbulb className="mr-1.5 h-3.5 w-3.5" />
+          Show more — create an AI idea
+        </Button>
+      </div>
 
       <Dialog open={!!active} onOpenChange={(o) => { if (!o) closePreview(); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">

@@ -1,14 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, Wand2, CalendarClock, Globe2, ShieldCheck, Scissors, MessageCircle } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Sparkles, Wand2, Globe2, ShieldCheck, Scissors, MessageCircle } from "lucide-react";
+import { ScheduleComposerScaffold, schedulePlatformChoices } from "@/components/publish/ScheduleComposerScaffold";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,7 +29,6 @@ import { CharCounter } from "@/components/publish/CharCounter";
 import { CoverFramePicker } from "@/components/publish/CoverFramePicker";
 import { NativeFeaturePicker, emptyNativeFeatureSelection, emptyNativeFeatureData, type NativeFeatureData } from "@/components/publish/NativeFeaturePicker";
 import type { NativeFeatureKey } from "@/lib/nativeFeatures";
-import { platforms as ALL_PLATFORMS } from "@/config/platforms";
 import { cn } from "@/lib/utils";
 import type { MediaMeta } from "@/lib/mediaValidator";
 
@@ -100,6 +92,11 @@ export function ScheduleDialog({
   const { posts, add } = useScheduledPosts();
 
   const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // Normal 5 channels by default — plus any extra connected channels.
+  const availablePlatforms = useMemo(
+    () => schedulePlatformChoices(accounts.map((a) => a.platformId)),
+    [accounts],
+  );
   const [caption, setCaption] = useState(initialCaption);
   const [firstComment, setFirstComment] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -164,7 +161,7 @@ export function ScheduleDialog({
       const w = u.searchParams.get("w");
       const h = u.searchParams.get("h");
       if (w && h) { probe.width = Number(w); probe.height = Number(h); }
-    } catch {}
+    } catch { /* URL probe is best-effort */ }
     return probe;
   }, [mediaUrl]);
 
@@ -208,22 +205,47 @@ export function ScheduleDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-        <DialogHeader className="px-6 pt-5 pb-4 border-b border-border/40 shrink-0">
-          <div className="flex items-start gap-3">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border/60 bg-primary/10">
-              <CalendarClock className="h-4.5 w-4.5 text-primary" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <DialogTitle className="text-lg font-semibold tracking-tight sm:text-xl">Schedule post</DialogTitle>
-              <DialogDescription className="mt-0.5">Caption, media, platforms, timezone, native features & preview.</DialogDescription>
-            </div>
+    <ScheduleComposerScaffold
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Schedule post"
+      description="Caption, media, platforms, timezone, native features & preview."
+      onInsertTemplate={(t) => {
+        setCaption(t.caption);
+        if (t.platformIds.length) setSelected(t.platformIds);
+        toast.success(`Template “${t.name}” inserted`);
+      }}
+      preview={
+        <div className="space-y-3">
+          <NetworkPreview
+            caption={caption}
+            mediaUrl={mediaUrl}
+            hashtags={hashtags.split(/\s+/).filter(Boolean)}
+            platformIds={selected}
+          />
+          <div className="rounded-2xl border border-border/60 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
+            <p className="inline-flex items-center gap-1 font-semibold text-foreground">
+              <ShieldCheck className="h-3 w-3 text-emerald-500" /> Safe to schedule
+            </p>
+            <p className="mt-1">
+              Double-click protection is on. If you tap Schedule twice within a few seconds we'll keep the first one and recover the duplicate.
+            </p>
+            {tz && (
+              <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-background border border-border/60 px-2 py-0.5 text-[10px]">
+                <Globe2 className="h-3 w-3" /> {tz}
+              </p>
+            )}
           </div>
-        </DialogHeader>
-
-        <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_340px] flex-1 min-h-0">
-          <div className="space-y-4 py-4 px-6 overflow-y-auto max-h-[62vh] md:max-h-[64vh] pr-3">
+        </div>
+      }
+      footer={
+        <>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={submit}>Schedule</Button>
+        </>
+      }
+    >
+          <div className="space-y-4">
             <div>
               <Label htmlFor="sd-caption" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">Caption</Label>
               <CaptionField
@@ -266,7 +288,7 @@ export function ScheduleDialog({
             <PlatformPicker
               selected={selected}
               onToggle={toggle}
-              available={ALL_PLATFORMS.map((p) => p.id)}
+              available={availablePlatforms}
               label="Platforms"
             />
 
@@ -334,15 +356,15 @@ export function ScheduleDialog({
             </div>
 
             {/* Native features switch + picker */}
-            <div className="rounded-2xl border border-border/60 bg-card/50 overflow-hidden">
-              <div className="flex items-center justify-between gap-3 p-3 border-b border-border/40 bg-muted/20">
+            <div className="rounded-xl border border-border/60 bg-card/50 overflow-hidden">
+              <div className="flex items-center justify-between gap-2 px-2.5 py-2 border-b border-border/40 bg-muted/20">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="grid h-7 w-7 place-items-center rounded-lg bg-primary/10 border border-primary/20">
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  <div className="grid h-6 w-6 place-items-center rounded-md bg-primary/10 border border-primary/20">
+                    <Sparkles className="h-3 w-3 text-primary" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-semibold leading-tight">Native features</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Per-platform enhancements</p>
+                    <p className="text-[9px] text-muted-foreground leading-tight">Per-platform enhancements</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -362,7 +384,7 @@ export function ScheduleDialog({
               </div>
 
               {nativeEnabled ? (
-                <div className="p-3">
+                <div className="p-2">
                   {activePlatforms.length > 0 ? (
                     <NativeFeaturePicker
                       platforms={activePlatforms}
@@ -379,9 +401,9 @@ export function ScheduleDialog({
                   )}
                 </div>
               ) : (
-                <div className="p-6 text-center">
-                  <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-muted text-muted-foreground mb-2">
-                    <Sparkles className="h-5 w-5" />
+                <div className="p-4 text-center">
+                  <div className="mx-auto grid h-8 w-8 place-items-center rounded-full bg-muted text-muted-foreground mb-1.5">
+                    <Sparkles className="h-4 w-4" />
                   </div>
                   <p className="text-xs font-medium text-muted-foreground">Native features disabled</p>
                   <p className="text-[11px] text-muted-foreground/70 mt-1 max-w-[260px] mx-auto">Turn the switch on to configure product tags, collaborations, location, trending audio, alt text, polls and link cards per platform.</p>
@@ -425,36 +447,6 @@ export function ScheduleDialog({
               </div>
             )}
           </div>
-
-          <div className="py-4 px-4 space-y-3 border-t md:border-t-0 md:border-l border-border/40 bg-muted/5 overflow-y-auto max-h-[64vh]">
-            <NetworkPreview
-              caption={caption}
-              mediaUrl={mediaUrl}
-              hashtags={hashtags.split(/\s+/).filter(Boolean)}
-              platformIds={selected}
-              className="md:sticky md:top-0"
-            />
-            <div className="rounded-2xl border border-border/60 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
-              <p className="inline-flex items-center gap-1 font-semibold text-foreground">
-                <ShieldCheck className="h-3 w-3 text-emerald-500" /> Safe to schedule
-              </p>
-              <p className="mt-1">
-                Double-click protection is on. If you tap Schedule twice within a few seconds we'll keep the first one and recover the duplicate.
-              </p>
-              {tz && (
-                <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-background border border-border/60 px-2 py-0.5 text-[10px]">
-                  <Globe2 className="h-3 w-3" /> {tz}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter className="px-6 py-4 border-t border-border/40 bg-background shrink-0">
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={submit}>Schedule</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </ScheduleComposerScaffold>
   );
 }

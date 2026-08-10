@@ -1,7 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Sparkles, Loader2, Send, Save, BookMarked, Repeat, Eye, PenLine } from "lucide-react";
+import {
+  Sparkles,
+  Loader2,
+  Send,
+  Save,
+  BookMarked,
+  Repeat,
+  Eye,
+  PenLine,
+  BookOpen,
+  Megaphone,
+  Clapperboard,
+  TreePine,
+  Newspaper,
+  MessageCircle,
+  Star,
+  Tag,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,6 +57,10 @@ export interface StudioDraft {
   status: StudioDraftStatus;
   caption: string;
   platform: string;
+  /** Every channel toggled in the composer — synced to the queue on schedule */
+  platformIds?: string[];
+  /** First comment — synced to the queue entry so it auto-posts after publish */
+  firstComment?: string;
   mediaUrl?: string;
   scheduledAt?: string;
   createdAt: string;
@@ -57,6 +79,25 @@ const DEFAULT_CHANNELS = ["instagram", "tiktok", "twitter", "linkedin", "faceboo
 
 const labelClass =
   "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
+
+/** Colored SVG glyph for a content category (replaces the plain emoji). */
+function categoryIconFor(c: { name: string; emoji: string }): LucideIcon {
+  const n = c.name.toLowerCase();
+  if (/educ|learn|tip|teach|guide/.test(n)) return BookOpen;
+  if (/promo|sell|sale|launch|offer/.test(n)) return Megaphone;
+  if (/behind|bts|scene/.test(n)) return Clapperboard;
+  if (/evergreen|recycl|repur/.test(n)) return TreePine;
+  if (/news|trend|update/.test(n)) return Newspaper;
+  if (/engage|community|question|poll/.test(n)) return MessageCircle;
+  if (/review|testimonial|proof/.test(n)) return Star;
+  const emojiMap: Record<string, LucideIcon> = {
+    "📚": BookOpen,
+    "🎯": Megaphone,
+    "🎬": Clapperboard,
+    "🌲": TreePine,
+  };
+  return emojiMap[c.emoji] ?? Tag;
+}
 
 interface NewDraftDialogProps {
   open: boolean;
@@ -114,15 +155,16 @@ export function NewDraftDialog({
 
   useEffect(() => () => { if (pulseTimer.current) clearTimeout(pulseTimer.current); }, []);
 
-  // Reset per-draft composer state when a different draft is opened.
+  // Reset per-draft composer state when a different draft is opened —
+  // the saved channel selection & first comment come back with the draft.
   useEffect(() => {
-    setSelected(draft ? [draft.platform] : []);
-    setPreviewPlatform(draft?.platform ?? "instagram");
+    setSelected(draft?.platformIds?.length ? draft.platformIds : draft ? [draft.platform] : []);
+    setPreviewPlatform(draft?.platformIds?.[0] ?? draft?.platform ?? "instagram");
     setPanel("preview");
     setMobilePanel(false);
     setTopic("");
     setScheduleAt("");
-    setFirstComment("");
+    setFirstComment(draft?.firstComment ?? "");
     setCategoryId("");
     setRecFreq("none");
     setRecCount(4);
@@ -142,7 +184,15 @@ export function NewDraftDialog({
     const next = selected.includes(p) ? selected.filter((x) => x !== p) : [...selected, p];
     const ensured = next.length ? next : [p];
     setSelected(ensured);
-    onChange({ platform: ensured[0] });
+    // Persist the full channel selection on the draft so it syncs to the queue.
+    onChange({ platform: ensured[0], platformIds: ensured });
+  };
+
+  // First comment lives on the draft too — it must ride along when the
+  // draft is scheduled or sent to the queue later.
+  const updateFirstComment = (v: string) => {
+    setFirstComment(v);
+    onChange({ firstComment: v });
   };
 
   const aiAssist = async () => {
@@ -166,7 +216,7 @@ export function NewDraftDialog({
     if (t.platformIds.length) {
       setSelected(t.platformIds);
       setPreviewPlatform(t.platformIds[0]);
-      onChange({ platform: t.platformIds[0] });
+      onChange({ platform: t.platformIds[0], platformIds: t.platformIds });
     }
     // Jump back to the live preview so the inserted template is visible.
     setPanel("preview");
@@ -360,7 +410,7 @@ export function NewDraftDialog({
               </label>
               <Textarea
                 value={firstComment}
-                onChange={(e) => setFirstComment(e.target.value)}
+                onChange={(e) => updateFirstComment(e.target.value)}
                 rows={2}
                 placeholder="Drop hashtags or a link so they don't clutter the caption…"
               />
@@ -371,11 +421,17 @@ export function NewDraftDialog({
                 <SelectTrigger><SelectValue placeholder="No category" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No category</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      <span className="mr-1.5">{c.emoji}</span> {c.name}
-                    </SelectItem>
-                  ))}
+                  {categories.map((c) => {
+                    const Glyph = categoryIconFor(c);
+                    return (
+                      <SelectItem key={c.id} value={c.id}>
+                        <span className="inline-flex items-center gap-1.5">
+                          <Glyph className="h-3.5 w-3.5 shrink-0" style={{ color: c.color }} />
+                          {c.name}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

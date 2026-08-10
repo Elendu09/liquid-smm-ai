@@ -419,19 +419,20 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
       aria-label="Onboarding tour"
       className="fixed inset-0 z-[100] bg-background flex flex-col animate-in fade-in duration-200"
     >
-      {/* Top bar */}
+      {/* Top bar — identical chrome on mobile, tablet & desktop:
+          the dot/pill progress style everywhere (no per-mode variants) */}
       <header
         className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="mx-auto max-w-5xl px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="h-5 w-5 text-primary" />
           </div>
           <div className="min-w-0 flex-1 flex flex-col items-center">
-            {/* Dot / pill progress */}
+            {/* Dot / pill progress — same sizes on every screen */}
             <div
-              className="flex items-center gap-1 sm:gap-1.5 max-w-full"
+              className="flex items-center gap-1.5 max-w-full"
               role="progressbar"
               aria-valuemin={1}
               aria-valuemax={totalSteps}
@@ -449,9 +450,9 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
                     aria-label={`Go to step ${i + 1}: ${s.title}`}
                     aria-current={active ? "step" : undefined}
                     className={cn(
-                      "h-1.5 rounded-full transition-all duration-300 ease-out",
+                      "touch-skip h-1.5 rounded-full transition-all duration-300 ease-out",
                       active
-                        ? "w-6 sm:w-7 bg-primary"
+                        ? "w-7 bg-primary"
                         : done
                           ? "w-1.5 bg-primary/70 hover:bg-primary"
                           : "w-1.5 bg-muted-foreground/25 hover:bg-muted-foreground/40",
@@ -460,7 +461,7 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
                 );
               })}
             </div>
-            <div className="mt-1 sm:mt-1.5 text-[10px] sm:text-[11px] text-muted-foreground truncate max-w-full">
+            <div className="mt-1.5 text-[11px] text-muted-foreground truncate max-w-full">
               Step {step + 1} of {totalSteps} · {current.title}
             </div>
           </div>
@@ -469,74 +470,26 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
             size="sm"
             onClick={() => onOpenChange(false)}
             aria-label="Close"
-            className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 flex-shrink-0"
+            className="h-9 w-9 p-0 flex-shrink-0"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
       </header>
 
-      {/* Body */}
+      {/* Body — one identical centered column on mobile, tablet & desktop.
+          Step navigation lives in the dot progress in the header everywhere. */}
       <div className="flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-5 sm:py-6 lg:py-10 grid lg:grid-cols-[240px_1fr] gap-6 sm:gap-8">
-          {/* Stepper — desktop */}
-          <nav className="hidden lg:block" aria-label="Onboarding steps">
-            <ol className="relative space-y-1 sticky top-6">
-              <div className="absolute left-[26px] top-4 bottom-4 w-px bg-border" aria-hidden />
-              <div
-                className="absolute left-[26px] top-4 w-px bg-primary transition-all duration-500"
-                style={{ height: `calc(${(step / Math.max(totalSteps - 1, 1)) * 100}% )` }}
-                aria-hidden
-              />
-              {STEP_META.map((s, i) => {
-                const done = i < step;
-                const active = i === step;
-                const valid = stepValid(i);
-                return (
-                  <li key={s.title} className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setStep(i)}
-                      className={cn(
-                        "relative z-10 w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-all",
-                        active && "bg-primary/10 text-primary shadow-sm",
-                        !active && "hover:bg-muted",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-semibold flex-shrink-0 bg-background transition-all",
-                          done && "bg-primary text-primary-foreground border-primary",
-                          active && "border-primary text-primary ring-4 ring-primary/15 scale-110",
-                          !done && !active && "border-border text-muted-foreground",
-                        )}
-                      >
-                        {done ? <Check className="h-4 w-4" /> : i + 1}
-                      </span>
-                      <span className="flex-1 min-w-0">
-                        <span className="block truncate font-medium">{s.title}</span>
-                        <span className={cn(
-                          "block truncate text-[11px]",
-                          active ? "text-primary/80" : "text-muted-foreground",
-                        )}>
-                          {done ? "Completed" : active ? "In progress" : valid ? "Ready" : "Pending"}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
-          </nav>
-
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-5 sm:py-6">
           {/* Content */}
-          <section className="min-w-0">
+          <section className="min-w-0 mx-auto w-full max-w-2xl">
+            {/* Step heading — compact dot-era chrome, same size on all screens */}
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <Icon className="h-5 w-5 text-primary" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-2xl font-semibold tracking-tight truncate">{current.title}</h1>
+                <h1 className="text-2xl font-semibold tracking-tight truncate">{current.title}</h1>
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-5 sm:mb-8">
@@ -561,7 +514,7 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
         className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="mx-auto max-w-5xl px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {step > 0 && (
               <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="flex-shrink-0">
@@ -569,13 +522,13 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
               </Button>
             )}
             {!canProceed && step < totalSteps - 1 && (
-              <span className="hidden sm:inline text-[11px] text-muted-foreground truncate">{stepHint(step)}</span>
+              <span className="text-[11px] text-muted-foreground truncate">{stepHint(step)}</span>
             )}
           </div>
           <div className="flex gap-2 justify-end flex-shrink-0">
             <Button variant="outline" size="sm" onClick={back} disabled={step === 0}>
-              <ArrowLeft className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Back</span>
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              <span>Back</span>
             </Button>
             {step < totalSteps - 1 ? (
               <Button size="sm" onClick={goNext} disabled={!canProceed}>
@@ -588,12 +541,6 @@ export function OnboardingWizard({ open, onOpenChange }: Props) {
             )}
           </div>
         </div>
-        {/* Inline hint on mobile when blocked */}
-        {!canProceed && step < totalSteps - 1 && (
-          <div className="sm:hidden px-3 pb-2 -mt-1">
-            <span className="text-[11px] text-muted-foreground">{stepHint(step)}</span>
-          </div>
-        )}
       </footer>
     </div>
   );
