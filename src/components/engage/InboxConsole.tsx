@@ -2,9 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Check,
+  ChevronDown,
   Inbox as InboxIcon,
+  Info,
   MessageCircle,
   MessageSquare,
+  Plus,
   RotateCcw,
   Search,
   Send,
@@ -26,6 +29,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ConnectAccountDialog } from "@/components/accounts/ConnectAccountDialog";
+import { InboxContextPanel } from "@/components/engage/InboxContextPanel";
 import { cn } from "@/lib/utils";
 import { useInboxMessages } from "@/hooks/useInboxMessages";
 import { useSavedReplies } from "@/hooks/useSavedReplies";
@@ -36,6 +41,7 @@ import { ageLabel, capabilitiesFor } from "@/config/inboxChannels";
 import type { InboxItem } from "@/pages/dashboard/views/InboxBoard";
 
 type Kind = "comment" | "dm";
+type ThreadTab = "messages" | "notes" | "orders" | "activity";
 
 /**
  * Unified inbox — clean three-column console:
@@ -61,6 +67,11 @@ export function InboxConsole() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [kindFilter, setKindFilter] = useState<Kind | "all">("all");
+  const [tab, setTab] = useState<ThreadTab>("messages");
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [contextOpen, setContextOpen] = useState(false);
+  const [pausedBots, setPausedBots] = useState<string[]>([]);
+  const [notes, setNotes] = useState<Record<string, string>>({});
 
   const quickAi = useQuickAi();
   const replyBoxRef = useRef<HTMLTextAreaElement | null>(null);
@@ -126,6 +137,7 @@ export function InboxConsole() {
 
   const openItem = (item: InboxItem) => {
     setActiveId(item.id);
+    setTab("messages");
     setMobileOpen(true);
   };
 
@@ -253,52 +265,154 @@ export function InboxConsole() {
     </div>
   ) : null;
 
+  const statusLabel = (s: InboxItem["status"]) =>
+    s === "snoozed" ? "Snoozed" : s === "resolved" ? "Resolved" : "Open";
+
   const threadHeader = active ? (
-    <div className="flex items-start gap-3 border-b border-border/60 p-4">
-      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted">
-        <User className="h-5 w-5 text-muted-foreground" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="truncate font-semibold">{active.author}</p>
-          <PlatformIcon platform={active.platform} className="h-3.5 w-3.5" />
+    <div className="border-b border-border/60">
+      <div className="flex items-start gap-3 px-4 pb-2 pt-4">
+        <div className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted">
+          <User className="h-5 w-5 text-muted-foreground" />
+          <span className="absolute -bottom-0.5 -right-0.5 rounded-full bg-background p-0.5">
+            <PlatformIcon platform={active.platform} className="h-3 w-3" />
+          </span>
         </div>
-        <p className="truncate text-xs text-muted-foreground">
-          {active.handle} · {active.kind === "dm" ? "Direct message" : "Comment"} · {ageLabel(active.createdAt)} ago
-        </p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold">{active.author}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {active.handle} · {active.kind === "dm" ? "Direct message" : "Comment"} · {ageLabel(active.createdAt)} ago
+          </p>
+        </div>
+        <div className="flex items-center gap-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 rounded-full px-2.5 text-[11px]">
+                <UserPlus className="mr-1 h-3.5 w-3.5" />
+                {active.assignee ?? "Assign"}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="text-xs">Assign to</DropdownMenuLabel>
+              {members.length === 0 && (
+                <DropdownMenuItem disabled className="text-xs">No teammates yet</DropdownMenuItem>
+              )}
+              {members.map((m) => (
+                <DropdownMenuItem
+                  key={m.id}
+                  className="text-xs"
+                  onClick={() => { patch(active, { assignee: m.name }); toast.success(`Assigned to ${m.name}`); }}
+                >
+                  {m.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 rounded-full px-2.5 text-[11px]">
+                {statusLabel(active.status)}
+                <ChevronDown className="ml-1 h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              {(["new", "snoozed", "resolved"] as const).map((s) => (
+                <DropdownMenuItem
+                  key={s}
+                  className="text-xs"
+                  onClick={() => { patch(active, { status: s }); toast.success(statusLabel(s)); }}
+                >
+                  {statusLabel(s)}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-full xl:hidden"
+            aria-label="Conversation details"
+            onClick={() => setContextOpen(true)}
+          >
+            <Info className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-      <div className="flex items-center gap-1">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" aria-label="Assign">
-              <UserPlus className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel className="text-xs">Assign to</DropdownMenuLabel>
-            {members.length === 0 && (
-              <DropdownMenuItem disabled className="text-xs">No teammates yet</DropdownMenuItem>
+
+      {/* Tabs */}
+      <div className="flex items-center gap-1 overflow-x-auto px-3 pb-2">
+        {(["messages", "notes", "orders", "activity"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={cn(
+              "rounded-full px-3 py-1 text-[11px] font-medium capitalize transition-colors",
+              tab === t ? "bg-primary/12 text-primary" : "text-muted-foreground hover:text-foreground",
             )}
-            {members.map((m) => (
-              <DropdownMenuItem
-                key={m.id}
-                className="text-xs"
-                onClick={() => { patch(active, { assignee: m.name }); toast.success(`Assigned to ${m.name}`); }}
-              >
-                {m.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          >
+            {t}
+          </button>
+        ))}
       </div>
     </div>
   ) : null;
 
+  const threadNotes = active ? (
+    <div className="flex-1 overflow-y-auto p-4">
+      <Textarea
+        value={notes[active.id] ?? ""}
+        onChange={(e) => setNotes((n) => ({ ...n, [active.id]: e.target.value }))}
+        rows={8}
+        placeholder="Private note for your team — never sent to the customer."
+        className="resize-none text-sm"
+      />
+      <p className="mt-2 text-[11px] text-muted-foreground">Notes stay internal to this conversation.</p>
+    </div>
+  ) : null;
+
+  const threadActivity = active ? (
+    <div className="flex-1 space-y-3 overflow-y-auto p-4 text-xs">
+      {[
+        { label: "Message received", at: active.createdAt },
+        ...(active.assignee ? [{ label: `Assigned to ${active.assignee}`, at: active.createdAt }] : []),
+        ...(active.status === "replied" ? [{ label: "Reply sent", at: active.createdAt }] : []),
+        { label: `Status: ${statusLabel(active.status)}`, at: active.createdAt },
+      ].map((e, i) => (
+        <div key={i} className="flex items-start gap-2">
+          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary/60" />
+          <div className="min-w-0">
+            <p className="font-medium">{e.label}</p>
+            <p className="text-[10px] text-muted-foreground">{new Date(e.at).toLocaleString()}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : null;
+
+  const threadOrders = (
+    <div className="flex flex-1 items-center justify-center p-6">
+      <EmptyState
+        icon={InboxIcon}
+        title="No orders connected"
+        description="Connect a commerce channel to see this contact's orders here."
+      />
+    </div>
+  );
+
   const thread = active ? (
     <div className="flex h-full min-h-0 flex-col">
       {threadHeader}
-      {threadBubbles}
-      {threadComposer}
+      {tab === "messages" && (
+        <>
+          {threadBubbles}
+          {threadComposer}
+        </>
+      )}
+      {tab === "notes" && threadNotes}
+      {tab === "orders" && threadOrders}
+      {tab === "activity" && threadActivity}
     </div>
   ) : (
     <div className="flex h-full items-center justify-center p-6">
@@ -309,6 +423,20 @@ export function InboxConsole() {
       />
     </div>
   );
+
+  const contextPanel = active ? (
+    <InboxContextPanel
+      item={active}
+      messageCount={active.status === "replied" ? 2 : 1}
+      botPaused={pausedBots.includes(active.id)}
+      onStatus={(s) => { patch(active, { status: s }); toast.success(statusLabel(s)); }}
+      onToggleBot={() =>
+        setPausedBots((p) =>
+          p.includes(active.id) ? p.filter((x) => x !== active.id) : [...p, active.id],
+        )
+      }
+    />
+  ) : null;
 
   /* ------------------------------- platform rail ------------------------------- */
 
@@ -353,6 +481,16 @@ export function InboxConsole() {
           <span className="sr-only">{platform} · {total}</span>
         </button>
       ))}
+
+      <button
+        type="button"
+        title="Add channel"
+        onClick={() => setConnectOpen(true)}
+        className="grid h-10 w-10 place-items-center rounded-xl border border-dashed border-border/70 text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+      >
+        <Plus className="h-4 w-4" />
+        <span className="sr-only">Add channel</span>
+      </button>
 
       <div className="mt-auto" />
 
@@ -476,11 +614,21 @@ export function InboxConsole() {
       </header>
       <div className="h-[2px] w-full bg-gradient-to-r from-primary via-primary/50 to-primary/10" aria-hidden />
 
-      {/* Desktop / tablet: three columns */}
-      <div className="hidden grid-cols-[3.5rem_minmax(0,19rem)_minmax(0,1fr)] lg:grid lg:h-[calc(100dvh-var(--demo-banner-h,0px)-var(--mobile-header-h,0px)-21rem)] lg:min-h-[30rem]">
+      {/* Desktop: three columns — plus a context column on XL when a thread is open */}
+      <div
+        className={cn(
+          "hidden lg:grid lg:h-[calc(100dvh-var(--demo-banner-h,0px)-var(--mobile-header-h,0px)-21rem)] lg:min-h-[30rem]",
+          active
+            ? "grid-cols-[3.5rem_minmax(0,19rem)_minmax(0,1fr)] xl:grid-cols-[3.5rem_minmax(0,19rem)_minmax(0,1fr)_20rem]"
+            : "grid-cols-[3.5rem_minmax(0,19rem)_minmax(0,1fr)]",
+        )}
+      >
         {rail}
         <div className="min-h-0 border-r border-border/60">{list}</div>
         <div className="min-h-0">{thread}</div>
+        {active && (
+          <div className="hidden min-h-0 border-l border-border/60 bg-muted/10 xl:block">{contextPanel}</div>
+        )}
       </div>
 
       {/* Mobile: platform rail + list, thread in a bottom sheet */}
@@ -498,6 +646,15 @@ export function InboxConsole() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Context panel as a sheet below XL */}
+      <Sheet open={contextOpen && !!active} onOpenChange={setContextOpen}>
+        <SheetContent side="right" className="w-[20rem] p-0 xl:hidden">
+          <div className="h-full pt-6">{contextPanel}</div>
+        </SheetContent>
+      </Sheet>
+
+      <ConnectAccountDialog open={connectOpen} onOpenChange={setConnectOpen} />
     </div>
   );
 }
