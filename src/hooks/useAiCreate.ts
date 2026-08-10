@@ -69,7 +69,7 @@ export const aiCreate = {
     post<{ translated: string; language: string }>({ op: "translate", ...p }),
   reply: (p: { message: string; author?: string; platform?: string; tone?: string; count?: number }) =>
     post<{ suggestions: string[] }>({ op: "reply", ...p }),
-  brief: (p: { topic: string; goal?: string; audience?: string; platform?: string; tone?: string }) =>
+  brief: (p: { topic: string; goal?: string; audience?: string; platform?: string; tone?: string; imageUrl?: string }) =>
     post<AiBrief>({ op: "brief", ...p }),
   rewrite: (p: { text: string; platform?: string; tone?: string }) =>
     post<{ rewritten: string; title: string }>({ op: "rewrite", ...p }),

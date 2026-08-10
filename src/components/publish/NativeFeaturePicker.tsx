@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2, Sparkles, X, MapPin, ShoppingBag, Users2, Music2, Frame, MessageCircle, Eye, BarChart3, Link2, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, MapPin, ShoppingBag, Users2, Music2, Frame, MessageCircle, Eye, BarChart3, Link2, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +44,30 @@ const ICON_MAP: Record<NativeFeatureKey, React.ReactNode> = {
   linkCard: <Link2 className="h-3.5 w-3.5" />,
 };
 
+/**
+ * Mini iOS-style switch indicator (visual only — the parent row button is
+ * the real toggle, so this never nests a button inside a button). Crisp on
+ * mobile where the old ON/OFF text pill clipped when shrunk.
+ */
+function MiniSwitch({ on }: { on: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "relative inline-flex h-[18px] w-8 shrink-0 items-center rounded-full border transition-colors duration-200",
+        on ? "border-primary bg-primary" : "border-border/70 bg-muted",
+      )}
+    >
+      <span
+        className={cn(
+          "absolute left-[3px] h-3 w-3 rounded-full bg-background shadow-sm transition-transform duration-200",
+          on && "translate-x-[14px]",
+        )}
+      />
+    </span>
+  );
+}
+
 function FeatureEditor({
   featureKey,
   platforms,
@@ -59,7 +83,7 @@ function FeatureEditor({
 
   if (featureKey === "productTag") {
     return (
-      <div className="mt-2 rounded-lg border border-border/50 bg-muted/30 p-2.5 space-y-1.5">
+      <div className="mt-1.5 rounded-lg border border-border/50 bg-muted/30 p-2 space-y-1.5">
         <Label className="text-[11px] flex items-center gap-1.5">
           <ShoppingBag className="h-3 w-3 text-primary" /> Product tag — <span className="text-muted-foreground font-normal">Instagram, Facebook, TikTok</span>
         </Label>
@@ -75,7 +99,7 @@ function FeatureEditor({
   }
   if (featureKey === "collabPost") {
     return (
-      <div className="mt-2 rounded-lg border border-border/50 bg-muted/30 p-2.5 space-y-1.5">
+      <div className="mt-1.5 rounded-lg border border-border/50 bg-muted/30 p-2 space-y-1.5">
         <Label className="text-[11px] flex items-center gap-1.5">
           <Users2 className="h-3 w-3 text-primary" /> Collaborative post — <span className="text-muted-foreground font-normal">Instagram, TikTok</span>
         </Label>
@@ -91,7 +115,7 @@ function FeatureEditor({
   }
   if (featureKey === "location") {
     return (
-      <div className="mt-2 rounded-lg border border-border/50 bg-muted/30 p-2.5 space-y-1.5">
+      <div className="mt-1.5 rounded-lg border border-border/50 bg-muted/30 p-2 space-y-1.5">
         <Label className="text-[11px] flex items-center gap-1.5">
           <MapPin className="h-3 w-3 text-primary" /> Location pin — <span className="text-muted-foreground font-normal">{platforms.filter((p) => ["instagram","facebook","tiktok","linkedin"].includes(p)).join(", ") || "Selected platforms"}</span>
         </Label>
@@ -107,7 +131,7 @@ function FeatureEditor({
   }
   if (featureKey === "trendingAudio") {
     return (
-      <div className="mt-2 rounded-lg border border-border/50 bg-muted/30 p-2.5 space-y-1.5">
+      <div className="mt-1.5 rounded-lg border border-border/50 bg-muted/30 p-2 space-y-1.5">
         <Label className="text-[11px] flex items-center gap-1.5">
           <Music2 className="h-3 w-3 text-primary" /> Trending audio — <span className="text-muted-foreground font-normal">TikTok, Instagram, YouTube</span>
         </Label>
@@ -123,7 +147,7 @@ function FeatureEditor({
   }
   if (featureKey === "coverFrame") {
     return (
-      <div className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5">
+      <div className="mt-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2">
         <p className="text-[11px] font-medium flex items-center gap-1.5">
           <Frame className="h-3 w-3 text-amber-600" /> Custom cover frame
         </p>
@@ -146,7 +170,7 @@ function FeatureEditor({
       else onDataChange?.("firstCommentMode" as any, "delayed" as any);
     };
     return (
-      <div className="mt-2 rounded-lg border border-border/50 bg-muted/30 p-2.5 space-y-2">
+      <div className="mt-1.5 rounded-lg border border-border/50 bg-muted/30 p-2 space-y-2">
         <div className="flex items-center justify-between">
           <p className="text-[11px] font-medium flex items-center gap-1.5">
             <MessageCircle className="h-3 w-3 text-primary" /> First comment — scheduler
@@ -187,7 +211,7 @@ function FeatureEditor({
   }
   if (featureKey === "altText") {
     return (
-      <div className="mt-2 rounded-lg border border-border/50 bg-muted/30 p-2.5 space-y-1.5">
+      <div className="mt-1.5 rounded-lg border border-border/50 bg-muted/30 p-2 space-y-1.5">
         <Label className="text-[11px] flex items-center gap-1.5">
           <Eye className="h-3 w-3 text-primary" /> Alt text — accessibility
         </Label>
@@ -206,7 +230,7 @@ function FeatureEditor({
     const options = (data?.pollOptions as string[] | undefined) ?? ["", ""];
     const setOptions = (next: string[]) => update(next);
     return (
-      <div className="mt-2 rounded-lg border border-border/50 bg-muted/30 p-2.5 space-y-2">
+      <div className="mt-1.5 rounded-lg border border-border/50 bg-muted/30 p-2 space-y-2">
         <Label className="text-[11px] flex items-center gap-1.5">
           <BarChart3 className="h-3 w-3 text-primary" /> Poll — X, LinkedIn, Threads
         </Label>
@@ -249,7 +273,7 @@ function FeatureEditor({
   }
   if (featureKey === "linkCard") {
     return (
-      <div className="mt-2 rounded-lg border border-border/50 bg-muted/30 p-2.5 space-y-1.5">
+      <div className="mt-1.5 rounded-lg border border-border/50 bg-muted/30 p-2 space-y-1.5">
         <Label className="text-[11px] flex items-center gap-1.5">
           <Link2 className="h-3 w-3 text-primary" /> Link card
         </Label>
@@ -269,7 +293,7 @@ function FeatureEditor({
 export function NativeFeaturePicker({ platforms, selected, onToggle, data, onDataChange, className }: NativeFeaturePickerProps) {
   if (platforms.length === 0) {
     return (
-      <div className={cn("rounded-2xl border border-dashed border-border/60 p-3 text-[10px] text-muted-foreground", className)}>
+      <div className={cn("rounded-lg border border-dashed border-border/60 p-2 text-[10px] text-muted-foreground", className)}>
         Pick at least one destination to see which native features are available.
       </div>
     );
@@ -284,25 +308,20 @@ export function NativeFeaturePicker({ platforms, selected, onToggle, data, onDat
 
   if (supported.length === 0) {
     return (
-      <div className={cn("rounded-2xl border border-dashed border-border/60 p-3 text-[10px] text-muted-foreground", className)}>
+      <div className={cn("rounded-lg border border-dashed border-border/60 p-2 text-[10px] text-muted-foreground", className)}>
         No native features available for the selected platforms.
       </div>
     );
   }
 
+  // Compact list — the wrapping dialog already provides the container chrome
+  // (title + ON/OFF switch), so the picker itself stays lean.
   return (
-    <div className={cn("rounded-2xl border border-border/60 bg-card/95 p-3", className)}>
-      <div className="flex items-center justify-between gap-2">
-        <p className="inline-flex items-center gap-1.5 text-xs font-semibold">
-          <Sparkles className="h-3.5 w-3.5 text-primary" /> Native features
-        </p>
-        <span className="text-[9px] text-muted-foreground">{supported.length} available · {Object.values(selected).filter(Boolean).length} enabled</span>
-      </div>
-      <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
-        Toggle to tailor this post for each network. Click a feature to enable its native handling — we’ll apply it only where the platform supports it.
+    <div className={cn("space-y-1.5", className)}>
+      <p className="text-[9px] text-muted-foreground leading-tight">
+        {supported.length} available · {Object.values(selected).filter(Boolean).length} enabled — applied only where a network supports them.
       </p>
-
-      <div className="mt-3 grid gap-2.5">
+      <div className="grid gap-1.5">
         {supported.map((f) => {
           const on = !!selected[f.key];
           const supporting = platforms.filter((p) => f.platforms.includes(p as PlatformId));
@@ -324,41 +343,39 @@ export function NativeFeaturePicker({ platforms, selected, onToggle, data, onDat
                 }}
                 aria-pressed={on}
                 className={cn(
-                  "w-full flex items-start gap-2.5 rounded-xl border p-2.5 text-left transition-colors",
-                  on ? "border-primary/40 bg-primary/[0.07] shadow-sm" : "border-border/60 hover:bg-muted/40",
+                  "w-full flex items-center gap-2 rounded-lg border p-1.5 text-left transition-colors",
+                  on ? "border-primary/40 bg-primary/[0.07]" : "border-border/60 hover:bg-muted/40",
                 )}
               >
                 <span
                   className={cn(
-                    "mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg border",
+                    "grid h-5 w-5 shrink-0 place-items-center rounded-md border",
                     on ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border/60",
                   )}
                 >
-                  {on ? <CheckCircle2 className="h-3.5 w-3.5" /> : ICON_MAP[f.key]}
+                  {on ? <CheckCircle2 className="h-3 w-3" /> : ICON_MAP[f.key]}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1.5 flex-wrap">
                     <span className="block text-[11px] font-semibold leading-tight">{f.label}</span>
                     {isCommon ? (
-                      <Badge variant="secondary" className="h-4 px-1 text-[8px] uppercase tracking-wide">All destinations</Badge>
+                      <Badge variant="secondary" className="h-3.5 px-1 text-[8px] uppercase tracking-wide">All</Badge>
                     ) : (
-                      <Badge variant="outline" className="h-4 px-1 text-[8px]">Selected only</Badge>
+                      <Badge variant="outline" className="h-3.5 px-1 text-[8px]">Selected only</Badge>
                     )}
                   </span>
-                  <span className="mt-0.5 block line-clamp-2 text-[10px] leading-tight text-muted-foreground">{f.description}</span>
-                  <span className="mt-1.5 flex flex-wrap items-center gap-1">
+                  <span className="mt-px block line-clamp-1 text-[10px] leading-tight text-muted-foreground">{f.description}</span>
+                  <span className="mt-1 flex flex-wrap items-center gap-0.5">
                     {supporting.map((pid) => (
-                      <span key={pid} className={cn("inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px]", on ? "border-primary/20 bg-primary/10 text-primary" : "border-border/60 bg-muted/40 text-muted-foreground")}>
-                        <PlatformIcon platform={pid} size="xs" className="h-3 w-3" />
+                      <span key={pid} className={cn("inline-flex items-center gap-0.5 rounded-full border px-1 py-px text-[8px] leading-tight", on ? "border-primary/20 bg-primary/10 text-primary" : "border-border/60 bg-muted/40 text-muted-foreground")}>
+                        <PlatformIcon platform={pid} size="xs" className="h-2.5 w-2.5" />
                         <span className="capitalize">{pid}</span>
                       </span>
                     ))}
-                    {supporting.length === 0 && <span className="text-[9px] text-muted-foreground">No selected platform supports this</span>}
+                    {supporting.length === 0 && <span className="text-[8px] text-muted-foreground">No selected platform supports this</span>}
                   </span>
                 </span>
-                <span className={cn("shrink-0 mt-1 grid h-5 w-9 place-items-center rounded-full border text-[9px] font-bold", on ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border/60")}>
-                  {on ? "ON" : "OFF"}
-                </span>
+                <MiniSwitch on={on} />
               </button>
               {on && (
                 <FeatureEditor featureKey={f.key} platforms={supporting} data={data} onDataChange={onDataChange} />
@@ -367,16 +384,6 @@ export function NativeFeaturePicker({ platforms, selected, onToggle, data, onDat
           );
         })}
       </div>
-
-      {/* Summary for unsupported */}
-      {platforms.length > 0 && (
-        <div className="mt-3 rounded-lg bg-muted/20 p-2 flex items-center gap-2 text-[10px] text-muted-foreground">
-          <Sparkles className="h-3 w-3 text-primary shrink-0" />
-          <span>
-            Features are applied natively only where supported — unsupported destinations automatically skip them without error.
-          </span>
-        </div>
-      )}
     </div>
   );
 }

@@ -495,8 +495,11 @@
     border-radius: 1.75rem;
   }
 
-  /* Larger, easier icon targets on touch */
-  button[aria-label] {
+  /* Larger, easier icon targets on touch.
+     Exempt switches (they stretch into fat ovals) and elements that opt out
+     via .touch-skip — e.g. decorative progress dots/dashes (onboarding
+     wizard & tour), which must stay the tiny desktop dot style on mobile. */
+  button[aria-label]:not([role="switch"]):not(.touch-skip) {
     min-height: 40px;
     min-width: 40px;
   }

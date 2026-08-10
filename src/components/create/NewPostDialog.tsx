@@ -1,26 +1,13 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, Loader2, Send, BookMarked, Repeat, X, ImagePlus, SquarePen } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DateTimePicker } from "@/components/ui/date-time-picker";
-import { MediaField } from "@/components/publish/MediaField";
-import { CaptionField } from "@/components/publish/CaptionField";
-import { aiCreate } from "@/hooks/useAiCreate";
-import { pushLocalCollection, useLocalCollection } from "@/hooks/useLocalCollection";
-import { useScheduledPosts, type Recurrence } from "@/hooks/useScheduledPosts";
+import { pushLocalCollection } from "@/hooks/useLocalCollection";
+import { useScheduledPosts } from "@/hooks/useScheduledPosts";
 import { useAccounts } from "@/contexts/AccountContext";
-import { useContentCategories } from "@/hooks/useContentCategories";
-import { PlatformIcon } from "@/components/shared/PlatformIcon";
-import { PlatformPicker } from "@/components/shared/PlatformPicker";
-import { cn } from "@/lib/utils";
-
-const PLATFORMS = ["instagram", "twitter", "tiktok", "linkedin", "facebook"];
+import {
+  NewDraftDialog,
+  type NewDraftScheduleExtras,
+  type StudioDraft,
+} from "@/components/create/NewDraftDialog";
 
 export interface PostTemplate {
   id: string;
@@ -36,6 +23,13 @@ export interface NewPostInitial {
   platformIds?: string[];
 }
 
+/**
+ * Entry point used by Dashboard, Campaigns and the prompt-templates
+ * "Use template" flow. It is intentionally the *same* unified composer
+ * as the Create studio's "Create new draft" dialog — one dialog, one
+ * look, one behavior — this component just seeds it with initial
+ * content and handles persistence for standalone use.
+ */
 export function NewPostDialog({
   open,
   onOpenChange,
@@ -47,276 +41,64 @@ export function NewPostDialog({
 }) {
   const { accounts } = useAccounts();
   const { add: addScheduled } = useScheduledPosts();
-  const { categories } = useContentCategories();
-  const { items: templates, add: addTemplate, remove: removeTemplate } =
-    useLocalCollection<PostTemplate>("publish", "templates");
-  const [title, setTitle] = useState(initial?.title ?? "");
-  const [topic, setTopic] = useState("");
-  const [caption, setCaption] = useState(initial?.caption ?? "");
-  const [mediaUrl, setMediaUrl] = useState<string | undefined>(undefined);
-  const [firstComment, setFirstComment] = useState("");
-  const [categoryId, setCategoryId] = useState<string>("");
-  const [selected, setSelected] = useState<string[]>(
-    initial?.platformIds?.length ? initial.platformIds : [accounts[0]?.platformId ?? "instagram"],
-  );
-  const [scheduleAt, setScheduleAt] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [recFreq, setRecFreq] = useState<"none" | Recurrence["freq"]>("none");
-  const [recCount, setRecCount] = useState(4);
-  const [saveTemplate, setSaveTemplate] = useState(false);
-  const [templateName, setTemplateName] = useState("");
+  const [draft, setDraft] = useState<StudioDraft | null>(null);
 
-  // Reseed when reopened with a new template.
+  // Seed a fresh working draft each time the dialog is opened/re-seeded.
   useEffect(() => {
-    if (!open || !initial) return;
-    if (initial.title !== undefined) setTitle(initial.title);
-    if (initial.caption !== undefined) setCaption(initial.caption);
-    if (initial.platformIds?.length) setSelected(initial.platformIds);
+    if (!open) return;
+    setDraft({
+      id: crypto.randomUUID(),
+      title: initial?.title ?? "",
+      caption: initial?.caption ?? "",
+      status: "draft",
+      platform: initial?.platformIds?.[0] ?? accounts[0]?.platformId ?? "instagram",
+      createdAt: new Date().toISOString(),
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial?.title, initial?.caption, initial?.platformIds?.join(",")]);
 
-  const toggle = (p: string) =>
-    setSelected((s) => (s.includes(p) ? s.filter((x) => x !== p) : [...s, p]));
+  const patch = (p: Partial<StudioDraft>) =>
+    setDraft((prev) => (prev ? { ...prev, ...p } : prev));
 
-  const applyTemplate = (t: PostTemplate) => {
-    setTitle(t.name);
-    setCaption(t.caption);
-    setSelected(t.platformIds.length ? t.platformIds : selected);
-    toast.success(`Template “${t.name}” applied`);
-  };
-
-  const aiAssist = async () => {
-    if (!topic.trim()) { toast.error("Add a topic first"); return; }
-    setBusy(true);
-    const res = await aiCreate.captions({ topic, count: 1, platform: selected[0] });
-    setBusy(false);
-    if (!res?.captions?.[0]) return;
-    const c = res.captions[0];
-    if (!title) setTitle(c.title);
-    setCaption(`${c.body}\n\n${c.hashtags.map((h) => `#${h}`).join(" ")}`);
-    toast.success("AI draft inserted");
-  };
-
-  const persistTemplateIfRequested = () => {
-    if (!saveTemplate) return;
-    const name = templateName.trim() || title.trim() || "Untitled template";
-    addTemplate({
-      id: crypto.randomUUID(),
-      name,
-      caption,
-      platformIds: selected,
-      createdAt: new Date().toISOString(),
-    });
-    toast.success(`Template “${name}” saved`);
-  };
-
-  const saveDraft = () => {
-    if (!title.trim() || !caption.trim()) { toast.error("Title and caption required"); return; }
-    pushLocalCollection("create", "drafts", [{
-      id: crypto.randomUUID(), title: title.trim(), status: "draft",
-      caption, mediaUrl: mediaUrl?.trim() || undefined, platform: selected[0] ?? "instagram",
-      createdAt: new Date().toISOString(),
-    }]);
-    persistTemplateIfRequested();
+  const onCreate = () => {
+    if (!draft) return;
+    pushLocalCollection("create", "drafts", [
+      { ...draft, title: draft.title.trim() || "Untitled draft" },
+    ]);
     toast.success("Draft saved to Studio");
-    reset(); onOpenChange(false);
+    onOpenChange(false);
   };
 
-  const scheduleNow = () => {
-    if (!caption.trim() || !scheduleAt || selected.length === 0) {
-      toast.error("Caption, schedule time, and platform required"); return;
-    }
-    const recurrence: Recurrence | undefined =
-      recFreq !== "none" ? { freq: recFreq, count: Math.max(1, recCount) } : undefined;
+  const onSchedule = (extras: NewDraftScheduleExtras) => {
+    if (!draft || !extras.scheduleAt) return;
     addScheduled(
       {
-        caption,
-        mediaUrl: mediaUrl?.trim() || undefined,
-        scheduledAt: new Date(scheduleAt).toISOString(),
-        platformIds: selected,
-        firstComment: firstComment.trim() || undefined,
-        categoryId: categoryId || undefined,
+        caption: draft.caption,
+        mediaUrl: draft.mediaUrl,
+        scheduledAt: new Date(extras.scheduleAt).toISOString(),
+        platformIds: extras.platformIds.length ? extras.platformIds : [draft.platform],
+        firstComment: extras.firstComment,
+        categoryId: extras.categoryId,
       },
-      { recurrence },
+      { recurrence: extras.recurrence },
     );
-    persistTemplateIfRequested();
-    toast.success(recurrence ? `Queued ${recurrence.count} recurring posts` : "Queued");
-    reset(); onOpenChange(false);
-  };
-
-  const reset = () => {
-    setTitle(""); setTopic(""); setCaption(""); setScheduleAt("");
-    setFirstComment(""); setCategoryId(""); setMediaUrl(undefined);
-    setRecFreq("none"); setRecCount(4); setSaveTemplate(false); setTemplateName("");
+    toast.success(
+      extras.recurrence
+        ? `Queued ${extras.recurrence.count} recurring posts`
+        : "Scheduled — check the Publish queue",
+    );
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto [&>button.absolute]:hidden">
-        <DialogHeader className="pb-0">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border/60 bg-muted/30">
-                <SquarePen className="h-4.5 w-4.5 text-foreground" />
-              </div>
-              <DialogTitle className="text-lg font-semibold tracking-tight sm:text-xl truncate">
-                Create draft
-              </DialogTitle>
-              <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Autosaved
-              </span>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <BookMarked className="h-3.5 w-3.5 mr-1.5" />
-                    Templates {templates.length > 0 && <span className="ml-1 text-muted-foreground">({templates.length})</span>}
-                  </Button>
-                </PopoverTrigger>
-              <PopoverContent className="w-72 p-2" align="end">
-                {templates.length === 0 ? (
-                  <p className="text-xs text-muted-foreground p-2">No templates yet. Tick “Save as template” below.</p>
-                ) : (
-                  <div className="space-y-1 max-h-64 overflow-y-auto">
-                    {templates.map((t) => (
-                      <div key={t.id} className="flex items-center gap-1 group">
-                        <button
-                          onClick={() => applyTemplate(t)}
-                          className="flex-1 text-left px-2 py-1.5 rounded-md text-xs hover:bg-muted transition-colors"
-                        >
-                          <p className="font-medium truncate">{t.name}</p>
-                          <p className="text-[10px] text-muted-foreground truncate">{t.caption.slice(0, 60)}</p>
-                        </button>
-                        <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                          onClick={() => { removeTemplate(t.id); toast.success("Template removed"); }}>
-                          ×
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </PopoverContent>
-              </Popover>
-              <DialogClose className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur transition hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <span className="hidden sm:inline">Close</span>
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </DialogClose>
-            </div>
-          </div>
-        </DialogHeader>
-
-        <div className="border-t border-border/40 mx-0" />
-        <div className="space-y-4">
-          <PlatformPicker
-            selected={selected}
-            onToggle={toggle}
-            label="Platforms"
-          />
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Title</label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Launch teaser" />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Topic (for AI)</label>
-            <div className="flex gap-2">
-              <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="What's the post about?" />
-              <Button variant="outline" size="sm" onClick={aiAssist} disabled={busy}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                <span className="ml-1.5 hidden sm:inline">AI assist</span>
-              </Button>
-            </div>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">Caption</label>
-            <CaptionField
-              value={caption}
-              onChange={setCaption}
-              platform={selected[0]}
-              onAi={aiAssist}
-              aiBusy={busy}
-            />
-          </div>
-
-          <MediaField
-            value={mediaUrl}
-            onChange={(url) => setMediaUrl(url)}
-            label="Image / Video"
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                First comment <span className="text-muted-foreground/70">(auto-posts after publish)</span>
-              </label>
-              <Textarea
-                value={firstComment}
-                onChange={(e) => setFirstComment(e.target.value)}
-                rows={2}
-                placeholder="Drop hashtags or a link so they don't clutter the caption…"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Category</label>
-              <Select value={categoryId || "none"} onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="No category" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No category</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      <span className="mr-1.5">{c.emoji}</span> {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Schedule for</label>
-              <DateTimePicker value={scheduleAt} onChange={setScheduleAt} placeholder="Pick a date & time" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                <Repeat className="h-3 w-3" /> Recurrence
-              </label>
-              <div className="flex gap-1.5">
-                <Select value={recFreq} onValueChange={(v) => setRecFreq(v as typeof recFreq)}>
-                  <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">One-off</SelectItem>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-                {recFreq !== "none" && (
-                  <Input type="number" min={1} max={52} value={recCount}
-                    onChange={(e) => setRecCount(Number(e.target.value) || 1)}
-                    className="w-16" aria-label="Occurrences" />
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="rounded-lg border border-border/60 p-3 space-y-2">
-            <label className="flex items-center gap-2 text-xs font-medium cursor-pointer">
-              <Checkbox checked={saveTemplate} onCheckedChange={(c) => setSaveTemplate(!!c)} />
-              Save as reusable template
-            </label>
-            {saveTemplate && (
-              <Input value={templateName} onChange={(e) => setTemplateName(e.target.value)}
-                placeholder="Template name (defaults to title)" className="h-8 text-xs" />
-            )}
-          </div>
-        </div>
-        <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="outline" onClick={saveDraft}>Save draft</Button>
-          <Button onClick={scheduleNow} disabled={!scheduleAt}>
-            <Send className="h-4 w-4 mr-1" /> Schedule
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <NewDraftDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      draft={draft}
+      isEdit={false}
+      onChange={patch}
+      onCreate={onCreate}
+      onSchedule={onSchedule}
+    />
   );
 }

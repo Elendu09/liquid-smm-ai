@@ -7,7 +7,7 @@ import {
   ChevronRight,
   ChevronDown,
   Menu,
-  Sparkles,
+  Pencil,
   Calendar,
   Bot,
   BarChart3,
@@ -69,7 +69,7 @@ const navItems: NavItem[] = [
   {
     label: "Create",
     href: "/dashboard/create",
-    icon: Sparkles,
+    icon: Pencil,
     children: [
       { label: "Studio", href: "/dashboard/create/studio", icon: Wand2 },
       { label: "Captions", href: "/dashboard/create/captions", icon: Type },
