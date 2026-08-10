@@ -71,37 +71,98 @@ function CampaignCard({
           : "border-border/60 hover:border-primary/40 hover:shadow-md"
       )}
     >
-      <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-lg font-semibold">{campaign.name}</h3>
-          <p className="mt-0.5 text-xs capitalize text-muted-foreground">
-            {campaign.objective}
-            {campaign.startDate ? ` · from ${campaign.startDate}` : ""}
-            {campaign.endDate ? ` → ${campaign.endDate}` : ""}
+      <header className="flex items-start gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/25 to-primary/5 text-primary ring-1 ring-primary/20">
+          <Target className="h-4.5 w-4.5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[9.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground/70">
+            Campaign
           </p>
+          <h3 className="truncate text-base font-semibold leading-tight">{campaign.name}</h3>
         </div>
-        <Badge className={STATUS_TONE[campaign.status] ?? STATUS_TONE.draft} variant="secondary">
-          {campaign.status}
-        </Badge>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive"
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          aria-label={`Delete ${campaign.name}`}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </header>
+
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        <span
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize",
+            STATUS_TONE[campaign.status] ?? STATUS_TONE.draft,
+          )}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+          {campaign.status}
+        </span>
+        <span className="rounded-full border border-border/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+          {scheduledCount} posts
+        </span>
+      </div>
 
       {campaign.brief && (
         <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{campaign.brief}</p>
       )}
 
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        {campaign.platformIds.map((p) => (
-          <span
-            key={p}
-            className="flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 text-xs capitalize text-muted-foreground"
-          >
-            <PlatformIcon platform={p} className="h-3 w-3" />
-            {p}
-          </span>
+      {/* Meta tiles */}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-xl border border-border/50 bg-muted/25 px-2.5 py-2">
+          <p className="flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
+            <CalendarRange className="h-3 w-3" /> Next run
+          </p>
+          <p className="mt-0.5 truncate text-xs font-medium">{campaign.startDate || "Not scheduled"}</p>
+        </div>
+        <div className="rounded-xl border border-border/50 bg-muted/25 px-2.5 py-2">
+          <p className="flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
+            <TrendingUp className="h-3 w-3" /> Objective
+          </p>
+          <p className="mt-0.5 truncate text-xs font-medium capitalize">{campaign.objective}</p>
+        </div>
+        <div className="col-span-2 rounded-xl border border-border/50 bg-muted/25 px-2.5 py-2">
+          <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
+            Channels
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            {campaign.platformIds.map((p) => (
+              <span
+                key={p}
+                className="flex items-center gap-1 rounded-full border border-border/60 bg-background/60 px-2 py-0.5 text-[10px] capitalize text-muted-foreground"
+              >
+                <PlatformIcon platform={p} className="h-3 w-3" />
+                {p}
+              </span>
+            ))}
+            {campaign.platformIds.length === 0 && (
+              <span className="text-[10px] text-muted-foreground">No channels yet</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {[
+          { label: "Generated", value: posts?.length ?? scheduledCount, tone: "text-primary" },
+          { label: "Posts", value: scheduledCount, tone: "text-foreground" },
+          { label: "Goal", value: goal || "—", tone: "text-muted-foreground" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-xl border border-border/50 px-2.5 py-2 text-center">
+            <p className={cn("text-base font-semibold tabular-nums", s.tone)}>{s.value}</p>
+            <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
+              {s.label}
+            </p>
+          </div>
         ))}
       </div>
 
-      <div className="mt-4 space-y-1.5">
+      <div className="mt-3 space-y-1.5">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>Posts planned</span>
           <span>
@@ -141,9 +202,9 @@ function CampaignCard({
           {onEdit && <button onClick={onEdit} className="w-full text-xs text-primary underline underline-offset-4 py-1">Configure campaign</button>}
         </CollapsibleContent>
       </Collapsible>
-      <footer className="mt-4 flex items-center gap-2">
+      <footer className="mt-4 flex items-center gap-2 border-t border-border/50 pt-3">
         <Select value={campaign.status} onValueChange={(v) => onStatus(v as Campaign["status"])}>
-          <SelectTrigger className="h-8 w-[130px] text-xs">
+          <SelectTrigger className="h-8 w-[118px] rounded-full text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -156,22 +217,22 @@ function CampaignCard({
         <Button
           variant="ghost"
           size="icon"
-          className="ml-auto h-10 w-10 rounded-full text-muted-foreground hover:text-primary"
-          onClick={onShare}
+          className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary"
+          onClick={(e) => { e.stopPropagation(); onShare(); }}
           aria-label={`Copy share link for ${campaign.name}`}
         >
           <Share2 className="h-4 w-4" />
         </Button>
         <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 rounded-full text-muted-foreground hover:text-destructive"
-          onClick={onDelete}
-          aria-label={`Delete ${campaign.name}`}
+          size="sm"
+          className="ml-auto h-9 rounded-full px-4 text-xs font-semibold"
+          onClick={(e) => {
+            e.stopPropagation();
+            onStatus("active");
+          }}
         >
-          <Trash2 className="h-4 w-4" />
+          Run now
         </Button>
-
       </footer>
     </article>
   );

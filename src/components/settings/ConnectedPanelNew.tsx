@@ -171,61 +171,107 @@ function AccountCard({
     );
   }
 
+  const profileType = `${platform?.name ?? account.platformId} ${
+    account.platformId === "facebook" || account.platformId === "linkedin" ? "Page" : "Profile"
+  }`;
+
   return (
     <Card
       className={cn(
-        "group relative overflow-hidden bg-card/60 border-border/60 hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all",
+        "group relative overflow-hidden bg-card/60 border-border/60 transition-all hover:border-primary/30 hover:shadow-md",
         isActive && "ring-1 ring-primary/40 border-primary/30",
       )}
     >
-      <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary/[0.08] to-transparent pointer-events-none" />
-      <CardContent className="relative p-4 space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 flex items-center justify-center flex-shrink-0">
-              <PlatformIcon platform={account.platformId} size="md" />
+      <CardContent className="relative p-4 pb-0">
+        <div className="flex items-start gap-3">
+          <div className="relative flex-shrink-0">
+            <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-border/60">
+              <span className="text-sm font-semibold uppercase text-muted-foreground">
+                {account.username.slice(0, 2)}
+              </span>
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <p className="text-sm font-semibold truncate">{platform?.name ?? account.platformId}</p>
-                <StatusDot status={account.status} />
-              </div>
-              <p className="text-xs text-muted-foreground truncate">@{account.username}</p>
-            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-background ring-1 ring-border/60">
+              <PlatformIcon platform={account.platformId} size="xs" />
+            </span>
           </div>
-          <AccountKebab
-            account={account}
-            isActive={isActive}
-            onSetActive={onSetActive}
-            onDisconnect={onRequestDisconnect}
-          />
+
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <p className="truncate text-sm font-semibold">{account.displayName || account.username}</p>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "rounded-full px-1.5 py-0 text-[9px] font-bold uppercase tracking-wide",
+                  account.status === "active"
+                    ? "bg-emerald-500/15 text-emerald-600"
+                    : account.status === "warning"
+                      ? "bg-amber-500/15 text-amber-600"
+                      : "bg-destructive/15 text-destructive",
+                )}
+              >
+                {account.status}
+              </Badge>
+            </div>
+            <button
+              type="button"
+              onClick={onSetActive}
+              className="mt-0.5 block max-w-full truncate text-xs font-medium text-primary hover:underline"
+            >
+              @{account.username}
+            </button>
+            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{profileType}</p>
+          </div>
+
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
+              aria-label="Add to group"
+              onClick={() => toast.success(`${account.username} pinned`)}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+            <AccountKebab
+              account={account}
+              isActive={isActive}
+              onSetActive={onSetActive}
+              onDisconnect={onRequestDisconnect}
+            />
+          </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 pt-1">
-          <div className="rounded-lg bg-muted/40 px-2.5 py-1.5">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Followers</p>
-            <p className="text-sm font-semibold">{formatNum(account.followers)}</p>
-          </div>
-          <div className="rounded-lg bg-muted/40 px-2.5 py-1.5">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Engagement</p>
-            <p className="text-sm font-semibold">{account.engagement.toFixed(1)}%</p>
-          </div>
-          <div className="rounded-lg bg-muted/40 px-2.5 py-1.5">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Synced</p>
-            <p className="text-sm font-semibold">{timeAgo(account.lastSync)}</p>
-          </div>
+        <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+          <span>{formatNum(account.followers)} followers</span>
+          <span>synced {timeAgo(account.lastSync)}</span>
         </div>
-
-        <div className="space-y-1 pt-1">
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>Health score</span>
-            <span className="font-medium text-foreground">{account.healthScore}/100</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-            <div className={cn("h-full rounded-full transition-all", healthTone)} style={{ width: `${account.healthScore}%` }} />
-          </div>
+        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted">
+          <div className={cn("h-full rounded-full transition-all", healthTone)} style={{ width: `${account.healthScore}%` }} />
         </div>
       </CardContent>
+
+      <div className="mt-3 flex items-center gap-1 border-t border-border/60 px-2 py-1.5">
+        <Button asChild variant="ghost" size="sm" className="h-7 rounded-full px-2.5 text-[11px]">
+          <Link to="/dashboard/analytics">Open</Link>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 rounded-full px-2.5 text-[11px]"
+          onClick={() => toast.success("Reconnect flow started")}
+        >
+          Reconnect
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="ml-auto h-7 w-7 rounded-full text-muted-foreground"
+          aria-label="More views"
+          onClick={onSetActive}
+        >
+          <LayoutGrid className="h-3.5 w-3.5" />
+        </Button>
+      </div>
     </Card>
   );
 }
@@ -237,10 +283,12 @@ export function ConnectedPanel() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [view, setView] = useState<"grid" | "list">("grid");
   const [pendingRemove, setPendingRemove] = useState<ConnectedAccount | null>(null);
+  const [showFilters, setShowFilters] = useState(true);
+  const [sort, setSort] = useState<"name" | "followers" | "recent">("name");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return accounts.filter((a) => {
+    const list = accounts.filter((a) => {
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
       if (!q) return true;
       const p = platforms.find((pp) => pp.id === a.platformId);
@@ -250,7 +298,13 @@ export function ConnectedPanel() {
         p?.name.toLowerCase().includes(q)
       );
     });
-  }, [accounts, query, statusFilter]);
+    return [...list].sort((a, b) => {
+      if (sort === "followers") return b.followers - a.followers;
+      if (sort === "recent")
+        return new Date(b.lastSync ?? 0).getTime() - new Date(a.lastSync ?? 0).getTime();
+      return (a.displayName || a.username).localeCompare(b.displayName || b.username);
+    });
+  }, [accounts, query, statusFilter, sort]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, ConnectedAccount[]>();
@@ -326,16 +380,68 @@ export function ConnectedPanel() {
       ) : (
         <>
           {/* Filter bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search channels…"
-                className="pl-9 h-9 bg-card/60 border-border/60"
-              />
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search channels…"
+                  className="pl-9 h-9 bg-card/60 border-border/60"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 rounded-full"
+                  onClick={() => toast.success(`Checked ${accounts.length} channels`)}
+                >
+                  <Check className="w-3.5 h-3.5 mr-1.5" /> Check all
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("h-9 rounded-full", showFilters && "border-primary/40 text-primary")}
+                  onClick={() => setShowFilters((v) => !v)}
+                >
+                  Filters
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" className="h-9 rounded-full">Sort</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setSort("name")}>By name</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSort("followers")}>By followers</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSort("recent")}>By last sync</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 rounded-full">Actions</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setConnectOpen(true)}>
+                      <Plus className="w-3.5 h-3.5 mr-2" /> Connect channel
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => toast.success("Syncing all channels…")}>
+                      <RefreshCw className="w-3.5 h-3.5 mr-2" /> Refresh all
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard/analytics">
+                        <BarChart3 className="w-3.5 h-3.5 mr-2" /> View analytics
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
+
+            {showFilters && (
+            <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5 bg-muted/40 rounded-full p-1">
               {STATUS_CHIPS.map((c) => (
                 <button
@@ -370,6 +476,8 @@ export function ConnectedPanel() {
                 <Rows3 className="w-3.5 h-3.5" />
               </Button>
             </div>
+            </div>
+            )}
           </div>
 
           {/* Content */}
@@ -386,7 +494,7 @@ export function ConnectedPanel() {
                     </h3>
                     <Badge variant="secondary" className="text-[10px]">{g.items.length}</Badge>
                   </div>
-                  <div className={cn(view === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3" : "space-y-2")}>
+                  <div className={cn(view === "grid" ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3" : "space-y-2")}>
                     {g.items.map((a) => (
                       <AccountCard
                         key={a.id}
@@ -402,7 +510,7 @@ export function ConnectedPanel() {
               ))}
             </div>
           ) : (
-            <div className={cn(view === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3" : "space-y-2")}>
+            <div className={cn(view === "grid" ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3" : "space-y-2")}>
               {filtered.map((a) => (
                 <AccountCard
                   key={a.id}

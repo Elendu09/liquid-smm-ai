@@ -16,7 +16,7 @@
 export type PlatformId =
   | "x" | "twitter" | "threads" | "bluesky"
   | "instagram" | "facebook" | "linkedin"
-  | "tiktok" | "youtube" | "pinterest";
+  | "tiktok" | "youtube" | "pinterest" | "reddit";
 
 export interface CharRules {
   /** Maximum allowed weighted length. */
@@ -43,7 +43,7 @@ export const CHAR_RULES: Record<PlatformId, CharRules> = {
   youtube:  { limit: 5000,  urlWeight: 0,  mentionDiscount: 0, hashtagFullText: true,  emojiWeight: 1 },
   pinterest:{ limit: 500,   urlWeight: 0,  mentionDiscount: 0, hashtagFullText: true,  emojiWeight: 1 },
   // Reddit varies — use 40000 as practical max
-  reddit:   { limit: 40000, urlWeight: 0, mentionDiscount: 0, hashtagFullText: true, emojiWeight: 1 } as any,
+  reddit:   { limit: 40000, urlWeight: 0, mentionDiscount: 0, hashtagFullText: true, emojiWeight: 1 },
 };
 
 // Free tier has slightly tighter limits for some platforms (X free 280, Threads 500, etc. — pro unlocks extended where applicable)

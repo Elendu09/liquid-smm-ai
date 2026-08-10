@@ -228,6 +228,13 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
         if (t.platformIds.length) setPlatformIds(t.platformIds);
         toast.success(`Template “${t.name}” inserted`);
       }}
+      mediaPane={
+        <MediaField
+          value={mediaUrl || undefined}
+          onChange={(u) => setMediaUrl(u ?? "")}
+          label="Image / video"
+        />
+      }
       preview={
         <div className="space-y-3">
           <NetworkPreview
@@ -377,12 +384,6 @@ export function PostSlotDialog({ open, onOpenChange, post, initialSlot, onSubmit
                 </Select>
               </div>
             </div>
-
-            <MediaField
-              value={mediaUrl || undefined}
-              onChange={(u) => setMediaUrl(u ?? "")}
-              label="Image / video"
-            />
 
             {showCoverFrame && (
               <CoverFramePicker
