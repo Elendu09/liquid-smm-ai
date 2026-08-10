@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Plus, Target, TrendingUp, CalendarRange, Trash2, Share2, Edit3, Eye } from "lucide-react";
 import { DEMO_CAMPAIGNS, campaignSlug } from "@/lib/demoCampaigns";
@@ -190,6 +191,17 @@ export default function Campaigns() {
   const [newPostInitial, setNewPostInitial] = useState<{ title?: string; caption?: string; platformIds?: string[] } | undefined>(undefined);
   const campaigns = useRealOrEmpty(real, { isGuest, demo: DEMO_CAMPAIGNS });
   const demoMode = isGuest && real.length === 0;
+
+  // Opened via "Plan a campaign" in the Create studio (?builder=1).
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("builder") !== "1") return;
+    setOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("builder");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const stats = useMemo(() => {
     const active = campaigns.filter((c) => c.status === "active").length;

@@ -1,11 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Sparkles, Calendar, Bot, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Pencil, Calendar, Bot, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUnreadInbox } from "@/hooks/useUnreadInbox";
 
 const left = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard, exact: true, tour: "mobile-nav-home" },
-  { label: "Create", href: "/dashboard/create", icon: Sparkles, tour: "mobile-nav-create" },
+  { label: "Create", href: "/dashboard/create", icon: Pencil, tour: "mobile-nav-create" },
 ];
 const right = [
   { label: "Engage", href: "/dashboard/engage", icon: Bot, tour: "mobile-nav-engage" },

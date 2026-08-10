@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Send, Save, Trash2, Plus, Image as ImageIcon, Heart, MessageCircle, Share2, Copy, CalendarPlus, Sparkles } from "lucide-react";
+import { Trash2, Plus, Copy, CalendarPlus, Target } from "lucide-react";
 import {
   ToolbarBar,
   ViewToggle,
@@ -11,8 +11,6 @@ import {
   type KanbanColumnDef,
 } from "@/components/dashboard/shell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,28 +27,21 @@ import { useMcpInbox } from "@/hooks/useMcpInbox";
 import { logMcpCall } from "@/hooks/useMcpActivity";
 import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { MediaThumb } from "@/components/shared/MediaThumb";
-import { PlatformPicker } from "@/components/shared/PlatformPicker";
 import { useAccounts } from "@/contexts/AccountContext";
-import { NewPostDialog } from "@/components/create/NewPostDialog";
+import { PostPreviewCard } from "@/components/create/PostPreviewCard";
+import {
+  NewDraftDialog,
+  type NewDraftScheduleExtras,
+  type StudioDraft,
+} from "@/components/create/NewDraftDialog";
 import { AiRepurposeDialog } from "@/components/create/AiRepurposeDialog";
-import { MediaField } from "@/components/publish/MediaField";
 import { Shuffle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isGuestSession } from "@/hooks/useGuest";
 
 
-type DraftStatus = "draft" | "review" | "scheduled";
-
-interface Draft {
-  id: string;
-  title: string;
-  status: DraftStatus;
-  caption: string;
-  platform: string;
-  mediaUrl?: string;
-  scheduledAt?: string;
-  createdAt: string;
-}
+type DraftStatus = StudioDraft["status"];
+type Draft = StudioDraft;
 
 const columns: KanbanColumnDef<DraftStatus>[] = [
   { id: "draft", label: "Draft" },
@@ -78,39 +69,6 @@ const seed: Draft[] = [
     createdAt: new Date().toISOString(),
   },
 ];
-
-function InstagramPreview({ draft, handle }: { draft: Draft; handle: string }) {
-  return (
-    <div className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm max-w-sm mx-auto">
-      <header className="flex items-center gap-2 p-3 border-b border-border/60">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500" />
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold truncate">{handle}</p>
-          <p className="text-[10px] text-muted-foreground">Sponsored</p>
-        </div>
-        <PlatformIcon platform={draft.platform} size="xs" />
-      </header>
-      <div className="aspect-square bg-muted flex items-center justify-center">
-        {draft.mediaUrl ? (
-          <img src={draft.mediaUrl} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <ImageIcon className="w-10 h-10 text-muted-foreground" />
-        )}
-      </div>
-      <div className="p-3 space-y-2">
-        <div className="flex items-center gap-3 text-foreground/80">
-          <Heart className="h-5 w-5" />
-          <MessageCircle className="h-5 w-5" />
-          <Share2 className="h-5 w-5" />
-        </div>
-        <p className="text-xs leading-relaxed whitespace-pre-wrap">
-          <span className="font-semibold">{handle}</span>{" "}
-          {draft.caption || "Your caption will appear here…"}
-        </p>
-      </div>
-    </div>
-  );
-}
 
 export default function CreateStudio() {
   const [view, setView] = useViewMode("create-studio", "kanban");
@@ -189,12 +147,11 @@ export default function CreateStudio() {
   }, []);
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Draft | null>(null);
-  const [scheduleAt, setScheduleAt] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<Draft | null>(null);
-  const [newPostOpen, setNewPostOpen] = useState(false);
   const [repurposeOpen, setRepurposeOpen] = useState(false);
   const [previewing, setPreviewing] = useState<Draft | null>(null);
 
@@ -282,39 +239,66 @@ export default function CreateStudio() {
   );
 
   const startNew = () => {
-    const d: Draft = {
+    // Fresh working copy — only persisted when the user hits "Create draft".
+    setEditing({
       id: crypto.randomUUID(),
-      title: "Untitled draft",
+      title: "",
       status: "draft",
       caption: "",
       platform: accounts[0]?.platformId ?? "instagram",
       createdAt: new Date().toISOString(),
-    };
-    add(d);
-    setEditing(d);
+    });
   };
+
+  const isEditingExisting = !!editing && drafts.some((d) => d.id === editing.id);
 
   const saveDraft = () => {
     if (!editing) return;
-    update(editing.id, editing);
-    toast.success("Draft saved");
+    const finalDraft = { ...editing, title: editing.title.trim() || "Untitled draft" };
+    if (drafts.some((d) => d.id === finalDraft.id)) {
+      update(finalDraft.id, finalDraft);
+      toast.success("Draft saved");
+    } else {
+      add(finalDraft);
+      toast.success("Draft added to studio");
+      setEditing(null);
+    }
   };
 
-  const scheduleDraft = () => {
-    if (!editing || !scheduleAt) return;
-    addScheduled({
-      caption: editing.caption,
-      mediaUrl: editing.mediaUrl,
-      scheduledAt: new Date(scheduleAt).toISOString(),
-      platformIds: [editing.platform],
-    });
-    update(editing.id, { status: "scheduled", scheduledAt: new Date(scheduleAt).toISOString() });
-    toast.success("Scheduled — check the Publish queue");
-    setScheduleAt("");
+  const scheduleDraft = (extras: NewDraftScheduleExtras) => {
+    if (!editing || !extras.scheduleAt) return;
+    const when = new Date(extras.scheduleAt).toISOString();
+    addScheduled(
+      {
+        caption: editing.caption,
+        mediaUrl: editing.mediaUrl,
+        scheduledAt: when,
+        platformIds: extras.platformIds.length ? extras.platformIds : [editing.platform],
+        firstComment: extras.firstComment,
+        categoryId: extras.categoryId,
+      },
+      { recurrence: extras.recurrence },
+    );
+    const finalDraft: Draft = {
+      ...editing,
+      title: editing.title.trim() || "Untitled draft",
+      status: "scheduled",
+      scheduledAt: when,
+      platform: extras.platformIds[0] ?? editing.platform,
+    };
+    if (drafts.some((d) => d.id === finalDraft.id)) update(finalDraft.id, finalDraft);
+    else add(finalDraft);
+    toast.success(
+      extras.recurrence
+        ? `Queued ${extras.recurrence.count} recurring posts`
+        : "Scheduled — check the Publish queue",
+    );
     setEditing(null);
   };
 
-  const handle = accounts.find((a) => a.platformId === editing?.platform)?.username ?? "yourbrand";
+  const patchEditing = (patch: Partial<Draft>) =>
+    setEditing((prev) => (prev ? { ...prev, ...patch } : prev));
+
 
   const card = (d: Draft, dense = false) => (
     <div
@@ -347,7 +331,7 @@ export default function CreateStudio() {
         </p>
       )}
       <div className="flex justify-end gap-1 mt-2" onClick={(e) => e.stopPropagation()}>
-        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditing(d)}>
+        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditing({ ...d })}>
           Open
         </Button>
         <Button
@@ -395,9 +379,13 @@ export default function CreateStudio() {
               <Shuffle className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Repurpose 5×</span>
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setNewPostOpen(true)}>
-              <Sparkles className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">AI post</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate("/dashboard/campaigns?builder=1")}
+            >
+              <Target className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Plan a campaign</span>
             </Button>
             <Button size="sm" onClick={startNew}>
               <Plus className="h-4 w-4 sm:mr-1" />
@@ -421,85 +409,18 @@ export default function CreateStudio() {
         <ListView items={filtered} getKey={(d) => d.id} renderItem={(d) => card(d, true)} />
       )}
 
-      {editing && (
-        <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center bg-background/85 backdrop-blur-sm p-0 sm:p-4">
-          <div className="w-full max-w-4xl sm:rounded-2xl border border-border bg-card shadow-xl flex flex-col sm:max-h-[90vh]">
-            <header className="flex items-center gap-2 p-4 border-b border-border/60 flex-shrink-0">
-              <Input
-                value={editing.title}
-                onChange={(e) => setEditing({ ...editing, title: e.target.value })}
-                className="border-0 shadow-none text-lg font-semibold h-auto p-0 focus-visible:ring-0"
-                aria-label="Draft title"
-              />
-              <Button variant="ghost" size="sm" onClick={() => setEditing(null)} aria-label="Close editor">
-                Close
-              </Button>
-            </header>
+      <NewDraftDialog
+        open={!!editing}
+        onOpenChange={(o) => {
+          if (!o) setEditing(null);
+        }}
+        draft={editing}
+        isEdit={isEditingExisting}
+        onChange={patchEditing}
+        onCreate={saveDraft}
+        onSchedule={scheduleDraft}
+      />
 
-            <div className="flex-1 overflow-y-auto p-4 grid gap-6 md:grid-cols-2">
-              <div className="space-y-3">
-                <div>
-                  <PlatformPicker
-                    selected={[editing.platform]}
-                    onToggle={(id) => setEditing({ ...editing, platform: id })}
-                    available={["instagram", "twitter", "tiktok", "linkedin", "facebook"]}
-                    label="Platform"
-                    multi={false}
-                    size="sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Caption</label>
-                  <Textarea
-                    value={editing.caption}
-                    onChange={(e) => setEditing({ ...editing, caption: e.target.value })}
-                    placeholder="Write your caption…"
-                    rows={6}
-                    aria-label="Caption"
-                  />
-                </div>
-
-                <div>
-                  <MediaField
-                    value={editing.mediaUrl}
-                    onChange={(url) => setEditing({ ...editing, mediaUrl: url })}
-                    label="Media (optional)"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Schedule for</label>
-                  <Input
-                    type="datetime-local"
-                    value={scheduleAt}
-                    onChange={(e) => setScheduleAt(e.target.value)}
-                    aria-label="Schedule datetime"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">Preview</p>
-                <InstagramPreview draft={editing} handle={handle} />
-              </div>
-            </div>
-
-            <footer className="flex flex-wrap items-center justify-end gap-2 p-4 border-t border-border/60 flex-shrink-0">
-              <Button variant="outline" onClick={saveDraft}>
-                <Save className="h-4 w-4 mr-1" />
-                Save draft
-              </Button>
-              <Button onClick={scheduleDraft} disabled={!scheduleAt || !editing.caption}>
-                <Send className="h-4 w-4 mr-1" />
-                Schedule
-              </Button>
-            </footer>
-          </div>
-        </div>
-      )}
-
-      <NewPostDialog open={newPostOpen} onOpenChange={setNewPostOpen} />
       <AiRepurposeDialog open={repurposeOpen} onOpenChange={setRepurposeOpen} initialCaption={editing?.caption ?? ""} />
 
       {previewing && (
@@ -514,14 +435,15 @@ export default function CreateStudio() {
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Preview · {previewing.platform}</span>
               <div className="flex gap-1.5">
-                <Button size="sm" variant="secondary" onClick={() => { setEditing(previewing); setPreviewing(null); }}>
+                <Button size="sm" variant="secondary" onClick={() => { setEditing({ ...previewing }); setPreviewing(null); }}>
                   Edit
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => setPreviewing(null)}>Close</Button>
               </div>
             </div>
-            <InstagramPreview
-              draft={previewing}
+            <PostPreviewCard
+              caption={previewing.caption}
+              mediaUrl={previewing.mediaUrl}
               handle={accounts.find((a) => a.platformId === previewing.platform)?.username ?? "yourbrand"}
             />
           </div>

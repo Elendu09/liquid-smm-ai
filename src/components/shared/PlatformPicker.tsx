@@ -81,7 +81,13 @@ export function PlatformPicker({
 }: PlatformPickerProps) {
   const navigate = useNavigate();
   const { accounts } = useAccounts();
-  const ids = available ?? DEFAULT_VISIBLE;
+  // Base row = the configured defaults; any extra platform added via the "+"
+  // popover (and thus in `selected`) is appended so it visibly appears.
+  const ids = useMemo(() => {
+    const base = available ?? DEFAULT_VISIBLE;
+    const extras = selected.filter((id) => !base.includes(id));
+    return extras.length ? [...base, ...extras] : base;
+  }, [available, selected]);
   const s = sizeMap[size];
 
   const [addOpen, setAddOpen] = useState(false);
@@ -177,7 +183,6 @@ export function PlatformPicker({
               </TooltipTrigger>
               <TooltipContent side="top" className="text-[11px] capitalize">
                 {platformLabel(id)}
-                {connectedIds.has(id) ? " · connected" : " · not connected"}
               </TooltipContent>
             </Tooltip>
           );
@@ -263,11 +268,6 @@ export function PlatformPicker({
                         >
                           <PlatformIcon platform={p.id} size="sm" showBackground />
                           <span className="text-[10px] font-medium leading-tight line-clamp-1">{p.name}</span>
-                          {connectedIds.has(p.id) ? (
-                            <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-medium">Connected</span>
-                          ) : (
-                            <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">Tap to add</span>
-                          )}
                         </button>
                       ))}
                     </div>
