@@ -202,9 +202,9 @@ function CampaignCard({
           {onEdit && <button onClick={onEdit} className="w-full text-xs text-primary underline underline-offset-4 py-1">Configure campaign</button>}
         </CollapsibleContent>
       </Collapsible>
-      <footer className="mt-4 flex items-center gap-2">
+      <footer className="mt-4 flex items-center gap-2 border-t border-border/50 pt-3">
         <Select value={campaign.status} onValueChange={(v) => onStatus(v as Campaign["status"])}>
-          <SelectTrigger className="h-8 w-[130px] text-xs">
+          <SelectTrigger className="h-8 w-[118px] rounded-full text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -217,22 +217,22 @@ function CampaignCard({
         <Button
           variant="ghost"
           size="icon"
-          className="ml-auto h-10 w-10 rounded-full text-muted-foreground hover:text-primary"
-          onClick={onShare}
+          className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary"
+          onClick={(e) => { e.stopPropagation(); onShare(); }}
           aria-label={`Copy share link for ${campaign.name}`}
         >
           <Share2 className="h-4 w-4" />
         </Button>
         <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 rounded-full text-muted-foreground hover:text-destructive"
-          onClick={onDelete}
-          aria-label={`Delete ${campaign.name}`}
+          size="sm"
+          className="ml-auto h-9 rounded-full px-4 text-xs font-semibold"
+          onClick={(e) => {
+            e.stopPropagation();
+            onStatus("active");
+          }}
         >
-          <Trash2 className="h-4 w-4" />
+          Run now
         </Button>
-
       </footer>
     </article>
   );
