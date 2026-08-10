@@ -38,6 +38,8 @@ export interface ScheduleComposerScaffoldProps {
   onInsertTemplate: (t: PostTemplate) => void;
   /** Left column: the scheduling form fields */
   children: ReactNode;
+  /** Optional first column on desktop: media upload / assets */
+  mediaPane?: ReactNode;
   /** Right column when in preview mode (NetworkPreview + info cards) */
   preview: ReactNode;
   /** Sticky footer actions */
