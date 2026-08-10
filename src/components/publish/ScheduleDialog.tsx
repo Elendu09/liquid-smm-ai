@@ -215,6 +215,9 @@ export function ScheduleDialog({
         if (t.platformIds.length) setSelected(t.platformIds);
         toast.success(`Template “${t.name}” inserted`);
       }}
+      mediaPane={
+        <MediaField value={mediaUrl} onChange={(u) => setMediaUrl(u ?? undefined)} label="Image / video" />
+      }
       preview={
         <div className="space-y-3">
           <NetworkPreview
@@ -343,8 +346,6 @@ export function ScheduleDialog({
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
               Use AI best-time (weekday · 10:00)
             </Button>
-
-            <MediaField value={mediaUrl} onChange={(u) => setMediaUrl(u ?? undefined)} label="Image / video" />
 
             {showCoverFrame && (
               <CoverFramePicker videoUrl={mediaUrl} valueSec={coverFrameSec} onChange={setCoverFrameSec} durationSec={60} />
